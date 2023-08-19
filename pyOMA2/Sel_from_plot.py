@@ -22,13 +22,12 @@ from . import tools
 # PLOTTING CLASS
 # =============================================================================
 
-class Sel_from_plot():
+class SelFromPlot():
     def __init__(self, Model, plot, freqlim=None):
         """ 
         Bla bla bla
         """
         self.Model = Model
-        simnum = self.Model.sim_num
         
         if freqlim is not None:
             self.freq_max = freqlim
@@ -38,7 +37,7 @@ class Sel_from_plot():
         self.shift_is_held = False
 
         self.samp_freq = self.Model.samp_freq
-        self.freqs = self.Model.Results[f"FDD_{simnum}"]["freqs"]
+        self.freqs = self.Model.Results["FDD"]["freqs"]
 
         self.root = tk.Tk()
 
@@ -46,7 +45,7 @@ class Sel_from_plot():
         if plot == "SSI" or plot == "pLSCF":
             self.show_legend = 0
             self.hide_poles = 1
-            self.S_val = self.Model.Results[f"FDD_{simnum}"]["S_val"]
+            self.S_val = self.Model.Results["FDD"]["S_val"]
 
             self.Model.sel_xi = []
             self.Model.sel_phi = []
@@ -122,10 +121,8 @@ class Sel_from_plot():
 #------------------------------------------------------------------------------
 
     def plot_svPSD(self, update_ticks=False):
-        
-        simnum = self.Model.sim_num
 
-        S_val = self.Model.Results[f"FDD_{simnum}"]["S_val"]
+        S_val = self.Model.Results["FDD"]["S_val"]
 
         if not update_ticks:
             self.ax2.clear()
@@ -134,7 +131,7 @@ class Sel_from_plot():
             for ii in range(self.Model.Nch):
                 self.ax2.plot(self.freqs[:], 10*np.log10(S_val[ii, ii]))
             
-            df = self.Model.Results[f"FDD_{simnum}"]["df"]
+            df = self.Model.Results["FDD"]["df"]
             self.ax2.set_xlim(left=0, right=self.freq_max)
             self.ax2.xaxis.set_major_locator(MultipleLocator(self.freq_max / 10))
             self.ax2.xaxis.set_major_formatter(FormatStrFormatter("%g"))
@@ -164,13 +161,11 @@ class Sel_from_plot():
         """
         On-the-fly selection of the closest poles.        
         """
-        simnum = self.Model.sim_num
-        
-        freq = self.Model.Results[f"FDD_{simnum}"]["freqs"]
+        freq = self.Model.Results["FDD"]["freqs"]
         # Find closest frequency
         sel = np.argmin(np.abs(freq - self.x_data_pole))
 
-        self.Model.sel_freq.append(self.Model.Results[f"FDD_{simnum}"]["freqs"][sel])
+        self.Model.sel_freq.append(self.Model.Results["FDD"]["freqs"][sel])
         self.Model.freq_ind.append(sel)
         self.sort_selected_poles()
 
@@ -181,33 +176,30 @@ class Sel_from_plot():
         """
         
         """
-        simnum = self.Model.sim_num
 
         if plot == "SSI":
             ordmax = self.Model.SSI_ordmax
             ordmin = self.Model.SSI_ordmin
-            Fr = self.Model.Results[f"SSIcov_{simnum}"]['Fn_poles']
-            Sm = self.Model.Results[f"SSIcov_{simnum}"]['xi_poles']
-            Ms = self.Model.Results[f"SSIcov_{simnum}"]['Phi_poles']
+            Fr = self.Model.Results["SSIcov"]['Fn_poles']
+            Sm = self.Model.Results["SSIcov"]['xi_poles']
+            Ms = self.Model.Results["SSIcov"]['Phi_poles']
             
             self.Lab = tools._stab_SSI(Fr, Sm, Ms, ordmin, ordmax, 
                             err_fn=err_fn, err_xi=err_xi, err_ms=err_ms)
 
         elif plot == "pLSCF":
-            ordmin = 0
             ordmax = self.Model.pLSCF_ordmax
-            Fr = self.Model.Results[f"pLSCF_{simnum}"]['Fn_poles']
-            Sm = self.Model.Results[f"pLSCF_{simnum}"]['xi_poles']
+            Fr = self.Model.Results["pLSCF"]['Fn_poles']
+            Sm = self.Model.Results["pLSCF"]['xi_poles']
             nch = self.Model.Nch
-            self.Lab = tools._stab_pLSCF(Fr, Sm, ordmin, ordmax, 
+            self.Lab = tools._stab_pLSCF(Fr, Sm, ordmax, 
                             err_fn=err_fn, err_xi=err_xi, nch=nch)
 
 #------------------------------------------------------------------------------
 
     def plot_stab(self, plot, update_ticks=False):
-        simnum = self.Model.sim_num
-        
-        S_val = self.Model.Results[f"FDD_{simnum}"]["S_val"]
+
+        S_val = self.Model.Results["FDD"]["S_val"]
 
         if not update_ticks:
             self.ax1.clear()
@@ -226,7 +218,7 @@ class Sel_from_plot():
 
             #-----------------------
             if plot == "SSI":
-                Fr = self.Model.Results[f"SSIcov_{simnum}"]['Fn_poles']
+                Fr = self.Model.Results["SSIcov"]['Fn_poles']
                 Lab = self.Lab
                 
                 # Stable pole
@@ -298,7 +290,7 @@ class Sel_from_plot():
 
             #-----------------------
             elif plot == "pLSCF":
-                Fr = self.Model.Results[f"pLSCF_{simnum}"]['Fn_poles']
+                Fr = self.Model.Results["pLSCF"]['Fn_poles']
                 Lab = self.Lab
                 
                 # Stable pole
@@ -365,19 +357,17 @@ class Sel_from_plot():
         """
         On-the-fly selection of the closest poles.        
         """
-        simnum = self.Model.sim_num
 
         if plot == "SSI":
-            Fr = self.Model.Results[f"SSIcov_{simnum}"]['Fn_poles']
-            Sm = self.Model.Results[f"SSIcov_{simnum}"]['xi_poles']
-            Ms = self.Model.Results[f"SSIcov_{simnum}"]['Phi_poles']
+            Fr = self.Model.Results["SSIcov"]['Fn_poles']
+            Sm = self.Model.Results["SSIcov"]['xi_poles']
+            Ms = self.Model.Results["SSIcov"]['Phi_poles']
         elif plot == "pLSCF":
-            Fr = self.Model.Results[f"pLSCF_{simnum}"]['Fn_poles']
-            Sm = self.Model.Results[f"pLSCF_{simnum}"]['xi_poles']
+            Fr = self.Model.Results["pLSCF"]['Fn_poles']
+            Sm = self.Model.Results["pLSCF"]['xi_poles']
 
         y_ind = int(np.argmin(np.abs(np.arange(Fr.shape[1])-self.y_data_pole)))  # Find closest pole order index
         x = Fr[:, y_ind]
-        # x = x[~np.isnan(x)]
         # Find closest frequency index
         sel = np.nanargmin(np.abs(x - self.x_data_pole))
 

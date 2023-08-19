@@ -1,6 +1,7 @@
 import os
 import glob
 import numpy as np
+from numpy.linalg import pinv
 from scipy import signal
 from scipy.optimize import curve_fit
 from scipy.linalg import eig
@@ -18,83 +19,39 @@ class Model():
     Model.
     """
 
-    def __init__(self, Nsetup = 1):
+    def __init__(self, data, fs):
         
             """
-            :param Nsetup: number of setup (default to 1) 
+            Bla bla bla
 
             """
+
             try:
-                self.Nsetup = int(Nsetup)
+                self.data = np.asarray(data)
             except:
-                raise Exception('Nsetup must be integer')
-            if self.Nsetup < 1:
-                raise Exception('Nsetup must be more than 1')
-            elif self.Nsetup > 1:
-                # self.data_all = np.zeros((self.Ndat, self.Nch, self.Nsetup))
-                self.data_all = []
+                raise Exception("Cannot convert data into a numpy array")
 
-                self.Ndat_all = np.zeros(self.Nsetup)
-                self.Nch_all = np.zeros(self.Nsetup)
-                self.samp_freq_all = np.zeros(self.Nsetup)
-                self.freq_max_all = np.zeros(self.Nsetup)
-                self.sup_num = []
-                self.ref_ch_all = []
-
-            self.Results = {}
-
-
-    def add_data(self, exp_data, fs, sup_num=1, ref_ch=None):
-        """
-        Bla bla bla
-
-        """
-        # if isinstance(data, self):
-            
-
-
-        if self.Nsetup > 1:
             try:
-                sup_num <= self.Nsetup
+                self.fs = float(fs)
             except:
-                raise Exception(f"sup_number cannot be greater than {self.Nsetup}")
-            
-            try:
-                ref_ch != None
-            except:
-                raise Exception("You must specify the reference channels in a multisetup (list of index)")
-            
-            # self.data_all[:,:, sup_num]
-            self.data_all.append(exp_data)
-            
-            self.Ndat_all[sup_num] = exp_data.shape[0]
-            self.Nch_all[sup_num] = exp_data.shape[1]
-            self.samp_freq_all[sup_num] = fs
-            self.freq_max_all[sup_num] = fs / 2  # Nyquist frequency
-            self.ref_ch_all.append(ref_ch) 
-            self.sup_num.append(sup_num)
-            
-            # if len(self.sup_num) == self.Nsetup:
-            #     pass
+                raise Exception("Cannot convert sampling frequency into a float")
 
-        else:
-            self.Ndat = exp_data.shape[0]
-            self.Nch = exp_data.shape[1]
-            self.data = exp_data
+            self.Ndat = data.shape[0]
+            self.Nch = data.shape[1]
+            self.data = data
             self.samp_freq = fs
             self.freq_max = self.samp_freq / 2  # Nyquist frequency
+            self.Results = {}
 
 # -----------------------------------------------------------------------------
 # Algorithms / Methods
 # -----------------------------------------------------------------------------
 
-    def FDDsvp(self, df=0.01, pov=0.5, window="hann", simnum=0):
+    def FDDsvp(self, df=0.01, pov=0.5, window="hann"):
         """
         Bla bla bla
 
         """
-        self.sim_num = simnum
-
         nxseg = self.samp_freq / df  # number of points per segment
         noverlap = int(nxseg * pov)  # Number of overlapping points
         Nf = int(nxseg / 2) + 1  # Number of frequency lines
@@ -119,32 +76,13 @@ class Model():
             S_vec[:, :, i] = U1_1
 
 
-        self.Results[f"FDD_{simnum}"] = {
+        self.Results["FDD"] = {
             "df": df,
             "freqs": _f,
             "S_val": S_val,
             "S_vec": S_vec,
             "PSD_matr": PSD_matr,
         }
-
-
-    def FDDsvp_multi(self, df=0.01, pov=0.5, window="hann"):
-        """
-        Bla bla bla
-
-        """
-        
-        for ii in self.sup_num:
-
-            self.data = self.data_all[ii]
-            self.Ndat = self.data.shape[0]
-            self.Nch = self.data.shape[1]
-            self.samp_freq = self.samp_freq_all[ii]
-            self.freq_max = self.freq_max_all[ii]
-            
-            # run sim on data
-            self.FDDsvp(df=df, pov=pov, window=window, simnum=ii)
-
 
 #------------------------------------------------------------------------------
 
@@ -153,12 +91,11 @@ class Model():
         Bla bla bla
 
         """
-        simnum = self.sim_num
-        df = self.Results[f"FDD_{simnum}"]["df"]
-        S_val = self.Results[f"FDD_{simnum}"]["S_val"]
-        S_vec = self.Results[f"FDD_{simnum}"]["S_vec"]
+        df = self.Results["FDD"]["df"]
+        S_val = self.Results["FDD"]["S_val"]
+        S_vec = self.Results["FDD"]["S_vec"]
         deltaf = ndf * df
-        freqs = self.Results[f"FDD_{simnum}"]["freqs"] 
+        freqs = self.Results["FDD"]["freqs"] 
         sel_freq = self.sel_freq
         
         Freq = []
@@ -190,9 +127,9 @@ class Model():
         Fi = np.array(Fi)
         index = np.array(index)
         
-        self.Results[f"FDD_{simnum}"]["Fn"] = Freq
-        self.Results[f"FDD_{simnum}"]["Phi"] = Fi.T
-        self.Results[f"FDD_{simnum}"]["Freq ind"] = index
+        self.Results["FDD"]["Fn"] = Freq
+        self.Results["FDD"]["Phi"] = Fi.T
+        self.Results["FDD"]["Freq ind"] = index
 
 #------------------------------------------------------------------------------
 
@@ -201,15 +138,15 @@ class Model():
         '''
         Bla bla bla
         '''
-        simnum = self.sim_num
-        df = self.Results[f"FDD_{simnum}"]["df"]
-        S_val = self.Results[f"FDD_{simnum}"]["S_val"]
-        S_vec = self.Results[f"FDD_{simnum}"]["S_vec"]
-        PSD_matr = self.Results[f"FDD_{simnum}"]["PSD_matr"]
-        freqs = self.Results[f"FDD_{simnum}"]["freqs"]
+        sel_freq = self.sel_freq
+        df = self.Results["FDD"]["df"]
+        S_val = self.Results["FDD"]["S_val"]
+        S_vec = self.Results["FDD"]["S_vec"]
+        PSD_matr = self.Results["FDD"]["PSD_matr"]
+        freqs = self.Results["FDD"]["freqs"]
         # Run FDD to get a first estimate of the modal properties
         self.FDDmodEX(ndf=ndf)
-        Freq, Fi = self.Results[f"FDD_{simnum}"]["Fn"], self.Results[f"FDD_{simnum}"]["Phi"]
+        Freq, Fi = self.Results["FDD"]["Fn"], self.Results["FDD"]["Phi"]
 
         freq_max = self.freq_max
         tlag = 1/df # time lag
@@ -224,7 +161,7 @@ class Model():
         Damp_E = []
         Figs = []
 
-        for n in range(len(Freq)): # looping through all frequencies to estimate
+        for n in range(len(sel_freq)): # looping through all frequencies to estimate
             _fi = Fi[: , n] # Select reference mode shape (from FDD)
             # Initialise SDOF bell and Mode Shape
             SDOFbell = np.zeros(int(Nf), dtype=complex) # 
@@ -241,7 +178,7 @@ class Model():
                     # Do the same for mode shapes
                     SDOFms += np.array([ S_vec[csm,:,_l]
                                         if tools.MAC(_fi, S_vec[csm,:,_l]) > MAClim 
-                                        else np.zeros(len(Freq)) 
+                                        else np.zeros(self.Nch) 
                                         for _l in range(int(Nf))]) 
                 # Classical Enhanced Frequency Domain Decomposition method
                 else:
@@ -251,7 +188,7 @@ class Model():
                                         for _l in range(int(Nf) )])
                     SDOFms += np.array([ S_vec[csm,:,_l]
                                         if tools.MAC(_fi, S_vec[csm,:,_l]) > MAClim 
-                                        else np.zeros(len(Freq)) 
+                                        else np.zeros(self.Nch) 
                                         for _l in range(int(Nf))])
 
             # indices of the singular values in SDOFsval
@@ -386,19 +323,19 @@ class Model():
         Damp = np.array(Damp_E)
         Fi = np.array(Fi_E)
 
-        self.Results[f"EFDD_{simnum}"] = {"Method": method}
-        self.Results[f"EFDD_{simnum}"]['Fn'] = Freq
-        self.Results[f"EFDD_{simnum}"]['Phi'] = Fi.T
-        self.Results[f"EFDD_{simnum}"]['xi'] = Damp
-        self.Results[f"EFDD_{simnum}"]['Figs'] = Figs
+        self.Results["EFDD"] = {"Method": method}
+        self.Results["EFDD"]['Fn'] = Freq
+        self.Results["EFDD"]['Phi'] = Fi.T
+        self.Results["EFDD"]['xi'] = Damp
+        self.Results["EFDD"]['Figs'] = Figs
 
 #------------------------------------------------------------------------------
 
-    def SSIcov(self, br, ordmin=0, ordmax=None, method='1', simnum=0):
+    def SSIcov(self, br, ordmin=0, ordmax=None, method='1'):
         '''
         Bla bla bla
         '''
-        self.sim_num = simnum
+        Nch = self.Nch
         
         try:
             self.br = int(br)
@@ -408,59 +345,57 @@ class Model():
         # If the maximum order is not given (default) it is set as the maximum
         # allowable model order which is: number of block rows * number of channels
         if ordmax == None:
-            self.SSI_ordmax = self.br*self.Nch
+            self.SSI_ordmax = self.br*Nch
         else:
             self.SSI_ordmax = ordmax
         self.SSI_ordmin = ordmin
-        
+
         Yy=self.data.T # 
 
         # Calculating R[i] (with i from 0 to 2*br)
         R_is = np.array( [ 1/(self.Ndat - _s) * (Yy[:, : self.Ndat - _s] @ \
                            Yy[:, _s:].T) for _s in range(br*2+1)]) 
-        
+
         # Assembling the Toepliz matrix
-        Tb = np.vstack([np.hstack([R_is[_o,:,:] for _o in range(br+_l, _l,-1)]) for _l in range(br)])
-        
-        # One-lag shifted Toeplitz matrix (used in "NExT-ERA" method)
-        Tb2 = np.vstack([np.hstack([R_is[_o,:,:] for _o in range(br+_l,_l,-1)]) for _l in range(1,br+1)])
+        Tb = np.vstack([ np.hstack(
+                                    [ R_is[_o,:,:] 
+                                     for _o in range(br+_l, _l,-1)]
+                                    )
+                        for _l in range(br)])
+
+        if method == "2":
+            # One-lag shifted Toeplitz matrix (used in "NExT-ERA" method)
+            Tb2 = np.vstack([ np.hstack(
+                                        [ R_is[_o,:,:] 
+                                         for _o in range(br + _l, _l, -1) ]
+                                        ) 
+                             for _l in range(1, br+1)])
 
         # SINGULAR VALUE DECOMPOSITION
         U1, S1, V1_t = np.linalg.svd(Tb)
         S1 = np.diag(S1)
         S1rad=np.sqrt(S1)
 
-
         # initializing arrays
         Fr=np.full((self.SSI_ordmax, int((self.SSI_ordmax)/2+1)), np.nan) # initialization of the matrix that contains the frequencies
         Sm=np.full((self.SSI_ordmax, int((self.SSI_ordmax)/2+1)), np.nan) # initialization of the matrix that contains the damping ratios
-        Ms=np.full((self.SSI_ordmax, int((self.SSI_ordmax)/2+1), self.Nch), np.nan, dtype=complex) # initialization of the matrix that contains the damping ratios
+        Ms=np.full((self.SSI_ordmax, int((self.SSI_ordmax)/2+1), Nch), np.nan, 
+                   dtype=complex) # initialization of the matrix that contains the damping ratios
 
         # loop for increasing order of the system
-        for _ind in range(self.SSI_ordmin, self.SSI_ordmax+1, 2):
-
-            S11 = np.zeros((_ind, _ind)) # Inizializzo
-            U11 = np.zeros((br*self.Nch, _ind)) # Inizializzo
-            V11 = np.zeros((_ind, br*self.Nch)) # Inizializzo
-            O_1 = np.zeros((br*self.Nch - self.Nch, _ind)) # Inizializzo
-            O_2 = np.zeros((br*self.Nch - self.Nch, _ind)) # Inizializzo
-
-            # Extraction of the submatrices for the increasing order of the system
-            S11[:_ind, :_ind] = S1rad[:_ind, :_ind] # 
-            U11[:br*self.Nch, :_ind] = U1[:br*self.Nch, :_ind] # 
-            V11[:_ind, :br*self.Nch] = V1_t[:_ind, :br*self.Nch] # 
-
-            O = U11 @ S11 # Observability matrix
+        for ii in range(self.SSI_ordmin, self.SSI_ordmax+1, 2):
+            O = U1[:br*Nch, :ii] @ S1rad[:ii, :ii] # Observability matrix
             # _GAM = S11 @ V11 # Controllability matrix
-            
-            O_1[:,:] = O[:O.shape[0] - self.Nch,:]
-            O_2[:,:] = O[self.Nch:,:]
 
             # Estimating matrix A
-            if method == '2':
-                A = np.linalg.inv(S11)@U11.T@Tb2@V11.T@np.linalg.inv(S11) # Method 2 "NExT-ERA"
-            else:
-                A = np.linalg.pinv(O_1)@O_2 # Method 1 (BALANCED_REALIZATION)
+            if method == '2':# Method 2 "NExT-ERA"
+                A = np.linalg.inv(S1rad[:ii, :ii]) @ U1[:br*Nch, :ii].T @ \
+                Tb2 @ V1_t[:ii, :br*Nch].T @ np.linalg.inv(S1rad[:ii, :ii]) 
+            else:# Method 1 (BALANCED_REALIZATION)
+                A = pinv(O[:O.shape[0] - Nch,:]) @ O[Nch:,:] 
+
+            # Output Influence Matrix
+            C = O[:Nch,:]
 
             [_AuVal, _AuVett] = np.linalg.eig(A)
             Lambda =(np.log(_AuVal))*self.samp_freq
@@ -475,40 +410,48 @@ class Model():
                 if np.isnan(fr[_j]) == True:
                     fr[_j] = 0
             # --------------
-            # Output Influence Matrix
-            C = O[:self.Nch,:]
 
             # Complex mode shapes
             Mcomp = C @ _AuVett
+            # normalised (unity displacement)
             Mcomp = np.array([ Mcomp[:, ii]/Mcomp[np.argmax(abs(Mcomp[:, ii])), ii] 
-                     for ii in range(Mcomp.shape[1])]).reshape(-1, self.Nch)
-
-            Mreal = np.real(C@_AuVett)
-            for ii in range(Mreal.shape[1]):
-                idmax = np.argmax(abs(Mreal[:, ii]))
-                Mreal[:, ii] = Mreal[:, ii]/Mreal[idmax, ii] # normalised (unity displacement)
+                     for ii in range(Mcomp.shape[1])]).reshape(-1, Nch)
 
             # we are increasing 2 orders at each step
-            _ind_new = int((_ind-self.SSI_ordmin)/2) 
+            _ind_new = int((ii-self.SSI_ordmin)/2) 
 
             Fr[:len(fr),_ind_new] = fr # save the frequencies
             Sm[:len(fr),_ind_new] = smorz # save the damping ratios
             Ms[:len(fr), _ind_new, :] = Mcomp
 
 
-        self.Results[f"SSIcov_{simnum}"] = {"Method": method}
-        self.Results[f"SSIcov_{simnum}"]['Fn_poles'] = Fr
-        self.Results[f"SSIcov_{simnum}"]['xi_poles'] = Sm
-        self.Results[f"SSIcov_{simnum}"]['Phi_poles'] = Ms
+        self.Results["SSIcov"] = {"Method": method}
+        self.Results["SSIcov"]['Fn_poles'] = Fr
+        self.Results["SSIcov"]['xi_poles'] = Sm
+        self.Results["SSIcov"]['Phi_poles'] = Ms
+        
 #------------------------------------------------------------------------------
 
-    def pLSCF(self, ordmax, df=0.01, pov=0.5, window="hann", simnum=0):
+    def SSImodEX(self):
+        """
+        Bla bla bla
+        """
+        FreQ = self.sel_freq
+        XI = self.sel_xi
+        Fi = np.array(self.sel_phi)
+        
+        # Save in dictionary of results
+        self.Results["SSIcov"]['Fn'] = FreQ
+        self.Results["SSIcov"]['Phi'] = Fi.T
+        self.Results["SSIcov"]['xi'] = XI
+
+#------------------------------------------------------------------------------
+
+    def pLSCF(self, ordmax, df=0.01, pov=0.5, window="hann"):
         '''
         Bla bla bla
         '''
-        
-        self.sim_num = simnum
-        
+        Nch = self.Nch
         # PSD
         nxseg = self.samp_freq / df  # number of point per segments
         #    nseg = self.Ndat // nxseg # number of segments
@@ -517,8 +460,8 @@ class Model():
 
         # Calculating Auto e Cross-Spectral Density
         _f, PSD_matr = signal.csd(
-            self.data.T.reshape(self.Nch, 1, self.Ndat),
-            self.data.T.reshape(1, self.Nch, self.Ndat),
+            self.data.T.reshape(Nch, 1, self.Ndat),
+            self.data.T.reshape(1, Nch, self.Ndat),
             fs=self.samp_freq,
             nperseg=nxseg,
             noverlap=noverlap,
@@ -534,76 +477,108 @@ class Model():
         Sy = np.copy(PSD_matr.T)
 
         dt = 1/self.samp_freq
-        Fr = np.full((ordmax*self.Nch, ordmax), np.nan) # initialise
-        Sm = np.full((ordmax*self.Nch, ordmax), np.nan) # initialise
-        Ws = np.full((ordmax*self.Nch, ordmax), np.nan) # initialise
+        Fr = np.full((ordmax*Nch, ordmax), np.nan) # initialise
+        Sm = np.full((ordmax*Nch, ordmax), np.nan) # initialise
+        Ws = np.full((ordmax*Nch, ordmax), np.nan) # initialise
 
         # Calculation of companion matrix A and modal parameters for each order
         for j in range(1, ordmax+1): # loop for increasing model order
-
-            M = np.zeros(((j+1)*self.Nch, (j+1)*self.Nch)) # inizializzo
-
+            M = np.zeros(((j+1)*Nch, (j+1)*Nch)) # inizializzo
             I0 = np.array([np.exp(1j*freq*dt*jj) for jj in range(j+1)]).T
-
             I0h = I0.conj().T # Calculate complex transpose
-
             R0 = np.real(I0h @ I0) # 4.163
 
-            for o in range(0, self.Nch): # loop on channels
-
+            for o in range(0, Nch): # loop on channels
                 Y0 = np.array([np.kron(-I0[kk, :], Sy[kk, o, :]) for kk in range(Nf)])
-
                 S0 = np.real(I0h @ Y0) # 4.164
                 T0 = np.real(Y0.conj().T @ Y0) # 4.165
-
                 M += 2*(T0 - (S0.T @ np.linalg.solve(R0, S0))) # 4.167
 
-            alfa = np.linalg.solve(-M[: j*self.Nch, : j*self.Nch], M[: j*self.Nch, j*self.Nch: (j+1)*self.Nch]) # 4.169
-            alfa = np.vstack((alfa, np.eye(self.Nch)))
+            alfa = np.linalg.solve(-M[: j*Nch, : j*Nch], M[: j*Nch, j*Nch: (j+1)*Nch]) # 4.169
+            alfa = np.vstack((alfa, np.eye(Nch)))
 
             # beta0 = np.linalg.solve(-R0, S0@alfa)
 
             # Companion matrix 
-            A = np.zeros((j*self.Nch, j*self.Nch));
+            A = np.zeros((j*Nch, j*Nch));
             for ii in range(j):
-                Aj = alfa[ii*self.Nch: (ii+1)*self.Nch, :]
-                A[(j-1)*self.Nch: , ii*self.Nch: (ii+1)*self.Nch] = -Aj.T
-            A[: (j-1)*self.Nch, self.Nch: j*self.Nch] = np.eye(((j-1)*self.Nch));
+                Aj = alfa[ii*Nch: (ii+1)*Nch, :]
+                A[(j-1)*Nch: , ii*Nch: (ii+1)*Nch] = -Aj.T
+            A[: (j-1)*Nch, Nch: j*Nch] = np.eye(((j-1)*Nch));
 
             # Eigenvalueproblem
             [my, My] = eig(A);
-            # my = np.diag(My);
             lambd = np.log(my)/dt # From discrete-time to continuous time 4.136
-            # lambd1 = lambd.copy()
+
             # replace with nan every value with negative real part (should be the other way around!)
             lambd = np.where(np.real(lambd)<0, np.nan, lambd)
 
-            Fr[:j*self.Nch, j-1] = abs(lambd)/(2*np.pi) # Natural frequencies (Hz) 4.137
-            Sm[:j*self.Nch, j-1] = ((np.real(lambd))/abs(lambd)) # Damping ratio initial calc 4.139
-            Ws[:j*self.Nch, j-1] = abs(lambd) # Natural frequencies (rad/s)
+            Fr[:j*Nch, j-1] = abs(lambd)/(2*np.pi) # Natural frequencies (Hz) 4.137
+            Sm[:j*Nch, j-1] = ((np.real(lambd))/abs(lambd)) # Damping ratio initial calc 4.139
+            
+        self.ordmax = ordmax
+        self.lambd = lambd
+        self.Sy = Sy
+        self.freqs = _f
+        self.Results["pLSCF"] = {"ordmax": ordmax}
+        self.Results["pLSCF"]['Fn_poles'] = Fr
+        self.Results["pLSCF"]['xi_poles'] = Sm
 
-        self.Results[f"pLSCF_{simnum}"] = {"ordmax": ordmax}
-        self.Results[f"pLSCF_{simnum}"]['Fn_poles'] = Fr
-        self.Results[f"pLSCF_{simnum}"]['xi_poles'] = Sm
-        self.Results[f"pLSCF_{simnum}"]['w_pole'] = Ws
 
 #------------------------------------------------------------------------------
 
-    def SSImodEX(self):
-        """
+    def pLSCFmodEx(self):
+        '''
         Bla bla bla
-        """
-        simnum = self.sim_num
+        '''
+        Fr = self.Results["pLSCF"]['Fn_poles']
+        Sm = self.Results["pLSCF"]['xi_poles']
+        Lab = tools._stab_pLSCF(Fr, Sm, self.ordmax, 0.01, 0.05, self.Nch)
         
-        FreQ = self.sel_freq
-        XI = self.sel_xi
-        Fi = np.array(self.sel_phi)
+        # Frstab = np.where(Lab == 3, Fr, np.nan)
+        lambd = self.lambd
+        Nch = self.Nch
+        w = self.Results["pLSCF"]['Fn_poles']*(2*np.pi)
         
-        # Save in dictionary of results
-        self.Results[f"SSIcov_{simnum}"]['Fn'] = FreQ
-        self.Results[f"SSIcov_{simnum}"]['Phi'] = Fi.T
-        self.Results[f"SSIcov_{simnum}"]['xi'] = XI
-    
+        for j in range(1, self.ordmax+1): # loop for increasing model order
+            # FORME MODALI
+            lambd = lambd[~np.isnan(lambd)] # elimino da lambda tutti i nan
+            w = w[~np.isnan(w)] # stessa cosa per omega
+
+            Nm = len(lambd) # numero modi 
+            LL = np.zeros((Nch*Nm, Nch*Nm), dtype=complex) # inizializzo
+            GL = np.zeros((Nch*Nm, Nch), dtype=complex) # inizializzo
+            # trovo l'indice della linea spettrale piu vicina alla frequenza del polo selezionato
+            for ww in w: # loop su poli fisici del sistema
+                idx_w = np.argmin(np.abs(self.freqs-ww)) # trovo indice
+
+                # loop sulle linee di frequenza intorno al polo fisico (+20 e -20)
+                for kk in range(idx_w-20, idx_w+20):
+
+                    GL += np.array(
+                        [ self.Sy[kk, :, :]/(1j*self.freqs[kk]-lambd[jj]) for jj in range(Nm)]
+                                    ).reshape(-1, Nch)
+
+                    LL += np.array([
+                          np.array([np.eye(Nch)/((1j*self.freqs[kk]-lambd[jj1])*(1j*self.freqs[kk]-lambd[jj2])) 
+                                    for jj2 in range(Nm)]).reshape((Nch*Nm, Nch),order="c").T
+                                    for jj1 in range(Nm)]).reshape((Nch*Nm, Nch*Nm))
+
+                R = np.linalg.solve(LL, GL) # matrice dei residui (fi@fi^T)
+
+                for jj in range(Nm): 
+                    # SVD della matrice dei residui per ciascun modo fisico del sistema
+                    U, S, VT = np.linalg.svd(R[jj*Nch: (jj+1)*Nch, :])
+
+                    phi = U[: , 0] # la forma modale è la prima colonna di U
+
+                    idmax = np.argmax(abs(phi))
+                    phiN = phi/phi[idmax] # normalised (unity displacement)
+
+                    # Fi[jj*l: (jj+1)*l, j-1]= np.real(phiN)
+
+
+
 
 #------------------------------------------------------------------------------
 
@@ -611,7 +586,7 @@ class Model():
         """
         Bla bla bla
         """
-        _ = Sel_from_plot(self, freqlim=freqlim, plot="FDD")
+        _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="FDD")
         self.FDDmodEX(ndf)
 
 
@@ -620,7 +595,7 @@ class Model():
         """
         Bla bla bla
         """
-        _ = Sel_from_plot(self, freqlim=freqlim, plot="FDD")
+        _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="FDD")
         self.EFDDmodEX(ndf, cm, MAClim, sppk, npmax, method, plot)
 
 
@@ -629,7 +604,7 @@ class Model():
         Bla bla bla
         """
         self.FDDsvp()
-        _ = Sel_from_plot(self, freqlim=freqlim, plot="SSI")
+        _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="SSI")
         self.SSImodEX()
 
 
@@ -638,7 +613,7 @@ class Model():
         Bla bla bla
         """
         self.FDDsvp()
-        _ = Sel_from_plot(self, freqlim=freqlim, plot="pLSCF")
+        _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="pLSCF")
         # self.pLSCFmodEx()
 
 

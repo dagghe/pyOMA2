@@ -195,7 +195,7 @@ def _stab_SSI(Fr, Sm, Ms, ordmin, ordmax, err_fn, err_xi, err_ms):
     return Lab
 
 
-def _stab_pLSCF(Fr, Sm, ordmin, ordmax, err_fn, err_xi, nch):
+def _stab_pLSCF(Fr, Sm, ordmax, err_fn, err_xi, nch):
     """
     Helping function for the construction of the Stability Chart when using 
     poly-reference Least Square Complex Frequency (pLSCF, also known as 
@@ -206,7 +206,6 @@ def _stab_pLSCF(Fr, Sm, ordmin, ordmax, err_fn, err_xi, nch):
 
     :param Fr: Frequency matrix, shape: ``(n_locations, n_modes)``
     :param Sm: Damping matrix, shape: ``(n_locations, n_modes)``
-    :param ordmin: Minimum order of modes to consider (inclusive)
     :param ordmax: Maximum order of modes to consider (exclusive)
     :param err_fn: Threshold for relative frequency difference for stability checks
     :param err_xi: Threshold for relative damping ratio difference for stability checks
