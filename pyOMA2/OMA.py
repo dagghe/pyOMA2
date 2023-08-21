@@ -335,6 +335,7 @@ class Model():
         '''
         Bla bla bla
         '''
+        self.SSItype = "cov"
         Nch = self.Nch
         
         try:
@@ -429,7 +430,122 @@ class Model():
         self.Results["SSIcov"]['Fn_poles'] = Fr
         self.Results["SSIcov"]['xi_poles'] = Sm
         self.Results["SSIcov"]['Phi_poles'] = Ms
-        
+
+#------------------------------------------------------------------------------
+
+    def SSIdat(self, br, ordmin=0, ordmax=None, method='1'):
+        '''
+        Bla bla bla
+        '''
+        self.SSItype = "dat"
+        Ndat = self.Ndat
+        Nch = self.Nch
+
+        try:
+            self.br = int(br)
+        except:
+            pass
+
+        # If the maximum order is not given (default) it is set as the maximum
+        # allowable model order which is: number of block rows * number of channels
+        if ordmax == None:
+            self.SSI_ordmax = self.br*Nch
+        else:
+            self.SSI_ordmax = ordmax
+        self.SSI_ordmin = ordmin
+
+        Yy=self.data.T # 
+
+        j=Ndat-2*br+1; # Dimension of the Hankel matrix
+
+        # calculating Hankel matrix
+        H=np.zeros((Nch*2*br,j)) # Initialization of the Hankel matrix
+        for k in range(0,2*br):
+            H[k*Nch:((k+1)*Nch),:]=(1/j**0.5)*Yy[:,k:k+j] # calculating Hankel matrix
+
+        # LQ factorization of the Hankel matrix
+        Q , L = np.linalg.qr(H.T)
+        L = L.T
+        Q = Q.T
+
+        L21 = L[Nch*br: Nch*br + Nch, : Nch*br]
+        L22 = L[Nch*br: Nch*br + Nch, Nch*br: Nch*br + Nch]
+        L31 = L[Nch*br + Nch: , : Nch*br]
+        L32 = L[Nch*br + Nch: , Nch*br : Nch*br + Nch]
+
+        Q1 = Q[: Nch*br, :]
+        Q2 = Q[Nch*br: Nch*br + Nch, :]
+
+        P_i = np.vstack((L21, L31)) @ Q1 # Projection Matrix P_i
+        if method == '2':
+            P_im1 = np.hstack((L31, L32)) @ np.vstack((Q1, Q2)) # Projection P_(i-1)
+            Y_i = np.hstack((L21, L22)) @ np.vstack((Q1, Q2)) # Output sequence
+
+        # SINGULAR VALUE DECOMPOSITION
+        U1, S1, V1_t = np.linalg.svd(P_i,full_matrices=False)
+        S1 = np.diag(S1)
+        S1rad=np.sqrt(S1)
+
+        # initializing arrays
+        Fr=np.full((self.SSI_ordmax, int((self.SSI_ordmax)/2+1)), np.nan) # initialization of the matrix that contains the frequencies
+        Sm=np.full((self.SSI_ordmax, int((self.SSI_ordmax)/2+1)), np.nan) # initialization of the matrix that contains the damping ratios
+        Ms=np.full((self.SSI_ordmax, int((self.SSI_ordmax)/2+1), Nch), np.nan, 
+                   dtype=complex) # initialization of the matrix that contains the damping ratios
+
+        # loop for increasing order of the system
+        for ii in range(self.SSI_ordmin, self.SSI_ordmax+1, 2):
+
+            O = U1[:br*Nch, :ii] @ S1rad[:ii, :ii] # Observability matrix
+
+            S = np.linalg.pinv(O) @ P_i # Kalman filter state sequence
+
+            # Estimate of the discrete Matrices A and C
+            if method == '1': # Method 1 
+                A = np.linalg.pinv(O[:O.shape[0] - Nch,:]) @ O[Nch:,:]
+                C = O[:Nch,:]     
+                # Ci sarebbero da calcolare le matrici G e R0 
+
+            else:  # Method 2
+                Sp1 = np.linalg.pinv(O[:O.shape[0] - Nch,:]) @ P_im1 # kalman state sequence S_(i+1)
+
+                AC = np.vstack((Sp1, Y_i)) @ np.linalg.pinv(S) 
+                A = AC[:Sp1.shape[0]]
+                C = AC[Sp1.shape[0]:]
+                # Ci sarebbero da calcolare le matrici G e R0 
+
+            [_AuVal, _AuVett] = np.linalg.eig(A)
+            Lambda =(np.log(_AuVal))*self.samp_freq
+            fr = abs(Lambda)/(2*np.pi) # natural frequencies
+            smorz = -((np.real(Lambda))/(abs(Lambda))) # damping ratios
+            # --------------
+            # This is a fix for a bug. We make shure that there are not nans
+            # (it has, seldom, happened that at the first iteration the first
+            # eigenvalue was negative, yielding the log to return a nan that
+            # messed up with the plot of the stabilisation diagram)
+            for _j in range(len(fr)):
+                if np.isnan(fr[_j]) == True:
+                    fr[_j] = 0
+            # --------------
+
+            # Complex mode shapes
+            Mcomp = C @ _AuVett
+            # normalised (unity displacement)
+            Mcomp = np.array([ Mcomp[:, ii]/Mcomp[np.argmax(abs(Mcomp[:, ii])), ii] 
+                     for ii in range(Mcomp.shape[1])]).reshape(-1, Nch)
+
+            # we are increasing 2 orders at each step
+            _ind_new = int((ii-self.SSI_ordmin)/2) 
+
+            Fr[:len(fr),_ind_new] = fr # save the frequencies
+            Sm[:len(fr),_ind_new] = smorz # save the damping ratios
+            Ms[:len(fr), _ind_new, :] = Mcomp
+
+
+        self.Results["SSIdat"] = {"Method": method}
+        self.Results["SSIdat"]['Fn_poles'] = Fr
+        self.Results["SSIdat"]['xi_poles'] = Sm
+        self.Results["SSIdat"]['Phi_poles'] = Ms
+
 #------------------------------------------------------------------------------
 
     def SSImodEX(self):
@@ -441,10 +557,15 @@ class Model():
         Fi = np.array(self.sel_phi)
         
         # Save in dictionary of results
-        self.Results["SSIcov"]['Fn'] = FreQ
-        self.Results["SSIcov"]['Phi'] = Fi.T
-        self.Results["SSIcov"]['xi'] = XI
+        if self.SSItype == "cov":
+            self.Results["SSIcov"]['Fn'] = FreQ
+            self.Results["SSIcov"]['Phi'] = Fi.T
+            self.Results["SSIcov"]['xi'] = XI
 
+        elif self.SSItype == "dat":
+            self.Results["SSIdat"]['Fn'] = FreQ
+            self.Results["SSIdat"]['Phi'] = Fi.T
+            self.Results["SSIdat"]['xi'] = XI        
 #------------------------------------------------------------------------------
 
     def pLSCF(self, ordmax, df=0.01, pov=0.5, window="hann"):

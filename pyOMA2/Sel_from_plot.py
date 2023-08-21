@@ -181,9 +181,15 @@ class SelFromPlot():
         if plot == "SSI":
             ordmax = self.Model.SSI_ordmax
             ordmin = self.Model.SSI_ordmin
-            Fr = self.Model.Results["SSIcov"]['Fn_poles']
-            Sm = self.Model.Results["SSIcov"]['xi_poles']
-            Ms = self.Model.Results["SSIcov"]['Phi_poles']
+            if self.Model.SSItype == "cov":
+                Fr = self.Model.Results["SSIcov"]['Fn_poles']
+                Sm = self.Model.Results["SSIcov"]['xi_poles']
+                Ms = self.Model.Results["SSIcov"]['Phi_poles']
+
+            elif self.Model.SSItype == "dat":
+                Fr = self.Model.Results["SSIdat"]['Fn_poles']
+                Sm = self.Model.Results["SSIdat"]['xi_poles']
+                Ms = self.Model.Results["SSIdat"]['Phi_poles']
             
             self.Lab = tools._stab_SSI(Fr, Sm, Ms, ordmin, ordmax, 
                             err_fn=err_fn, err_xi=err_xi, err_ms=err_ms)
@@ -219,7 +225,12 @@ class SelFromPlot():
 
             #-----------------------
             if plot == "SSI":
-                Fr = self.Model.Results["SSIcov"]['Fn_poles']
+                if self.Model.SSItype == "cov":
+                    Fr = self.Model.Results["SSIcov"]['Fn_poles']
+
+                elif self.Model.SSItype == "dat":
+                    Fr = self.Model.Results["SSIdat"]['Fn_poles']
+
                 Lab = self.Lab
                 
                 # Stable pole
@@ -360,9 +371,16 @@ class SelFromPlot():
         """
 
         if plot == "SSI":
-            Fr = self.Model.Results["SSIcov"]['Fn_poles']
-            Sm = self.Model.Results["SSIcov"]['xi_poles']
-            Ms = self.Model.Results["SSIcov"]['Phi_poles']
+            if self.Model.SSItype == "cov":
+                Fr = self.Model.Results["SSIcov"]['Fn_poles']
+                Sm = self.Model.Results["SSIcov"]['xi_poles']
+                Ms = self.Model.Results["SSIcov"]['Phi_poles']
+
+            elif self.Model.SSItype == "dat":
+                Fr = self.Model.Results["SSIdat"]['Fn_poles']
+                Sm = self.Model.Results["SSIdat"]['xi_poles']
+                Ms = self.Model.Results["SSIdat"]['Phi_poles']
+
         elif plot == "pLSCF":
             Fr = self.Model.Results["pLSCF"]['Fn_poles']
             Sm = self.Model.Results["pLSCF"]['xi_poles']

@@ -12,11 +12,11 @@ import scipy as sp
 # =============================================================================
 # Helping Funcitons
 # =============================================================================
-def MAC(phi_1, phi_2):
+def MAC(phi_X, phi_A):
     """Modal Assurance Criterion.
 
-    The number of locations (axis 0) must be the same for ``phi_1`` and
-    ``phi_2``. The nubmer of modes (axis 1) is arbitrary.
+    The number of locations (axis 0) must be the same for ``phi_X`` and
+    ``phi_A``. The nubmer of modes (axis 1) is arbitrary.
 
     Literature:
         [1] Maia, N. M. M., and J. M. M. Silva. 
@@ -25,27 +25,35 @@ def MAC(phi_1, phi_2):
             Mathematical, Physical and Engineering Sciences 359.1778 
             (2001): 29-40. 
 
-    :param phi_1: Mode shape matrix X, shape: ``(n_locations, n_modes)``
+    :param phi_X: Mode shape matrix X, shape: ``(n_locations, n_modes)``
         or ``n_locations``.
-    :param phi_2: Mode shape matrix A, shape: ``(n_locations, n_modes)``
+    :param phi_A: Mode shape matrix A, shape: ``(n_locations, n_modes)``
         or ``n_locations``.
-    :return: MAC matrix. Returns MAC value if both ``phi_1`` and ``phi_2`` are
+    :return: MAC matrix. Returns MAC value if both ``phi_X`` and ``phi_A`` are
         one-dimensional arrays.
     """
-    if phi_1.ndim == 1:
-        phi_1 = phi_1[:, np.newaxis]
+    if phi_X.ndim == 1:
+        phi_X = phi_X[:, np.newaxis]
     
-    if phi_2.ndim == 1:
-        phi_2 = phi_2[:, np.newaxis]
+    if phi_A.ndim == 1:
+        phi_A = phi_A[:, np.newaxis]
     
-    if phi_1.ndim > 2 or phi_2.ndim > 2:
-        raise Exception(f'Mode shape matrices must have 1 or 2 dimensions (phi_1: {phi_1.ndim}, phi_2: {phi_2.ndim})')
+    if phi_X.ndim > 2 or phi_A.ndim > 2:
+        raise Exception(f'Mode shape matrices must have 1 or 2 dimensions (phi_X: {phi_X.ndim}, phi_A: {phi_A.ndim})')
 
-    if phi_1.shape[0] != phi_2.shape[0]:
-        raise Exception(f'Mode shapes must have the same first dimension (phi_1: {phi_1.shape[0]}, phi_2: {phi_2.shape[0]})')
+    if phi_X.shape[0] != phi_A.shape[0]:
+        raise Exception(f'Mode shapes must have the same first dimension (phi_X: {phi_X.shape[0]}, phi_A: {phi_A.shape[0]})')
 
-    MAC = np.abs(phi_1.conj().T @ phi_2)**2 / \
-        ((phi_1.conj().T @ phi_1)*(phi_2.conj().T @ phi_2))
+    MAC = np.abs(np.conj(phi_X).T @ phi_A)**2
+    for i in range(phi_X.shape[1]):
+        for j in range(phi_A.shape[1]):
+            MAC[i, j] = MAC[i, j]/\
+                            (np.conj(phi_X[:, i]) @ phi_X[:, i] *\
+                            np.conj(phi_A[:, j]) @ phi_A[:, j])
+
+    
+    if MAC.shape == (1, 1):
+        MAC = MAC[0, 0]
 
     return MAC
 

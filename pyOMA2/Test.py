@@ -49,10 +49,15 @@ Test.sel_pole_pLSCF(freqlim=6.25)
 Test.SSIcov(30, ordmax=100)
 Test.sel_pole_SSIcov(freqlim=6.25)
 
+# Run SSIdat
+Test.SSIdat(30, ordmax=100)
+Test.sel_pole_SSIcov(freqlim=6.25)
+
 # Run (E)FDD
 Test.FDDsvp()
 # Test.sel_peak_FDD(freqlim=8)
 Test.sel_peak_EFDD(freqlim=6.25)
+
 
 # Save dictionary of results
 Res = Test.Results
@@ -60,15 +65,17 @@ Res = Test.Results
 # Save mode shapes for each method
 FI_pLSCF = Test.Results["pLSCF"]["Phi"]
 FI_SSI = Test.Results["SSIcov"]["Phi"]
+FI_SSId = Test.Results["SSIdat"]["Phi"]
 FI_EFDD = Test.Results["FDD"]["Phi"]
 
 # Calculate MAC
 MAC1 = oma.MAC(FI_ex, FI_pLSCF)
 MAC2 = oma.MAC(FI_ex, FI_SSI)
-MAC3 = oma.MAC(FI_ex, FI_EFDD)
+MAC3 = oma.MAC(FI_ex, FI_SSId)
+MAC4 = oma.MAC(FI_ex, FI_EFDD)
 
-tol = 1e-4
+tol = 1e-3
 MAC1[MAC1.real < tol] = 0.
 MAC2[MAC2.real < tol] = 0.
 MAC3[MAC3.real < tol] = 0.
-
+MAC4[MAC4.real < tol] = 0.
