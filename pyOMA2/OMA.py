@@ -554,18 +554,18 @@ class Model():
         """
         FreQ = self.sel_freq
         XI = self.sel_xi
-        Fi = np.array(self.sel_phi)
+        Fi = np.array(self.sel_phi).T
         
         # Save in dictionary of results
         if self.SSItype == "cov":
-            self.Results["SSIcov"]['Fn'] = FreQ
-            self.Results["SSIcov"]['Phi'] = Fi.T
-            self.Results["SSIcov"]['xi'] = XI
+            self.Results["SSIcov"]['Fn'] = np.array(FreQ)
+            self.Results["SSIcov"]['Phi'] = Fi
+            self.Results["SSIcov"]['xi'] = np.array(XI)
 
         elif self.SSItype == "dat":
-            self.Results["SSIdat"]['Fn'] = FreQ
-            self.Results["SSIdat"]['Phi'] = Fi.T
-            self.Results["SSIdat"]['xi'] = XI        
+            self.Results["SSIdat"]['Fn'] = np.array(FreQ)
+            self.Results["SSIdat"]['Phi'] = Fi
+            self.Results["SSIdat"]['xi'] = np.array(XI)
 #------------------------------------------------------------------------------
 
     def pLSCF(self, ordmax, df=0.01, pov=0.5, window="hann"):
@@ -692,9 +692,9 @@ class Model():
             Fi[:, jj]= phiN
 
         # Save in dictionary of results
-        self.Results["pLSCF"]['Fn'] = self.sel_freq
+        self.Results["pLSCF"]['Fn'] = np.array(self.sel_freq)
         self.Results["pLSCF"]['Phi'] = Fi
-        self.Results["pLSCF"]['xi'] = self.sel_xi
+        self.Results["pLSCF"]['xi'] = np.array(self.sel_xi)
 
 
 
@@ -717,7 +717,7 @@ class Model():
         self.EFDDmodEX(ndf, cm, MAClim, sppk, npmax, method, plot)
 
 
-    def sel_pole_SSIcov(self, freqlim=None, ordmin=0, ordmax=None, method='1'):
+    def sel_pole_SSI(self, freqlim=None, ordmin=0, ordmax=None, method='1'):
         """
         Bla bla bla
         """
@@ -752,4 +752,69 @@ class Model():
         """
         self.sel_freq = sel_freq
         self.EFDDmodEX(ndf, cm, MAClim, sppk, npmax, method, plot)
+
+
+    def get_mod_SSI(self, sel_freq, order="find_min"):
+        """
+        Bla bla bla
+        """
+        try:
+            order == "find_min" or order % 2 == 0
+        except:
+            raise Exception('ordmin must either be = "find_min" or an even number')
+
+        SSItype = self.SSItype
+        self.sel_freq = []
+        self.sel_xi = []
+        self.sel_phi = []
+        order = int(order/2)
+        # Loop through the frequencies given in the input list
+        for fj in sel_freq:
+
+            if order == "find_min": # here we find the minimum model order so to get a stable pole for every mode of interest
+                pass
+            else: # when the model order is provided
+                Fr = self.Results[f"SSI{SSItype}"]["Fn_poles"][:, order]
+                Sm = self.Results[f"SSI{SSItype}"]["xi_poles"][:, order]
+                Ms = self.Results[f"SSI{SSItype}"]["Phi_poles"][:, order]
+                # Find closest frequency index
+                sel = np.nanargmin(np.abs(Fr - fj))
+
+                self.sel_freq.append(Fr[sel])
+                self.sel_xi.append(Sm[sel])
+                self.sel_phi.append(Ms[sel, :])
+
+        self.Results[f"SSI{SSItype}"]['Fn'] = np.array(self.sel_freq)
+        self.Results[f"SSI{SSItype}"]['Phi'] = np.array(self.sel_phi).T
+        self.Results[f"SSI{SSItype}"]['xi'] = np.array(self.sel_xi)
+
+
+    def get_mod_pLSCF(self, sel_freq, order="find_min"):
+        """
+        Bla bla bla
+        """
+        self.sel_freq = []
+        self.sel_xi = []
+        self.sel_lam = []
+        # Loop through the frequencies given in the input list
+        for fj in sel_freq:
+
+            if order == "find_min": # here we find the minimum model order so to get a stable pole for every mode of interest
+                pass
+            else: # when the model order is provided
+                Fr = self.Results["pLSCF"]["Fn_poles"][:, order]
+                Sm = self.Results["pLSCF"]["xi_poles"][:, order]
+                Ls = self.Results["pLSCF"]['lam_poles'][:, order]
+
+                # Find closest frequency index
+                sel = np.nanargmin(np.abs(Fr - fj))
+
+                self.sel_freq.append(Fr[sel])
+                self.sel_xi.append(Sm[sel])
+                self.sel_lam.append(Ls[sel])
+
+        self.pLSCFmodEx()
+
+
+
 

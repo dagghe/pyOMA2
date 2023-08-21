@@ -221,10 +221,12 @@ class SelFromPlot():
             self.ax1.xaxis.set_major_formatter(FormatStrFormatter("%g"))
             self.ax1.xaxis.set_minor_locator(MultipleLocator(self.freq_max / 100))
             self.ax1.set_xlabel("Frequency [Hz]")
+
             self.ax2.set_ylabel(r"dB $[g^2/Hz]$")
 
             #-----------------------
             if plot == "SSI":
+                self.ax1.set_ylabel("Model Order (x2)")
                 if self.Model.SSItype == "cov":
                     Fr = self.Model.Results["SSIcov"]['Fn_poles']
 
@@ -302,6 +304,7 @@ class SelFromPlot():
 
             #-----------------------
             elif plot == "pLSCF":
+                self.ax1.set_ylabel("Model Order")
                 Fr = self.Model.Results["pLSCF"]['Fn_poles']
                 Lab = self.Lab
                 
