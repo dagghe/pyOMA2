@@ -49,6 +49,7 @@ class SelFromPlot():
 
             self.Model.sel_xi = []
             self.Model.sel_phi = []
+            self.Model.sel_lam = []
             self.Model.pole_ind = []
 
             self.root.title('Stabilisation Chart')
@@ -365,6 +366,7 @@ class SelFromPlot():
         elif plot == "pLSCF":
             Fr = self.Model.Results["pLSCF"]['Fn_poles']
             Sm = self.Model.Results["pLSCF"]['xi_poles']
+            Ls = self.Model.Results["pLSCF"]['lam_poles']
 
         y_ind = int(np.argmin(np.abs(np.arange(Fr.shape[1])-self.y_data_pole)))  # Find closest pole order index
         x = Fr[:, y_ind]
@@ -374,8 +376,11 @@ class SelFromPlot():
         self.Model.pole_ind.append(y_ind)
         self.Model.sel_freq.append(Fr[sel, y_ind])
         self.Model.sel_xi.append(Sm[sel, y_ind])
+
         if plot == "SSI":
             self.Model.sel_phi.append(Ms[sel, y_ind, :])
+        if plot == "pLSCF":
+            self.Model.sel_lam.append(Ls[sel, y_ind])
 
         self.sort_selected_poles()
 

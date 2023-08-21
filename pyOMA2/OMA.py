@@ -459,7 +459,7 @@ class Model():
         Nf = int((nxseg) / 2 + 1) # Number of frequency lines
 
         # Calculating Auto e Cross-Spectral Density
-        _f, PSD_matr = signal.csd(
+        freqs_hz, PSD_matr = signal.csd(
             self.data.T.reshape(Nch, 1, self.Ndat),
             self.data.T.reshape(1, Nch, self.Ndat),
             fs=self.samp_freq,
@@ -470,7 +470,7 @@ class Model():
 
         # p-LSCF - METODO CON MATRICI REALI
         self.pLSCF_ordmax = ordmax
-        freq = 2*np.pi*_f
+        freqs = 2*np.pi*freqs_hz
 
         # The PSD matrix should be in the format (k, o, o) where:
         # k=1,2,...Nf; and o=1,2...l
@@ -479,12 +479,12 @@ class Model():
         dt = 1/self.samp_freq
         Fr = np.full((ordmax*Nch, ordmax), np.nan) # initialise
         Sm = np.full((ordmax*Nch, ordmax), np.nan) # initialise
-        Ws = np.full((ordmax*Nch, ordmax), np.nan) # initialise
+        Ls = np.full((ordmax*Nch, ordmax), np.nan, dtype=complex) # initialise
 
         # Calculation of companion matrix A and modal parameters for each order
         for j in range(1, ordmax+1): # loop for increasing model order
             M = np.zeros(((j+1)*Nch, (j+1)*Nch)) # inizializzo
-            I0 = np.array([np.exp(1j*freq*dt*jj) for jj in range(j+1)]).T
+            I0 = np.array([np.exp(1j*freqs*dt*jj) for jj in range(j+1)]).T
             I0h = I0.conj().T # Calculate complex transpose
             R0 = np.real(I0h @ I0) # 4.163
 
@@ -512,17 +512,18 @@ class Model():
 
             # replace with nan every value with negative real part (should be the other way around!)
             lambd = np.where(np.real(lambd)<0, np.nan, lambd)
-
+            Ls[:j*Nch, j-1] = lambd
             Fr[:j*Nch, j-1] = abs(lambd)/(2*np.pi) # Natural frequencies (Hz) 4.137
             Sm[:j*Nch, j-1] = ((np.real(lambd))/abs(lambd)) # Damping ratio initial calc 4.139
             
         self.ordmax = ordmax
-        self.lambd = lambd
+        self.ws = freqs
         self.Sy = Sy
-        self.freqs = _f
+        self.freqs = freqs_hz
         self.Results["pLSCF"] = {"ordmax": ordmax}
         self.Results["pLSCF"]['Fn_poles'] = Fr
         self.Results["pLSCF"]['xi_poles'] = Sm
+        self.Results["pLSCF"]['lam_poles'] = Ls
 
 
 #------------------------------------------------------------------------------
@@ -531,52 +532,48 @@ class Model():
         '''
         Bla bla bla
         '''
-        Fr = self.Results["pLSCF"]['Fn_poles']
-        Sm = self.Results["pLSCF"]['xi_poles']
-        Lab = tools._stab_pLSCF(Fr, Sm, self.ordmax, 0.01, 0.05, self.Nch)
         
-        # Frstab = np.where(Lab == 3, Fr, np.nan)
-        lambd = self.lambd
         Nch = self.Nch
-        w = self.Results["pLSCF"]['Fn_poles']*(2*np.pi)
+        w_sel = np.array(self.sel_freq)*(2*np.pi)
+        sel_lam = self.sel_lam
+        Nm = len(sel_lam) # numero modi 
+        Fi = np.zeros((self.Nch, Nm), dtype=complex)
         
-        for j in range(1, self.ordmax+1): # loop for increasing model order
-            # FORME MODALI
-            lambd = lambd[~np.isnan(lambd)] # elimino da lambda tutti i nan
-            w = w[~np.isnan(w)] # stessa cosa per omega
+        LL = np.zeros((Nch*Nm, Nch*Nm), dtype=complex) # inizializzo
+        GL = np.zeros((Nch*Nm, Nch), dtype=complex) # inizializzo
 
-            Nm = len(lambd) # numero modi 
-            LL = np.zeros((Nch*Nm, Nch*Nm), dtype=complex) # inizializzo
-            GL = np.zeros((Nch*Nm, Nch), dtype=complex) # inizializzo
-            # trovo l'indice della linea spettrale piu vicina alla frequenza del polo selezionato
-            for ww in w: # loop su poli fisici del sistema
-                idx_w = np.argmin(np.abs(self.freqs-ww)) # trovo indice
+        for ww in w_sel: # loop su poli selezionati
 
-                # loop sulle linee di frequenza intorno al polo fisico (+20 e -20)
-                for kk in range(idx_w-20, idx_w+20):
+            idx_w = np.argmin(np.abs(self.ws-ww)) # trovo indice
 
-                    GL += np.array(
-                        [ self.Sy[kk, :, :]/(1j*self.freqs[kk]-lambd[jj]) for jj in range(Nm)]
+            # loop sulle linee di frequenza intorno al polo fisico (+20 e -20)
+            for kk in range(idx_w-20, idx_w+20):
+                GL += np.array(
+                        [ self.Sy[kk, :, :]/(1j*self.ws[kk]-sel_lam[jj]) for jj in range(Nm)]
                                     ).reshape(-1, Nch)
 
-                    LL += np.array([
-                          np.array([np.eye(Nch)/((1j*self.freqs[kk]-lambd[jj1])*(1j*self.freqs[kk]-lambd[jj2])) 
+                LL += np.array([
+                          np.array([np.eye(Nch)/((1j*self.ws[kk]-sel_lam[jj1])*(1j*self.ws[kk]-sel_lam[jj2])) 
                                     for jj2 in range(Nm)]).reshape((Nch*Nm, Nch),order="c").T
                                     for jj1 in range(Nm)]).reshape((Nch*Nm, Nch*Nm))
 
-                R = np.linalg.solve(LL, GL) # matrice dei residui (fi@fi^T)
+        R = np.linalg.solve(LL, GL) # matrice dei residui (fi@fi^T
+        
+        for jj in range(len(w_sel)):
+            # SVD della matrice dei residui per ciascun modo fisico del sistema
+            U, S, VT = np.linalg.svd(R[jj*Nch: (jj+1)*Nch, :])
 
-                for jj in range(Nm): 
-                    # SVD della matrice dei residui per ciascun modo fisico del sistema
-                    U, S, VT = np.linalg.svd(R[jj*Nch: (jj+1)*Nch, :])
+            phi = U[: , 0] # la forma modale è la prima colonna di U
 
-                    phi = U[: , 0] # la forma modale è la prima colonna di U
+            idmax = np.argmax(abs(phi))
+            phiN = phi/phi[idmax] # normalised (unity displacement)
 
-                    idmax = np.argmax(abs(phi))
-                    phiN = phi/phi[idmax] # normalised (unity displacement)
+            Fi[:, jj]= phiN
 
-                    # Fi[jj*l: (jj+1)*l, j-1]= np.real(phiN)
-
+        # Save in dictionary of results
+        self.Results["pLSCF"]['Fn'] = self.sel_freq
+        self.Results["pLSCF"]['Phi'] = Fi
+        self.Results["pLSCF"]['xi'] = self.sel_xi
 
 
 
@@ -614,7 +611,7 @@ class Model():
         """
         self.FDDsvp()
         _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="pLSCF")
-        # self.pLSCFmodEx()
+        self.pLSCFmodEx()
 
 
 # =============================================================================

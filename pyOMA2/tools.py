@@ -6,6 +6,8 @@ Created on Sun Aug 13 16:31:54 2023
 """
 
 import numpy as np
+from scipy import signal
+import scipy as sp
 
 # =============================================================================
 # Helping Funcitons
@@ -47,6 +49,7 @@ def MAC(phi_1, phi_2):
 
     return MAC
 
+# -----------------------------------------------------------------------------
 
 def MSF(phi_1, phi_2):
     """Modal Scale Factor.
@@ -80,6 +83,7 @@ def MSF(phi_1, phi_2):
 
     return np.array(msf).real
 
+# -----------------------------------------------------------------------------
 
 def MCF(phi):
     """ Modal complexity factor.
@@ -109,6 +113,7 @@ def MCF(phi):
         mcf.append(_mcf)
     return np.array(mcf)
 
+# -----------------------------------------------------------------------------
 
 def _stab_SSI(Fr, Sm, Ms, ordmin, ordmax, err_fn, err_xi, err_ms):
     """
@@ -194,6 +199,7 @@ def _stab_SSI(Fr, Sm, Ms, ordmin, ordmax, err_fn, err_xi, err_ms):
 
     return Lab
 
+# -----------------------------------------------------------------------------
 
 def _stab_pLSCF(Fr, Sm, ordmax, err_fn, err_xi, nch):
     """
@@ -257,3 +263,191 @@ def _stab_pLSCF(Fr, Sm, ordmax, err_fn, err_xi, nch):
                     except:
                         pass
     return Lab
+
+# -----------------------------------------------------------------------------
+
+def Exdata():
+    '''
+    This function generates a time history of acceleration for a 5 DOF
+    system.
+    
+    The function returns a (360001,5) array and a tuple containing: the 
+    natural frequencies of the system (fn = (5,) array); the unity 
+    displacement normalised mode shapes matrix (FI_1 = (5,5) array); and the 
+    damping ratios (xi = float)
+    
+    -------
+    Returns
+    -------
+    acc : 2D array
+        Time histories of the 5 DOF of the system.  
+    (fn, FI_1, xi) : tuple 
+        Tuple containing the natural frequencies (fn), the mode shape
+        matrix (FI_1), and the damping ratio (xi) of the system.
+    '''
+
+    rng = np.random.RandomState(12345) # Set the seed
+    fs = 100 # [Hz] Sampling freqiency
+    T = 3600 # [sec] Period of the time series (60 minutes)
+    
+    dt = 1/fs # [sec] time resolution
+    df = 1/T # [Hz] frequency resolution
+    N = int(T/dt) # number of data points 
+    fmax = fs/2 # Nyquist frequency
+
+    t = np.arange(0, T, dt) # time instants array
+
+    fs = np.arange(0, fmax+df, df) # spectral lines array
+
+    #-------------------
+    # SYSTEM DEFINITION
+
+    m = 25.91 # mass
+    k = 10000. # stiffness
+
+    # Mass matrix
+    M = np.eye(5)*m
+    _ndof = M.shape[0] # number of DOF (5)
+
+    # Stiffness matrix
+    K = np.array([[2,-1,0,0,0],
+                  [-1,2,-1,0,0],
+                  [0,-1,2,-1,0],
+                  [0,0,-1,2,-1],
+                  [0,0,0,-1,1]])*k
+
+    lam , FI = sp.linalg.eigh(K,b=M) # Solving eigen value problem
+
+    fn = np.sqrt(lam)/(2*np.pi) # Natural frequencies
+    
+    # Unity displacement normalised mode shapes
+    FI_1 = np.array([FI[:,k]/max(abs(FI[:,k])) for k in range(_ndof)]).T
+    # Ordering from smallest to largest
+    FI_1 = FI_1[:, np.argsort(fn)]
+    fn = np.sort(fn)
+
+    # K_M = FI_M.T @ K @ FI_M # Modal stiffness
+    M_M = FI_1.T @ M @ FI_1 # Modal mass
+
+    xi = 0.02 # damping ratio for all modes (2%)
+    # Modal damping
+    C_M = np.diag(np.array([2*M_M[i, i]*xi*fn[i]*(2*np.pi) for i in range(_ndof)]))
+
+    C = sp.linalg.inv(FI_1.T) @ C_M @ sp.linalg.inv(FI_1) # Damping matrix
+    # C = LA.solve(LA.solve(FI_1.T, C_M), FI_1)
+    # n = _ndof*2 # order of the system
+    
+    #-------------------
+    # STATE-SPACE FORMULATION
+    
+    a1 = np.zeros((_ndof,_ndof)) # Zeros (ndof x ndof)
+    a2 = np.eye(_ndof) # Identity (ndof x ndof)
+    A1 = np.hstack((a1,a2)) # horizontal stacking (ndof x 2*ndof)
+    a3 = -sp.linalg.inv(M) @ K # M^-1 @ K (ndof x ndof)
+    # a3 = -LA.solve(M, K) # M^-1 @ K (ndof x ndof)
+    a4 = -sp.linalg.inv(M) @ C # M^-1 @ C (ndof x ndof)
+    # a4 = -LA.solve(M, C) # M^-1 @ C (ndof x ndof)
+    A2 = np.hstack((a3,a4)) # horizontal stacking(ndof x 2*ndof)
+    # vertical stacking of A1 e A2
+    Ac = np.vstack((A1,A2)) # State Matrix A (2*ndof x 2*ndof))
+    
+    b2 = -sp.linalg.inv(M)
+     # Input Influence Matrix B (2*ndof x n°input=ndof)
+    Bc = np.vstack((a1,b2))
+    
+    # N.B. number of rows = n°output*ndof 
+    # n°output may be 1, 2 o 3 (displacements, velocities, accelerations)
+    # the Cc matrix has to be defined accordingly
+    c1 = np.hstack((a2,a1)) # displacements row
+    c2 = np.hstack((a1,a2)) # velocities row
+    c3 = np.hstack((a3,a4)) # accelerations row
+    # Output Influence Matrix C (n°output*ndof x 2*ndof)
+    Cc = np.vstack((c1,c2,c3)) 
+    
+    # Direct Transmission Matrix D (n°output*ndof x n°input=ndof)
+    Dc = np.vstack((a1,a1, b2)) 
+    
+    #-------------------
+    # Using SciPy's LTI to solve the system
+    
+    # Defining the system
+    sys = signal.lti(Ac, Bc, Cc, Dc) 
+    
+    # Defining the amplitute of the force
+    af = 1
+    
+    # Assembling the forcing vectors (N x ndof) (random white noise!)
+    # N.B. N=number of data points; ndof=number of DOF
+    u = np.array([rng.randn(N)*af for r in range(_ndof)]).T
+    
+    # Solving the system
+    tout, yout, xout = signal.lsim(sys, U=u, T=t)
+    
+    # d = yout[:,:5] # displacement
+    # v = yout[:,5:10] # velocity
+    a = yout[:,10:] # acceleration
+    
+    #-------------------
+    # Adding noise
+    # SNR = 10*np.log10(_af/_ar)
+    SNR = 10 # Signal-to-Noise ratio
+    ar = af/(10**(SNR/10)) # Noise amplitude
+    
+    # Initialize the arrays (copy of accelerations)
+    acc = a.copy()
+    for _ind in range(_ndof):
+        # Measurments POLLUTED BY NOISE
+        acc[:,_ind] = a[:,_ind] + ar*rng.randn(N)
+
+    #-------------------
+    # # Subplot of the accelerations
+    # fig, axs = plt.subplots(5,1,sharex=True)
+    # for _nr in range(_ndof):
+    #     axs[_nr].plot(t, a[:,_nr], alpha=1, linewidth=1, label=f'story{_nr+1}')
+    #     axs[_nr].legend(loc=1, shadow=True, framealpha=1)
+    #     axs[_nr].grid(alpha=0.3)
+    #     axs[_nr].set_ylabel('$mm/s^2$')
+    # axs[_nr].set_xlabel('t [sec]')
+    # fig.suptitle('Accelerations plot', fontsize=12)
+    # plt.show()    
+
+    return acc, (fn,FI_1,xi)
+
+# -----------------------------------------------------------------------------
+
+def merge_mode_shapes(MSarr_list, refsens_idx_list):
+    Nmodes = MSarr_list[0].shape[1]
+    Nsetup = len(MSarr_list)
+    Nref = len(refsens_idx_list[0])
+    M = Nref + np.sum([ MSarr_list[i].shape[0]- Nref for i in range(Nsetup)])
+
+    # Check if the input arrays have consistent dimensions
+
+    for i in range(1, Nsetup):
+        if MSarr_list[i].shape[1] != Nmodes:
+            raise ValueError("All mode shape arrays must have the same number of modes.")
+
+    # Initialize merged mode shape array
+    merged_mode_shapes = np.zeros((M, Nmodes))
+
+    # Loop through each mode
+    for k in range(Nmodes):
+        phi_1_k = MSarr_list[0][:, k] # Save the mode shape from first setup
+        phi_ref_1_k = phi_1_k[refsens_idx_list[0]] # Save the reference sensors
+
+        merged_mode_k = phi_1_k.copy() # initialise the merged mode shape 
+        # Loop through each setup
+        for i in range(1, Nsetup):
+            ref_indices = refsens_idx_list[i] # reference sensors indices for the specific setup
+            phi_i_k = MSarr_list[i][:, k] # mode shape of setup i
+            phi_ref_i_k = MSarr_list[i][ref_indices, k] # save data from reference sensors
+            phi_rov_i_k = np.delete(phi_i_k, ref_indices, axis=0) # saave data from roving sensors
+            # Find scaling factor
+            alpha_i_k = MSF(phi_ref_1_k, phi_ref_i_k)
+            # Merge mode
+            merged_mode_k = np.hstack((merged_mode_k, alpha_i_k * phi_rov_i_k ))
+
+        merged_mode_shapes[:, k]  = merged_mode_k
+
+    return merged_mode_shapes
+
