@@ -5,7 +5,7 @@ Created on Fri Aug 18 18:48:53 2023
 @author: dagpa
 """
 
-import pyOMA2 as oma
+import pyOMA2new as oma
 
 import pandas as pd
 import numpy as np
@@ -28,16 +28,19 @@ fs = 100
 # -----------------------------------------------------------------------------
 # Filtering
 data = signal.detrend(data, axis=0) # Trend rmoval
-q = 5 # Decimation factor
+q = 2 # Decimation factor
 data = signal.decimate(data,  q, ftype='fir', axis=0) # Decimation
 fs = fs/q # [Hz] Decimated sampling frequency
 # -----------------------------------------------------------------------------
 
+# nodes_coord = np.array([[0,3],[0,6],[0,9],[0,12],[0,15]])
+nodes_coord = np.array([[0,0,3],[0,0,6],[0,0,9],[0,0,12],[0,0,15]])
 
+directions = np.ones(5)
 
 Test = oma.Model(data, fs)
 
-
+Test.def_geo(nodes_coord,directions)
 
 
 #%%
@@ -45,22 +48,26 @@ Test = oma.Model(data, fs)
 sel_freq = [0.89, 2.59, 4.1, 5.25, 6.0]
 
 Test.pLSCF(40)
-# Test.sel_pole_pLSCF(freqlim=6.25)
+# Test.sel_pole_pLSCF(freqlim=20)
 Test.get_mod_pLSCF(sel_freq=sel_freq, order =39)
 
+Test.anim_mode("pLSCF", 0)
+
+#%%
+
 # Run SSIcov
-Test.SSIcov(30, ordmax=50)
-# Test.sel_pole_SSI(freqlim=6.25)
+Test.SSIcov(100, ordmax=100)
+# Test.sel_pole_SSI()
 Test.get_mod_SSI(sel_freq=[0.89, 2.59, 4.1, 5.25, 6.0], order = 30)
 
 # Run SSIdat
-Test.SSIdat(30, ordmax=50)
+Test.SSIdat(50, ordmax=100)
 # Test.sel_pole_SSI(freqlim=6.25)
 Test.get_mod_SSI(sel_freq=[0.89, 2.59, 4.1, 5.25, 6.0], order = 44)
 
 # Run (E)FDD
-Test.FDDsvp()
-# Test.sel_peak_FDD(freqlim=8)
+Test.FDDsvp(df=0.05)
+Test.sel_peak_FDD(freqlim=20)
 # Test.sel_peak_EFDD(freqlim=6.25)
 Test.get_mod_EFDD(sel_freq=[0.89, 2.59, 4.1, 5.25, 6.0])
 

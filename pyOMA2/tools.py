@@ -424,10 +424,10 @@ def Exdata():
 # -----------------------------------------------------------------------------
 
 def merge_mode_shapes(MSarr_list, refsens_idx_list):
-    Nmodes = MSarr_list[0].shape[1]
-    Nsetup = len(MSarr_list)
-    Nref = len(refsens_idx_list[0])
-    M = Nref + np.sum([ MSarr_list[i].shape[0]- Nref for i in range(Nsetup)])
+    Nsetup = len(MSarr_list) # number of setup
+    Nmodes = MSarr_list[0].shape[1] # number of modes
+    Nref = len(refsens_idx_list[0]) # number of reference sensors
+    M = Nref + np.sum([ MSarr_list[i].shape[0]- Nref for i in range(Nsetup)]) # total number of nodes in a mode shape
 
     # Check if the input arrays have consistent dimensions
 
