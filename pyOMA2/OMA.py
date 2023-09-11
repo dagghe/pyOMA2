@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from . import tools
 from . import Sel_from_plot
-
+from . import Plot_Modes
 # =============================================================================
 # pyOMA classes
 # =============================================================================
@@ -355,7 +355,8 @@ class Model():
 
         # Calculating R[i] (with i from 0 to 2*br)
         R_is = np.array( [ 1/(self.Ndat - _s) * (Yy[:, : self.Ndat - _s] @ \
-                           Yy[:, _s:].T) for _s in range(br*2+1)]) 
+                           Yy[:, _s:].T) for _s in range(br*2+1)])
+        # R0 = R_is[0,:,:]
 
         # Assembling the Toepliz matrix
         Tb = np.vstack([ np.hstack(
@@ -366,11 +367,9 @@ class Model():
 
         if method == "2":
             # One-lag shifted Toeplitz matrix (used in "NExT-ERA" method)
-            Tb2 = np.vstack([ np.hstack(
-                                        [ R_is[_o,:,:] 
-                                         for _o in range(br + _l, _l, -1) ]
-                                        ) 
-                             for _l in range(1, br+1)])
+            Tb2 = np.vstack( [ np.hstack(
+                  [ R_is[_o,:,:] for _o in range(br + _l, _l, -1) ]
+                                        ) for _l in range(1, br+1)])
 
         # SINGULAR VALUE DECOMPOSITION
         U1, S1, V1_t = np.linalg.svd(Tb)
@@ -385,8 +384,8 @@ class Model():
 
         # loop for increasing order of the system
         for ii in range(self.SSI_ordmin, self.SSI_ordmax+1, 2):
-            O = U1[:br*Nch, :ii] @ S1rad[:ii, :ii] # Observability matrix
-            # _GAM = S11 @ V11 # Controllability matrix
+            O = U1[:, :ii] @ S1rad[:ii, :ii] # Observability matrix
+            GAM = S1rad[:ii, :ii] @ V1_t[: ii, :] # Controllability matrix
 
             # Estimating matrix A
             if method == '2':# Method 2 "NExT-ERA"
@@ -397,6 +396,7 @@ class Model():
 
             # Output Influence Matrix
             C = O[:Nch,:]
+            # G = GAM[:, Nch:]
 
             [_AuVal, _AuVett] = np.linalg.eig(A)
             Lambda =(np.log(_AuVal))*self.samp_freq
@@ -459,9 +459,8 @@ class Model():
         j=Ndat-2*br+1; # Dimension of the Hankel matrix
 
         # calculating Hankel matrix
-        H=np.zeros((Nch*2*br,j)) # Initialization of the Hankel matrix
-        for k in range(0,2*br):
-            H[k*Nch:((k+1)*Nch),:]=(1/j**0.5)*Yy[:,k:k+j] # calculating Hankel matrix
+        H = np.array([(1/j**0.5)*Yy[:, k:k+j] 
+                      for k in range(2*br)]).reshape(Nch*2*br, j)
 
         # LQ factorization of the Hankel matrix
         Q , L = np.linalg.qr(H.T)
@@ -734,7 +733,6 @@ class Model():
         _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="pLSCF")
         self.pLSCFmodEx()
 
-
 # =============================================================================
 # DA TESTARE
     def get_mod_FDD(self, sel_freq, ndf=5):
@@ -798,8 +796,8 @@ class Model():
         self.sel_lam = []
         # Loop through the frequencies given in the input list
         for fj in sel_freq:
-
-            if order == "find_min": # here we find the minimum model order so to get a stable pole for every mode of interest
+            if order == "find_min":
+                # here we find the minimum model order so to get a stable pole for every mode of interest
                 pass
             else: # when the model order is provided
                 Fr = self.Results["pLSCF"]["Fn_poles"][:, order]
@@ -815,6 +813,66 @@ class Model():
 
         self.pLSCFmodEx()
 
+# =============================================================================
+# MODE SHAPE PLOTTING
 
+    def def_geo(self, nodes_coord, directions, mapping=None):
+        '''
+        
+
+        Parameters
+        ----------
+        nodes_coord : TYPE
+            DESCRIPTION.
+        directions : TYPE
+            DESCRIPTION.
+        mapping : TYPE, optional
+            DESCRIPTION. The default is None.
+
+        Returns
+        -------
+        None.
+
+        '''
+        try:
+            nodes_coord.shape[0] == self.Nch and len(directions) == self.Nch
+        except:
+            raise Exception("The number of nodes and directions must equal the number of channels")
+        
+        if nodes_coord.shape[1] == 3:
+            self.PlotModesDim = "3D"
+        elif nodes_coord.shape[1] == 2:
+            self.PlotModesDim = "2D"
+        else:
+            raise Exception("noodes_coord.shape[1] must be either 2 or 3")
+            
+        if mapping is not None:
+            nodes_coord = nodes_coord[mapping]
+        
+        self.nodes_coord = nodes_coord
+        self.directions = directions
+
+#------------------------------------------------------------------------------
+
+    def anim_mode(self, method, mode_numb):
+        '''
+        
+
+        Parameters
+        ----------
+        method : str
+            Can be one of: "SSIcov","SSIdat","pLSCF","FDD","EFDD".
+
+        Returns
+        -------
+        None.
+
+        '''
+        # try except to check if def_geo function has been run
+        # try except to check if the mode shape for the selected mode is available
+        
+        _ = Plot_Modes.AniMode(self, method, mode_numb)
+        
+        
 
 
