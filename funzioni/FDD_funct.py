@@ -361,7 +361,7 @@ def EFDD_MPE(Sy, freq, dt, sel_freq, methodSy, method="FSDD", DF1=0.1, DF2=0.1,
         Xi_E.append(xi_EFDD)
         Phi_E.append(phi_FDD)
 
-        PerPlot.append([time, SDOFbell, Sval, idSV,
+        PerPlot.append([freq, time, SDOFbell, Sval, idSV,
                        normSDOFcorr, minmax_fit_idx, lam, delta])
 
     Fn = np.array(Fn_E)
