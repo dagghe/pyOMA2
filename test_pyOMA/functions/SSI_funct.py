@@ -6,6 +6,7 @@ Created on Sat Oct 21 18:48:38 2023
 """
 
 import numpy as np
+from tqdm import tqdm, trange
 
 from . import Gen_funct as GF
 
@@ -52,13 +53,13 @@ def BuildHank(Y, Yref, br, fs, method):
         Yf = np.vstack([(1/N**0.5)*Y[:, q+1+i:N+q+i] for i in range(p+1)])
         Yp = np.vstack([(1/N**0.5)*Yref[:, q+i:N+q-1+i]
                        for i in range(0, -q, -1)])
-        Hank = Yf @ Yp.T
+        Hank = Yf @ Yp.T # X DIEGO si puo usare tqdm per tenere d'occhio questa?
         return Hank
 
     elif method == "cov_unb":
         # Correlations
         Ri = np.array([1/(Ndat-k) * (Y[:, :Ndat-k] @
-                                     Yref[:, k:].T) for k in range(p+q)])
+                                     Yref[:, k:].T) for k in trange(p+q)])
         # Assembling the Toepliz matrix
         Hank = np.vstack([np.hstack([Ri[k, :, :] for k in range(p+l, l-1, -1)])
                           for l in range(q)])
@@ -67,7 +68,7 @@ def BuildHank(Y, Yref, br, fs, method):
     elif method == "cov_bias":
         # Correlations
         Ri = np.array([1/(Ndat) * (Y[:, :Ndat-k] @
-                                   Yref[:, k:].T) for k in range(p+q)])
+                                   Yref[:, k:].T) for k in trange(p+q)])
         # Assembling the Toepliz matrix
         Hank = np.vstack([np.hstack([Ri[k, :, :] for k in range(p+l, l-1, -1)])
                           for l in range(q)])
@@ -81,7 +82,7 @@ def BuildHank(Y, Yref, br, fs, method):
         Yp = np.vstack([(1/N**0.5)*Yref[:, q+i:N+q-1+i]
                        for i in range(0, -q, -1)])
         Ys = np.vstack((Yp, Yf))
-        R3 = np.linalg.qr(Ys.T, mode="r")
+        R3 = np.linalg.qr(Ys.T, mode="r") # X DIEGO si puo usare tqdm per tenere d'occhio questa?
         R3 = R3.T
         Hank = R3[n_ref*(br+1):, : n_ref*(br+1)]
         return Hank
@@ -168,7 +169,8 @@ def SSI(H, br, ordmax, step=1):
     A = []
     C = []
     # loop for increasing order of the system
-    for ii in range(0, ordmax+1, step):
+    print("SSI for increasing model order...")
+    for ii in trange(0, ordmax+1, step):
         Obs = U1[:, :ii] @ S1rad[:ii, :ii]  # Observability matrix
         # Con = S1rad[:ii, :ii] @ V1_t[: ii, :] # Controllability matrix
         # System Matrix
@@ -176,6 +178,7 @@ def SSI(H, br, ordmax, step=1):
         # Output Influence Matrix
         C.append(Obs[:Nch, :])
         # G = Con[:, Nch:]
+    print("... Done!")
     return A, C
 
 
@@ -221,11 +224,13 @@ def SSI_FAST(H, br, ordmax, step=1):
     A = []
     C = []
     # loop for increasing order of the system
-    for ii in range(0, ordmax+1, step):
+    print("SSI for increasing model order...")
+    for ii in trange(0, ordmax+1, step):
         # System Matrix
         A.append(np.linalg.inv(R[:ii, :ii]) @ S[:ii, :ii])
         # Output Influence Matrix
         C.append(Obs[:Nch, :ii])
+    print("... Done!")
     return A, C
 
 
@@ -323,7 +328,8 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
     n_DOF = n_ref+np.sum(n_mov)  # total number of sensors
     dt = 1/fs
     O_mov_s = []  # initialise the scaled moving part of the observability matrix
-    for kk in range(n_setup):
+    for kk in trange(n_setup):
+        print(f"Analyising setup nr.:{kk}...")
         Y_ref = Y[kk]["ref"]
         # Ndat = Y_ref.shape[1] # number of data points
 
@@ -355,6 +361,7 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
         # scale the moving observability matrix to the reference basis
         O_movs = O_mov @ np.linalg.pinv(O_ref) @ O1_ref
         O_mov_s.append(O_movs)
+        print(f"... Done with setup nr.:{kk}!")
 
     # global observability matrix formation via block-interleaving
     Obs_all = np.zeros((n_DOF*br, ordmax))
@@ -379,7 +386,7 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
         A = []
         C = []
         # loop for increasing order of the system
-        for i in range(0, ordmax+1, step):
+        for i in trange(0, ordmax+1, step):
             # System Matrix
             A.append(np.linalg.inv(R[:i, :i]) @ S[:i, :i])
             # Output Influence Matrix
@@ -388,7 +395,7 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
         A = []
         C = []
         # loop over model orders
-        for i in range(0, ordmax+1, step):
+        for i in trange(0, ordmax+1, step):
             A.append(np.linalg.pinv(
                 Obs_all[:-n_DOF, :i]) @ Obs_all[n_DOF:, :i])
             C.append(Obs_all[:n_DOF, :i])
@@ -527,7 +534,8 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     sel_phi = []
     sel_freq1 = []
     # Loop through the frequencies given in the input list
-    for fj in sel_freq:
+    print("Extracting modal parameters")
+    for fj in tqdm(sel_freq):
 # =============================================================================
 # OPZIONE order = "find_min"
 # here we find the minimum model order so to get a stable pole for every mode of interest
@@ -603,7 +611,7 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
                 sel_phi.append(Ms_pol[:, order][sel, :])
                 order_out = order
         else: raise ValueError('order must be either of type(int) or "find_min"')
-
+    print("Done!")
 
     Fn = np.array(sel_freq1)
     Phi = np.array(sel_phi).T
