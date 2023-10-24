@@ -7,7 +7,7 @@ Created on Sat Oct 21 18:51:51 2023
 import numpy as np
 from scipy import signal
 from scipy.optimize import curve_fit
-
+from tqdm import tqdm, trange
 
 
 from . import Gen_funct as GF
@@ -25,7 +25,9 @@ def SD_PreGER(Y, fs, ref_idx, nxseg=1024, pov=0.5, method="per"):
     # n_mov = [Y[i]["mov"].shape[0] for i in range(n_setup)] # number of moving sensor
     # n_DOF = n_ref+np.sum(n_mov) # total number of sensors
     Gyy = []
-    for ii in range(n_setup):
+    for ii in trange(n_setup):
+        print(f"Analyising setup nr.:{ii}...")
+
         Y_ref = Y[ii]["ref"]
         Y_mov = Y[ii]["mov"]
         # Ndat =  Y[ii]["ref"].shape[1] # number of data points
@@ -42,6 +44,7 @@ def SD_PreGER(Y, fs, ref_idx, nxseg=1024, pov=0.5, method="per"):
             freq, Sy_allref = SD_Est(Y_all, Y_ref, dt, nxseg, method)
             _, Sy_allmov = SD_Est(Y_all, Y_mov, dt, nxseg, method)
             Gyy.append(np.hstack((Sy_allref, Sy_allmov)))
+        print(f"... Done with setup nr.:{ii}!")
 
     Gy_refref = 1/n_setup*np.sum([Gyy[ii][:n_ref, :n_ref]
                                  for ii in range(n_setup)], axis=0)
@@ -89,8 +92,11 @@ def SD_Est(Yall, Yref, dt, nxseg, method="cor", pov=0.5,):
         # n_ref =  Yref.shape[0] # number of data points
         # n_all = Yall.shape[0]
         # Calculating Auto e Cross-Spectral Density (Y_all, Y_ref)
+        print("Estimating spectrum...")
         R_i = np.array([1/(Ndat - ii)*(Yall[:, :Ndat-ii] @
-                                       Yref[:, ii:].T) for ii in range(nxseg)])
+                                       Yref[:, ii:].T) for ii in trange(nxseg)])
+        print("... Done!")
+
         nxseg, nr, nc = R_i.shape
         # N.B. beta = 1/tau
         tau = -(nxseg-1) / np.log(0.01)
@@ -117,6 +123,7 @@ def SD_Est(Yall, Yref, dt, nxseg, method="cor", pov=0.5,):
         n_ref = Yref.shape[0]  # number of data points
         n_all = Yall.shape[0]
         # Calculating Auto e Cross-Spectral Density (Y_all, Y_ref)
+        # X DIEGO: Si puo aggiungere tqdm a questa function call di scipy?
         freq, Sy = signal.csd(
             Yall.reshape(n_all, 1, Ndat),
             Yref.reshape(1, n_ref, Ndat),
@@ -171,7 +178,8 @@ def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1, ret_peak=False):
     Fi = []
     index = []
     maxSy_diff = []
-    for sel_fn in sel_freq:
+    print("Extracting modal parameters")
+    for sel_fn in tqdm(sel_freq):
         # Frequency bandwidth where the peak is searched
         lim = (sel_fn - DF, sel_fn + DF)
         idxlim = (np.argmin(np.abs(freq - lim[0])),
@@ -194,6 +202,7 @@ def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1, ret_peak=False):
         Fi.append(phi_FDDn)
         index.append(idxfin)
         maxSy_diff. append(maxDiffS1S2)
+    print("Done!")
 
     Fn = np.array(Freq)
     Phi = np.array(Fi).T
@@ -269,7 +278,8 @@ def EFDD_MPE(Sy, freq, dt, sel_freq, methodSy, method="FSDD", DF1=0.1, DF2=1.,
     Phi_E = []
     Xi_E = []
 
-    for n in range(len(sel_freq)):  # looping through all frequencies to estimate
+    print("Extracting modal parameters")
+    for n in trange(len(sel_freq)):  # looping through all frequencies to estimate
         phi_FDD = Phi_FDD[:, n]  # Select reference mode shape (from FDD)
         sel_fn = sel_freq[n]
         SDOFbell, SDOFms = SDOF_bellandMS(
@@ -363,10 +373,10 @@ def EFDD_MPE(Sy, freq, dt, sel_freq, methodSy, method="FSDD", DF1=0.1, DF2=1.,
 
         PerPlot.append([freq, time, SDOFbell, Sval, idSV,
                        normSDOFcorr, minmax_fit_idx, lam, delta])
+    print("Done!")
 
     Fn = np.array(Fn_E)
     Xi = np.array(Xi_E)
-
     Phi = np.array(Phi_E).T
 
     return Fn, Xi, Phi, PerPlot
