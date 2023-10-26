@@ -18,14 +18,14 @@ class SingleSetup:
 
     # find algorithm (method) from the available ones.
     def _find_algorithm(self, name: str) -> algorithm.algorithm.BaseAlgorithm:
-        for algorithm in self.algorithms:
+        for alg in self.algorithms:
             if algorithm.name == name:
                 return algorithm
         raise ValueError(f"Algorithm {name} not found")
 
     # run the whole set of algorithms (methods).
     def run_all(self):
-        for algorithm in self.algorithms:
+        for alg in self.algorithms:
             print(f"Running {algorithm.name} with params {algorithm.run_params}")
             algorithm.run(data=self.data, fs=self.fs)
         print("all done")
@@ -101,7 +101,7 @@ class MultiSetup:
 
     def merge_results(self):
         for setup in self.setups:
-            for algorithm in setup.algorithms:
+            for alg in setup.algorithms:
                 if not algorithm.result:
                     raise ValueError(f"Run {algorithm.name} first")
                 print(f"Merging {algorithm.name} results")
