@@ -27,7 +27,7 @@ class SingleSetup:
     def run_all(self):
         for algorithm in self.algorithms:
             print(f"Running {algorithm.name} with params {algorithm.run_params}")
-            algorithm.run()
+            algorithm.run(data=self.data, fs=self.fs)
         print("all done")
 
     # run algorithm (method) by name. QUESTO è IL METODO 1
@@ -35,7 +35,7 @@ class SingleSetup:
         algorithm = self._find_algorithm(name)
         if algorithm:
             print(f"Running {algorithm.name} with params {algorithm.run_params}")
-            return algorithm.run()
+            return algorithm.run(data=self.data, fs=self.fs)
         print("run by name done")
 
     # get the modal properties (all results).
@@ -57,9 +57,9 @@ class SingleSetup:
         print("***DONE***")
         
     # method to plot the time histories of the data channels.
-    def plot_data(self, nc: int=1, names: None | list([str])=None, 
+    def plot_data(self, nc: int=1, names: None | list[str]=None, 
                   unit: str="unit", show_rms: bool=False, 
-                  len_Wrms: None | int=None )
+                  len_Wrms: None | int=None ):
         data = self.data
         dt = self.dt
         nc = nc # number of columns for subplot
@@ -81,7 +81,6 @@ class SingleSetup:
     # metodo per definire geometria 2
     def def_geo2(self,):
         pass
-
 
 
 # LA CLASSE MULTISETUP VA PROBABILMENTE RIVISTA...
