@@ -5,7 +5,7 @@ from pydantic import (
     validate_call,
 )  # controlla che i parametri passati siano quelli giusti
 
-import Gen_funct, FDD_funct, SSI_funct, pLSCF_funct, plot_funct
+from test_pyOMA.functions import Gen_funct, FDD_funct, SSI_funct, pLSCF_funct, plot_funct
 
 from .result import BaseResult
 from .run_params import BaseRunParams
@@ -24,7 +24,7 @@ class BaseAlgorithm(abc.ABC):
         self.result: BaseResult
 
     @abc.abstractmethod
-    def run(self) -> typing.Any:
+    def run(self, data, fs) -> typing.Any:
         """Run main algorithm using self.run_params"""
 
     @abc.abstractmethod
@@ -41,24 +41,24 @@ class BaseAlgorithm(abc.ABC):
             raise ValueError("Run algorithm first")
 
     # Questo mi sa che non serve
-    @abc.abstractmethod
-    def mod_ex(self, *args, **kwargs) -> typing.Any:
-        if not self.result:
-            raise ValueError("Run algorithm first")
+    # @abc.abstractmethod
+    # def mod_ex(self, *args, **kwargs) -> typing.Any:
+    #     if not self.result:
+    #         raise ValueError("Run algorithm first")
 
 #------------------------------------------------------------------------------
 # BASIC FREQUENCY DOMAIN DECOMPOSITION
 class FDD_algo(BaseAlgorithm):
-    def run(self) -> typing.Any:
+    def run(self, data, fs) -> typing.Any:
         print(self.run_params)
-        Y = self.data.T
-        dt = self.dt
+        Y = data.T
+        dt = 1/fs
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         self.run_params.df = 1/dt/nxseg # frequency resolution for the spectrum
 
-        freq, Sy = SD_Est(Y, Y, dt, nxseg, method=method)
-        Sval, Svec = SD_svalsvec(Sy)
+        freq, Sy = FDD_funct.SD_Est(Y, Y, dt, nxseg, method=method)
+        Sval, Svec = FDD_funct.SD_svalsvec(Sy)
         # come si salvano i risultati ora?
         # self.result.freq = freq
         # self.result.Sy = Sy
@@ -73,7 +73,7 @@ class FDD_algo(BaseAlgorithm):
         self.run_params.DF = DF
 
         # Get Modal Parameters
-        Fn_FDD, Phi_FDD = FDD_MPE(Sy, freq, sel_freq, DF=DF)
+        Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(Sy, freq, sel_freq, DF=DF)
 
         # e poi salvare?
         # self.result.Fn_FDD = Fn_FDD
@@ -90,7 +90,7 @@ class FDD_algo(BaseAlgorithm):
         # _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="FDD")
 
         # e poi estrarre risultati
-        Fn_FDD, Phi_FDD = FDD_MPE(Sy, freq, sel_freq, DF=DF)
+        Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(Sy, freq, sel_freq, DF=DF)
 
         # e poi salvare?
         # self.result.Fn_FDD = Fn_FDD
@@ -103,16 +103,16 @@ class FDD_algo(BaseAlgorithm):
 #------------------------------------------------------------------------------
 # ENHANCED FREQUENCY DOMAIN DECOMPOSITION
 class EFDD_algo(BaseAlgorithm):
-    def run(self) -> typing.Any:
+    def run(self, data, fs) -> typing.Any:
         print(self.run_params)
-        Y = self.data.T
-        dt = self.dt
+        Y = data.T
+        dt = 1/fs
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         self.run_params.df = 1/dt/nxseg # frequency resolution for the spectrum
 
-        freq, Sy = SD_Est(Y, Y, dt, nxseg, method=method)
-        Sval, Svec = SD_svalsvec(Sy)
+        freq, Sy = FDD_funct.SD_Est(Y, Y, dt, nxseg, method=method)
+        Sval, Svec = FDD_funct.SD_svalsvec(Sy)
         # come si salvano i risultati ora?
         # self.result.freq = freq
         # self.result.Sval = Sval
@@ -126,7 +126,7 @@ class EFDD_algo(BaseAlgorithm):
         super().mpe(sel_freq=sel_freq,method=method, methodSy=methodSy, DF1=DF1,
             DF2=DF2, cm=cm, MAClim=MAClim, sppk=sppk, npmax=npmax)
 
-        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = EFDD_MPE(Sy, freq, dt, sel_freq, methodSy,
+        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = FDD_funct.EFDD_MPE(Sy, freq, dt, sel_freq, methodSy,
     method="EFDD", DF1=0.1, DF2=1., cm=1, MAClim=0.85, sppk=3, npmax=20, )
 
         # e poi salvare?
@@ -144,7 +144,7 @@ class EFDD_algo(BaseAlgorithm):
         # _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="FDD")
 
         # e poi estrarre risultati
-        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = EFDD_MPE(Sy, freq, dt, sel_freq, methodSy,
+        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = FDD_funct.EFDD_MPE(Sy, freq, dt, sel_freq, methodSy,
     method="EFDD", DF1=0.1, DF2=1., cm=1, MAClim=0.85, sppk=3, npmax=20, )
 
         # e poi salvare?
@@ -160,10 +160,10 @@ class EFDD_algo(BaseAlgorithm):
 #------------------------------------------------------------------------------
 # FREQUENCY SPATIAL DOMAIN DECOMPOSITION
 class FSDD_algo(BaseAlgorithm):
-    def run(self) -> typing.Any:
+    def run(self, data, fs) -> typing.Any:
         print(self.run_params)
-        Y = self.data.T
-        dt = self.dt
+        Y = data.T
+        dt = 1/fs
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         df = 1/dt/nxseg
@@ -176,7 +176,7 @@ class FSDD_algo(BaseAlgorithm):
     @validate_call
     def mpe(self, sel_freq: float, DF: float = 0.1) -> typing.Any:
         super().mpe(sel_freq=sel_freq, DF=DF)
-        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = EFDD_MPE(Sy, freq, dt, sel_freq, methodSy,
+        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = FDD_funct.EFDD_MPE(Sy, freq, dt, sel_freq, methodSy,
     method="FSDD", DF1=0.1, DF2=1., cm=1, MAClim=0.85, sppk=3, npmax=20, )
 
         # e poi salvare?
@@ -190,7 +190,7 @@ class FSDD_algo(BaseAlgorithm):
         # _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="FDD")
 
         # e poi estrarre risultati
-        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = EFDD_MPE(Sy, freq, dt, sel_freq, methodSy,
+        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = FDD_funct.EFDD_MPE(Sy, freq, dt, sel_freq, methodSy,
     method="EFDD", DF1=0.1, DF2=1., cm=1, MAClim=0.85, sppk=3, npmax=20, )
 
         # e poi salvare?
@@ -202,10 +202,10 @@ class FSDD_algo(BaseAlgorithm):
 #------------------------------------------------------------------------------
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIdat_algo(BaseAlgorithm):
-    def run(self) -> typing.Any:
+    def run(self, data, fs) -> typing.Any:
         print(self.run_params)
-        Y = self.data.T
-        dt = self.dt
+        Y = data.T
+        dt = 1/fs
         p = self.run_params.br
         #method = self.run_params.method_hank
         ordmin = self.run_params.ordmin
@@ -220,11 +220,11 @@ class SSIdat_algo(BaseAlgorithm):
         # if self.ref_ind is not None:
 
         # Build Hankel matrix
-        H = BuildHank(Y, Y, 1/dt, fs, method="dat")
+        H = SSI_funct.BuildHank(Y, Y, 1/dt, fs, method="dat")
         # Get state matrix and output matrix
-        A, C = SSI_FAST(H, br, ordmax)
+        A, C = SSI_funct.SSI_FAST(H, br, ordmax)
         # Get frequency poles (and damping and mode shapes)
-        Fn_pol, Sm_pol, Ms_pol = SSI_Poles(A, C, ordmax, dt, step=step)
+        Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_funct.SSI_Poles(A, C, ordmax, dt, step=step)
         # Get the labels of the poles
         Lab = Lab_stab_SSI(Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, 
                             err_fn, err_xi, err_phi, xi_max)
@@ -233,7 +233,7 @@ class SSIdat_algo(BaseAlgorithm):
     @validate_call
     def mpe(self, sel_freq: float, order: str = "find_min") -> typing.Any:
         super().mpe(sel_freq=sel_freq, order=order)
-        Fn_SSI, Xi_SSI, Phi_SSI = SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
     sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2
     )
 
@@ -258,7 +258,7 @@ class SSIdat_algo(BaseAlgorithm):
         # _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="SSI")
 
         # e poi estrarre risultati
-        Fn_SSI, Xi_SSI, Phi_SSI = SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
     sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2
     )
         # e poi salvare?
@@ -270,10 +270,10 @@ class SSIdat_algo(BaseAlgorithm):
 #------------------------------------------------------------------------------
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIcov_algo(BaseAlgorithm):
-    def run(self) -> typing.Any:
+    def run(self, data, fs) -> typing.Any:
         print(self.run_params)
-        Y = self.data.T
-        dt = self.dt
+        Y = data.T
+        dt = 1/fs
         p = self.run_params.br
         method = self.run_params.method_hank
         ordmin = self.run_params.ordmin
@@ -288,11 +288,11 @@ class SSIcov_algo(BaseAlgorithm):
         # if self.ref_ind is not None:
 
         # Build Hankel matrix
-        H = BuildHank(Y, Y, 1/dt, fs, method=method)
+        H = SSI_funct.BuildHank(Y, Y, 1/dt, fs, method=method)
         # Get state matrix and output matrix
-        A, C = SSI_FAST(H, br, ordmax)
+        A, C = SSI_funct.SSI_FAST(H, br, ordmax)
         # Get frequency poles (and damping and mode shapes)
-        Fn_pol, Sm_pol, Ms_pol = SSI_Poles(A, C, ordmax, dt, step=step)
+        Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, dt, step=step)
         # Get the labels of the poles
         Lab = Lab_stab_SSI(Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, 
                             err_fn, err_xi, err_phi, xi_max)
@@ -301,7 +301,7 @@ class SSIcov_algo(BaseAlgorithm):
     @validate_call
     def mpe(self, sel_freq: float, order: str = "find_min") -> typing.Any:
         super().mpe(sel_freq=sel_freq, order=order)
-        Fn_SSI, Xi_SSI, Phi_SSI = SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
     sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2
     )
 
@@ -326,7 +326,7 @@ class SSIcov_algo(BaseAlgorithm):
         # _ = Sel_from_plot.SelFromPlot(self, freqlim=freqlim, plot="SSI")
 
         # e poi estrarre risultati
-        Fn_SSI, Xi_SSI, Phi_SSI = SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
     sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2
     )
         # e poi salvare?

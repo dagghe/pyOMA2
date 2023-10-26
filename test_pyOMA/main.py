@@ -1,22 +1,21 @@
-import algorithm
-import OMA
+import numpy as np
+from algorithm import FDD_algo, SSIcov_algo
+from algorithm.run_params import FDDRunParams, SSIcovRunParams
+
+from test_pyOMA.OMA import MultiSetup, SingleSetup
 
 if __name__ == "__main__":
     """Running single setup"""
     print("**** Running single setup ****")
 
     # create single setup 1
-    data1 = [1, 2, 3, 4, 5]
+    data1 = np.asarray([1, 2, 3, 4, 5])
     fs1 = 10
-    single_setup_1 = setup.SingleSetup(data1, fs1)
+    single_setup_1 = SingleSetup(data1, fs1)
 
     # create algorithms
-    fdd = algorithm.FDDAlgorithm(
-        run_params=algorithm.run_params.FDDRunParams(df=0.01, pov=0.5, window="hann")
-    )
-    ssicov = algorithm.SSIcovAlgorithm(
-        run_params=algorithm.run_params.SSIcovRunParams(br=3, ordmin=0, ordmax="1")
-    )
+    fdd = FDD_algo(run_params=FDDRunParams(df=0.01, pov=0.5, window="hann"))
+    ssicov = SSIcov_algo(run_params=SSIcovRunParams(br=3, ordmin=0, ordmax="1"))
 
     # add algorithms to single setup 1
     single_setup_1.add_algorithms(fdd, ssicov)
@@ -27,14 +26,14 @@ if __name__ == "__main__":
     # define another setup
     data2 = [7, 8, 9, 10]
     fs2 = 20
-    single_setup_2 = setup.SingleSetup(data2, fs2)
+    single_setup_2 = SingleSetup(data2, fs2)
 
     # add algorithms to single setup 2
     single_setup_2.add_algorithms(fdd, ssicov)
 
     print("\n**** Running multi setup ****")
     # define Multi Setup
-    multi_setup = setup.MultiSetup([data1, data2], [fs1, fs2])
+    multi_setup = MultiSetup([data1, data2], [fs1, fs2])
     # add setups to multi setup
     multi_setup.add_setups(single_setup_1, single_setup_2)
     # run all algorithms in multi setup
