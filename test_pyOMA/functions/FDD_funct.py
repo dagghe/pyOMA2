@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Sat Oct 21 18:51:51 2023
 
@@ -9,9 +8,7 @@ from scipy import signal
 from scipy.optimize import curve_fit
 from tqdm import tqdm, trange
 
-
 from . import Gen_funct as GF
-
 
 # =============================================================================
 # FUNZIONI FDD
@@ -19,7 +16,7 @@ from . import Gen_funct as GF
 
 
 def SD_PreGER(Y, fs, ref_idx, nxseg=1024, pov=0.5, method="per"):
-    dt = 1/fs
+    dt = 1 / fs
     n_setup = len(Y)  # number of setup
     n_ref = Y[0]["ref"].shape[0]  # number of reference sensor
     # n_mov = [Y[i]["mov"].shape[0] for i in range(n_setup)] # number of moving sensor
@@ -46,14 +43,19 @@ def SD_PreGER(Y, fs, ref_idx, nxseg=1024, pov=0.5, method="per"):
             Gyy.append(np.hstack((Sy_allref, Sy_allmov)))
         print(f"... Done with setup nr.:{ii}!")
 
-    Gy_refref = 1/n_setup*np.sum([Gyy[ii][:n_ref, :n_ref]
-                                 for ii in range(n_setup)], axis=0)
+    Gy_refref = (
+        1 / n_setup * np.sum([Gyy[ii][:n_ref, :n_ref] for ii in range(n_setup)], axis=0)
+    )
 
     Gg = []
     # Scale spectrum to reference spectrum
     for ff in range(len(freq)):
-        G1 = [Gyy[ii][n_ref:, :n_ref][:, :, ff] @ np.linalg.inv(
-            Gyy[ii][:n_ref, :n_ref][:, :, ff]) @ Gy_refref[:, :, ff] for ii in range(n_setup)]
+        G1 = [
+            Gyy[ii][n_ref:, :n_ref][:, :, ff]
+            @ np.linalg.inv(Gyy[ii][:n_ref, :n_ref][:, :, ff])
+            @ Gy_refref[:, :, ff]
+            for ii in range(n_setup)
+        ]
         G2 = np.vstack(G1)
         G3 = np.vstack([Gy_refref[:, :, ff], G2])
         Gg.append(G3)
@@ -66,7 +68,14 @@ def SD_PreGER(Y, fs, ref_idx, nxseg=1024, pov=0.5, method="per"):
 # -----------------------------------------------------------------------------
 
 
-def SD_Est(Yall, Yref, dt, nxseg, method="cor", pov=0.5,):
+def SD_Est(
+    Yall,
+    Yref,
+    dt,
+    nxseg,
+    method="cor",
+    pov=0.5,
+):
     """
     Estimate the Cross-Spectral Density (CSD) using either the correlogram
         method or the periodogram method.
@@ -76,37 +85,40 @@ def SD_Est(Yall, Yref, dt, nxseg, method="cor", pov=0.5,):
         Yref (ndarray): Reference signal data.
         dt (float): Sampling interval.
         nxseg (int): Length of each segment for CSD estimation.
-        method (str, optional): Method for CSD estimation, either "cor" for 
+        method (str, optional): Method for CSD estimation, either "cor" for
             correlogram method or "per" for periodogram. Default is "cor".
         pov (float, optional): Proportion of overlap for the periodogram
             method. Default is 0.5.
 
     Returns:
-        tuple: A tuple containing the frequency values and the estimated 
+        tuple: A tuple containing the frequency values and the estimated
             Cross-Spectral Density (CSD).
             freq (ndarray): Array of frequencies.
-            Sy (ndarray): Cross-Spectral Density (CSD) estimation.
-"""
+            Sy (ndarray): Cross-Spectral Density (CSD) estimation."""
     if method == "cor":
         Ndat = Yref.shape[1]  # number of data points
         # n_ref =  Yref.shape[0] # number of data points
         # n_all = Yall.shape[0]
         # Calculating Auto e Cross-Spectral Density (Y_all, Y_ref)
         print("Estimating spectrum...")
-        R_i = np.array([1/(Ndat - ii)*(Yall[:, :Ndat-ii] @
-                                       Yref[:, ii:].T) for ii in trange(nxseg)])
+        R_i = np.array(
+            [
+                1 / (Ndat - ii) * (Yall[:, : Ndat - ii] @ Yref[:, ii:].T)
+                for ii in trange(nxseg)
+            ]
+        )
         print("... Done!")
 
         nxseg, nr, nc = R_i.shape
         # N.B. beta = 1/tau
-        tau = -(nxseg-1) / np.log(0.01)
+        tau = -(nxseg - 1) / np.log(0.01)
         W = signal.windows.exponential(nxseg, center=0, tau=tau, sym=False)
         R = np.zeros((nr, nc, nxseg))
         for ii in range(nr):
             for jj in range(nc):
-                R[ii, jj, :] = R_i[:, ii, jj]*W
+                R[ii, jj, :] = R_i[:, ii, jj] * W
 
-        Sy = np.zeros((nr, nc, nxseg),dtype=complex)
+        Sy = np.zeros((nr, nc, nxseg), dtype=complex)
         R11 = np.zeros(nxseg)
         for r in range(nr):
             for c in range(nc):
@@ -115,10 +127,10 @@ def SD_Est(Yall, Yref, dt, nxseg, method="cor", pov=0.5,):
                 R1 = np.concatenate((R11, np.flipud(R11[:nxseg]) * 0))
                 G = np.fft.fft(R1)
                 Sy[r, c, :] = G[:nxseg]
-        freq = np.arange(0, nxseg)*(1/dt/(2*nxseg))  # Frequency vector
+        freq = np.arange(0, nxseg) * (1 / dt / (2 * nxseg))  # Frequency vector
 
     elif method == "per":
-        noverlap = nxseg*pov
+        noverlap = nxseg * pov
         Ndat = Yref.shape[1]  # number of data points
         n_ref = Yref.shape[0]  # number of data points
         n_all = Yall.shape[0]
@@ -127,7 +139,7 @@ def SD_Est(Yall, Yref, dt, nxseg, method="cor", pov=0.5,):
         freq, Sy = signal.csd(
             Yall.reshape(n_all, 1, Ndat),
             Yref.reshape(1, n_ref, Ndat),
-            fs=1/dt,
+            fs=1 / dt,
             nperseg=nxseg,
             noverlap=noverlap,
             window="hann",
@@ -140,18 +152,17 @@ def SD_Est(Yall, Yref, dt, nxseg, method="cor", pov=0.5,):
 
 def SD_svalsvec(SD):
     """
-    Compute the singular values and singular vectors for a given set of 
+    Compute the singular values and singular vectors for a given set of
         Cross-Spectral Density (CSD) matrices.
 
     Parameters:
-    SD (ndarray): Array of Cross-Spectral Density (CSD) matrices, with 
+    SD (ndarray): Array of Cross-Spectral Density (CSD) matrices, with
         shape (number_of_rows, number_of_columns, number_of_frequencies).
 
     Returns:
     tuple: A tuple containing the singular values and the singular vectors.
         S_val (ndarray): Singular values.
-        S_vec (ndarray): Singular vectors.
-"""
+        S_vec (ndarray): Singular vectors."""
     nr, nc, nf = SD.shape
     Sval = np.zeros((nf, nc))
     S_val = np.empty((nf, nc, nc))
@@ -171,7 +182,7 @@ def SD_svalsvec(SD):
 
 
 def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1, ret_peak=False):
-    #Sval, Svec = SD_svalsvec(Sy)
+    # Sval, Svec = SD_svalsvec(Sy)
     Nch, Nref, Nf = Sval.shape
 
     Freq = []
@@ -182,14 +193,14 @@ def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1, ret_peak=False):
     for sel_fn in tqdm(sel_freq):
         # Frequency bandwidth where the peak is searched
         lim = (sel_fn - DF, sel_fn + DF)
-        idxlim = (np.argmin(np.abs(freq - lim[0])),
-                  np.argmin(np.abs(freq - lim[1])))  # Indices of the limits
+        idxlim = (
+            np.argmin(np.abs(freq - lim[0])),
+            np.argmin(np.abs(freq - lim[1])),
+        )  # Indices of the limits
         # Ratios between the first and second singular value
-        diffS1S2 = Sval[0, 0, idxlim[0]:idxlim[1]] / \
-            Sval[1, 1, idxlim[0]:idxlim[1]]
+        diffS1S2 = Sval[0, 0, idxlim[0] : idxlim[1]] / Sval[1, 1, idxlim[0] : idxlim[1]]
         maxDiffS1S2 = np.max(diffS1S2)  # Looking for the maximum difference
-        idx1 = np.argmin(np.abs(diffS1S2 - maxDiffS1S2)
-                         )  # Index of the max diff
+        idx1 = np.argmin(np.abs(diffS1S2 - maxDiffS1S2))  # Index of the max diff
         idxfin = idxlim[0] + idx1  # Final index
 
         # Modal properties
@@ -201,7 +212,7 @@ def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1, ret_peak=False):
         Freq.append(fn_FDD)
         Fi.append(phi_FDDn)
         index.append(idxfin)
-        maxSy_diff. append(maxDiffS1S2)
+        maxSy_diff.append(maxDiffS1S2)
     print("Done!")
 
     Fn = np.array(Freq)
@@ -220,56 +231,85 @@ def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF
     Sval, Svec = SD_svalsvec(Sy)
     Nch = phi_FDD.shape[0]
     nxseg = Sval.shape[2]
-    freq = np.arange(0, nxseg)*(1/dt/(2*nxseg))
+    freq = np.arange(0, nxseg) * (1 / dt / (2 * nxseg))
     # Frequency bandwidth where the peak is searched
     lim = (sel_fn - DF, sel_fn + DF)
-    idxlim = (np.argmin(np.abs(freq - lim[0])),
-              np.argmin(np.abs(freq - lim[1])))  # Indices of the limits
+    idxlim = (
+        np.argmin(np.abs(freq - lim[0])),
+        np.argmin(np.abs(freq - lim[1])),
+    )  # Indices of the limits
     # Initialise SDOF bell and Mode Shape
     SDOFbell = np.zeros(len(np.arange(idxlim[0], idxlim[1])), dtype=complex)
-    SDOFms = np.zeros(
-        (len(np.arange(idxlim[0], idxlim[1])), Nch), dtype=complex)
+    SDOFms = np.zeros((len(np.arange(idxlim[0], idxlim[1])), Nch), dtype=complex)
 
     for csm in range(cm):  # Loop through close mode (if any, default 1)
         # Frequency Spatial Domain Decomposition variation (defaulf)
         if method == "FSDD":
             # Save values that satisfy MAC > MAClim condition
-            SDOFbell += np.array([phi_FDD.conj().T @ Sy[:, :, l] @ phi_FDD  # Enhanced PSD matrix (frequency filtered)
-                                  if GF.MAC(phi_FDD, Svec[csm, :, l]) > MAClim
-                                  else 0
-                                  for l in range(int(idxlim[0]), int(idxlim[1]))])
+            SDOFbell += np.array(
+                [
+                    phi_FDD.conj().T
+                    @ Sy[:, :, el]
+                    @ phi_FDD  # Enhanced PSD matrix (frequency filtered)
+                    if GF.MAC(phi_FDD, Svec[csm, :, el]) > MAClim
+                    else 0
+                    for el in range(int(idxlim[0]), int(idxlim[1]))
+                ]
+            )
             # Do the same for mode shapes
-            SDOFms += np.array([Svec[csm, :, l]
-                                if GF.MAC(phi_FDD, Svec[csm, :, l]) > MAClim
-                                else np.zeros(Nch)
-                                for l in range(int(idxlim[0]), int(idxlim[1]))])
+            SDOFms += np.array(
+                [
+                    Svec[csm, :, el]
+                    if GF.MAC(phi_FDD, Svec[csm, :, el]) > MAClim
+                    else np.zeros(Nch)
+                    for el in range(int(idxlim[0]), int(idxlim[1]))
+                ]
+            )
         elif method == "EFDD":
-            SDOFbell += np.array([Sval[csm, csm, l]
-                                  if GF.MAC(phi_FDD, Svec[csm, :, l]) > MAClim
-                                  else 0
-                                  for l in range(int(idxlim[0]), int(idxlim[1]))])
-            SDOFms += np.array([Svec[csm, :, l]
-                                if GF.MAC(phi_FDD, Svec[csm, :, l]) > MAClim
-                                else np.zeros(Nch)
-                                for l in range(int(idxlim[0]), int(idxlim[1]))])
+            SDOFbell += np.array(
+                [
+                    Sval[csm, csm, l] if GF.MAC(phi_FDD, Svec[csm, :, l]) > MAClim else 0
+                    for l in range(int(idxlim[0]), int(idxlim[1]))
+                ]
+            )
+            SDOFms += np.array(
+                [
+                    Svec[csm, :, l]
+                    if GF.MAC(phi_FDD, Svec[csm, :, l]) > MAClim
+                    else np.zeros(Nch)
+                    for l in range(int(idxlim[0]), int(idxlim[1]))
+                ]
+            )
 
     SDOFbell1 = np.zeros((nxseg), dtype=complex)
     SDOFms1 = np.zeros((nxseg, Nch), dtype=complex)
-    SDOFbell1[idxlim[0]:idxlim[1]] = SDOFbell
-    SDOFms1[idxlim[0]:idxlim[1], :] = SDOFms
+    SDOFbell1[idxlim[0] : idxlim[1]] = SDOFbell
+    SDOFms1[idxlim[0] : idxlim[1], :] = SDOFms
     return SDOFbell1, SDOFms1
 
 
 # -----------------------------------------------------------------------------
 
 
-def EFDD_MPE(Sy, freq, dt, sel_freq, methodSy, method="FSDD", DF1=0.1, DF2=1., 
-             cm=1, MAClim=0.85, sppk=3, npmax=20, ):
+def EFDD_MPE(
+    Sy,
+    freq,
+    dt,
+    sel_freq,
+    methodSy,
+    method="FSDD",
+    DF1=0.1,
+    DF2=1.0,
+    cm=1,
+    MAClim=0.85,
+    sppk=3,
+    npmax=20,
+):
     Sval, Svec = SD_svalsvec(Sy)
 
     Nch, Nref, nxseg = Sval.shape
     # number of points for the inverse transform (zeropadding)
-    nIFFT = (int(nxseg))*5
+    nIFFT = (int(nxseg)) * 5
     Freq_FDD, Phi_FDD = FDD_MPE(Sval, Svec, freq, sel_freq, DF=DF1)
 
     # Initialize Results
@@ -283,11 +323,12 @@ def EFDD_MPE(Sy, freq, dt, sel_freq, methodSy, method="FSDD", DF1=0.1, DF2=1.,
         phi_FDD = Phi_FDD[:, n]  # Select reference mode shape (from FDD)
         sel_fn = sel_freq[n]
         SDOFbell, SDOFms = SDOF_bellandMS(
-            Sy, dt, sel_fn, phi_FDD, method=method, cm=cm, MAClim=MAClim, DF=DF2)
+            Sy, dt, sel_fn, phi_FDD, method=method, cm=cm, MAClim=MAClim, DF=DF2
+        )
 
         # indices of the singular values in SDOFsval
         idSV = np.array(np.where(SDOFbell)).T
-# =============================================================================
+        # =============================================================================
         # # Mode shapes (singular vectors) associated to each singular values
         # # and weighted with respect to the singular value itself
         # FIs = [ SDOFbell[idSV[u]] * SDOFms[idSV[u],:]
@@ -296,16 +337,15 @@ def EFDD_MPE(Sy, freq, dt, sel_freq, methodSy, method="FSDD", DF1=0.1, DF2=1.,
         # meanFi = np.mean(FIs,axis=0)
         # # Normalised mode shape (unity disp)
         # meanFi = meanFi/meanFi[np.argmax(abs(meanFi))]
-# =============================================================================
+        # =============================================================================
         # Autocorrelation function (Free Decay)
-        SDOFcorr1 = np.fft.ifft(SDOFbell, n=nIFFT, axis=0, norm='ortho').real
-        df = 1/dt/nxseg
-        tlag = 1/df  # time lag
-        time = np.linspace(0, tlag, len(SDOFcorr1)//2)  # t
+        SDOFcorr1 = np.fft.ifft(SDOFbell, n=nIFFT, axis=0, norm="ortho").real
+        df = 1 / dt / nxseg
+        tlag = 1 / df  # time lag
+        time = np.linspace(0, tlag, len(SDOFcorr1) // 2)  # t
 
         # NORMALISED AUTOCORRELATION
-        normSDOFcorr = SDOFcorr1[:len(SDOFcorr1)//2] / \
-            SDOFcorr1[np.argmax(SDOFcorr1)]
+        normSDOFcorr = SDOFcorr1[: len(SDOFcorr1) // 2] / SDOFcorr1[np.argmax(SDOFcorr1)]
 
         # finding where x = 0
         sgn = np.sign(normSDOFcorr).real  # finding the sign
@@ -314,65 +354,72 @@ def EFDD_MPE(Sy, freq, dt, sel_freq, methodSy, method="FSDD", DF1=0.1, DF2=1.,
         zc1 = np.where(sgn1)[0]  # Zero crossing indices
 
         # finding maximums and minimums (peaks) of the autoccorelation
-        maxSDOFcorr = [np.max(normSDOFcorr[zc1[_i]:zc1[_i+2]])
-                       for _i in range(0, len(zc1)-2, 2)]
-        minSDOFcorr = [np.min(normSDOFcorr[zc1[_i]:zc1[_i+2]])
-                       for _i in range(0, len(zc1)-2, 2)]
+        maxSDOFcorr = [
+            np.max(normSDOFcorr[zc1[_i] : zc1[_i + 2]])
+            for _i in range(0, len(zc1) - 2, 2)
+        ]
+        minSDOFcorr = [
+            np.min(normSDOFcorr[zc1[_i] : zc1[_i + 2]])
+            for _i in range(0, len(zc1) - 2, 2)
+        ]
         if len(maxSDOFcorr) > len(minSDOFcorr):
             maxSDOFcorr = maxSDOFcorr[:-1]
         elif len(maxSDOFcorr) < len(minSDOFcorr):
             minSDOFcorr = minSDOFcorr[:-1]
 
         minmax = np.array((minSDOFcorr, maxSDOFcorr))
-        minmax = np.ravel(minmax, order='F')
+        minmax = np.ravel(minmax, order="F")
 
         # finding the indices of the peaks
-        maxSDOFcorr_idx = [np.argmin(abs(normSDOFcorr-maxx))
-                           for maxx in maxSDOFcorr]
-        minSDOFcorr_idx = [np.argmin(abs(normSDOFcorr-minn))
-                           for minn in minSDOFcorr]
+        maxSDOFcorr_idx = [np.argmin(abs(normSDOFcorr - maxx)) for maxx in maxSDOFcorr]
+        minSDOFcorr_idx = [np.argmin(abs(normSDOFcorr - minn)) for minn in minSDOFcorr]
         minmax_idx = np.array((minSDOFcorr_idx, maxSDOFcorr_idx))
-        minmax_idx = np.ravel(minmax_idx, order='F')
+        minmax_idx = np.ravel(minmax_idx, order="F")
 
         # Peacks and indices of the peaks to be used in the fitting
-        minmax_fit = np.array([minmax[_a]
-                               for _a in range(sppk, sppk+npmax)])
-        minmax_fit_idx = np.array([minmax_idx[_a]
-                                   for _a in range(sppk, sppk+npmax)])
+        minmax_fit = np.array([minmax[_a] for _a in range(sppk, sppk + npmax)])
+        minmax_fit_idx = np.array([minmax_idx[_a] for _a in range(sppk, sppk + npmax)])
 
         # estimating the natural frequency from the distance between the peaks
         # *2 because we use both max and min
-        Td = np.diff(time[minmax_fit_idx])*2
+        Td = np.diff(time[minmax_fit_idx]) * 2
         Td_EFDD = np.mean(Td)
 
-        fd_EFDD = 1/Td_EFDD  # damped natural frequency
+        fd_EFDD = 1 / Td_EFDD  # damped natural frequency
 
         # Log decrement
-        delta = np.array([2*np.log(np.abs(minmax[0])/np.abs(minmax[ii]))
-                          for ii in range(len(minmax_fit))])
+        delta = np.array(
+            [
+                2 * np.log(np.abs(minmax[0]) / np.abs(minmax[ii]))
+                for ii in range(len(minmax_fit))
+            ]
+        )
 
         # Fit
-        def _fit(x, m): return m*x
+        def _fit(x, m):
+            return m * x
+
         lam, _ = curve_fit(_fit, np.arange(len(minmax_fit)), delta)
 
         # damping ratio
         if methodSy == "cor":  # correct for exponential window
-            tau = -(nxseg-1) / np.log(0.01)
-            lam = 2*lam-1/tau  # lam*2 because we use both max and min
+            tau = -(nxseg - 1) / np.log(0.01)
+            lam = 2 * lam - 1 / tau  # lam*2 because we use both max and min
         elif methodSy == "per":
-            lam = 2*lam  # lam*2 because we use both max and min
+            lam = 2 * lam  # lam*2 because we use both max and min
 
-        xi_EFDD = lam/np.sqrt(4*np.pi**2 + lam**2)
+        xi_EFDD = lam / np.sqrt(4 * np.pi**2 + lam**2)
 
-        fn_EFDD = fd_EFDD/np.sqrt(1-xi_EFDD**2)
+        fn_EFDD = fd_EFDD / np.sqrt(1 - xi_EFDD**2)
 
         # Finally appending the results
         Fn_E.append(fn_EFDD)
         Xi_E.append(xi_EFDD)
         Phi_E.append(phi_FDD)
 
-        PerPlot.append([freq, time, SDOFbell, Sval, idSV,
-                       normSDOFcorr, minmax_fit_idx, lam, delta])
+        PerPlot.append(
+            [freq, time, SDOFbell, Sval, idSV, normSDOFcorr, minmax_fit_idx, lam, delta]
+        )
     print("Done!")
 
     Fn = np.array(Fn_E)

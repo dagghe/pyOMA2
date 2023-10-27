@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Sat Oct 21 19:12:47 2023
 
@@ -6,10 +5,10 @@ Created on Sat Oct 21 19:12:47 2023
 """
 import numpy as np
 
-
 # =============================================================================
 # FUNZIONI PolyMAX
 # =============================================================================
+
 
 def pLSCF(Sy, dt, ordmax):
     """
@@ -30,12 +29,11 @@ def pLSCF(Sy, dt, ordmax):
     Returns:
     list: List of companion matrices for each order up to ordmax.
 
-    Notes:
-"""
+    Notes:"""
     Nf = Sy.shape[2]
-    freq = np.arange(0, Nf)*(1/dt/(2*Nf))
+    freq = np.arange(0, Nf) * (1 / dt / (2 * Nf))
     # p-LSCF - METODO CON MATRICI REALI
-    freq_w = 2*np.pi*freq
+    freq_w = 2 * np.pi * freq
 
     # The PSD matrix should be in the format (k, o, o) where:
     # k=1,2,...Nf; and o=1,2...Nch
@@ -45,33 +43,34 @@ def pLSCF(Sy, dt, ordmax):
     Nref = Sy.shape[2]
     A = []
     # Calculation of companion matrix A and modal parameters for each order
-    for j in range(1, ordmax+1):  # loop for increasing model order
-        M = np.zeros(((j+1)*Nref, (j+1)*Nref))  # inizializzo
-        X0 = np.array([np.exp(1j*freq_w*dt*jj) for jj in range(j+1)]).T
+    for j in range(1, ordmax + 1):  # loop for increasing model order
+        M = np.zeros(((j + 1) * Nref, (j + 1) * Nref))  # inizializzo
+        X0 = np.array([np.exp(1j * freq_w * dt * jj) for jj in range(j + 1)]).T
         X0h = X0.conj().T  # Calculate complex transpose
         R0 = np.real(X0h @ X0)  # 4.163
 
         for o in range(0, Nch):  # loop on channels
-            Y0 = np.array([np.kron(-X0[kk, :], Sy[kk, o, :])
-                          for kk in range(Nf)])
+            Y0 = np.array([np.kron(-X0[kk, :], Sy[kk, o, :]) for kk in range(Nf)])
             S0 = np.real(X0h @ Y0)  # 4.164
             T0 = np.real(Y0.conj().T @ Y0)  # 4.165
             # np.linalg.solve(R0, S0))) # 4.167
-            M += 2*(T0 - (S0.T @ np.linalg.inv(R0) @ S0))
-        alfa = np.linalg.solve(-M[: j*Nref, : j*Nref],
-                               M[: j*Nref, j*Nref: (j+1)*Nref])  # 4.169
+            M += 2 * (T0 - (S0.T @ np.linalg.inv(R0) @ S0))
+        alfa = np.linalg.solve(
+            -M[: j * Nref, : j * Nref], M[: j * Nref, j * Nref : (j + 1) * Nref]
+        )  # 4.169
         alfa = np.vstack((alfa, np.eye(Nref)))
         # beta0 = np.linalg.solve(-R0, S0@alfa)
         # Companion matrix
-        AA = np.zeros((j*Nref, j*Nref))
+        AA = np.zeros((j * Nref, j * Nref))
         for ii in range(j):
-            Aj = alfa[ii*Nref: (ii+1)*Nref, :]
-            AA[(j-1)*Nref:, ii*Nref: (ii+1)*Nref] = -Aj.T
+            Aj = alfa[ii * Nref : (ii + 1) * Nref, :]
+            AA[(j - 1) * Nref :, ii * Nref : (ii + 1) * Nref] = -Aj.T
         if j == 1:
             A.append(np.zeros((0, 0)))
-        AA[: (j-1)*Nref, Nref: j*Nref] = np.eye(((j-1)*Nref))
+        AA[: (j - 1) * Nref, Nref : j * Nref] = np.eye((j - 1) * Nref)
         A.append(AA)
     return A
+
 
 # -----------------------------------------------------------------------------
 
@@ -86,27 +85,27 @@ def pLSCF(Sy, dt, ordmax):
 
 def pLSCF_Poles(A, ordmax, dt, methodSy, nxseg, Nref=None):
     Nch = int(A[1].shape[0])
-    if Nref == None:
+    if Nref is None:
         Nref = Nch
-    Fn = np.full((ordmax*Nch, ordmax+1), np.nan)  # initialise
-    Sm = np.full((ordmax*Nch, ordmax+1), np.nan)  # initialise
+    Fn = np.full((ordmax * Nch, ordmax + 1), np.nan)  # initialise
+    Sm = np.full((ordmax * Nch, ordmax + 1), np.nan)  # initialise
     # initialise    for ii in range(NAC):
-    Ls = np.full((ordmax*Nch, ordmax+1), np.nan, dtype=complex)
-    for j in range(1, ordmax+1):  # loop for increasing model order
+    Ls = np.full((ordmax * Nch, ordmax + 1), np.nan, dtype=complex)
+    for j in range(1, ordmax + 1):  # loop for increasing model order
         # Eigenvalueproblem
         [my, My] = np.linalg.eig(A[j])
-        lambd = np.log(my)/dt  # From discrete-time to continuous time 4.136
+        lambd = np.log(my) / dt  # From discrete-time to continuous time 4.136
         # replace with nan every value with negative real part (should be the other way around!)
         lambd = np.where(np.real(lambd) < 0, np.nan, lambd)
         if methodSy == "cor":  # correct for exponential window
-            tau = -(nxseg-1) / np.log(0.01)
-            lambd = lambd-1/tau
+            tau = -(nxseg - 1) / np.log(0.01)
+            lambd = lambd - 1 / tau
 
-        Ls[:(j)*Nch, (j)] = lambd
+        Ls[: (j) * Nch, (j)] = lambd
         # Natural frequencies (Hz) 4.137
-        Fn[:(j)*Nch, (j)] = abs(lambd)/(2*np.pi)
+        Fn[: (j) * Nch, (j)] = abs(lambd) / (2 * np.pi)
         # Damping ratio initial calc 4.139
-        Sm[:(j)*Nch, (j)] = ((np.real(lambd))/abs(lambd))
+        Sm[: (j) * Nch, (j)] = (np.real(lambd)) / abs(lambd)
     return Fn, Sm, Ls
 
 
@@ -115,11 +114,12 @@ def pLSCF_Poles(A, ordmax, dt, methodSy, nxseg, Nref=None):
 
 def Lab_stab_pLSCF(Fn, Sm, ordmax, err_fn, err_xi, max_xi):
     """
-    Helping function for the construction of the Stability Chart when using 
-    poly-reference Least Square Complex Frequency (pLSCF, also known as 
+    Helping function for the construction of the Stability Chart when using
+    poly-reference Least Square Complex Frequency (pLSCF, also known as
     Polymax) method.
 
-    This function performs stability analysis of identified poles, it categorizes modes based on their stability in terms
+    This function performs stability analysis of identified poles,
+    it categorizes modes based on their stability in terms
     of frequency and damping.
 
     :param Fr: Frequency matrix, shape: ``(n_locations, n_modes)``
@@ -138,28 +138,28 @@ def Lab_stab_pLSCF(Fn, Sm, ordmax, err_fn, err_xi, max_xi):
     Note:
 
     """
-    Lab = np.zeros(Fn.shape, dtype='int')
+    Lab = np.zeros(Fn.shape, dtype="int")
 
-# -----------------------------------------------------------------------------
-# REMOVING HARD CONDITIONS
+    # -----------------------------------------------------------------------------
+    # REMOVING HARD CONDITIONS
     # Create Mask array to pick only damping xi, which are xi> 0 and xi<max_xi
-    Mask = np.logical_and(Sm < max_xi,  Sm > 0).astype(int)
+    Mask = np.logical_and(Sm < max_xi, Sm > 0).astype(int)
     # Mask Damping Array
-    Sm1 = Sm*Mask
+    Sm1 = Sm * Mask
     Sm1[Sm1 == 0] = np.nan
     # Mask Frequency Array
-    Fn1 = Fn*Mask
+    Fn1 = Fn * Mask
     Fn1[Fn1 == 0] = np.nan
 
-# -----------------------------------------------------------------------------
-# STABILITY BETWEEN CONSECUTIVE ORDERS
-    for nn in range(1, ordmax+1):
+    # -----------------------------------------------------------------------------
+    # STABILITY BETWEEN CONSECUTIVE ORDERS
+    for nn in range(1, ordmax + 1):
 
         f_n = Fn1[:, nn].reshape(-1, 1)
         xi_n = Sm[:, nn].reshape(-1, 1)
 
-        f_n1 = Fn1[:, nn-1].reshape(-1, 1)
-        xi_n1 = Sm[:, nn-1].reshape(-1, 1)
+        f_n1 = Fn1[:, nn - 1].reshape(-1, 1)
+        xi_n1 = Sm[:, nn - 1].reshape(-1, 1)
 
         if nn != 0:
 
@@ -194,9 +194,9 @@ def Lab_stab_pLSCF(Fn, Sm, ordmax, err_fn, err_xi, max_xi):
 
 
 def pLSCF_MPE(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
-    '''
+    """
     Bla bla bla
-    '''
+    """
     sel_freq1 = []
     sel_xi = []
     sel_lam = []
@@ -214,13 +214,13 @@ def pLSCF_MPE(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
             sel_lam.append(Ls_pol[:, order][sel])
 
     Nch, Nref, Nf = Sy.shape
-    w_sel = np.array(sel_freq)*(2*np.pi)
+    w_sel = np.array(sel_freq) * (2 * np.pi)
     Nm = len(sel_lam)  # numero modi
     Phi = np.zeros((Nch, Nm), dtype=complex)
-    freq = np.arange(0, Nf)*(1/dt/(2*Nf))
-    freq_rad = 2*np.pi*freq
-    LL = np.zeros((Nch*Nm, Nch*Nm), dtype=complex)  # inizializzo
-    GL = np.zeros((Nch*Nm, Nch), dtype=complex)  # inizializzo
+    freq = np.arange(0, Nf) * (1 / dt / (2 * Nf))
+    freq_rad = 2 * np.pi * freq
+    LL = np.zeros((Nch * Nm, Nch * Nm), dtype=complex)  # inizializzo
+    GL = np.zeros((Nch * Nm, Nch), dtype=complex)  # inizializzo
     Sy = np.moveaxis(Sy, 2, 0)
     for ww in w_sel:  # loop su poli selezionati
 
@@ -234,27 +234,37 @@ def pLSCF_MPE(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
         # for kk in range(idx_w-nn, idx_w+nn):
         for kk in range(Nf):
             GL += np.array(
-                [Sy[kk, :, :]/(1j*freq_rad[kk]-sel_lam[jj])
-                 for jj in range(Nm)]
+                [Sy[kk, :, :] / (1j * freq_rad[kk] - sel_lam[jj]) for jj in range(Nm)]
             ).reshape(-1, Nch)
 
-            LL += np.array([
-                np.array([np.eye(Nch) /
-                                ((1j*freq_rad[kk]-sel_lam[jj1])
-                                 * (1j*freq_rad[kk]-sel_lam[jj2]))
-                          for jj2 in range(Nm)]).reshape((Nch*Nm, Nch), order="c").T
-                for jj1 in range(Nm)]).reshape((Nch*Nm, Nch*Nm))
+            LL += np.array(
+                [
+                    np.array(
+                        [
+                            np.eye(Nch)
+                            / (
+                                (1j * freq_rad[kk] - sel_lam[jj1])
+                                * (1j * freq_rad[kk] - sel_lam[jj2])
+                            )
+                            for jj2 in range(Nm)
+                        ]
+                    )
+                    .reshape((Nch * Nm, Nch), order="c")
+                    .T
+                    for jj1 in range(Nm)
+                ]
+            ).reshape((Nch * Nm, Nch * Nm))
 
     R = np.linalg.solve(LL, GL)  # matrice dei residui (fi@fi^T
 
     for jj in range(len(w_sel)):
         # SVD della matrice dei residui per ciascun modo fisico del sistema
-        U, S, VT = np.linalg.svd(R[jj*Nch: (jj+1)*Nch, :])
+        U, S, VT = np.linalg.svd(R[jj * Nch : (jj + 1) * Nch, :])
 
         phi = U[:, 0]  # la forma modale è la prima colonna di U
 
         idmax = np.argmax(abs(phi))
-        phiN = phi/phi[idmax]  # normalised (unity displacement)
+        phiN = phi / phi[idmax]  # normalised (unity displacement)
 
         Phi[:, jj] = phiN
     # Save results
@@ -262,4 +272,3 @@ def pLSCF_MPE(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
     Xi = np.array(sel_xi)
 
     return Fn, Xi, Phi
-

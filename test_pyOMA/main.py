@@ -10,7 +10,9 @@ if __name__ == "__main__":
     print("**** Running single setup ****")
 
     htc1 = read_from_test_data("test_pyOMA/test_data/3SL/3SL_set1.txt")
-    palisaden1 = read_from_test_data("test_pyOMA/test_data/palisaden/Palisaden_3_11082022_DAG.txt")
+    palisaden1 = read_from_test_data(
+        "test_pyOMA/test_data/palisaden/Palisaden_3_11082022_DAG.txt"
+    )
 
     # create single setup 1
     data1 = np.asarray([1, 2, 3, 4, 5])

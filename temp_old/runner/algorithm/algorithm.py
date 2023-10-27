@@ -1,9 +1,9 @@
 import abc
 import typing
 
-from pydantic import (
+from pydantic import (  # controlla che i parametri passati siano quelli giusti
     validate_call,
-)  # controlla che i parametri passati siano quelli giusti
+)
 
 from .result import BaseResult
 from .run_params import BaseRunParams

@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class BaseRunParams(BaseModel):
     """Base class for input parameters."""
+
     model_config = ConfigDict(from_attributes=True)
 
 
