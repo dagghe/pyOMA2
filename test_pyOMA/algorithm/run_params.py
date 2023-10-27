@@ -1,7 +1,6 @@
 import typing
-from dataclasses import dataclass
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class BaseRunParams(BaseModel):
@@ -22,7 +21,7 @@ class FDDRunParams(BaseRunParams):
 
 class SSIdatRunParams(BaseRunParams):
     br: int
-    ref_id: typing.Optional[list[int]] = None # lista di indici ?
+    ref_id: typing.Optional[list[int]] = None  # lista di indici ?
     ordmin: int = 0
     ordmax: typing.Optional[int] = None
     step: int = 1
