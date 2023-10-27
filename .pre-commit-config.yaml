@@ -5,8 +5,7 @@ repos:
     rev: 22.3.0
     hooks:
     -   id: black
-        args: [--config=pyproject.toml, --safe, --skip-string-normalization]
-        exclude: ^migrations/
+        args: [--config=pyproject.toml]
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
@@ -23,20 +22,16 @@ repos:
     hooks:
     -   id: pyupgrade
         args: [--py37-plus]
-        exclude: ^migrations/
 
 -   repo: https://github.com/PyCQA/flake8
     rev: 3.9.2
     hooks:
     -   id: flake8
-        args: [--config=.flake8,]
         language_version: python3
-        exclude: ^migrations/
 
 -   repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
     -   id: isort
         name: isort (python)
-        args: [--settings-path=pyproject.toml, --trailing-comma, -m=VERTICAL_HANGING_INDENT, --profile, black]
-        exclude: ^migrations/
+        args: [--settings-path=pyproject.toml]
