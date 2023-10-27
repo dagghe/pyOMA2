@@ -12,7 +12,9 @@ python3 -m venv .venv
 # Unix
 source .venv/bin/activate
 
-# Windows
+# Windows cmd
+.\.venv\Scripts\Activate.bat
+# Windows Powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
