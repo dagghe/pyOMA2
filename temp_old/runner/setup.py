@@ -13,13 +13,11 @@ class SingleSetup:
     def add_algorithms(self, *algorithms: algorithm.algorithm.BaseAlgorithm):
         self.algorithms.extend(algorithms)
 
-
     def _find_algorithm(self, name: str) -> algorithm.algorithm.BaseAlgorithm:
         for algorithm in self.algorithms:
             if algorithm.name == name:
                 return algorithm
         raise ValueError(f"Algorithm {name} not found")
-
 
     def run_all(self):
         for algorithm in self.algorithms:
@@ -49,9 +47,9 @@ class SingleSetup:
         print("selecct peaks done")
 
 
-
 class MultiSetup:
     """Come il Single setup ma prende nell'init una lista degli stessi argomenti"""
+
     def __init__(self, data: list[typing.Iterable[float]], fs: list[float]):
         self.data = data
         self.fs = fs
@@ -59,7 +57,7 @@ class MultiSetup:
 
     def add_setups(self, *setups: SingleSetup):
         self.setups.extend(setups)
-    
+
     def run_all(self):
         for setup in self.setups:
             setup.run_all()
