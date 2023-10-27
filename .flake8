@@ -1,0 +1,6 @@
+[flake8]
+per-file-ignores =
+    __init__.py:F401
+max-line-length = 90
+safe = true
+skip-string-normalization = true

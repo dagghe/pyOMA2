@@ -19,41 +19,41 @@ class SingleSetup:
     # find algorithm (method) from the available ones.
     def _find_algorithm(self, name: str) -> algorithm.algorithm.BaseAlgorithm:
         for alg in self.algorithms:
-            if algorithm.name == name:
-                return algorithm
+            if alg.name == name:
+                return alg
         raise ValueError(f"Algorithm {name} not found")
 
     # run the whole set of algorithms (methods).
     def run_all(self):
         for alg in self.algorithms:
-            print(f"Running {algorithm.name} with params {algorithm.run_params}")
-            algorithm.run(data=self.data, fs=self.fs)
+            print(f"Running {alg.name} with params {alg.run_params}")
+            alg.run(data=self.data, fs=self.fs)
         print("all done")
 
     # run algorithm (method) by name. QUESTO è IL METODO 1
     def run_by_name(self, name: str):
-        algorithm = self._find_algorithm(name)
-        if algorithm:
-            print(f"Running {algorithm.name} with params {algorithm.run_params}")
-            return algorithm.run(data=self.data, fs=self.fs)
+        alg = self._find_algorithm(name)
+        if alg:
+            print(f"Running {alg.name} with params {alg.run_params}")
+            return alg.run(data=self.data, fs=self.fs)
         print("run by name done")
 
     # get the modal properties (all results).
     #  QUESTO è IL METODO 2 (manuale)
     def MPE(self, name: str, *args, **kwargs):
-        algorithm = self._find_algorithm(name)
-        if algorithm:
-            print(f"Getting modal parameters from {algorithm.name}")
-            return algorithm.mpe(*args, **kwargs)
+        alg = self._find_algorithm(name)
+        if alg:
+            print(f"Getting modal parameters from {alg.name}")
+            return alg.mpe(*args, **kwargs)
         print("***DONE***")
 
     # get the modal properties (all results) from the plots.
     # QUESTO è IL METODO 2 (grafico)
     def MPE_fromPlot(self, name: str, *args, **kwargs):
-        algorithm = self._find_algorithm(name)
-        if algorithm:
-            print(f"Getting modal parameters from plot... {algorithm.name}")
-            return algorithm.mpe_fromPlot(*args, **kwargs)
+        alg = self._find_algorithm(name)
+        if alg:
+            print(f"Getting modal parameters from plot... {alg.name}")
+            return alg.mpe_fromPlot(*args, **kwargs)
         print("***DONE***")
         
     # method to plot the time histories of the data channels.
@@ -102,6 +102,6 @@ class MultiSetup:
     def merge_results(self):
         for setup in self.setups:
             for alg in setup.algorithms:
-                if not algorithm.result:
-                    raise ValueError(f"Run {algorithm.name} first")
-                print(f"Merging {algorithm.name} results")
+                if not alg.result:
+                    raise ValueError(f"Run {alg.name} first")
+                print(f"Merging {alg.name} results")
