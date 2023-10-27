@@ -1,0 +1,5 @@
+[tool.isort]
+split_on_trailing_comma = true
+
+[tool.black]
+line-length = 90
