@@ -3,15 +3,15 @@ from algorithm import FDD_algo, SSIcov_algo
 from algorithm.run_params import FDDRunParams, SSIcovRunParams
 from utils.utils import read_from_test_data
 
-from test_pyOMA.OMA import MultiSetup, SingleSetup
+from pyoma2.OMA import MultiSetup, SingleSetup
 
 if __name__ == "__main__":
     """Running single setup"""
     print("**** Running single setup ****")
 
-    htc1 = read_from_test_data("test_pyOMA/test_data/3SL/3SL_set1.txt")
+    htc1 = read_from_test_data("src/pyoma2/test_data/3SL/3SL_set1.txt")
     palisaden1 = read_from_test_data(
-        "test_pyOMA/test_data/palisaden/Palisaden_3_11082022_DAG.txt"
+        "src/pyoma2/test_data/palisaden/Palisaden_3_11082022_DAG.txt"
     )
 
     # create single setup 1

@@ -5,8 +5,8 @@ from pydantic import (  # controlla che i parametri passati siano quelli giusti
     validate_call,
 )
 
-from test_pyOMA.functions import (FDD_funct, Gen_funct, SSI_funct, plot_funct,
-                                  pLSCF_funct)
+from pyoma2.functions import (FDD_funct, Gen_funct, SSI_funct, plot_funct,
+                              pLSCF_funct)
 
 from .result import BaseResult
 from .run_params import BaseRunParams
