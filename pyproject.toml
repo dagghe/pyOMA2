@@ -1,3 +1,29 @@
+[project]
+name = "pyOMA2"
+version = "0.1.0"
+description = "Software for Structural Health Monitoring with Advanced Signal Processing Techniques"
+authors = [
+    {name = "Dag Pasca", email = "dpa@treteknisk.no"},
+    {name = "Marco Martino Rosso", email = "marco.rosso@polito.it"},
+    {name = "Diego Federico Margoni", email = "diegofederico.margoni@studenti.polito.it"},
+]
+dependencies = [
+    "numpy>=1.24.4",
+    "pandas>=2.0.3",
+    "scipy>=1.9.3",
+    "pydantic>=2.5.1",
+    "tqdm>=4.66.1",
+    "matplotlib>=3.7.4",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
 [tool.isort]
 split_on_trailing_comma = true
 
