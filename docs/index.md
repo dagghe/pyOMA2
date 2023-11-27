@@ -21,3 +21,8 @@ pip install pyOMA2
         ...             # all modules listed here implement utility functions
     main.py             # This module contains the main function of the library
     OMA.py              # This module contains the Single and Multiple Setup classes to run the algorithms
+
+::: src.pyoma2.OMA.SingleSetup
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -27,8 +27,9 @@ theme:
       primary: teal
       accent: lime
 
-# plugins:
-#   - social
+plugins:
+  - search
+  - mkdocstrings
 
 extra:
   social:

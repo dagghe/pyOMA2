@@ -1,7 +1,7 @@
 import typing
 
-import algorithm
-from functions.plot_funct import plt_data
+from pyoma2 import algorithm
+from pyoma2.functions.plot_funct import plt_data
 
 
 class SingleSetup:
