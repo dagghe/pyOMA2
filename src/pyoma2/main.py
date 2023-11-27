@@ -1,9 +1,9 @@
 import numpy as np
-from algorithm import FDD_algo, SSIcov_algo
-from algorithm.run_params import FDDRunParams, SSIcovRunParams
-from utils.utils import read_from_test_data
 
+from pyoma2.algorithm import FDD_algo, SSIcov_algo
+from pyoma2.algorithm.run_params import FDDRunParams, SSIcovRunParams
 from pyoma2.OMA import MultiSetup, SingleSetup
+from pyoma2.utils.utils import read_from_test_data
 
 if __name__ == "__main__":
     """Running single setup"""
