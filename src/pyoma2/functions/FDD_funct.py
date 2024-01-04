@@ -51,11 +51,11 @@ def SD_PreGER(Y, fs, ref_idx, nxseg=1024, pov=0.5, method="per"):
     # Scale spectrum to reference spectrum
     for ff in range(len(freq)):
         G1 = [
-            Gyy[ii][n_ref:, :n_ref][:, :, ff]
-            @ np.linalg.inv(Gyy[ii][:n_ref, :n_ref][:, :, ff])
-            @ Gy_refref[:, :, ff]
-            for ii in range(n_setup)
-        ]
+            np.dot(np.dot(Gyy[ii][n_ref:, :n_ref][:, :, ff],
+            np.linalg.inv(Gyy[ii][:n_ref, :n_ref][:, :, ff])),
+            Gy_refref[:, :, ff])
+    for ii in range(n_setup)
+]
         G2 = np.vstack(G1)
         G3 = np.vstack([Gy_refref[:, :, ff], G2])
         Gg.append(G3)
@@ -72,7 +72,7 @@ def SD_Est(
     Yall,
     Yref,
     dt,
-    nxseg,
+    nxseg=1024,
     method="cor",
     pov=0.5,
 ):
@@ -95,18 +95,17 @@ def SD_Est(
             Cross-Spectral Density (CSD).
             freq (ndarray): Array of frequencies.
             Sy (ndarray): Cross-Spectral Density (CSD) estimation."""
+
     if method == "cor":
         Ndat = Yref.shape[1]  # number of data points
         # n_ref =  Yref.shape[0] # number of data points
         # n_all = Yall.shape[0]
         # Calculating Auto e Cross-Spectral Density (Y_all, Y_ref)
         print("Estimating spectrum...")
-        R_i = np.array(
-            [
-                1 / (Ndat - ii) * (Yall[:, : Ndat - ii] @ Yref[:, ii:].T)
-                for ii in trange(nxseg)
-            ]
-        )
+        R_i = np.array([
+            1 / (Ndat - ii) * np.dot(Yall[:, : Ndat - ii], Yref[:, ii:].T)
+            for ii in trange(nxseg)
+        ])
         print("... Done!")
 
         nxseg, nr, nc = R_i.shape
@@ -135,7 +134,6 @@ def SD_Est(
         n_ref = Yref.shape[0]  # number of data points
         n_all = Yall.shape[0]
         # Calculating Auto e Cross-Spectral Density (Y_all, Y_ref)
-        # X DIEGO: Si puo aggiungere tqdm a questa function call di scipy?
         freq, Sy = signal.csd(
             Yall.reshape(n_all, 1, Ndat),
             Yref.reshape(1, n_ref, Ndat),
@@ -181,7 +179,7 @@ def SD_svalsvec(SD):
 # -----------------------------------------------------------------------------
 
 
-def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1, ret_peak=False):
+def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1,):
     # Sval, Svec = SD_svalsvec(Sy)
     Nch, Nref, Nf = Sval.shape
 
@@ -218,16 +216,13 @@ def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1, ret_peak=False):
     Fn = np.array(Freq)
     Phi = np.array(Fi).T
     index = np.array(index)
-    if ret_peak:
-        return Fn, Phi, maxSy_diff
-    else:
-        return Fn, Phi
+    return Fn, Phi
 
 
 # -----------------------------------------------------------------------------
-
-
-def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF=0.1):
+# COMMENT
+# Utility function (Hidden for users?)
+def _SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF=0.1):
     Sval, Svec = SD_svalsvec(Sy)
     Nch = phi_FDD.shape[0]
     nxseg = Sval.shape[2]
@@ -248,9 +243,7 @@ def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF
             # Save values that satisfy MAC > MAClim condition
             SDOFbell += np.array(
                 [
-                    phi_FDD.conj().T
-                    @ Sy[:, :, el]
-                    @ phi_FDD  # Enhanced PSD matrix (frequency filtered)
+                    np.dot(np.dot(phi_FDD.conj().T, Sy[:, :, el]), phi_FDD) # Enhanced PSD matrix (frequency filtered)
                     if GF.MAC(phi_FDD, Svec[csm, :, el]) > MAClim
                     else 0
                     for el in range(int(idxlim[0]), int(idxlim[1]))
@@ -322,7 +315,7 @@ def EFDD_MPE(
     for n in trange(len(sel_freq)):  # looping through all frequencies to estimate
         phi_FDD = Phi_FDD[:, n]  # Select reference mode shape (from FDD)
         sel_fn = sel_freq[n]
-        SDOFbell, SDOFms = SDOF_bellandMS(
+        SDOFbell, SDOFms = _SDOF_bellandMS(
             Sy, dt, sel_fn, phi_FDD, method=method, cm=cm, MAClim=MAClim, DF=DF2
         )
 

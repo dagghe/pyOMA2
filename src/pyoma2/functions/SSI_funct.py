@@ -54,13 +54,13 @@ def BuildHank(Y, Yref, br, fs, method):
         Yp = np.vstack(
             [(1 / N**0.5) * Yref[:, q + i : N + q - 1 + i] for i in range(0, -q, -1)]
         )
-        Hank = Yf @ Yp.T  # X DIEGO si puo usare tqdm per tenere d'occhio questa?
+        Hank = np.dot(Yf, Yp.T)  # X DIEGO si puo usare tqdm per tenere d'occhio questa?
         return Hank
 
     elif method == "cov_unb":
         # Correlations
         Ri = np.array(
-            [1 / (Ndat - k) * (Y[:, : Ndat - k] @ Yref[:, k:].T) for k in trange(p + q)]
+            [1 / (Ndat - k) * np.dot(Y[:, : Ndat - k], Yref[:, k:].T) for k in trange(p + q)]
         )
         # Assembling the Toepliz matrix
         Hank = np.vstack(
@@ -71,7 +71,7 @@ def BuildHank(Y, Yref, br, fs, method):
     elif method == "cov_bias":
         # Correlations
         Ri = np.array(
-            [1 / (Ndat) * (Y[:, : Ndat - k] @ Yref[:, k:].T) for k in trange(p + q)]
+            [1 / (Ndat) * np.dot(Y[:, : Ndat - k], Yref[:, k:].T) for k in trange(p + q)]
         )
         # Assembling the Toepliz matrix
         Hank = np.vstack(
@@ -138,7 +138,7 @@ def AC2MP(A, C, dt):
     fn = abs(Lambda) / (2 * np.pi)  # natural frequencies
     xi = -((np.real(Lambda)) / (abs(Lambda)))  # damping ratios
     # Complex mode shapes
-    phi = C @ AuVett
+    phi = np.dot(C, AuVett)
     # normalised (unity displacement)
     phi = np.array(
         [phi[:, ii] / phi[np.argmax(abs(phi[:, ii])), ii] for ii in range(phi.shape[1])]
@@ -178,17 +178,17 @@ def SSI(H, br, ordmax, step=1):
     U1, S1, V1_t = np.linalg.svd(H)
     S1rad = np.sqrt(np.diag(S1))
     # initializing arrays
-    # Obs = U1[:, :ordmax] @ S1rad[:ordmax, :ordmax] # Observability matrix
-    # Con = S1rad[:ordmax, :ordmax] @ V1_t[: ordmax, :] # Controllability matrix
+    # Obs = np.dot(U1[:, :ordmax], S1rad[:ordmax, :ordmax]) # Observability matrix
+    # Con = np.dot(S1rad[:ordmax, :ordmax], V1_t[: ordmax, :]) # Controllability matrix
     A = []
     C = []
     # loop for increasing order of the system
     print("SSI for increasing model order...")
     for ii in trange(0, ordmax + 1, step):
-        Obs = U1[:, :ii] @ S1rad[:ii, :ii]  # Observability matrix
-        # Con = S1rad[:ii, :ii] @ V1_t[: ii, :] # Controllability matrix
+        Obs = np.dot(U1[:, :ii], S1rad[:ii, :ii])  # Observability matrix
+        # Con = np.dot(S1rad[:ii, :ii], V1_t[: ii, :]) # Controllability matrix
         # System Matrix
-        A.append(np.linalg.pinv(Obs[: Obs.shape[0] - Nch, :]) @ Obs[Nch:, :])
+        A.append(np.dot(np.linalg.pinv(Obs[: Obs.shape[0] - Nch, :]), Obs[Nch:, :]))
         # Output Influence Matrix
         C.append(Obs[:Nch, :])
         # G = Con[:, Nch:]
@@ -227,20 +227,20 @@ def SSI_FAST(H, br, ordmax, step=1):
     U1, S1, V1_t = np.linalg.svd(H)
     S1rad = np.sqrt(np.diag(S1))
     # initializing arrays
-    Obs = U1[:, :ordmax] @ S1rad[:ordmax, :ordmax]  # Observability matrix
+    Obs = np.dot(U1[:, :ordmax], S1rad[:ordmax, :ordmax]) # Observability matrix
     O_p = Obs[: Obs.shape[0] - Nch, :]
     O_m = Obs[Nch:, :]
     # QR decomposition
     Q, R = np.linalg.qr(O_p)
-    S = Q.T @ O_m
-    # Con = S1rad[:ordmax, :ordmax] @ V1_t[: ordmax, :] # Controllability matrix
+    S = np.dot(Q.T, O_m)
+    # Con = np.dot(S1rad[:ordmax, :ordmax], V1_t[: ordmax, :]) # Controllability matrix
     A = []
     C = []
     # loop for increasing order of the system
     print("SSI for increasing model order...")
     for ii in trange(0, ordmax + 1, step):
         # System Matrix
-        A.append(np.linalg.inv(R[:ii, :ii]) @ S[:ii, :ii])
+        A.append(np.dot(np.linalg.inv(R[:ii, :ii]), S[:ii, :ii]))
         # Output Influence Matrix
         C.append(Obs[:Nch, :ii])
     print("... Done!")
@@ -355,7 +355,7 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
         U1, S1, V1_t = np.linalg.svd(H)
         S1rad = np.sqrt(np.diag(S1))
         # Observability matrix
-        Obs = U1[:, :ordmax] @ S1rad[:ordmax, :ordmax]
+        Obs = np.dot(U1[:, :ordmax], S1rad[:ordmax, :ordmax])
         # get reference idexes
         ref_id = np.array([np.arange(br) * (n_ref + n_mov[kk]) + j for j in range(n_ref)])
         ref_id = ref_id.flatten(order="f")
@@ -370,7 +370,7 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
         if kk == 0:
             O1_ref = O_ref  # basis
         # scale the moving observability matrix to the reference basis
-        O_movs = O_mov @ np.linalg.pinv(O_ref) @ O1_ref
+        O_movs = np.dot(np.dot(O_mov, np.linalg.pinv(O_ref)), O1_ref)
         O_mov_s.append(O_movs)
         print(f"... Done with setup nr.:{kk}!")
 
@@ -392,14 +392,14 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
         O_m = Obs_all[n_DOF:, :]
         # QR decomposition
         Q, R = np.linalg.qr(O_p)
-        S = Q.T @ O_m
-        # Con = S1rad[:ordmax, :ordmax] @ V1_t[: ordmax, :] # Controllability matrix
+        S = np.dot(Q.T, O_m)
+        # Con = np.dot(S1rad[:ordmax, :ordmax], V1_t[: ordmax, :]) # Controllability matrix
         A = []
         C = []
         # loop for increasing order of the system
         for i in trange(0, ordmax + 1, step):
             # System Matrix
-            A.append(np.linalg.inv(R[:i, :i]) @ S[:i, :i])
+            A.append(np.dot(np.linalg.inv(R[:i, :i]), S[:i, :i]))
             # Output Influence Matrix
             C.append(Obs_all[:n_DOF, :i])
     elif method == "SLOW":
@@ -407,7 +407,7 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
         C = []
         # loop over model orders
         for i in trange(0, ordmax + 1, step):
-            A.append(np.linalg.pinv(Obs_all[:-n_DOF, :i]) @ Obs_all[n_DOF:, :i])
+            A.append(np.dot(np.linalg.pinv(Obs_all[:-n_DOF, :i]), Obs_all[n_DOF:, :i]))
             C.append(Obs_all[:n_DOF, :i])
 
     return A, C

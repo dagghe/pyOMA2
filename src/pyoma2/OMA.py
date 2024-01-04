@@ -13,6 +13,9 @@ class SingleSetup:
 
     # add algorithm (method) to the set.
     def add_algorithms(self, *algorithms: algorithm.algorithm.BaseAlgorithm):
+        for alg in algorithms:
+            alg.fs = self.fs
+            alg.data = self.data
         self.algorithms.extend(algorithms)
 
     # find algorithm (method) from the available ones.

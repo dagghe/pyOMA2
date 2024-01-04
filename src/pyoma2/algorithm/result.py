@@ -8,31 +8,30 @@ import numpy.typing as npt
 
 @dataclass
 class BaseResult:
-    df: int
-    S_val: int
-    S_vec: int
-    freqs: int
-    Fn: int
-    Phi: int
-    Freq_ind: int
-    PSD_matr: int
+    Fn: npt.NDArray[np.float32] # array of natural frequencies
+    Phi: npt.NDArray[np.float32] # array of Mode shape vectors
+    # Xi: npt.NDArray[np.float32] # array of damping ratios
 
 
 @dataclass
 class FDDResult(BaseResult):
-    pass
+    freq: npt.NDArray[np.float32]
+    Sy: npt.NDArray[np.float32]
+    S_val: npt.NDArray[np.float32]
+    S_vec: npt.NDArray[np.float32]
+
+    Freq_ind: npt.NDArray[np.float32]
+    sel_freq: npt.NDArray[np.float32]
 
 
 @dataclass
-class EFDDResult(BaseResult):
-    Method: int
-    xi: int
-    Figs: int
+class EFDDResult(FDDResult):
+    Xi: npt.NDArray[np.float32] # array of damping ratios
+    forPlot: list
 
 
 @dataclass
 class SSIcovResult(BaseResult):
-    Method: str
     Fn_poles: npt.NDArray[np.float32]
     xi_poles: npt.NDArray[np.float32]
     Phi_poles: npt.NDArray[np.float32]
@@ -46,4 +45,4 @@ class SSIdatResult(SSIcovResult):
 
 @dataclass
 class pLSCFResult(SSIcovResult):
-    ordmax: int
+    pass

@@ -47,19 +47,19 @@ def pLSCF(Sy, dt, ordmax):
         M = np.zeros(((j + 1) * Nref, (j + 1) * Nref))  # inizializzo
         X0 = np.array([np.exp(1j * freq_w * dt * jj) for jj in range(j + 1)]).T
         X0h = X0.conj().T  # Calculate complex transpose
-        R0 = np.real(X0h @ X0)  # 4.163
+        R0 = np.real(np.dot(X0h,X0))  # 4.163
 
         for o in range(0, Nch):  # loop on channels
             Y0 = np.array([np.kron(-X0[kk, :], Sy[kk, o, :]) for kk in range(Nf)])
-            S0 = np.real(X0h @ Y0)  # 4.164
-            T0 = np.real(Y0.conj().T @ Y0)  # 4.165
+            S0 = np.real(np.dot(X0h,Y0))  # 4.164
+            T0 = np.real(np.dot(Y0.conj().T, Y0))  # 4.165
             # np.linalg.solve(R0, S0))) # 4.167
-            M += 2 * (T0 - (S0.T @ np.linalg.inv(R0) @ S0))
+            M += 2 * (T0 - np.dot(np.dot(S0.T, np.linalg.inv(R0)), S0))
         alfa = np.linalg.solve(
             -M[: j * Nref, : j * Nref], M[: j * Nref, j * Nref : (j + 1) * Nref]
         )  # 4.169
         alfa = np.vstack((alfa, np.eye(Nref)))
-        # beta0 = np.linalg.solve(-R0, S0@alfa)
+        # beta0 = np.linalg.solve(-R0, np.dot(S0,alfa))
         # Companion matrix
         AA = np.zeros((j * Nref, j * Nref))
         for ii in range(j):
