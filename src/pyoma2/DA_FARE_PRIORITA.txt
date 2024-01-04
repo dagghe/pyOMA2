@@ -1,0 +1,10 @@
+metodo Plot STATICI
+Plot_MIF: FDD_algo e EFDD_algo
+Plot_StDiag: SSIcov_algo e SSIdat_algo
+(plot fit per EFDD e cluster plot per SSI)
+
+unire FDD e EFDD (FSDD)
+
+trovare un modo per avere accessibile fs (e/o dt, data) negli algoritmi 
+
+

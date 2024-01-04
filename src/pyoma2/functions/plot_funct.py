@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on Sat Oct 21 19:16:25 2023
 
@@ -129,7 +130,7 @@ def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
 
 # -----------------------------------------------------------------------------
 
-
+# COMMENT
 def Stab_pLSCF_plot(Fn, Lab, ordmax, freqlim=None, hide_poles=True, Sval=None, nSv=None):
     # TO DO: Add sval plot on twin ax
 
@@ -178,7 +179,7 @@ def Stab_pLSCF_plot(Fn, Lab, ordmax, freqlim=None, hide_poles=True, Sval=None, n
 
 # -----------------------------------------------------------------------------
 
-
+# COMMENT
 def Stab_SSI_plot(
     Fn, Lab, step, ordmax, ordmin=0, freqlim=None, hide_poles=True, Sval=None, nSv=None
 ):
@@ -544,6 +545,8 @@ def Transf_Matr(Nsens, mapping, s_names=None):
 # =============================================================================
 # plotting sensor's time histories
 # =============================================================================
+# COMMENT 
+# ELIMINARE LUNGHEZZA RMS 
 def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False, len_Wrms=None):
     # show RMS of signal
     if show_rms is True:

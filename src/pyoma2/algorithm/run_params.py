@@ -2,21 +2,22 @@ import typing
 
 from pydantic import BaseModel, ConfigDict
 
+import numpy as np
+import numpy.typing as npt
 
 class BaseRunParams(BaseModel):
     """Base class for input parameters."""
-
     model_config = ConfigDict(from_attributes=True)
+    fs: float 
 
 
 class FDDRunParams(BaseRunParams):
     nxseg: int = 1024
     method_SD: str = "cor"
-    df: float = 0.1
+    pov: float = 0.5
 
-
-#    pov: float = 0.5
-#    window: str = "hann"
+    DF: float = 0.1
+    sel_freq: npt.NDArray[np.float32]
 
 
 class SSIdatRunParams(BaseRunParams):

@@ -80,7 +80,7 @@ def MSF(phi_1, phi_2):
     n_modes = phi_1.shape[1]
     msf = []
     for i in range(n_modes):
-        _msf = (phi_2[:, i].T @ phi_1[:, i]) / (phi_1[:, i].T @ phi_1[:, i])
+        _msf = np.dot(phi_2[:, i].T, phi_1[:, i]) / np.dot(phi_1[:, i].T, phi_1[:, i])
 
         msf.append(_msf)
 
@@ -160,8 +160,8 @@ def MAC(phi_X, phi_A):
         )
 
     # mine
-    MAC = np.abs(phi_X.conj().T @ phi_A) ** 2 / (
-        (phi_X.conj().T @ phi_X) * (phi_A.conj().T @ phi_A)
+    MAC = np.abs(np.dot(phi_X.conj().T, phi_A)) ** 2 / (
+    (np.dot(phi_X.conj().T, phi_X)) * (np.dot(phi_A.conj().T, phi_A))
     )
     # original
     # MAC = np.abs(np.conj(phi_X).T @ phi_A)**2
