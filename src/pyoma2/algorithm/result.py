@@ -20,7 +20,6 @@ class FDDResult(BaseResult):
     S_val: npt.NDArray[np.float32]
     S_vec: npt.NDArray[np.float32]
 
-    Freq_ind: npt.NDArray[np.float32]
     sel_freq: npt.NDArray[np.float32]
 
 
@@ -31,18 +30,19 @@ class EFDDResult(FDDResult):
 
 
 @dataclass
-class SSIcovResult(BaseResult):
+class SSIResult(BaseResult):
     Fn_poles: npt.NDArray[np.float32]
     xi_poles: npt.NDArray[np.float32]
     Phi_poles: npt.NDArray[np.float32]
     lam_poles: npt.NDArray[np.float32]
+    Lab: npt.NDArray[np.float32]
+    Xi: npt.NDArray[np.float32] # array of damping ratios
+
+# @dataclass
+# class SSIdatResult(SSIcovResult):
+#     pass
 
 
 @dataclass
-class SSIdatResult(SSIcovResult):
-    pass
-
-
-@dataclass
-class pLSCFResult(SSIcovResult):
+class pLSCFResult(SSIResult):
     pass

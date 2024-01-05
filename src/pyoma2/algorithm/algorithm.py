@@ -8,16 +8,12 @@ from pydantic import (  # controlla che i parametri passati siano quelli giusti
 from pyoma2.functions import (FDD_funct, Gen_funct, SSI_funct, plot_funct,
                               pLSCF_funct)
 
-
 from pyoma2.algorithm.result import BaseResult
 # from .result import BaseResult
-
 from pyoma2.algorithm.run_params import BaseRunParams
 # from .run_params import BaseRunParams
-
 from pyoma2.algorithm.Sel_from_plot import SelFromPlot
 
-from pyoma2.OMA import SingleSetup
 
 class BaseAlgorithm(abc.ABC):
     """Abstract class for Modal Analysis algorithms"""
@@ -116,11 +112,11 @@ class EFDD_algo(BaseAlgorithm):
         Y = data.T
         dt = 1 / fs
         nxseg = self.run_params.nxseg
-        method = self.run_params.method_SD
+        methodSy = self.run_params.method_SD
 
         self.run_params.df = 1 / dt / nxseg  # frequency resolution for the spectrum
 
-        freq, Sy = FDD_funct.SD_Est(Y, Y, dt, nxseg, method=method)
+        freq, Sy = FDD_funct.SD_Est(Y, Y, dt, nxseg, method=methodSy)
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
         # Save results
@@ -133,8 +129,8 @@ class EFDD_algo(BaseAlgorithm):
     def mpe(
         self,
         sel_freq: float,
-        method: str,
-        methodSy: str = "cor",
+        method: str, # ATTENZIONE puo essere soltanto o "EFDD" o "FSDD"
+        methodSy: str = "cor", # o "cor" o "per"
         DF1: float = 0.1,
         DF2: float = 1.0,
         cm: int = 1,
@@ -165,13 +161,13 @@ class EFDD_algo(BaseAlgorithm):
             dt,
             sel_freq,
             methodSy,
-            method="EFDD",
-            DF1=0.1,
-            DF2=1.0,
-            cm=1,
-            MAClim=0.85,
-            sppk=3,
-            npmax=20,
+            method=method,
+            DF1=DF1,
+            DF2=DF2,
+            cm=cm,
+            MAClim=MAClim,
+            sppk=sppk,
+            npmax=npmax,
         )
 
         # Save results
@@ -210,7 +206,7 @@ class EFDD_algo(BaseAlgorithm):
         freq = self.result.freq
 
         # chiamare plot interattivo
-        sel_freq = SelFromPlot(self, freqlim=freqlim, plot="FDD")
+        sel_freq = SelFromPlot(self, freqlim=freqlim)
 
         # e poi estrarre risultati
         Fn_FDD, Xi_FDD, Phi_FDD, forPlot = FDD_funct.EFDD_MPE(
@@ -219,13 +215,13 @@ class EFDD_algo(BaseAlgorithm):
             dt,
             sel_freq,
             methodSy,
-            method="EFDD",
-            DF1=0.1,
-            DF2=1.0,
-            cm=1,
-            MAClim=0.85,
-            sppk=3,
-            npmax=20,
+            method=method,
+            DF1=DF1,
+            DF2=DF2,
+            cm=cm,
+            MAClim=MAClim,
+            sppk=sppk,
+            npmax=npmax,
         )
 
         # Save results
@@ -237,8 +233,9 @@ class EFDD_algo(BaseAlgorithm):
 
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIdat_algo(BaseAlgorithm):
-    def run(self, data, fs) -> typing.Any:
+# (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
+class SSI_algo(BaseAlgorithm):
+    def run(self, data, fs, method_hank) -> typing.Any:
         print(self.run_params)
         Y = data.T
         dt = 1 / fs
@@ -259,7 +256,7 @@ class SSIdat_algo(BaseAlgorithm):
             Yref = Y
 
         # Build Hankel matrix
-        H = SSI_funct.BuildHank(Y, Yref, 1 / dt, fs, method="dat")
+        H = SSI_funct.BuildHank(Y, Yref, 1 / dt, fs, method=method_hank)
         # Get state matrix and output matrix
         A, C = SSI_funct.SSI_FAST(H, br, ordmax)
         # Get frequency poles (and damping and mode shapes)
@@ -275,6 +272,7 @@ class SSIdat_algo(BaseAlgorithm):
         self.result.H = H
         self.result.A = A
         self.result.C = C
+        self.result.Lab = Lab
         self.result.Fn_pol = Fn_pol
         self.result.Sm_pol = Sm_pol
         self.result.Ms_pol = Ms_pol
@@ -282,14 +280,16 @@ class SSIdat_algo(BaseAlgorithm):
     @validate_call
     def mpe(self, 
             sel_freq: float, 
-            order: str = "find_min"
+            order: str = "find_min",
+            deltaf: float = 0.05,
+            rtol:float = 1e-2
         ) -> typing.Any:
-        super().mpe(sel_freq=sel_freq, 
-                    order=order)
+        super().mpe(sel_freq=sel_freq, order=order, deltaf=deltaf, rtol=rtol)
 
         Fn_pol = self.result.Fn_pol
         Sm_pol = self.result.Sm_pol
         Ms_pol = self.result.Ms_pol
+        Lab = self.result.Lab
 
         Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
             sel_freq, 
@@ -297,9 +297,9 @@ class SSIdat_algo(BaseAlgorithm):
             Sm_pol, 
             Ms_pol, 
             order, 
-            Lab=None, 
-            deltaf=0.05, 
-            rtol=1e-2
+            Lab=Lab, 
+            deltaf=deltaf, 
+            rtol=rtol
         )
 
         # Save results
@@ -321,7 +321,7 @@ class SSIdat_algo(BaseAlgorithm):
         Ms_pol = self.result.Ms_pol
 
         # chiamare plot interattivo
-        sel_freq, order = SelFromPlot(self, freqlim=freqlim, plot="SSI")
+        sel_freq, order = SelFromPlot(self, freqlim=freqlim)
 
         # e poi estrarre risultati
         Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
@@ -333,101 +333,6 @@ class SSIdat_algo(BaseAlgorithm):
         self.result.Sm = Xi_SSI
         self.result.Ms = Phi_SSI
 
-# =============================================================================
-# (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIcov_algo(BaseAlgorithm):
-    def run(self, data, fs) -> typing.Any:
-        print(self.run_params)
-        Y = data.T
-        dt = 1 / fs
-        br = self.run_params.br
-        method = self.run_params.method_hank
-        ordmin = self.run_params.ordmin
-        ordmax = self.run_params.ordmax
-        step = self.run_params.step
-        err_fn = self.run_params.err_fn
-        err_xi = self.run_params.err_xi
-        err_phi = self.run_params.err_phi
-        xi_max = self.run_params.xi_max
-
-        if self.ref_ind is not None:
-            ref_ind = self.run_params.ref_ind
-            Yref = Y[ref_ind,:]
-        else:
-            Yref = Y
-
-        # Build Hankel matrix
-        H = SSI_funct.BuildHank(Y, Yref, 1 / dt, fs, method=method)
-        # Get state matrix and output matrix
-        A, C = SSI_funct.SSI_FAST(H, br, ordmax)
-        # Get frequency poles (and damping and mode shapes)
-        Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, dt, step=step)
-        # Get the labels of the poles
-        Lab = SSI_funct.Lab_stab_SSI(
-            Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
-        )
-
-        # Save results
-        self.result.H = H
-        self.result.A = A
-        self.result.C = C
-        self.result.Fn_pol = Fn_pol
-        self.result.Sm_pol = Sm_pol
-        self.result.Ms_pol = Ms_pol
-
-    @validate_call
-    def mpe(self, 
-            sel_freq: float, 
-            order: str = "find_min"
-        ) -> typing.Any:
-        super().mpe(sel_freq=sel_freq, 
-                    order=order)
-
-        Fn_pol = self.result.Fn_pol
-        Sm_pol = self.result.Sm_pol
-        Ms_pol = self.result.Ms_pol
-
-        Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
-            sel_freq, 
-            Fn_pol, 
-            Sm_pol, 
-            Ms_pol, 
-            order, 
-            Lab=None, 
-            deltaf=0.05, 
-            rtol=1e-2
-        )
-
-        # Save results
-        self.result.Fn = Fn_SSI
-        self.result.Sm = Xi_SSI
-        self.result.Ms = Phi_SSI
-
-    @validate_call
-    def mpe_fromPlot(
-        self,
-        freqlim: typing.Optional[float] = None,
-    ) -> typing.Any:
-        super().mpe_fromPlot(
-            freqlim=freqlim,
-        )
-        
-        Fn_pol = self.result.Fn_pol
-        Sm_pol = self.result.Sm_pol
-        Ms_pol = self.result.Ms_pol
-
-        # chiamare plot interattivo
-        sel_freq, order = SelFromPlot(self, freqlim=freqlim, plot="SSI")
-
-        # e poi estrarre risultati
-        Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
-            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2
-        )
-        
-        # Save results
-        self.result.Fn = Fn_SSI
-        self.result.Sm = Xi_SSI
-        self.result.Ms = Phi_SSI
 
 # =============================================================================
 # ------------------------------------------------------------------------------

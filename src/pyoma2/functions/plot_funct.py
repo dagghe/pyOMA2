@@ -7,17 +7,27 @@ Created on Sat Oct 21 19:16:25 2023
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 import numpy as np
-
+from .FDD_funct import BaseResult
 # =============================================================================
 # PLOT ALGORITMI
 # =============================================================================
 
 
-def MIF_plot(sval, freq, freqlim=None, nSv="all"):
-    fig, ax = plt.subplots()
+def CMIF_plot(sval, freq, freqlim=None, nSv="all", fig=None, ax=None):
+    # COMPLEX MODE INDICATOR FUNCTION
+    if fig == None and ax == None:
+        fig, ax = plt.subplots()
     if nSv == "all":
         nSv = sval.shape[1]
-    # assert nSv < sval.shape[1]
+    # Check that the number of singular value to plot is lower thant the total
+    # number of singular values
+    else:
+        try:
+            int(nSv) < sval.shape[1]
+        except:
+            # DA SISTEMARE!!!
+            raise ValueError("ERROR")
+
     for k in range(nSv):
         if k == 0:
             ax.plot(
@@ -181,9 +191,12 @@ def Stab_pLSCF_plot(Fn, Lab, ordmax, freqlim=None, hide_poles=True, Sval=None, n
 
 # COMMENT
 def Stab_SSI_plot(
-    Fn, Lab, step, ordmax, ordmin=0, freqlim=None, hide_poles=True, Sval=None, nSv=None
+    Fn, Lab, step, ordmax, ordmin=0, freqlim=None, hide_poles=True, 
+    fig=None, ax=None,
 ):
-    # TO DO: Add sval plot on twin ax
+    
+    if fig == None and ax == None:
+        fig, ax = plt.subplots()
 
     # Stable pole
     a = np.where(Lab == 7, Fn, np.nan)
@@ -203,14 +216,13 @@ def Stab_SSI_plot(
     # new or unstable
     h = np.where(Lab == 0, Fn, np.nan)
 
-    fig, ax1 = plt.subplots()
-    ax1.set_title("Stabilisation Chart")
-    ax1.set_ylabel("Model Order")
-    ax1.set_xlabel("Frequency [Hz]")
+    ax.set_title("Stabilisation Chart")
+    ax.set_ylabel("Model Order")
+    ax.set_xlabel("Frequency [Hz]")
     if hide_poles:
         x = a.flatten(order="f")
         y = np.array([i // len(a) for i in range(len(x))]) * step + ordmin
-        ax1.plot(x, y, "go", markersize=7, label="Stable pole")
+        ax.plot(x, y, "go", markersize=7, label="Stable pole")
 
     else:
         x = a.flatten(order="f")
@@ -226,9 +238,9 @@ def Stab_SSI_plot(
         x6 = g.flatten(order="f")
         x7 = h.flatten(order="f")
 
-        ax1.plot(x, y, "go", markersize=7, label="Stable pole")
+        ax.plot(x, y, "go", markersize=7, label="Stable pole")
 
-        ax1.scatter(
+        ax.scatter(
             x1,
             y1,
             marker="o",
@@ -236,10 +248,10 @@ def Stab_SSI_plot(
             c="#FFFF00",
             label="Stable frequency, stable mode shape",
         )
-        ax1.scatter(
+        ax.scatter(
             x2, y1, marker="o", s=4, c="#FFFF00", label="Stable frequency, stable damping"
         )
-        ax1.scatter(
+        ax.scatter(
             x3,
             y1,
             marker="o",
@@ -247,18 +259,18 @@ def Stab_SSI_plot(
             c="#FFFF00",
             label="Stable damping, stable mode shape",
         )
-        ax1.scatter(x4, y1, marker="o", s=4, c="#FFA500", label="Stable damping")
-        ax1.scatter(x5, y1, marker="o", s=4, c="#FFA500", label="Stable mode shape")
-        ax1.scatter(x6, y1, marker="o", s=4, c="#FFA500", label="Stable frequency")
-        ax1.scatter(x7, y1, marker="o", s=4, c="r", label="Unstable pole")
+        ax.scatter(x4, y1, marker="o", s=4, c="#FFA500", label="Stable damping")
+        ax.scatter(x5, y1, marker="o", s=4, c="#FFA500", label="Stable mode shape")
+        ax.scatter(x6, y1, marker="o", s=4, c="#FFA500", label="Stable frequency")
+        ax.scatter(x7, y1, marker="o", s=4, c="r", label="Unstable pole")
 
-        ax1.legend(loc="lower center", ncol=2)
-        ax1.set_ylim(ordmin, ordmax + 1)
+        ax.legend(loc="lower center", ncol=2)
+        ax.set_ylim(ordmin, ordmax + 1)
 
-    ax1.grid()
-    ax1.set_xlim(left=0, right=freqlim)
+    ax.grid()
+    ax.set_xlim(left=0, right=freqlim)
     plt.tight_layout()
-    return fig, ax1
+    return fig, ax
 
 
 # -----------------------------------------------------------------------------
@@ -545,20 +557,14 @@ def Transf_Matr(Nsens, mapping, s_names=None):
 # =============================================================================
 # plotting sensor's time histories
 # =============================================================================
-# COMMENT 
-# ELIMINARE LUNGHEZZA RMS 
-def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False, len_Wrms=None):
+
+def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
     # show RMS of signal
     if show_rms is True:
-        # if the lenght of the window is not provided the RMS is calculated over the whole signal
-        if len_Wrms is None:
             a_rmss = np.array(
-                [window_rms(data[:, _kk], data.shape[0]) for _kk in range(data.shape[1])]
+                [np.sqrt(1/len(data[:, _kk])*np.sum(data[:, _kk]**2))
+                    for _kk in range(data.shape[1])]
             )
-        else:
-            a_rmss = np.array(
-                [window_rms(data[:, _kk], len_Wrms) for _kk in range(data.shape[1])]
-            ).T
 
     Ndat = data.shape[0]  # number of data points
     Nch = data.shape[1]  # number of channels
@@ -585,10 +591,9 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False, len_Wrms=N
                     if jj == 0:
                         ax.set_ylabel(f"{unit}")
                     if show_rms is True:
-                        if len_Wrms is None:
-                            ax.plot(time, np.repeat(a_rmss[kk], len(time)))
-                        else:
-                            ax.plot(np.linspace(0, timef, a_rmss.shape[0]), a_rmss[:, kk])
+                        ax.plot(time, np.repeat(a_rmss[kk], len(time)),
+                                label=f"arms={a_rmss[kk][0]:.3f}")
+                        ax.legend()
                 except:
                     # if k > data.shape[1]
                     pass
@@ -601,20 +606,13 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False, len_Wrms=N
                 ax.set_title(f"{names[kk]}")
             if ii == nr - 1:
                 ax.set_xlabel("time [s]")
-            if len_Wrms is None:
-                ax.plot(time, np.repeat(a_rmss[kk], len(time)))
-            else:
-                ax.plot(np.linspace(0, timef, a_rmss.shape[0]), a_rmss[:, kk])
+            if show_rms is True:
+                ax.plot(time, np.repeat(a_rmss[kk], len(time)),
+                        label=f"arms={a_rmss[kk][0]:.3f}")
+                ax.legend()
             ax.set_ylabel(f"{unit}")
             kk += 1
     plt.tight_layout()
     return fig, ax
 
 
-def window_rms(a, window_size):
-    a2 = np.power(a, 2)
-    window = np.ones(window_size) / float(window_size)
-    if window_size == len(a):
-        return np.sqrt(np.convolve(a2, window, "valid"))[0]
-    else:
-        return np.sqrt(np.convolve(a2, window, "valid"))
