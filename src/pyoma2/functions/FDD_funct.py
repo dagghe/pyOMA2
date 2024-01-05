@@ -222,7 +222,7 @@ def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1,):
 # -----------------------------------------------------------------------------
 # COMMENT
 # Utility function (Hidden for users?)
-def _SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF=0.1):
+def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF=1.0):
     Sval, Svec = SD_svalsvec(Sy)
     Nch = phi_FDD.shape[0]
     nxseg = Sval.shape[2]
@@ -315,7 +315,7 @@ def EFDD_MPE(
     for n in trange(len(sel_freq)):  # looping through all frequencies to estimate
         phi_FDD = Phi_FDD[:, n]  # Select reference mode shape (from FDD)
         sel_fn = sel_freq[n]
-        SDOFbell, SDOFms = _SDOF_bellandMS(
+        SDOFbell, SDOFms = SDOF_bellandMS(
             Sy, dt, sel_fn, phi_FDD, method=method, cm=cm, MAClim=MAClim, DF=DF2
         )
 

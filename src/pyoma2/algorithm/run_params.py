@@ -15,12 +15,12 @@ class FDDRunParams(BaseRunParams):
     nxseg: int = 1024
     method_SD: str = "cor"
     pov: float = 0.5
-
     DF: float = 0.1
     sel_freq: npt.NDArray[np.float32]
 
 
-class SSIdatRunParams(BaseRunParams):
+class SSIRunParams(BaseRunParams):
+    method_hank: str 
     br: int
     ref_id: typing.Optional[list[int]] = None  # lista di indici ?
     ordmin: int = 0
@@ -31,6 +31,3 @@ class SSIdatRunParams(BaseRunParams):
     err_phi: float = 0.03
     xi_max: float = 0.1
 
-
-class SSIcovRunParams(SSIdatRunParams):
-    method_hank: str = "bias"

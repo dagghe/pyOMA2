@@ -65,7 +65,6 @@ class SingleSetup:
         names: None | list[str] = None,
         unit: str = "unit",
         show_rms: bool = False,
-        len_Wrms: None | int = None,
     ):
         data = self.data
         dt = self.dt
@@ -73,12 +72,7 @@ class SingleSetup:
         names = names  # list of names (str) of the channnels
         unit = unit  # str label for the y-axis (unit of measurement)
         show_rms = show_rms  # wheter to show or not the rms acc in the plot
-        len_Wrms = len_Wrms  # lenght of window for rms calc
-        # N.B. if len_Wrms is int then it's the lenght of the window to
-        # to calculate the rms acc, if None then the window is taken as the
-        # whole signal
-
-        fig, ax = plt_data(data, dt, nc, names, unit, show_rms, len_Wrms)
+        fig, ax = plt_data(data, dt, nc, names, unit, show_rms)
         # possiamo salvarli questi ora?
 
     # metodo per definire geometria 1

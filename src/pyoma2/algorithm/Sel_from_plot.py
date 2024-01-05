@@ -20,7 +20,13 @@ import tkinter as tk
 from pyoma2.functions import (FDD_funct, Gen_funct, SSI_funct, plot_funct,
                               pLSCF_funct)
 
-from pyoma2.OMA import SingleSetup
+from pyoma2.algorithm.result import BaseResult, FDDResult, EFDDResult, SSIResult
+# from .result import BaseResult
+
+from pyoma2.algorithm.run_params import BaseRunParams, SSIRunParams, FDDRunParams
+# from .run_params import BaseRunParams
+from pyoma2.functions.plot_funct import CMIF_plot, Stab_SSI_plot
+
 
 # =============================================================================
 # PLOTTING CLASS
@@ -31,55 +37,56 @@ class SelFromPlot():
         """ 
         Bla bla bla
         """
-        self.AlgoName = AlgoName
+        # self.AlgoName = AlgoName
         # CHECK PER VEDERE CHE ALGORITMO 
-        
-        # Importare frequenza campionamento da classe SingleSetup
-        self.fs = SingleSetup.fs
-
+        if AlgoName == FDD_algo or EFDD_algo:
+            self.plot = "FDD"
+        elif AlgoName == SSIdat_algo or SSIcov_algo:
+            self.plot = "SSI"
+        # elif AlgoName == pLSCF_algo:
+        #     self.plot = "pLSCF"
+        # Importare frequenza campionamento
+        self.fs = BaseRunParams.fs
 
         if freqlim is not None:
-            self.freq_max = freqlim
+            self.freqlim = freqlim
         else:
-            self.freq_max = self.fs / 2  # Nyquist frequency
+            self.freqlim = self.fs / 2  # Nyquist frequency
 
+        # inizializzo TK e check su shift
         self.shift_is_held = False
         self.root = tk.Tk()
 
-        # COME USARE LE FUNZIONI PER PLOT "STATICI"?
+        self.sel_freq = []
 
-        self.AlgoName.sel_freq = []
-
-        if plot == "SSI" or plot == "pLSCF":
+        if self.plot == "SSI" or self.plot == "pLSCF":
             self.show_legend = 0
             self.hide_poles = 1
 
-            self.AlgoName.sel_xi = []
-            self.AlgoName.sel_phi = []
-            self.AlgoName.pole_ind = []
+            self.pole_ind = []
 
             self.root.title('Stabilisation Chart')
+        # # per aggiungere plot di sottofondo
+        #     self.ax1 = self.ax2.twinx()
 
-        elif plot == "FDD":
-            self.AlgoName.freq_ind = []
+        elif self.plot == "FDD":
+            self.freq_ind = []
             self.root.title('Singular Values of PSD matrix')
 
+        # Create fig and ax
         self.fig = Figure(figsize=(16, 8))
-
-        # Create axes
         self.ax2 = self.fig.add_subplot(111)
-        self.ax2.grid(True)
-        if plot == "SSI" or plot == "pLSCF":
-            self.ax1 = self.ax2.twinx()
-        
+        # self.ax2.grid(True)
+
+
         # Tkinter menu
         menubar = tk.Menu(self.root)
         filemenu = tk.Menu(menubar, tearoff=0)
         filemenu.add_command(label='Save figure', command=self.save_this_figure)
         menubar.add_cascade(label='File', menu=filemenu)
 
-        if plot == "SSI" or plot == "pLSCF":
-            self.plot = plot
+        if self.plot == "SSI" or self.plot == "pLSCF":
+
             hidepolesmenu = tk.Menu(menubar, tearoff=0)
             hidepolesmenu.add_command(label='Show unstable poles', 
                 command=lambda: (self.toggle_hide_poles(0), self.toggle_legend(1)))
@@ -94,14 +101,13 @@ class SelFromPlot():
 
         self.root.config(menu=menubar)
 
-
-        # Program execution
-        if plot == "SSI" or plot == "pLSCF":
-            self.get_stab(plot)
-            self.plot_stab(plot)
-        elif plot == "FDD":
+# =============================================================================
+#         # Program execution
+        if self.plot == "SSI" or self.plot == "pLSCF":
+            self.plot_stab(self.plot)
+        elif self.plot == "FDD":
             self.plot_svPSD()
-
+# =============================================================================
 
         # Integrate matplotlib figure
         canvas = FigureCanvasTkAgg(self.fig, self.root)
@@ -114,51 +120,51 @@ class SelFromPlot():
                                     lambda x: self.on_key_press(x))
         self.fig.canvas.mpl_connect('key_release_event', 
                                     lambda x: self.on_key_release(x))
-        if plot == "SSI" or plot == "pLSCF":
+        if self.plot == "SSI" or self.plot == "pLSCF":
             self.fig.canvas.mpl_connect('button_press_event', 
-                                        lambda x: self.on_click_SSI(x, plot))
+                                        lambda x: self.on_click_SSI(x, self.plot))
 
-        elif plot == "FDD":
+        elif self.plot == "FDD":
             self.fig.canvas.mpl_connect('button_press_event', 
                                         lambda x: self.on_click_FDD(x))
 
         self.root.protocol("WM_DELETE_WINDOW", lambda: self.on_closing())
         self.root.mainloop()
 
+
+        # ATTENZIONE!!!!
+        # CI VA IL RETURN QUI? VORREI IL RETURN AL CLOSE WINDOW EVENT
+        # if self.order is not None:
+            # return self.sel_freq, self.order
+        # else:
+            # return self.sel_freq
+
 #------------------------------------------------------------------------------
 
     def plot_svPSD(self, update_ticks=False):
-        
-        simnum = self.AlgoName.sim_num
 
-        S_val = self.AlgoName.Results[f"FDD_{simnum}"]["S_val"]
+        freq = FDDResult.freq
+        S_val = FDDResult.S_val
 
         if not update_ticks:
             self.ax2.clear()
             self.ax2.grid(True)
 
-            for ii in range(self.AlgoName.Nch):
-                self.ax2.plot(self.freqs[:], 10*np.log10(S_val[ii, ii]))
-            
-            df = self.AlgoName.Results[f"FDD_{simnum}"]["df"]
-            self.ax2.set_xlim(left=0, right=self.freq_max)
-            self.ax2.xaxis.set_major_locator(MultipleLocator(self.freq_max / 10))
-            self.ax2.xaxis.set_major_formatter(FormatStrFormatter("%g"))
-            self.ax2.xaxis.set_minor_locator(MultipleLocator(self.freq_max / 100))
-            self.ax2.set_title("Singular values plot - (Freq. res. ={0})".format(df))
-            self.ax2.set_xlabel("Frequency [Hz]")
-            self.ax2.set_ylabel(r"dB $[g^2/Hz]$")
-
-            self.line, = self.ax2.plot(self.AlgoName.sel_freq, 
-                         [10*np.log10(S_val[0,0,i]*1.05) for i in self.AlgoName.freq_ind]
+            CMIF_plot(S_val, freq, freqlim=self.freqlim, # come fare con nSv?
+                      fig=self.fig, ax=self.ax2)
+# =============================================================================
+            # ATTENZIONE DA RIVEDERE
+            self.MARKER, = self.ax2.plot(self.sel_freq, # ATTENZIONE
+                         [10*np.log10(S_val[0,0,i]*1.05) for i in self.freq_ind]
                                        , 'kv', markersize=8)
 
             plt.tight_layout()
 
         else:
-            self.line.set_xdata(np.asarray(self.AlgoName.sel_freq))  # update data
-            self.line.set_ydata([10*np.log10(S_val[0,0,i]*1.05) for i in 
-                                 self.AlgoName.freq_ind])
+            # ATTENZIONE DA RIVEDERE
+            self.MARKER.set_xdata(np.asarray(self.sel_freq))  # update data
+            self.MARKER.set_ydata([10*np.log10(S_val[0,0,i]*1.05) for i in 
+                                 self.freq_ind])
 
             plt.tight_layout()
 
@@ -170,194 +176,85 @@ class SelFromPlot():
         """
         On-the-fly selection of the closest poles.        
         """
-        simnum = self.AlgoName.sim_num
         
-        freq = self.AlgoName.Results[f"FDD_{simnum}"]["freqs"]
+        freq = FDDResult.freq
         # Find closest frequency
         sel = np.argmin(np.abs(freq - self.x_data_pole))
 
-        self.AlgoName.sel_freq.append(self.AlgoName.Results[f"FDD_{simnum}"]["freqs"][sel])
-        self.AlgoName.freq_ind.append(sel)
+        self.freq_ind.append(sel)
+        self.sel_freq.append(freq[sel])
         self.sort_selected_poles()
-
-
-#------------------------------------------------------------------------------
-
-    def get_stab(self, plot, err_fn=0.01, err_xi=0.05, err_ms=0.02):
-        """
-        
-        """
-        simnum = self.AlgoName.sim_num
-
-        if plot == "SSI":
-            ordmax = self.AlgoName.SSI_ordmax
-            ordmin = self.AlgoName.SSI_ordmin
-            Fr = self.AlgoName.Results[f"SSIcov_{simnum}"]['Fn_poles']
-            Sm = self.AlgoName.Results[f"SSIcov_{simnum}"]['xi_poles']
-            Ms = self.AlgoName.Results[f"SSIcov_{simnum}"]['Phi_poles']
-            
-            self.Lab = tools._stab_SSI(Fr, Sm, Ms, ordmin, ordmax, 
-                            err_fn=err_fn, err_xi=err_xi, err_ms=err_ms)
-
-        elif plot == "pLSCF":
-            ordmax = self.AlgoName.pLSCF_ordmax
-            Fr = self.AlgoName.Results[f"pLSCF_{simnum}"]['Fn_poles']
-            Sm = self.AlgoName.Results[f"pLSCF_{simnum}"]['xi_poles']
-            nch = self.AlgoName.Nch
-            self.Lab = tools._stab_pLSCF(Fr, Sm, ordmax, 
-                            err_fn=err_fn, err_xi=err_xi, nch=nch)
 
 #------------------------------------------------------------------------------
 
     def plot_stab(self, plot, update_ticks=False):
-        simnum = self.AlgoName.sim_num
-        
-        S_val = self.AlgoName.Results[f"FDD_{simnum}"]["S_val"]
+
+        # S_val = self.AlgoName.Results[f"FDD_{simnum}"]["S_val"]
+
+        freqlim = self.freqlim
+        hide_poles = self.hide_poles
+
+        Fn = SSIResult.Fn
+        Lab = SSIResult.Lab
+        Fn = SSIResult.Fn
+        Fn = SSIResult.Fn
+
+        step = SSIRunParams.step
+        ordmin = SSIRunParams.ordmin
+        ordmax = SSIRunParams.ordmax
+        step = SSIRunParams.step
 
         if not update_ticks:
             self.ax1.clear()
             self.ax2.clear()
             self.ax2.grid(True)
 
-            for ii in range(2):
-                self.ax2.plot(self.freqs[:], 10*np.log10(S_val[ii, ii]),"gray")
-
-            self.ax1.set_xlim(left=0, right=self.freq_max)
-            self.ax1.xaxis.set_major_locator(MultipleLocator(self.freq_max / 10))
-            self.ax1.xaxis.set_major_formatter(FormatStrFormatter("%g"))
-            self.ax1.xaxis.set_minor_locator(MultipleLocator(self.freq_max / 100))
-            self.ax1.set_xlabel("Frequency [Hz]")
-            self.ax2.set_ylabel(r"dB $[g^2/Hz]$")
-
             #-----------------------
             if plot == "SSI":
-                Fr = self.AlgoName.Results[f"SSIcov_{simnum}"]['Fn_poles']
-                Lab = self.Lab
-                
-                # Stable pole
-                a = np.where(Lab == 7, Fr, np.nan)
-                # Stable frequency, stable mode shape
-                b = np.where(Lab == 6, Fr, np.nan)
-                # Stable frequency, stable damping
-                c = np.where(Lab == 5, Fr, np.nan)
-                # Stable damping, stable mode shape
-                d = np.where(Lab == 4, Fr, np.nan)
-                # Stable damping
-                e = np.where(Lab == 3, Fr, np.nan)
-                # Stable mode shape
-                f = np.where(Lab == 2, Fr, np.nan)
-                # Stable frequency
-                g = np.where(Lab == 1, Fr, np.nan)
-                # new or unstable
-                h = np.where(Lab == 0, Fr, np.nan)
+                Stab_SSI_plot(
+                    Fn, Lab, step, ordmax, ordmin=ordmin, freqlim=freqlim, 
+                    hide_poles=hide_poles, 
+                    # DA FARE 
+                    Sval=None, nSv=None, 
+                    fig=self.fig, ax=self.ax1,
+                )
 
-                if self.hide_poles:
-                    x = a.flatten(order='f')
-                    y = np.array([i//len(a) for i in range(len(x))])
+                self.MARKER, = self.ax1.plot(self.sel_freq, 
+                                           [i for i in self.AlgoName.pole_ind]
+                                            , 'kx', markersize=10)
 
-                    self.ax1.plot(x, y, 'go', markersize=7, label="Stable pole")
+            # ATTENZIONE DA FARE
+            # #-----------------------
+            # elif plot == "pLSCF":
+            #     Fr = self.AlgoName.Results[f"pLSCF_{simnum}"]['Fn_poles']
+            #     Lab = self.Lab
 
-                    self.line, = self.ax1.plot(self.AlgoName.sel_freq, 
-                                               [i for i in self.AlgoName.pole_ind]
-                                                , 'kx', markersize=10)
+            #     if self.hide_poles:
+            #         x = a.flatten(order='f')
+            #         y = np.array([i//len(a) for i in range(len(x))])
 
-                else:
-                    x = a.flatten(order='f')
-                    x1 = b.flatten(order='f')
-                    x2 = c.flatten(order='f')
-                    x3 = d.flatten(order='f')
-                    x4 = e.flatten(order='f')
-                    x5 = f.flatten(order='f')
-                    x6 = g.flatten(order='f')
-                    x7 = h.flatten(order='f')
+            #         self.ax1.plot(x, y, 'go', markersize=7, label="Stable pole")
 
-                    y = np.array([i//len(a) for i in range(len(x))])
+            #         self.MARKER, = self.ax1.plot(self.AlgoName.sel_freq, 
+            #                                    [i for i in self.AlgoName.pole_ind]
+            #                                     , 'kx', markersize=10)
 
-                    self.ax1.plot(x, y, 'go', markersize=7, label="Stable pole")
-                    
-                    self.ax1.scatter(x1, y, 
-                                       marker='o', s=4, c='#FFFF00',
-                                       label="Stable frequency, stable mode shape")
-                    self.ax1.scatter(x2, y,
-                                       marker='o', s=4, c='#FFFF00',
-                                       label="Stable frequency, stable damping")
-                    self.ax1.scatter(x3, y, 
-                                       marker='o', s=4, c='#FFFF00',
-                                       label="Stable damping, stable mode shape")
-                    self.ax1.scatter(x4, y, 
-                                       marker='o', s=4, c='#FFA500',
-                                       label="Stable damping")
-                    self.ax1.scatter(x5, y, 
-                                       marker='o', s=4, c='#FFA500',
-                                       label="Stable mode shape")
-                    self.ax1.scatter(x6, y, 
-                                       marker='o', s=4, c='#FFA500',
-                                       label="Stable frequency")
-                    self.ax1.scatter(x7, y, 
-                                       marker='o', s=4, c='r',
-                                       label="Unstable pole")
+            #     else:
+            #         # PLOT ALL
 
-                    self.line, = self.ax1.plot(self.AlgoName.sel_freq, 
-                                               [i for i in self.AlgoName.pole_ind]
-                                                , 'kx', markersize=10)
+            #         self.MARKER, = self.ax1.plot(self.AlgoName.sel_freq, 
+            #                                    [i for i in self.AlgoName.pole_ind]
+            #                                     , 'kx', markersize=10)
 
-            #-----------------------
-            elif plot == "pLSCF":
-                Fr = self.AlgoName.Results[f"pLSCF_{simnum}"]['Fn_poles']
-                Lab = self.Lab
-                
-                # Stable pole
-                a = np.where(Lab == 3, Fr, np.nan)
-                # Stable damping
-                b = np.where(Lab == 2, Fr, np.nan)
-                # Stable frequency
-                c = np.where(Lab == 1, Fr, np.nan)
-                # Unstable pole
-                d = np.where(Lab == 0, Fr, np.nan)
-
-                if self.hide_poles:
-                    x = a.flatten(order='f')
-                    y = np.array([i//len(a) for i in range(len(x))])
-                    
-                    self.ax1.plot(x, y, 'go', markersize=7, label="Stable pole")
-                    
-                    self.line, = self.ax1.plot(self.AlgoName.sel_freq, 
-                                               [i for i in self.AlgoName.pole_ind]
-                                                , 'kx', markersize=10)
-
-                else:
-                    x = a.flatten(order='f')
-                    x1 = b.flatten(order='f')
-                    x2 = c.flatten(order='f')
-                    x3 = d.flatten(order='f')
-
-                    y = np.array([i//len(a) for i in range(len(x))])
-
-                    self.ax1.plot(x, y, 'go', markersize=7, label="Stable pole")
-                    
-                    self.ax1.scatter(x1, y, 
-                                       marker='o', s=4, c='#FFFF00',
-                                       label="Stable damping")
-                    self.ax1.scatter(x2, y,
-                                       marker='o', s=4, c='#FFFF00',
-                                       label="Stable frequency")
-                    self.ax1.scatter(x3, y, 
-                                       marker='o', s=4, c='r',
-                                       label="Unstable pole")
-
-                    self.line, = self.ax1.plot(self.AlgoName.sel_freq, 
-                                               [i for i in self.AlgoName.pole_ind]
-                                                , 'kx', markersize=10)
-
-            #-----------------------
+            # #-----------------------
             if self.show_legend:
                 self.pole_legend = self.ax1.legend(loc='lower center', ncol=4, frameon=True)
 
             plt.tight_layout()
 
         else:
-            self.line.set_xdata(np.asarray(self.AlgoName.sel_freq))  # update data
-            self.line.set_ydata([i for i in self.AlgoName.pole_ind])
+            self.MARKER.set_xdata(np.asarray(self.sel_freq))  # update data
+            self.MARKER.set_ydata([i for i in self.pole_ind])
 
             plt.tight_layout()
 
@@ -370,26 +267,21 @@ class SelFromPlot():
         """
         On-the-fly selection of the closest poles.        
         """
-        simnum = self.AlgoName.sim_num
 
         if plot == "SSI":
-            Fr = self.AlgoName.Results[f"SSIcov_{simnum}"]['Fn_poles']
-            Sm = self.AlgoName.Results[f"SSIcov_{simnum}"]['xi_poles']
-            Ms = self.AlgoName.Results[f"SSIcov_{simnum}"]['Phi_poles']
-        elif plot == "pLSCF":
-            Fr = self.AlgoName.Results[f"pLSCF_{simnum}"]['Fn_poles']
-            Sm = self.AlgoName.Results[f"pLSCF_{simnum}"]['xi_poles']
+            Fn_poles = SSIResult.Fn_poles
 
-        y_ind = int(np.argmin(np.abs(np.arange(Fr.shape[1])-self.y_data_pole)))  # Find closest pole order index
-        x = Fr[:, y_ind]
+        # elif plot == "pLSCF":
+        #     Fr = self.AlgoName.Results[f"pLSCF_{simnum}"]['Fn_poles']
+        #     Sm = self.AlgoName.Results[f"pLSCF_{simnum}"]['xi_poles']
+
+        y_ind = int(np.argmin(np.abs(np.arange(Fn_poles.shape[1])-self.y_data_pole)))  # Find closest pole order index
+        x = Fn_poles[:, y_ind]
         # Find closest frequency index
         sel = np.nanargmin(np.abs(x - self.x_data_pole))
 
-        self.AlgoName.pole_ind.append(y_ind)
-        self.AlgoName.sel_freq.append(Fr[sel, y_ind])
-        self.AlgoName.sel_xi.append(Sm[sel, y_ind])
-        if plot == "SSI":
-            self.AlgoName.sel_phi.append(Ms[sel, y_ind, :])
+        self.pole_ind.append(y_ind)
+        self.sel_freq.append(Fn_poles[sel, y_ind])
 
         self.sort_selected_poles()
 
@@ -408,23 +300,22 @@ class SelFromPlot():
         # On button 3 press (left mouse button)
         elif event.button == 3 and self.shift_is_held:
             try:
-                del self.AlgoName.sel_freq[-1]  # delete last point
-                del self.AlgoName.freq_ind[-1]
+                del self.sel_freq[-1]  # delete last point
+                del self.freq_ind[-1]
 
                 self.plot_svPSD()
             except:
                 pass
 
         elif event.button == 2 and self.shift_is_held:
-            i = np.argmin(np.abs(self.AlgoName.sel_freq - event.xdata))
+            i = np.argmin(np.abs(self.sel_freq - event.xdata))
             try:
-                del self.AlgoName.sel_freq[i]
-                del self.AlgoName.freq_ind[i]
+                del self.sel_freq[i]
+                del self.freq_ind[i]
 
                 self.plot_svPSD()
             except:
                 pass
-
 
         if self.shift_is_held:
             self.plot_svPSD(update_ticks=True)
@@ -436,7 +327,7 @@ class SelFromPlot():
         if event.button == 1 and self.shift_is_held:
             self.y_data_pole = [event.ydata]
             self.x_data_pole = event.xdata
-            
+
             self.get_closest_pole(plot)
 
             self.plot_stab(plot)
@@ -444,29 +335,22 @@ class SelFromPlot():
         # On button 3 press (left mouse button)
         elif event.button == 3 and self.shift_is_held:
             try:
-                del self.AlgoName.sel_freq[-1]  # delete last point
-                del self.AlgoName.sel_xi[-1]
-                del self.AlgoName.pole_ind[-1]
-                if plot == "SSI":
-                    del self.AlgoName.sel_phi[-1]
-                
+                del self.sel_freq[-1]  # delete last point
+                del self.pole_ind[-1]
+
                 self.plot_stab(plot)
             except:
                 pass
 
         elif event.button == 2 and self.shift_is_held:
-            i = np.argmin(np.abs(self.AlgoName.sel_freq - event.xdata))
+            i = np.argmin(np.abs(self.sel_freq - event.xdata))
             try:
-                del self.AlgoName.sel_freq[i]
-                del self.AlgoName.sel_xi[i]
-                del self.AlgoName.pole_ind[i]
-                if plot == "SSI":
-                    del self.AlgoName.sel_phi[i]
+                del self.sel_freq[i]
+                del self.pole_ind[i]
 
                 self.plot_stab(plot)
             except:
                 pass
-
 
         if self.shift_is_held:
             self.plot_stab(plot, update_ticks=True)
@@ -508,8 +392,8 @@ class SelFromPlot():
 
 
     def sort_selected_poles(self):
-        _ = np.argsort(self.AlgoName.sel_freq)
-        self.AlgoName.sel_freq = list(np.array(self.AlgoName.sel_freq)[_])
+        _ = np.argsort(self.sel_freq)
+        self.sel_freq = list(np.array(self.sel_freq)[_])
 
 
     def show_help(self):
