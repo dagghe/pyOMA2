@@ -129,7 +129,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         Ms_pol = self.result.Ms_pol
 
         # chiamare plot interattivo
-        sel_freq, order = SelFromPlot(algo=self, freqlim=freqlim)
+        sel_freq, order = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
 
         # e poi estrarre risultati
         Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
@@ -186,7 +186,6 @@ class SSIcov_algo(SSIdat_algo):
         Ms_pol = self.result.Ms_pol
 
         # chiamare plot interattivo
-        # FIXME nell'init di SelFromPlot manca l'attributo plot
         sel_freq, order = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
 
         # e poi estrarre risultati

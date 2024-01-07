@@ -3,11 +3,13 @@ Created on Wed Jan  3 11:56:19 2024
 
 @author: dpa
 """
+from __future__ import annotations
 
 import glob
 import logging
 import os
 import tkinter as tk
+import typing
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,13 +23,9 @@ from matplotlib.ticker import (  # noqa: F401
     MultipleLocator,
 )
 
-from pyoma2.algorithm import (
-    BaseAlgorithm,
-    EFDD_algo,
-    FDD_algo,
-    SSIcov_algo,
-    SSIdat_algo,
-)
+if typing.TYPE_CHECKING:
+    from pyoma2.algorithm import BaseAlgorithm
+
 from pyoma2.functions.plot_funct import (
     CMIF_plot,
     Stab_SSI_plot,
@@ -41,7 +39,12 @@ logger = logging.getLogger(__name__)
 
 
 class SelFromPlot:
-    def __init__(self, algo: BaseAlgorithm, freqlim=None):
+    def __init__(
+        self,
+        algo: BaseAlgorithm,
+        freqlim=None,
+        plot: typing.Literal["FDD", "SSI"] = "FDD",
+    ):
         """
         Bla bla bla
 
@@ -51,13 +54,7 @@ class SelFromPlot:
         e tornare i valori che sono stati selezionati dal plot
         """
         self.algo = algo
-        # CHECK PER VEDERE CHE ALGORITMO
-        if issubclass(algo.__class__, FDD_algo) or issubclass(algo.__class__, EFDD_algo):
-            self.plot = "FDD"
-        elif issubclass(algo.__class__, SSIdat_algo) or issubclass(
-            algo.__class__, SSIcov_algo
-        ):
-            self.plot = "SSI"
+        self.plot = plot
 
         # Importare frequenza campionamento
         self.fs = self.algo.fs
