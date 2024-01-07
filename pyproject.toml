@@ -27,6 +27,9 @@ build-backend = "pdm.backend"
 
 [tool.isort]
 split_on_trailing_comma = true
+multi_line_output = 3
+line_length = 90
+profile="black"
 
 [tool.black]
 line-length = 90
