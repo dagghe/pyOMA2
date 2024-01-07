@@ -20,16 +20,6 @@ readme = "README.md"
 license = {text = "MIT"}
 
 
-[tool.pdm.dev-dependencies]
-docs = [
-    "mkdocs-material>=9.4.10",
-    "mkdocstrings-python>=1.7.5",
-]
-qa = [
-    "pre-commit>=3.5.0",
-]
-
-
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
@@ -40,3 +30,14 @@ split_on_trailing_comma = true
 
 [tool.black]
 line-length = 90
+
+[tool.pdm.dev-dependencies]
+docs = [
+    "mkdocs-material>=9.4.10",
+    "mkdocstrings-python>=1.7.5",
+]
+qa = [
+    "pre-commit>=3.5.0",
+    "ipdb>=0.13.13",
+    "pytest>=7.4.4",
+]
