@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import typing
 
-from pyoma2 import algorithm
 from pyoma2.functions.plot_funct import plt_data
+
+if typing.TYPE_CHECKING:
+    from pyoma2.algorithm import BaseAlgorithm
 
 
 class SingleSetup:
@@ -9,54 +13,45 @@ class SingleSetup:
         self.data = data  # data
         self.fs = fs  # sampling frequency
         self.dt = 1 / fs  # sampling interval
-        self.algorithms = []  # set of algo
+        self.algorithms: dict[str, BaseAlgorithm] = {}  # set of algo
 
     # add algorithm (method) to the set.
-    def add_algorithms(self, *algorithms: algorithm.algorithm.BaseAlgorithm):
-        for alg in algorithms:
-            alg.fs = self.fs
-            alg.data = self.data
-        self.algorithms.extend(algorithms)
+    def add_algorithms(self, *algorithms: BaseAlgorithm):
+        """
+        Add algorithms to the set and set the data and fs.
+        N.B:
+            the algorithms must be instantiated before adding them to the set.
+            algorithms names must be unique.
+        """
+        self.algorithms = {
+            **self.algorithms,
+            **{alg.name: alg.set_data(data=self.data, fs=self.fs) for alg in algorithms},
+        }
 
-    # find algorithm (method) from the available ones.
-    def _find_algorithm(self, name: str) -> algorithm.algorithm.BaseAlgorithm:
-        for alg in self.algorithms:
-            if alg.name == name:
-                return alg
-        raise ValueError(f"Algorithm {name} not found")
-
-    # run the whole set of algorithms (methods).
+    # run the whole set of algorithms (methods). METODO 1 di tutti
     def run_all(self):
-        for alg in self.algorithms:
-            print(f"Running {alg.name} with params {alg.run_params}")
-            alg.run(data=self.data, fs=self.fs)
+        for alg_name in self.algorithms:
+            self.run_by_name(name=alg_name)
         print("all done")
 
-    # run algorithm (method) by name. QUESTO è IL METODO 1
+    # run algorithm (method) by name. QUESTO è IL METODO 1 di un singolo
     def run_by_name(self, name: str):
-        alg = self._find_algorithm(name)
-        if alg:
-            print(f"Running {alg.name} with params {alg.run_params}")
-            return alg.run(data=self.data, fs=self.fs)
-        print("run by name done")
+        """Run an algorithm by its name and save the result in the algorithm itself."""
+        print(f"Running {name}...with parameters: {self[name].run_params}")
+        result = self[name].run()
+        self[name].set_result(result)
 
     # get the modal properties (all results).
     #  QUESTO è IL METODO 2 (manuale)
     def MPE(self, name: str, *args, **kwargs):
-        alg = self._find_algorithm(name)
-        if alg:
-            print(f"Getting modal parameters from {alg.name}")
-            return alg.mpe(*args, **kwargs)
-        print("***DONE***")
+        print(f"Getting MPE modal parameters from {name}")
+        self[name].mpe(*args, **kwargs)
 
     # get the modal properties (all results) from the plots.
     # QUESTO è IL METODO 2 (grafico)
     def MPE_fromPlot(self, name: str, *args, **kwargs):
-        alg = self._find_algorithm(name)
-        if alg:
-            print(f"Getting modal parameters from plot... {alg.name}")
-            return alg.mpe_fromPlot(*args, **kwargs)
-        print("***DONE***")
+        print(f"Getting MPE modal parameters from plot... {name}")
+        self[name].mpe_fromPlot(*args, **kwargs)
 
     # method to plot the time histories of the data channels.
     def plot_data(
@@ -86,6 +81,25 @@ class SingleSetup:
         self,
     ):
         pass
+
+    def __getitem__(self, name: str) -> BaseAlgorithm:
+        """
+        Retrieve an algorithm from the set by its name.
+        Raises a KeyError if the algorithm does not exist.
+        """
+        if name in self.algorithms:
+            return self.algorithms[name]
+        else:
+            raise KeyError(f"No algorithm named '{name}' exists.")
+
+    def get(
+        self, name: str, default: BaseAlgorithm | None = None
+    ) -> BaseAlgorithm | None:
+        """
+        Retrieve an algorithm from the set by its name.
+        Returns the default value if the algorithm does not exist.
+        """
+        return self.algorithms.get(name, default)
 
 
 # LA CLASSE MULTISETUP VA PROBABILMENTE RIVISTA...
