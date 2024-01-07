@@ -24,6 +24,7 @@ COSA CAMBIA
 5) bisogna solo importare l'algoritmo senza importare la classe diei run parameter
    perchè già bindata dentro l'algoritmo
 6) aggiunti diagrammi generati automaticamente in ./docs/diagram/
+7) in Sel_from_plot.py sistemato nell'initi l'uso di algo
 
 
 

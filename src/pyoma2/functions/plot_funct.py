@@ -1,21 +1,24 @@
-# -*- coding: utf-8 -*-
 """
 Created on Sat Oct 21 19:16:25 2023
 
 @author: dagpa
 """
+import logging
+
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 import numpy as np
-from .FDD_funct import BaseResult
+
+logger = logging.getLogger(__name__)
 # =============================================================================
 # PLOT ALGORITMI
 # =============================================================================
 
 
+# FIXME sval & feq li prende dal result dell'algoritmo ma no li trovo in run paramters
 def CMIF_plot(sval, freq, freqlim=None, nSv="all", fig=None, ax=None):
     # COMPLEX MODE INDICATOR FUNCTION
-    if fig == None and ax == None:
+    if fig is None and ax is None:
         fig, ax = plt.subplots()
     if nSv == "all":
         nSv = sval.shape[1]
@@ -24,9 +27,9 @@ def CMIF_plot(sval, freq, freqlim=None, nSv="all", fig=None, ax=None):
     else:
         try:
             int(nSv) < sval.shape[1]
-        except:
+        except Exception as e:
             # DA SISTEMARE!!!
-            raise ValueError("ERROR")
+            raise ValueError("ERROR") from e
 
     for k in range(nSv):
         if k == 0:
@@ -191,11 +194,18 @@ def Stab_pLSCF_plot(Fn, Lab, ordmax, freqlim=None, hide_poles=True, Sval=None, n
 
 # COMMENT
 def Stab_SSI_plot(
-    Fn, Lab, step, ordmax, ordmin=0, freqlim=None, hide_poles=True, 
-    fig=None, ax=None,
+    Fn,
+    Lab,
+    step,
+    ordmax,
+    ordmin=0,
+    freqlim=None,
+    hide_poles=True,
+    fig=None,
+    ax=None,
 ):
-    
-    if fig == None and ax == None:
+
+    if fig is None and ax is None:
         fig, ax = plt.subplots()
 
     # Stable pole
@@ -544,13 +554,14 @@ def Transf_Matr(Nsens, mapping, s_names=None):
     for ii in range(len(mapp)):
         try:
             Tr_Mat[ii, int(mapp[ii])] = 1
-        except:
+        except Exception as e:
+            logger.exception("Error %s in the mapping matrix, try to fix it", e)
             try:
                 mappe = str(mapp[ii])
                 ind = np.where(s_names == mappe)
                 Tr_Mat[ii, int(ind[0][0])] = 1
-            except:
-                print("ERROR")
+            except Exception as e:
+                logger.exception(e)
     return Tr_Mat
 
 
@@ -558,13 +569,16 @@ def Transf_Matr(Nsens, mapping, s_names=None):
 # plotting sensor's time histories
 # =============================================================================
 
+
 def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
     # show RMS of signal
     if show_rms is True:
-            a_rmss = np.array(
-                [np.sqrt(1/len(data[:, _kk])*np.sum(data[:, _kk]**2))
-                    for _kk in range(data.shape[1])]
-            )
+        a_rmss = np.array(
+            [
+                np.sqrt(1 / len(data[:, _kk]) * np.sum(data[:, _kk] ** 2))
+                for _kk in range(data.shape[1])
+            ]
+        )
 
     Ndat = data.shape[0]  # number of data points
     Nch = data.shape[1]  # number of channels
@@ -591,10 +605,14 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
                     if jj == 0:
                         ax.set_ylabel(f"{unit}")
                     if show_rms is True:
-                        ax.plot(time, np.repeat(a_rmss[kk], len(time)),
-                                label=f"arms={a_rmss[kk][0]:.3f}")
+                        ax.plot(
+                            time,
+                            np.repeat(a_rmss[kk], len(time)),
+                            label=f"arms={a_rmss[kk][0]:.3f}",
+                        )
                         ax.legend()
-                except:
+                except Exception as e:
+                    logger.exception(e)
                     # if k > data.shape[1]
                     pass
                 kk += 1
@@ -607,12 +625,13 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
             if ii == nr - 1:
                 ax.set_xlabel("time [s]")
             if show_rms is True:
-                ax.plot(time, np.repeat(a_rmss[kk], len(time)),
-                        label=f"arms={a_rmss[kk][0]:.3f}")
+                ax.plot(
+                    time,
+                    np.repeat(a_rmss[kk], len(time)),
+                    label=f"arms={a_rmss[kk][0]:.3f}",
+                )
                 ax.legend()
             ax.set_ylabel(f"{unit}")
             kk += 1
     plt.tight_layout()
     return fig, ax
-
-
