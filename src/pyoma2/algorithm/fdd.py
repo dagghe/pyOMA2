@@ -97,8 +97,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         self.run_params.DF = DF
 
         # chiamare plot interattivo
-        # FIXME nell'init di SelFromPlot manca l'attributo plot
-        sel_freq = SelFromPlot(algo=self, freqlim=freqlim, plot=self.method)
+        sel_freq = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
 
         # e poi estrarre risultati
         Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(Sy, freq, sel_freq, DF=DF)
@@ -201,7 +200,7 @@ class EFDD_algo(FDD_algo):
         freq = self.result.freq
 
         # chiamare plot interattivo
-        sel_freq = SelFromPlot(algo=self, freqlim=freqlim)
+        sel_freq = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
 
         # e poi estrarre risultati
         Fn_FDD, Xi_FDD, Phi_FDD, forPlot = FDD_funct.EFDD_MPE(
