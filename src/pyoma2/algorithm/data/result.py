@@ -15,12 +15,16 @@ class BaseResult(BaseModel):
 
 class FDDResult(BaseResult):
     # dopo run
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+
     freq: npt.NDArray[np.float32]
     Sy: npt.NDArray[np.float32]
     S_val: npt.NDArray[np.float32]
     S_vec: npt.NDArray[np.float32]
 
 class EFDDResult(BaseResult):
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+
     # dopo run
     freq: npt.NDArray[np.float32]
     Sy: npt.NDArray[np.float32]
@@ -31,6 +35,8 @@ class EFDDResult(BaseResult):
     forPlot: list
 
 class SSIResult(BaseResult):
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+
     # dopo run
     Fn_poles: npt.NDArray[np.float32]
     xi_poles: npt.NDArray[np.float32]

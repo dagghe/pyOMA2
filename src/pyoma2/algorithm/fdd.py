@@ -34,8 +34,8 @@ from pyoma2.algorithm.base import BaseAlgorithm
 # =============================================================================
 # BASIC FREQUENCY DOMAIN DECOMPOSITION
 class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
-    RunParam = FDDRunParams
-    ResultType = FDDResult
+    RunParamCls = FDDRunParams
+    ResultCls = FDDResult
 
     def run(self) -> FDDResult:
         super()._pre_run()
