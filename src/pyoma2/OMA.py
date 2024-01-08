@@ -88,6 +88,7 @@ class SingleSetup:
         bg_lines: npt.NDArray[np.float32] = None, # Background lines
 
     ):
+        # self.geometry = 
         pass
 
     # metodo per plottare geometria 1
