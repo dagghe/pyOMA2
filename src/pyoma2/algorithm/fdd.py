@@ -26,7 +26,7 @@ from pyoma2.functions import (  # noqa: F401
 # from .run_params import BaseRunParams
 from pyoma2.plot.Sel_from_plot import SelFromPlot
 
-from .base import BaseAlgorithm
+from pyoma2.algorithm.base import BaseAlgorithm
 
 
 # METODI PER PLOT "STATICI" DOVE SI AGGIUNGONO?
@@ -36,7 +36,6 @@ from .base import BaseAlgorithm
 class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
     RunParam = FDDRunParams
     ResultType = FDDResult
-    method: typing.Literal["FDD"] = "FDD"
 
     def run(self) -> FDDResult:
         super()._pre_run()
@@ -101,7 +100,10 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         self.result.Fn = Fn_FDD
         self.result.Phi = Phi_FDD
 
-    def plot_CMIF(self, *args, **kwargs) -> typing.Any:
+    def plot_CMIF(self, 
+                  freqlim: typing.Optional[float] = None,
+                  nSv: typing.Optional[int] = "all",
+                  ) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
@@ -110,10 +112,53 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         fig, ax = plot_funct.CMIF_plot(
             S_val=self.result.S_val,
             freq=self.result.freq,
-            # freqlim=freqlim,
-            # nSv=nSv
+            freqlim=freqlim,
+            nSv=nSv
         )
         return fig, ax
+
+    def plot_mode_g1(self, *args, **kwargs) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if not self.geometry1:
+            raise ValueError("Definde the geometry first")
+
+        if not self.result.Fn:
+            raise ValueError("Run algorithm first")
+        # argomenti plot mode:
+        # modenumb: int # (da 1 a result.Phi.shape[1]+1)
+
+        # fig, ax = 
+        # return fig, ax
+
+    def plot_mode_g2(self, *args, **kwargs) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if not self.geometry2:
+            raise ValueError("Definde the geometry first")
+
+        if not self.result.Fn:
+            raise ValueError("Run algorithm first")
+        # argomenti plot mode:
+        # modenumb: int # (da 1 a result.Phi.shape[1]+1)
+
+        # fig, ax = 
+        # return fig, ax
+
+    def anim_mode(self, *args, **kwargs) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if not self.geometry2:
+            raise ValueError("Definde the geometry (method 2) first")
+
+        if not self.result:
+            raise ValueError("Run algorithm first")
+
+        # fig, ax = 
+        # return fig, ax
 
 
 # =============================================================================
@@ -242,34 +287,7 @@ class EFDD_algo(FDD_algo):
         )
         return fig, ax
 
-    def plot_mode(self, *args, **kwargs) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
-        """
-        if not self.geometry1 or self.geometry2:
-            raise ValueError("Definde the geometry first")
 
-        if not self.result.Fn:
-            raise ValueError("Run algorithm first")
-        # argomenti plot mode:
-        # modenumb: int # (da 1 a result.Phi.shape[1]+1)
-
-        # fig, ax = 
-        # return fig, ax
-
-    def anim_mode(self, *args, **kwargs) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
-        """
-        if not self.geometry2:
-            raise ValueError("Definde the geometry (method 2) first")
-
-        if not self.result:
-            raise ValueError("Run algorithm first")
-
-        # fig, ax = 
-        # return fig, ax
-    
 # ------------------------------------------------------------------------------
 # FREQUENCY SPATIAL DOMAIN DECOMPOSITION FSDD
 class FSDD_algo(EFDD_algo):

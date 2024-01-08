@@ -34,7 +34,6 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
     ):
         """Initialize the algorithm with the run parameters"""
         if run_params:
-
             self.run_params = run_params
         elif kwargs:
             self.run_params = self.RunParam(**kwargs)

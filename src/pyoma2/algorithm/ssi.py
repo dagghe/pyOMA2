@@ -28,7 +28,7 @@ from .base import BaseAlgorithm
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
-    RunParamType = SSIRunParams
+    RunParam = SSIRunParams
     ResultType = SSIResult
     method: typing.Literal["dat"] = "dat"
 
@@ -65,29 +65,14 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         Lab = SSI_funct.Lab_stab_SSI(
             Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
         )
-        Lab
 
         # FIXME Non serve fare così, basta ritornare la classe result, poi saraà SingleSetup a salvarla
-        # # Save results <--
-        # self.result = FDD
-        # self.result.H = H
-        # self.result.A = A
-        # self.result.C = C
-        # self.result.Lab = Lab
-        # self.result.Fn_pol = Fn_pol
-        # self.result.Sm_pol = Sm_pol
-        # self.result.Ms_pol = Ms_pol
-
         # Fake result: FIXME return real SSIResult
         return SSIResult(
-            Fn=np.asarray([10, 20, 30]),
-            Phi=np.asarray([0.1, 0.2, 0.3]),
-            Fn_poles=np.asarray([10, 20, 30]),
-            xi_poles=np.asarray([0.1, 0.2, 0.3]),
-            Phi_poles=np.asarray([0.1, 0.2, 0.3]),
-            lam_poles=np.asarray([0.1, 0.2, 0.3]),
-            Lab=np.asarray([0.1, 0.2, 0.3]),
-            Xi=np.asarray([0.1, 0.2, 0.3]),
+            Fn_poles=Fn_pol,
+            xi_poles=Sm_pol,
+            Phi_poles=Ms_pol,
+            Lab=Lab,
         )
 
     @validate_call
@@ -119,10 +104,10 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
     def mpe_fromPlot(
         self,
         freqlim: typing.Optional[float] = None,
+        deltaf: float = 0.05,
+        rtol: float = 1e-2,
     ) -> typing.Any:
-        super().mpe_fromPlot(
-            freqlim=freqlim,
-        )
+        super().mpe_fromPlot(freqlim=freqlim, deltaf=deltaf, rtol=rtol)
 
         Fn_pol = self.result.Fn_pol
         Sm_pol = self.result.Sm_pol
@@ -133,7 +118,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
 
         # e poi estrarre risultati
         Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
-            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2
+            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=deltaf, rtol=rtol
         )
 
         # Save results
@@ -142,32 +127,85 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         self.result.Sm = Xi_SSI
         self.result.Ms = Phi_SSI
 
-    def plot_STDiag(self, *args, **kwargs) -> typing.Any:
+    def plot_STDiag(self,
+                    freqlim: typing.Optional[float] = None,
+                    hide_poles: typing.Optional[True, False] = True,
+
+                    # # da testare (per aggiungere CMIF_plot su ax2=ax1.twin())
+                    # plotSval: typing.Optional[False,True] = False,
+                    # nSv: typing.Optional[int] = "all",
+                    # nxseg: typing.Optional[int] = 1024, 
+                    # method_SD : typing.Literal["cor", "per"] = "cor",
+                    # pov: typing.Optional[float] = 0.5,  
+                    ) -> typing.Any:
         """Tobe implemented, plot for SSIdat, SSIcov
         Stability Diagram
         """
-        pass
+        Fn_pol= self.result.Fn_poles,
+        Lab= self.result.Lab,
+        step= self.run_params.step,
+        ordmax= self.run_params.ordmax,
+        ordmin= self.run_params.ordmin,
+        # chiamare plot interattivo
+        fig, ax = plot_funct.Stab_SSI_plot(
+            Fn_pol,
+            Lab,
+            step,
+            ordmax,
+            ordmin=ordmin,
+            freqlim=freqlim,
+            hide_poles=hide_poles,
+            fig=None,
+            ax=None,)
+        return fig, ax
 
-    def plot_FIT(self, *args, **kwargs) -> typing.Any:
+    def plot_cluster(self,
+                    freqlim: typing.Optional[float] = None,
+                    hide_poles: typing.Optional[True, False] = True,
+                    ) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
         if not self.result:
             raise ValueError("Run algorithm first")
-
-        fig, ax = plot_funct.EFDD_FIT_plot(
-            Fn=self.result.Fn,
-            Xi=self.result.Xi,
-            PerPlot = self.result.perPlot,
-            # freqlim=freqlim,
-        )
+        Fn_pol= self.result.Fn_poles,
+        Sm_pol= self.result.xi_poles,
+        Lab= self.result.Lab,
+        # step= self.run_params.step,
+        # ordmax= self.run_params.ordmax,
+        ordmin= self.run_params.ordmin,
+        
+        fig, ax = plot_funct.Cluster_SSI_plot(
+            Fn_pol,
+            Sm_pol,
+            Lab,
+            ordmin=ordmin,
+            freqlim=freqlim,
+            hide_poles=hide_poles,
+            fig=None,
+            ax=None,)
         return fig, ax
 
-    def plot_mode(self, *args, **kwargs) -> typing.Any:
+    def plot_mode_g1(self, *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        if not self.geometry1 or self.geometry2:
+        if not self.geometry1:
+            raise ValueError("Definde the geometry first")
+
+        if not self.result.Fn:
+            raise ValueError("Run algorithm first")
+        # argomenti plot mode:
+        # modenumb: int # (da 1 a result.Phi.shape[1]+1)
+
+        # fig, ax = 
+        # return fig, ax
+
+    def plot_mode_g2(self, *args, **kwargs) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if not self.geometry2:
             raise ValueError("Definde the geometry first")
 
         if not self.result.Fn:
