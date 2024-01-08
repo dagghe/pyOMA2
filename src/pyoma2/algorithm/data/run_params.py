@@ -1,5 +1,5 @@
 import typing
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 import numpy as np
 import numpy.typing as npt
 
@@ -16,7 +16,7 @@ class FDDRunParams(BaseModel):
 # METODO 2: MPE e MPE_fromPlot
     # io sel_freq lo metterei qui perche e un input per la funzione che viene
     # chiamata internamente quando viene usato MPE_fromPlot 
-    sel_freq: npt.NDArray[np.float32]
+    sel_freq: npt.NDArray[np.float32] | None = None
     DF: float = 0.1
 
 
@@ -31,7 +31,7 @@ class EFDDRunParams(BaseModel):
 # METODO 2: MPE e MPE_fromPlot
     # io sel_freq lo metterei qui perche e un input per la funzione che viene
     # chiamata internamente quando viene usato MPE_fromPlot 
-    sel_freq: npt.NDArray[np.float32]
+    sel_freq: npt.NDArray[np.float32] | None = None
     DF1: float = 0.1,
     DF2: float = 1.0,
     cm: int = 1,
@@ -41,8 +41,10 @@ class EFDDRunParams(BaseModel):
 
 
 class SSIRunParams(BaseModel):
-    method: str
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+
     br: int
+    method: str = "dat"
     ref_ind: typing.Optional[list[int]] = None  # lista di indici ?
     ordmin: int = 0
     ordmax: typing.Optional[int] = None
@@ -53,8 +55,8 @@ class SSIRunParams(BaseModel):
     xi_max: float = 0.1
 # METODO 2: MPE e MPE_fromPlot
     # stessi motivi per sel_freq, vedi sopra
-    sel_freq: npt.NDArray[np.float32]
-    order_in: int | str = "find_min",
+    sel_freq: npt.NDArray[np.float32] | None = None
+    order_in: int | str = "find_min"
     deltaf: float = 0.05,
     rtol: float = 1e-2,
 

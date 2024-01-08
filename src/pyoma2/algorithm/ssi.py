@@ -28,8 +28,8 @@ from .base import BaseAlgorithm
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
-    RunParam = SSIRunParams
-    ResultType = SSIResult
+    RunParamCls = SSIRunParams
+    ResultCls = SSIResult
     method: typing.Literal["dat"] = "dat"
 
     def run(self) -> SSIResult:
@@ -129,7 +129,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
 
     def plot_STDiag(self,
                     freqlim: typing.Optional[float] = None,
-                    hide_poles: typing.Optional[True, False] = True,
+                    hide_poles: typing.Optional[bool] = True,
 
                     # # da testare (per aggiungere CMIF_plot su ax2=ax1.twin())
                     # plotSval: typing.Optional[False,True] = False,
@@ -161,7 +161,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
 
     def plot_cluster(self,
                     freqlim: typing.Optional[float] = None,
-                    hide_poles: typing.Optional[True, False] = True,
+                    hide_poles: typing.Optional[bool] = True,
                     ) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)

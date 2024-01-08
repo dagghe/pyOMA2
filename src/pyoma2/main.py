@@ -41,14 +41,14 @@ if __name__ == "__main__":
 # SSI invece no perche ha br che non ha valori di default
 
 # certo non sarebbe male avere anche l opzione di:
-    fdd.set_run_param = FDD_algo.RunParam(nxseg=512, method_SD="per", pov=0.5)
+    fdd.set_run_param = FDD_algo.RunParamCls(nxseg=512, method_SD="per", pov=0.5)
 # (chiaramente sovrascrivendo quelli gia definiti all iniz o di default)
 
 # Comunque un MUST deve essere l opzione per poter chiamare i run param dall
 # algo e ottenere qualcosa tipo un dizionario.
-    run_param_ssi = ssicov.run_param
-# oppure
-    run_param_ssi = Pali_ss[ssicov.name].run_param
+    run_param_ssi = ssicov.run_params
+# oppure 
+    # run_param_ssi = Pali_ss[ssicov.name].run_params
 
     # Pali_ss.add_algorithms(ssidat, ssicov, efdd, fsdd, fdd)
     Pali_ss.add_algorithms(efdd, fsdd, fdd)

@@ -2,9 +2,9 @@ import abc
 import typing
 
 from pyoma2.algorithm.data.result import BaseResult
-from pyoma2.algorithm.data.run_params import BaseRunParams
+from pydantic import BaseModel
 
-T_RunParams = typing.TypeVar("T_RunParams", bound=BaseRunParams)
+T_RunParams = typing.TypeVar("T_RunParams", bound=BaseModel)
 T_Result = typing.TypeVar("T_Result", bound=BaseResult)
 
 
@@ -18,8 +18,8 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
     result: T_Result | None = None
     run_params: T_RunParams | None = None
     name: str | None = None
-    RunParam: typing.Type[T_RunParams]
-    ResultType: typing.Type[T_Result]
+    RunParamCls: typing.Type[T_RunParams]
+    ResultCls: typing.Type[T_Result]
 
     # additional attributes set by the Setup Class
     fs: float | None = None  # sampling frequency
@@ -36,7 +36,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
         if run_params:
             self.run_params = run_params
         elif kwargs:
-            self.run_params = self.RunParam(**kwargs)
+            self.run_params = self.RunParamCls(**kwargs)
 
         self.name = name or self.__class__.__name__
         
@@ -57,9 +57,9 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
         """Run main algorithm using self.run_params and save result in the base result"""
         self._pre_run()
 
-    def set_run_params(self, run_param: T_RunParams) -> "BaseAlgorithm":
+    def set_run_params(self, run_params: T_RunParams) -> "BaseAlgorithm":
         """Sets the run parameters"""
-        self.run_params = run_param
+        self.run_params = run_params
         return self
 
     def set_result(self, result: T_Result) -> "BaseAlgorithm":
@@ -89,21 +89,21 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
         return self
 
     def __class_getitem__(cls, item):
-        # tricky way to evaluate at runtime the type of the RunParam and ResultType
-        cls.RunParam = item[0]
-        cls.ResultType = item[1]
+        # tricky way to evaluate at runtime the type of the RunParamCls and ResultCls
+        cls.RunParamCls = item[0]
+        cls.ResultCls = item[1]
         return cls
 
     def __init_subclass__(cls, **kwargs):
-        """Check that subclasses define RunParam and ResultType"""
+        """Check that subclasses define RunParamCls and ResultCls"""
         super().__init_subclass__(**kwargs)
-        if not hasattr(cls, "RunParam") or not issubclass(
-            cls.RunParam, BaseRunParams
+        if not hasattr(cls, "RunParamCls") or not issubclass(
+            cls.RunParamCls, BaseModel
         ):
             raise ValueError(
-                f"{cls.__name__}: RunParam must be defined in subclasses of BaseAlgorithm"
+                f"{cls.__name__}: RunParamCls must be defined in subclasses of BaseAlgorithm"
             )
-        if not hasattr(cls, "ResultType") or not issubclass(cls.ResultType, BaseResult):
+        if not hasattr(cls, "ResultCls") or not issubclass(cls.ResultCls, BaseResult):
             raise ValueError(
-                f"{cls.__name__}: ResultType must be defined in subclasses of BaseResult"
+                f"{cls.__name__}: ResultCls must be defined in subclasses of BaseResult"
             )
