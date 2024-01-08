@@ -43,6 +43,7 @@ class SingleSetup:
         """Run an algorithm by its name and save the result in the algorithm itself."""
         print(f"Running {name}...with parameters: {self[name].run_params}")
         result = self[name].run()
+        print(f"...saving {name} result\n")
         self[name].set_result(result)
 
     # get the modal properties (all results).
