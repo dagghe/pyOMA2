@@ -143,7 +143,7 @@ class SelFromPlot:
         self.root.protocol("WM_DELETE_WINDOW", lambda: self.on_closing())
         self.root.mainloop()
 
-        # ATTENZIONE!!!!
+        # FIXME ATTENZIONE!!!!
         # CI VA IL RETURN QUI? VORREI IL RETURN AL CLOSE WINDOW EVENT
         # if self.order is not None:
         # return self.sel_freq, self.order

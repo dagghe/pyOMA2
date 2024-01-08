@@ -18,8 +18,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
     result: T_Result | None = None
     run_params: T_RunParams | None = None
     name: str | None = None
-    method: str | None = None
-    RunParamType: typing.Type[T_RunParams]
+    RunParam: typing.Type[T_RunParams]
     ResultType: typing.Type[T_Result]
 
     # additional attributes set by the Setup Class
@@ -31,11 +30,17 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
         self,
         run_params: T_RunParams | None = None,
         name: typing.Optional[str] = None,
+        *args, **kwargs
     ):
         """Initialize the algorithm with the run parameters"""
-        self.run_params = run_params
-        self.name = name or self.__class__.__name__
+        if run_params:
 
+            self.run_params = run_params
+        elif kwargs:
+            self.run_params = self.RunParam(**kwargs)
+
+        self.name = name or self.__class__.__name__
+        
     def _pre_run(self):
         if self.fs is None or self.data is None:
             raise ValueError(
@@ -85,19 +90,19 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
         return self
 
     def __class_getitem__(cls, item):
-        # tricky way to evaluate at runtime the type of the RunParamType and ResultType
-        cls.RunParamType = item[0]
+        # tricky way to evaluate at runtime the type of the RunParam and ResultType
+        cls.RunParam = item[0]
         cls.ResultType = item[1]
         return cls
 
     def __init_subclass__(cls, **kwargs):
-        """Check that subclasses define RunParamType and ResultType"""
+        """Check that subclasses define RunParam and ResultType"""
         super().__init_subclass__(**kwargs)
-        if not hasattr(cls, "RunParamType") or not issubclass(
-            cls.RunParamType, BaseRunParams
+        if not hasattr(cls, "RunParam") or not issubclass(
+            cls.RunParam, BaseRunParams
         ):
             raise ValueError(
-                f"{cls.__name__}: RunParamType must be defined in subclasses of BaseAlgorithm"
+                f"{cls.__name__}: RunParam must be defined in subclasses of BaseAlgorithm"
             )
         if not hasattr(cls, "ResultType") or not issubclass(cls.ResultType, BaseResult):
             raise ValueError(

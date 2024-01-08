@@ -21,83 +21,61 @@ if __name__ == "__main__":
     fs1 = 200
     Pali_ss = SingleSetup(palisaden1, fs1)
 
-    Pali_ss.plot_data()
-
+    fig, ax = Pali_ss.plot_data()
+# =============================================================================
+# 
+# =============================================================================
     # # INITIALIZE ALGORITHM WITHOUT RUN PARAMETERS # #
-    fdd1 = FDD_algo(name="FDD1")
-    # si possono settare dopo o così
-    fdd1 = fdd1.set_run_params(
-        run_param=FDD_algo.RunParamType(
-            fs=fs1, nxseg=1024, method="per", pov=0.67, sel_freq=np.asarray([10, 20, 30])
-        )
-    )
-    # o così
-    fdd1.run_params = FDD_algo.RunParamType(
-        fs=fs1, nxseg=1024, method="per", pov=0.67, sel_freq=np.asarray([10, 20, 30])
-    )
+# Se diventa troppo complicato settare i run param dopo, allora obblighiamo
+# gli utenti a definire subito i run param specifici per ciascun algoritmo.
+    fdd = FDD_algo(name="FDD")
+    # FIXME TUTTO SI ROMPE
+    efdd = EFDD_algo(name="EFDD", nxseg=2048, method_SD="cor")
+    fsdd = FSDD_algo(name="FSDD", nxseg=1024, method_SD="per", pov=0.5)
+    ssicov = SSIcov_algo(name="SSIcov", br=80, ordmax=150)
+    ssidat = SSIcov_algo(name="SSIdat", br=80, ordmax=150,
+                         ref_ind=[0, 1, 2, 3],ordmin=0,step=1,err_fn=0.1,
+                         err_xi=0.05,err_phi=0.03,xi_max=0.1,)
+# N.B. gli algo FDD, EFDD e FSDD potrebbero anche essere definiti soltanto
+# usando name, dato che comunque i run param hanno tutti dei valori di default
+# SSI invece no perche ha br che non ha valori di default
 
-    # # INITIALIZE ALGORITHM WITH RUN PARAMETERS # #
-    efdd1 = EFDD_algo(
-        name="EFDD1",
-        run_params=EFDD_algo.RunParamType(
-            fs=fs1, nxseg=1024, method="per", pov=0.67, sel_freq=np.asarray([10, 20, 30])
-        ),
-    )
+# certo non sarebbe male avere anche l opzione di:
+    fdd.set_run_param = FDD_algo.RunParam(nxseg=512, method_SD="per", pov=0.5)
+# (chiaramente sovrascrivendo quelli gia definiti all iniz o di default)
 
-    # # INITIALIZE OTHER ALG WITH RUN PARAMETERS # #
-    fsdd1 = FSDD_algo(
-        name="FSDD1",
-        run_params=FSDD_algo.RunParamType(
-            fs=fs1, nxseg=1024, method="per", pov=0.67, sel_freq=np.asarray([10, 20, 30])
-        ),
-    )
-    ssicov1 = SSIcov_algo(
-        name="SSIcov1",
-        run_params=SSIcov_algo.RunParamType(
-            fs=fs1,
-            br=50,
-            method_hank="cov",
-            ref_ind=[0, 1, 2, 3],
-            ordmin=0,
-            ordmax=150,
-            step=1,
-            err_fn=0.1,
-            err_xi=0.05,
-            err_phi=0.03,
-            xi_max=0.1,
-        ),
-    )
-    ssidat1 = SSIdat_algo(
-        name="SSIdat1",
-        run_params=SSIdat_algo.RunParamType(
-            fs=fs1,
-            method_hank="dat",
-            br=50,
-            ordmax=150,
-        ),
-    )
+# Comunque un MUST deve essere l opzione per poter chiamare i run param dall
+# algo e ottenere qualcosa tipo un dizionario.
+    run_param_ssi = ssicov.run_param
+# oppure
+    run_param_ssi = Pali_ss[ssicov.name].run_param
 
-    # # ADD ALGORITHMS TO SINGLE SETUP # #
-    assert ssidat1.result is None
-    assert ssicov1.result is None
-    assert efdd1.result is None
-    assert fsdd1.result is None
-    assert fdd1.result is None
-
-    # FIXME SSI si rompe al momento
-    # Pali_ss.add_algorithms(ssidat1, ssicov1, efdd1, fsdd1, fdd1)
-    Pali_ss.add_algorithms(efdd1, fsdd1, fdd1)
+    # Pali_ss.add_algorithms(ssidat, ssicov, efdd, fsdd, fdd)
+    Pali_ss.add_algorithms(efdd, fsdd, fdd)
     Pali_ss.run_all()
+# =============================================================================
+    # plot "statici"
+    fdd.plot_MIF()
+# =============================================================================
+    # e poi
+    fdd.MPE_fromPlot()
+    # oppure
+    Pali_ss[fdd.name].MPE_fromPlot(DF=0.1)
+    # e poi
+    efdd.MPE_fromPlot()
+    fsdd.MPE(sel_freq=[1.,2.,3.], 
+             DF1=0.1,DF2= 1.0,cm=2,MAClim=0.85,sppk=3,npmax=20)
+    # o anche qui
+    Pali_ss[ssicov.name].MPE_fromPlot()
+    Pali_ss[ssidat.name].MPE(sel_freq=[1.,2.,3.], 
+                             order_in="find_min",deltaf=0.05,rtol=1e-2,)
+    
+    # anche qui poi poter chiamare i risultati su un dizionario o simili
+    fdd_res = Pali_ss[fdd.name].result
+    efdd_res = Pali_ss[efdd.name].result
+    # ecc ecc
+    # o anche le singole variabili
+    Fn_efdd = Pali_ss[efdd.name].result.Fn
+# =============================================================================
 
-    # assert ssidat1.result is not None
-    # assert ssicov1.result is not None
-    assert efdd1.result is not None
-    assert fsdd1.result is not None
-    assert fdd1.result is not None
 
-    # oppure accedo agli algoritmi dal single setup (puoi usare il name come string o dalla variabile name)
-    # assert Pali_ss[ssidat1.name].result is not None
-    # assert Pali_ss[ssicov1.name].result is not None
-    assert Pali_ss[efdd1.name].result is not None
-    assert Pali_ss[fsdd1.name].result is not None
-    assert Pali_ss[fdd1.name].result is not None
