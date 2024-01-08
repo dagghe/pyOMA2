@@ -148,56 +148,56 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         """
         pass
 
+    def plot_FIT(self, *args, **kwargs) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if not self.result:
+            raise ValueError("Run algorithm first")
+
+        fig, ax = plot_funct.EFDD_FIT_plot(
+            Fn=self.result.Fn,
+            Xi=self.result.Xi,
+            PerPlot = self.result.perPlot,
+            # freqlim=freqlim,
+        )
+        return fig, ax
+
+    def plot_mode(self, *args, **kwargs) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if not self.geometry1 or self.geometry2:
+            raise ValueError("Definde the geometry first")
+
+        if not self.result.Fn:
+            raise ValueError("Run algorithm first")
+        # argomenti plot mode:
+        # modenumb: int # (da 1 a result.Phi.shape[1]+1)
+
+        # fig, ax = 
+        # return fig, ax
+
+    def anim_mode(self, *args, **kwargs) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if not self.geometry2:
+            raise ValueError("Definde the geometry (method 2) first")
+
+        if not self.result:
+            raise ValueError("Run algorithm first")
+
+        # fig, ax = 
+        # return fig, ax
+    
+
 
 # =============================================================================
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIcov_algo(SSIdat_algo):
     method: typing.Literal["cov_bias", "cov_matmul", "cov_unb"] = "cov_bias"
 
-    @validate_call
-    def mpe(self, sel_freq: float, order: str = "find_min") -> typing.Any:
-        super().mpe(sel_freq=sel_freq, order=order)
-
-        Fn_pol = self.result.Fn_pol
-        Sm_pol = self.result.Sm_pol
-        Ms_pol = self.result.Ms_pol
-
-        Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
-            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2
-        )
-
-        # Save results
-        # Qui è corretto perchè result esiste dopo che si è fatto il run()
-        self.result.Fn = Fn_SSI
-        self.result.Sm = Xi_SSI
-        self.result.Ms = Phi_SSI
-
-    @validate_call
-    def mpe_fromPlot(
-        self,
-        freqlim: typing.Optional[float] = None,
-    ) -> typing.Any:
-        super().mpe_fromPlot(
-            freqlim=freqlim,
-        )
-
-        Fn_pol = self.result.Fn_pol
-        Sm_pol = self.result.Sm_pol
-        Ms_pol = self.result.Ms_pol
-
-        # chiamare plot interattivo
-        sel_freq, order = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
-
-        # e poi estrarre risultati
-        Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
-            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2
-        )
-
-        # Save results
-        # Qui è corretto perchè result esiste dopo che si è fatto il run()
-        self.result.Fn = Fn_SSI
-        self.result.Sm = Xi_SSI
-        self.result.Ms = Phi_SSI
 
 
 # =============================================================================

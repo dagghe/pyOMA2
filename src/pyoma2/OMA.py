@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import typing
 
+import numpy as np
+import numpy.typing as npt
+
+
 from pyoma2.functions.plot_funct import plt_data
 
 if typing.TYPE_CHECKING:
@@ -68,18 +72,54 @@ class SingleSetup:
         unit = unit  # str label for the y-axis (unit of measurement)
         show_rms = show_rms  # wheter to show or not the rms acc in the plot
         fig, ax = plt_data(data, dt, nc, names, unit, show_rms)
-        # possiamo salvarli questi ora?
+        return fig, ax
 
     # metodo per definire geometria 1
     def def_geo1(
         self,
+        ## MANDATORY
+        sens_name: npt.NDArray[np.string] | list[str],
+        # FIXME sens coor e meglio se lo facciamo come dataframe
+        sens_coord: npt.NDArray[np.float32], # sensors' coordinates
+        sens_dir: npt.NDArray[np.float32], # sensors' directions (array(n,3))
+        ## OPTIONAL
+        sens_lines: npt.NDArray[np.float32] = None, # lines connection sensors (array(n,2))
+        bg_nodes: npt.NDArray[np.float32] = None, # Background nodes
+        bg_lines: npt.NDArray[np.float32] = None, # Background lines
+
     ):
+        pass
+
+    # metodo per plottare geometria 1
+    def plot_geo1(
+        self,
+        ):
         pass
 
     # metodo per definire geometria 2
     def def_geo2(
         self,
+        ## MANDATORY
+        # uno tra ["None", "xy","xz","yz","x","y","z"]
+        sens_name: npt.NDArray[np.string],# sensors' names (n, 1)
+        # FIXME sens coor e meglio se lo facciamo come dataframe
+        pts_coord: npt.NDArray[np.float32], # points' coordinates (n, 4or3)
+        # sens_sign: npt.NDArray[np.float32], # sensors' sign (n, 1)
+        sens_map: npt.NDArray[np.float32], # mapping (n, 3)
+        ## OPTIONAL
+        order_red: None | str = None, 
+        sens_dir: npt.NDArray[np.float32] = None, # sensors' directions (array(n,3))
+        sens_lines: npt.NDArray[np.float32] = None, # lines connection sensors (array(n,2))
+        bg_nodes: npt.NDArray[np.float32] = None, # Background nodes
+        bg_lines: npt.NDArray[np.float32] = None, # Background lines
+        # bg_surf: npt.NDArray[np.float32], # Background surfaces
     ):
+        pass
+
+    # metodo per plottare geometria 2
+    def plot_geo2(
+        self,
+        ):
         pass
 
     def __getitem__(self, name: str) -> BaseAlgorithm:

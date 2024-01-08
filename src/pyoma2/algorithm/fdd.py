@@ -34,7 +34,7 @@ from .base import BaseAlgorithm
 # =============================================================================
 # BASIC FREQUENCY DOMAIN DECOMPOSITION
 class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
-    RunParamType = FDDRunParams
+    RunParam = FDDRunParams
     ResultType = FDDResult
     method: typing.Literal["FDD"] = "FDD"
 
@@ -49,23 +49,15 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, method=method)
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
-        # FIXME Non serve fare così, basta ritornare la classe result, poi saraà SingleSetup a salvarla
-        # # Save results   <--
-        # self.result.freq = freq
-        # self.result.Sy = Sy
-        # self.result.Sval = Sval
-        # self.result.Svec = Svec
+        # FIXME Non serve fare così, basta ritornare la classe result, 
+        # poi sarà SingleSetup a salvarla
+
         # Fake result: FIXME return real FDDResult
         return FDDResult(
-            Fn=np.asarray([10, 20, 30]),
-            Phi=np.asarray([0.1, 0.2, 0.3]),
-            freq=np.asarray([10, 20, 30]),
-            Sy=np.asarray([0.1, 0.2, 0.3]),
-            S_val=np.asarray([0.1, 0.2, 0.3]),
-            S_vec=np.asarray([0.1, 0.2, 0.3]),
-            sel_freq=np.asarray([10, 20, 30]),
-            Xi=np.asarray([0.1, 0.2, 0.3]),
-            forPlot=[],
+            freq=freq,
+            Sy=Sy,
+            S_val=Sval,
+            S_vec=Svec,
         )
 
     @validate_call
@@ -98,6 +90,8 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
 
         # chiamare plot interattivo
         sel_freq = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
+        # FIXME qui dovrebbe essere
+        self.run_params.sel_freq = sel_freq
 
         # e poi estrarre risultati
         Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(Sy, freq, sel_freq, DF=DF)
@@ -107,11 +101,19 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         self.result.Fn = Fn_FDD
         self.result.Phi = Phi_FDD
 
-    def plot_MIF(self, *args, **kwargs) -> typing.Any:
+    def plot_CMIF(self, *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        pass
+        if not self.result:
+            raise ValueError("Run algorithm first")
+        fig, ax = plot_funct.CMIF_plot(
+            S_val=self.result.S_val,
+            freq=self.result.freq,
+            # freqlim=freqlim,
+            # nSv=nSv
+        )
+        return fig, ax
 
 
 # =============================================================================
@@ -225,7 +227,49 @@ class EFDD_algo(FDD_algo):
         self.result.Phi = Phi_FDD
         self.result.forPlot = forPlot
 
+    def plot_FIT(self, *args, **kwargs) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if not self.result:
+            raise ValueError("Run algorithm first")
 
+        fig, ax = plot_funct.EFDD_FIT_plot(
+            Fn=self.result.Fn,
+            Xi=self.result.Xi,
+            PerPlot = self.result.perPlot,
+            # freqlim=freqlim,
+        )
+        return fig, ax
+
+    def plot_mode(self, *args, **kwargs) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if not self.geometry1 or self.geometry2:
+            raise ValueError("Definde the geometry first")
+
+        if not self.result.Fn:
+            raise ValueError("Run algorithm first")
+        # argomenti plot mode:
+        # modenumb: int # (da 1 a result.Phi.shape[1]+1)
+
+        # fig, ax = 
+        # return fig, ax
+
+    def anim_mode(self, *args, **kwargs) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if not self.geometry2:
+            raise ValueError("Definde the geometry (method 2) first")
+
+        if not self.result:
+            raise ValueError("Run algorithm first")
+
+        # fig, ax = 
+        # return fig, ax
+    
 # ------------------------------------------------------------------------------
 # FREQUENCY SPATIAL DOMAIN DECOMPOSITION FSDD
 class FSDD_algo(EFDD_algo):
