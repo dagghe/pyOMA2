@@ -43,8 +43,8 @@ def BuildHank(Y, Yref, br, fs, method):
     - "YfYp": Returns the future and past output data matrices Yf and Yp.
     """
     Ndat = Y.shape[1]
-    p = br  # number of block row (to use same notation as Dohler)
-    q = p + 1  # block column
+    p = int(br)  # number of block row (to use same notation as Dohler)
+    q = int(p + 1)  # block column
     N = Ndat - p - q  # lenght of the Hankel matrix
     if method == "cov_matmul":
         # Future and past Output
@@ -94,7 +94,8 @@ def BuildHank(Y, Yref, br, fs, method):
             Ys.T, mode="r"
         )  # X DIEGO si puo usare tqdm per tenere d'occhio questa?
         R3 = R3.T
-        Hank = R3[n_ref * (br + 1) :, : n_ref * (br + 1)]
+        print(n_ref,p)
+        Hank = R3[n_ref * (p + 1) :, : n_ref * (p + 1)]
         return Hank
 
     elif method == "YfYp":

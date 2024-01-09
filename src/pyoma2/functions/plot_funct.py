@@ -16,17 +16,17 @@ logger = logging.getLogger(__name__)
 
 
 # FIXME sval & feq li prende dal result dell'algoritmo ma no li trovo in run paramters
-def CMIF_plot(sval, freq, freqlim=None, nSv="all", fig=None, ax=None):
+def CMIF_plot(S_val, freq, freqlim=None, nSv="all", fig=None, ax=None):
     # COMPLEX MODE INDICATOR FUNCTION
     if fig is None and ax is None:
         fig, ax = plt.subplots()
     if nSv == "all":
-        nSv = sval.shape[1]
+        nSv = S_val.shape[1]
     # Check that the number of singular value to plot is lower thant the total
     # number of singular values
     else:
         try:
-            int(nSv) < sval.shape[1]
+            int(nSv) < S_val.shape[1]
         except Exception as e:
             # DA SISTEMARE!!!
             raise ValueError("ERROR") from e
@@ -35,14 +35,14 @@ def CMIF_plot(sval, freq, freqlim=None, nSv="all", fig=None, ax=None):
         if k == 0:
             ax.plot(
                 freq,
-                10 * np.log10(sval[k, k, :] / sval[k, k, :][np.argmax(sval[k, k, :])]),
+                10 * np.log10(S_val[k, k, :] / S_val[k, k, :][np.argmax(S_val[k, k, :])]),
                 "k",
                 linewidth=2,
             )
         else:
             ax.plot(
                 freq,
-                10 * np.log10(sval[k, k, :] / sval[0, 0, :][np.argmax(sval[0, 0, :])]),
+                10 * np.log10(S_val[k, k, :] / S_val[0, 0, :][np.argmax(S_val[0, 0, :])]),
                 "grey",
             )
 
