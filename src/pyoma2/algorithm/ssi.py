@@ -58,7 +58,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         # Get state matrix and output matrix
         A, C = SSI_funct.SSI_FAST(H, br, ordmax)
         # Get frequency poles (and damping and mode shapes)
-        Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_funct.SSI_Poles(
+        Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(
             A, C, ordmax, self.dt, step=step
         )
         # Get the labels of the poles
@@ -141,18 +141,13 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         """Tobe implemented, plot for SSIdat, SSIcov
         Stability Diagram
         """
-        Fn_pol= self.result.Fn_poles,
-        Lab= self.result.Lab,
-        step= self.run_params.step,
-        ordmax= self.run_params.ordmax,
-        ordmin= self.run_params.ordmin,
-        # chiamare plot interattivo
+
         fig, ax = plot_funct.Stab_SSI_plot(
-            Fn_pol,
-            Lab,
-            step,
-            ordmax,
-            ordmin=ordmin,
+            Fn= self.result.Fn_poles,
+            Lab= self.result.Lab,
+            step= self.run_params.step,
+            ordmax= self.run_params.ordmax,
+            ordmin= self.run_params.ordmin,
             freqlim=freqlim,
             hide_poles=hide_poles,
             fig=None,
@@ -168,22 +163,16 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         """
         if not self.result:
             raise ValueError("Run algorithm first")
-        Fn_pol= self.result.Fn_poles,
-        Sm_pol= self.result.xi_poles,
-        Lab= self.result.Lab,
+
         # step= self.run_params.step,
         # ordmax= self.run_params.ordmax,
-        ordmin= self.run_params.ordmin,
-        
         fig, ax = plot_funct.Cluster_SSI_plot(
-            Fn_pol,
-            Sm_pol,
-            Lab,
-            ordmin=ordmin,
+            Fn= self.result.Fn_poles,
+            Sm= self.result.xi_poles,
+            Lab= self.result.Lab,
+            ordmin= self.run_params.ordmin,
             freqlim=freqlim,
-            hide_poles=hide_poles,
-            fig=None,
-            ax=None,)
+            hide_poles=hide_poles,)
         return fig, ax
 
     def plot_mode_g1(self, *args, **kwargs) -> typing.Any:

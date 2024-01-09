@@ -48,9 +48,6 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, method=method)
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
-        # FIXME Non serve fare così, basta ritornare la classe result, 
-        # poi sarà SingleSetup a salvarla
-
         # Fake result: FIXME return real FDDResult
         return FDDResult(
             freq=freq,
@@ -87,9 +84,9 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
 
         self.run_params.DF = DF
 
-        # chiamare plot interattivo
+        # FIXME chiamare plot interattivo  da fare
         sel_freq = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
-        # FIXME qui dovrebbe essere
+        
         self.run_params.sel_freq = sel_freq
 
         # e poi estrarre risultati
@@ -170,10 +167,10 @@ class EFDD_algo(FDD_algo):
     def mpe(
         self,
         sel_freq: float,
-        method: typing.Literal[
-            "EFDD", "FSDD"
-        ],  # ATTENZIONE puo essere soltanto o "EFDD" o "FSDD"
-        methodSy: str = "cor",  # o "cor" o "per"
+        # method: typing.Literal[
+        #     "EFDD", "FSDD"
+        # ],  # ATTENZIONE puo essere soltanto o "EFDD" o "FSDD"
+        # method_SD: str = "cor",  # o "cor" o "per"
         DF1: float = 0.1,
         DF2: float = 1.0,
         cm: int = 1,
@@ -181,28 +178,14 @@ class EFDD_algo(FDD_algo):
         sppk: int = 3,
         npmax: int = 20,
     ) -> typing.Any:
-        super().mpe(
-            sel_freq=sel_freq,
-            method=method,
-            methodSy=methodSy,
-            DF1=DF1,
-            DF2=DF2,
-            cm=cm,
-            MAClim=MAClim,
-            sppk=sppk,
-            npmax=npmax,
-        )
-
-        Sy = self.result.Sy
-        freq = self.result.freq
 
         Fn_FDD, Xi_FDD, Phi_FDD, forPlot = FDD_funct.EFDD_MPE(
-            Sy,
-            freq,
+            self.result.Sy,
+            self.result.freq,
             self.dt,
             sel_freq,
-            methodSy,
-            method=method,
+            self.run_param.method_SD,
+            method=self.method,
             DF1=DF1,
             DF2=DF2,
             cm=cm,
@@ -221,8 +204,8 @@ class EFDD_algo(FDD_algo):
     @validate_call
     def mpe_fromPlot(
         self,
-        method: typing.Literal["EFDD", "FSDD"],
-        methodSy: str = "cor",
+        # method: typing.Literal["EFDD", "FSDD"],
+        # method_SD: str = "cor",
         DF1: float = 0.1,
         DF2: float = 1.0,
         cm: int = 1,
@@ -231,32 +214,19 @@ class EFDD_algo(FDD_algo):
         npmax: int = 20,
         freqlim: typing.Optional[float] = None,
     ) -> typing.Any:
-        super().mpe_fromPlot(
-            method=method,
-            methodSy=methodSy,
-            DF1=DF1,
-            DF2=DF2,
-            cm=cm,
-            MAClim=MAClim,
-            sppk=sppk,
-            npmax=npmax,
-            freqlim=freqlim,
-        )
-
-        Sy = self.result.Sy
-        freq = self.result.freq
 
         # chiamare plot interattivo
-        sel_freq = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
+        SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
+        sel_freq = SFP.result[0]
 
         # e poi estrarre risultati
         Fn_FDD, Xi_FDD, Phi_FDD, forPlot = FDD_funct.EFDD_MPE(
-            Sy,
-            freq,
+            self.result.Sy,
+            self.result.freq,
             self.dt,
             sel_freq,
-            methodSy,
-            method=method,
+            self.run_params.method_SD,
+            method=self.method,
             DF1=DF1,
             DF2=DF2,
             cm=cm,

@@ -5,6 +5,8 @@ import typing
 import numpy as np
 import numpy.typing as npt
 
+import pandas as pd
+
 
 from pyoma2.functions.plot_funct import plt_data
 
@@ -81,7 +83,7 @@ class SingleSetup:
         ## MANDATORY
         sens_name: npt.NDArray[np.string] | list[str],
         # FIXME sens coor e meglio se lo facciamo come dataframe
-        sens_coord: npt.NDArray[np.float32], # sensors' coordinates
+        sens_coord: pd.DataFrame, # sensors' coordinates
         sens_dir: npt.NDArray[np.float32], # sensors' directions (array(n,3))
         ## OPTIONAL
         sens_lines: npt.NDArray[np.float32] = None, # lines connection sensors (array(n,2))
