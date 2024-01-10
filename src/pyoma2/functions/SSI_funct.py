@@ -7,12 +7,15 @@ Created on Sat Oct 21 18:48:38 2023
 import numpy as np
 from tqdm import tqdm, trange
 
-from . import Gen_funct as GF
-
+# from . import Gen_funct as GF
+# from Gen_funct import *
 # =============================================================================
 # FUNZIONI SSI
 # =============================================================================
-
+def MAC(phi_X,phi_A):
+    return np.abs(np.dot(phi_X.conj().T, phi_A)) ** 2 / (
+    (np.dot(phi_X.conj().T, phi_X)) * (np.dot(phi_A.conj().T, phi_A))
+    )
 
 def BuildHank(Y, Yref, br, fs, method):
     # -----------------------------------------------------------------------------
@@ -494,8 +497,8 @@ def Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_x
 
                         cond1 = np.abs(f_n[i] - f_n1[idx]) / f_n[i]
                         cond2 = np.abs(xi_n[i] - xi_n1[idx]) / xi_n[i]
-                        cond3 = 1 - GF.MAC(phi_n[i, :], phi_n1[idx, :])
-
+                        # cond3 = 1 - GF.MAC(phi_n[i, :], phi_n1[idx, :])
+                        cond3 = 1 - MAC(phi_n[i, :], phi_n1[idx, :])
                         if cond1 < err_fn and cond2 < err_xi and cond3 < err_ms:
                             Lab[i, ii] = 7  # Stable
 
@@ -551,10 +554,10 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     # Loop through the frequencies given in the input list
     print("Extracting modal parameters")
     for fj in tqdm(sel_freq):
-        # =============================================================================
-        # OPZIONE order = "find_min"
-        # here we find the minimum model order so to get a stable pole for every mode of interest
-        # -----------------------------------------------------------------------------
+# =============================================================================
+# OPZIONE order = "find_min"
+# here we find the minimum model order so to get a stable pole for every mode of interest
+# -----------------------------------------------------------------------------
         if order == "find_min":
             # keep only Stable pole
             a = np.where(Lab == 7, Fn_pol, np.nan)
@@ -565,14 +568,14 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
                 np.where(((a < limits[ii][1]) & (a > limits[ii][0])), a, np.nan)
                 for ii in range(len(sel_freq))
             ]
-            # =============================================================================
-            # N.B if deltaf is too big and a +- limits includes also another frequency from
-            # sel_freq, then the method of adding the matrices together in the next loop
-            # wont work.
-            # DOVREI ESCLUDERE LE FREQUENZE CHE HANNO FORME MODALI DIVERSE (MAC<0.85?)
-            # RISPETTO AD UNA FORMA DI RIFERIMENTO FORNITA
-            # =============================================================================
-            # then loop through list
+# =============================================================================
+# N.B if deltaf is too big and a +- limits includes also another frequency from
+# sel_freq, then the method of adding the matrices together in the next loop
+# wont work.
+# DOVREI ESCLUDERE LE FREQUENZE CHE HANNO FORME MODALI DIVERSE (MAC<0.85?)
+# RISPETTO AD UNA FORMA DI RIFERIMENTO FORNITA
+# =============================================================================
+# then loop through list
             aa = 0
             for bb in aas:
                 # transform nan into 0 (so to be able to add the matrices together)
@@ -613,9 +616,9 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
                     sel_xi.append(Sm_pol[r_ind, ii])
                     sel_phi.append(Ms_pol[r_ind, ii, :])
             order_out = ii
-        # =============================================================================
-        # OPZIONE 2 order = int
-        # -----------------------------------------------------------------------------
+# =============================================================================
+# OPZIONE 2 order = int
+# -----------------------------------------------------------------------------
         elif type(order) == int:
             sel = np.nanargmin(np.abs(Fn_pol[:, order] - fj))
             fns_at_ord_ii = Fn_pol[:, order][sel]

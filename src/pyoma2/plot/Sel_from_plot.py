@@ -142,15 +142,14 @@ class SelFromPlot:
 
         self.root.protocol("WM_DELETE_WINDOW", lambda: self.on_closing())
         self.root.mainloop()
+# ------------------------------------------------------------------------------
+# SET RESULTS
+        if self.plot == "SSI" or self.plot == "pLSCF":
+            self.result = self.sel_freq, self.pole_ind
+        elif self.plot == "FDD":
+            self.result = self.sel_freq, None
 
-        # FIXME ATTENZIONE!!!!
-        # CI VA IL RETURN QUI? VORREI IL RETURN AL CLOSE WINDOW EVENT
-        # if self.order is not None:
-        # return self.sel_freq, self.order
-        # else:
-        # return self.sel_freq
-
-    # ------------------------------------------------------------------------------
+# =============================================================================
 
     def plot_svPSD(self, update_ticks=False):
 
@@ -172,7 +171,8 @@ class SelFromPlot:
             # ATTENZIONE DA RIVEDERE
             (self.MARKER,) = self.ax2.plot(
                 self.sel_freq,  # ATTENZIONE
-                [10 * np.log10(S_val[0, 0, i] * 1.05) for i in self.freq_ind],
+                # [10 * np.log10(S_val[0, 0, i] * 1.05) for i in self.freq_ind],
+                [10 * np.log10((S_val[0, 0, :] / S_val[0, 0, :][np.argmax(S_val[0, 0, :])])* 1.25)[i] for i in self.freq_ind],
                 "kv",
                 markersize=8,
             )
@@ -183,7 +183,8 @@ class SelFromPlot:
             # ATTENZIONE DA RIVEDERE
             self.MARKER.set_xdata(np.asarray(self.sel_freq))  # update data
             self.MARKER.set_ydata(
-                [10 * np.log10(S_val[0, 0, i] * 1.05) for i in self.freq_ind]
+                # [10 * np.log10(S_val[0, 0, i] * 1.05) for i in self.freq_ind]
+                [10 * np.log10((S_val[0, 0, :] / S_val[0, 0, :][np.argmax(S_val[0, 0, :])])* 1.25)[i] for i in self.freq_ind],
             )
 
             plt.tight_layout()
@@ -214,10 +215,8 @@ class SelFromPlot:
         freqlim = self.freqlim
         hide_poles = self.hide_poles
 
-        Fn = self.algo.result.Fn
+        Fn = self.algo.result.Fn_poles
         Lab = self.algo.result.Lab
-        Fn = self.algo.result.Fn
-        Fn = self.algo.result.Fn
 
         step = self.algo.run_params.step
         ordmin = self.algo.run_params.ordmin
@@ -225,7 +224,7 @@ class SelFromPlot:
         step = self.algo.run_params.step
 
         if not update_ticks:
-            self.ax1.clear()
+            # self.ax1.clear()
             self.ax2.clear()
             self.ax2.grid(True)
 
@@ -240,15 +239,15 @@ class SelFromPlot:
                     freqlim=freqlim,
                     hide_poles=hide_poles,
                     # DA FARE
-                    Sval=None,
-                    nSv=None,
+                    # Sval=None,
+                    # nSv=None,
                     fig=self.fig,
-                    ax=self.ax1,
+                    ax=self.ax2,
                 )
 
-                (self.MARKER,) = self.ax1.plot(
+                (self.MARKER,) = self.ax2.plot(
                     self.sel_freq,
-                    [i for i in self.algo.result.pole_ind],
+                    [i for i in self.pole_ind],
                     "kx",
                     markersize=10,
                 )
@@ -278,7 +277,7 @@ class SelFromPlot:
 
             # #-----------------------
             if self.show_legend:
-                self.pole_legend = self.ax1.legend(
+                self.pole_legend = self.ax2.legend(
                     loc="lower center", ncol=4, frameon=True
                 )
 

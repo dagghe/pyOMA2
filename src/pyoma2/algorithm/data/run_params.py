@@ -14,7 +14,7 @@ class FDDRunParams(BaseModel):
     # (eventualmente) le kwarg di scipy.signal.csd ?? tipo window ecc
 
     # METODO 2: MPE e MPE_fromPlot
-    sel_freq: npt.NDArray[np.float32] | None = None
+    sel_freq: npt.NDArray[np.float64] | None = None
     DF: float = 0.1
 
 
@@ -28,7 +28,7 @@ class EFDDRunParams(BaseModel):
     # (eventualmente) le kwarg di scipy.signal.csd ?? tipo window ecc
 
 # METODO 2: MPE e MPE_fromPlot
-    sel_freq: npt.NDArray[np.float32] | None = None
+    sel_freq: npt.NDArray[np.float64] | None = None
     DF1: float = 0.1,
     DF2: float = 1.0,
     cm: int = 1,
@@ -41,6 +41,7 @@ class SSIRunParams(BaseModel):
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
 # METODO 1: run
     br: int
+    method: str = None
     ref_ind: typing.Optional[list[int]] = None  # lista di indici ?
     ordmin: int = 0
     ordmax: typing.Optional[int] = None
@@ -50,7 +51,7 @@ class SSIRunParams(BaseModel):
     err_phi: float = 0.03
     xi_max: float = 0.1
 # METODO 2: MPE e MPE_fromPlot
-    sel_freq: npt.NDArray[np.float32] | None = None
+    sel_freq: npt.NDArray[np.float64] | None = None
     order_in: int | str = "find_min"
     deltaf: float = 0.05,
     rtol: float = 1e-2,
