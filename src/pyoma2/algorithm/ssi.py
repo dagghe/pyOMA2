@@ -37,7 +37,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         print(self.run_params)
         Y = self.data.T
         br = self.run_params.br
-        # method = self.run_params.method_hank
+        method = self.method
         ordmin = self.run_params.ordmin
         ordmax = self.run_params.ordmax
         step = self.run_params.step
@@ -54,7 +54,8 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
 
         # Build Hankel matrix
         # qui method deve essere uno nell elseif del file SSI_func (vedi 10 01:00)
-        H = SSI_funct.BuildHank(Y, Yref, 1 / self.dt, self.fs, method=self.method)
+
+        H = SSI_funct.BuildHank(Y, Yref, br, self.fs, method=self.method)
         # Get state matrix and output matrix
         A, C = SSI_funct.SSI_FAST(H, br, ordmax)
         # Get frequency poles (and damping and mode shapes)
@@ -69,6 +70,9 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         # FIXME Non serve fare così, basta ritornare la classe result, poi saraà SingleSetup a salvarla
         # Fake result: FIXME return real SSIResult
         return SSIResult(
+            A=A,
+            C=C,
+            H=H,
             Fn_poles=Fn_pol,
             xi_poles=Sm_pol,
             Phi_poles=Ms_pol,
@@ -97,8 +101,8 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         # Save results
         # Qui è corretto perchè result esiste dopo che si è fatto il run()
         self.result.Fn = Fn_SSI
-        self.result.Sm = Xi_SSI
-        self.result.Ms = Phi_SSI
+        self.result.Xi = Xi_SSI
+        self.result.Phi = Phi_SSI
 
     @validate_call
     def mpe_fromPlot(
@@ -109,13 +113,15 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
     ) -> typing.Any:
         super().mpe_fromPlot(freqlim=freqlim, deltaf=deltaf, rtol=rtol)
 
-        Fn_pol = self.result.Fn_pol
-        Sm_pol = self.result.Sm_pol
-        Ms_pol = self.result.Ms_pol
+        Fn_pol = self.result.Fn_poles
+        Sm_pol = self.result.xi_poles
+        Ms_pol = self.result.Phi_poles
 
         # chiamare plot interattivo
-        sel_freq, order = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
-
+        SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
+        sel_freq = SFP.result[0]
+        order = SFP.result[1][0]
+        
         # e poi estrarre risultati
         Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=deltaf, rtol=rtol
@@ -124,8 +130,8 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         # Save results
         # Qui è corretto perchè result esiste dopo che si è fatto il run()
         self.result.Fn = Fn_SSI
-        self.result.Sm = Xi_SSI
-        self.result.Ms = Phi_SSI
+        self.result.Xi = Xi_SSI
+        self.result.Phi = Phi_SSI
 
     def plot_STDiag(self,
                     freqlim: typing.Optional[float] = None,

@@ -8,12 +8,12 @@ from pydantic import (  # controlla che i parametri passati siano quelli giusti
 )
 
 from pyoma2.algorithm.data.result import (
-    FDDResult,
+    FDDResult, EFDDResult,
 )
 
 # from .result import BaseResult
 from pyoma2.algorithm.data.run_params import (
-    FDDRunParams,
+    FDDRunParams, EFDDRunParams,
 )
 from pyoma2.functions import (  # noqa: F401
     FDD_funct,
@@ -84,10 +84,9 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
 
         self.run_params.DF = DF
 
-        # FIXME chiamare plot interattivo  da fare
-        sel_freq = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
-        
-        self.run_params.sel_freq = sel_freq
+        # chiamare plot interattivo
+        SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
+        sel_freq = SFP.result[0]
 
         # e poi estrarre risultati
         Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(Sy, freq, sel_freq, DF=DF)
@@ -160,8 +159,11 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
 
 # =============================================================================
 # ENHANCED FREQUENCY DOMAIN DECOMPOSITION EFDD
-class EFDD_algo(FDD_algo):
+class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
     method: typing.Literal["EFDD", "FSDD"] = "EFDD"
+
+    RunParamCls = EFDDRunParams
+    ResultCls = EFDDResult
 
     @validate_call
     def mpe(
@@ -194,12 +196,19 @@ class EFDD_algo(FDD_algo):
             npmax=npmax,
         )
 
-        # Save results
-        # Qui è corretto perchè result esiste dopo che si è fatto il run()
-        self.result.Fn = Fn_FDD
-        self.result.Xi = Xi_FDD
-        self.result.Phi = Phi_FDD
-        self.result.forPlot = forPlot
+        return EFDDResult(
+            Fn=Fn_FDD,
+            Xi=Xi_FDD,
+            Phi=Phi_FDD,
+            forPlot=forPlot,
+        )
+
+        # # Save results
+        # # Qui è corretto perchè result esiste dopo che si è fatto il run()
+        # self.result.Fn = Fn_FDD
+        # self.result.Xi = Xi_FDD
+        # self.result.Phi = Phi_FDD
+        # self.result.forPlot = forPlot
 
     @validate_call
     def mpe_fromPlot(
@@ -235,12 +244,19 @@ class EFDD_algo(FDD_algo):
             npmax=npmax,
         )
 
-        # Save results
-        # Qui è corretto perchè result esiste dopo che si è fatto il run()
-        self.result.Fn = Fn_FDD
-        self.result.Xi = Xi_FDD
-        self.result.Phi = Phi_FDD
-        self.result.forPlot = forPlot
+        return EFDDResult(
+            Fn=Fn_FDD,
+            Xi=Xi_FDD,
+            Phi=Phi_FDD,
+            forPlot=forPlot,
+        )
+
+        # # Save results
+        # # Qui è corretto perchè result esiste dopo che si è fatto il run()
+        # self.result.Fn = Fn_FDD
+        # self.result.Xi = Xi_FDD
+        # self.result.Phi = Phi_FDD
+        # self.result.forPlot = forPlot
 
     def plot_FIT(self, *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
