@@ -34,3 +34,17 @@ DA SITEMARE
 
 Nel codice ho messo in alcuni punti un commento con FIXME,
 cercarlo in tutto il codice
+
+
+--
+
+PROBLEMI / DA FARE
+
+L'argomento method per ssicov 
+(che può essere o “cov_unb”, cov_bias”, “cov_matmul”) anche se viene 
+passato all’ inst dell algoritmo non viene usato 
+(viene salvato giusto nei run_params, ma non viene usato dal metodo)
+
+Aggiungere griglia a canvas tk (bassa priorita)
+
+Aggiungere linee verticali e orizzontali a canvas tk (bassa priorita)

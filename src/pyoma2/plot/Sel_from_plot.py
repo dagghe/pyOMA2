@@ -85,7 +85,7 @@ class SelFromPlot:
             self.root.title("Singular Values of PSD matrix")
 
         # Create fig and ax
-        self.fig = Figure(figsize=(16, 8))
+        self.fig = Figure(figsize=(12, 6),tight_layout=True)
         self.ax2 = self.fig.add_subplot(111)
         # self.ax2.grid(True)
 
@@ -124,6 +124,7 @@ class SelFromPlot:
 
         # Integrate matplotlib figure
         canvas = FigureCanvasTkAgg(self.fig, self.root)
+        self.ax2.grid()
         canvas.get_tk_widget().pack(side="top", fill="both", expand=1)
         NavigationToolbar2Tk(canvas, self.root)
 
@@ -167,8 +168,8 @@ class SelFromPlot:
                 fig=self.fig,
                 ax=self.ax2,
             )
-            # =============================================================================
-            # ATTENZIONE DA RIVEDERE
+# =============================================================================
+# ATTENZIONE DA RIVEDERE
             (self.MARKER,) = self.ax2.plot(
                 self.sel_freq,  # ATTENZIONE
                 # [10 * np.log10(S_val[0, 0, i] * 1.05) for i in self.freq_ind],
@@ -176,8 +177,6 @@ class SelFromPlot:
                 "kv",
                 markersize=8,
             )
-
-            plt.tight_layout()
 
         else:
             # ATTENZIONE DA RIVEDERE
@@ -187,7 +186,7 @@ class SelFromPlot:
                 [10 * np.log10((S_val[0, 0, :] / S_val[0, 0, :][np.argmax(S_val[0, 0, :])])* 1.25)[i] for i in self.freq_ind],
             )
 
-            plt.tight_layout()
+        self.ax2.grid()
 
         self.fig.canvas.draw()
 
@@ -281,13 +280,11 @@ class SelFromPlot:
                     loc="lower center", ncol=4, frameon=True
                 )
 
-            plt.tight_layout()
-
         else:
             self.MARKER.set_xdata(np.asarray(self.sel_freq))  # update data
             self.MARKER.set_ydata([i for i in self.pole_ind])
 
-            plt.tight_layout()
+        self.ax2.grid()
 
         self.fig.canvas.draw()
 

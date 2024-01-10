@@ -49,7 +49,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
         # Fake result: FIXME return real FDDResult
-        return FDDResult(
+        return self.ResultCls(
             freq=freq,
             Sy=Sy,
             S_val=Sval,
@@ -196,19 +196,12 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
             npmax=npmax,
         )
 
-        return EFDDResult(
-            Fn=Fn_FDD,
-            Xi=Xi_FDD,
-            Phi=Phi_FDD,
-            forPlot=forPlot,
-        )
-
-        # # Save results
-        # # Qui è corretto perchè result esiste dopo che si è fatto il run()
-        # self.result.Fn = Fn_FDD
-        # self.result.Xi = Xi_FDD
-        # self.result.Phi = Phi_FDD
-        # self.result.forPlot = forPlot
+        # Save results
+        # Qui è corretto perchè result esiste dopo che si è fatto il run()
+        self.result.Fn = Fn_FDD
+        self.result.Xi = Xi_FDD
+        self.result.Phi = Phi_FDD
+        self.result.forPlot = forPlot
 
     @validate_call
     def mpe_fromPlot(
@@ -244,19 +237,12 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
             npmax=npmax,
         )
 
-        return EFDDResult(
-            Fn=Fn_FDD,
-            Xi=Xi_FDD,
-            Phi=Phi_FDD,
-            forPlot=forPlot,
-        )
-
-        # # Save results
-        # # Qui è corretto perchè result esiste dopo che si è fatto il run()
-        # self.result.Fn = Fn_FDD
-        # self.result.Xi = Xi_FDD
-        # self.result.Phi = Phi_FDD
-        # self.result.forPlot = forPlot
+        # Save results
+        # Qui è corretto perchè result esiste dopo che si è fatto il run()
+        self.result.Fn = Fn_FDD
+        self.result.Xi = Xi_FDD
+        self.result.Phi = Phi_FDD
+        self.result.forPlot = forPlot
 
     def plot_FIT(self, *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
