@@ -20,68 +20,72 @@ if __name__ == "__main__":
 
     # create single setup 1
     fs1 = 200
-    
+# ------------------------------------------------------------------------------
     # filtering
     _sos = signal.butter(12, (0.5, 40.), "bandpass",output="sos",fs=fs1)
     palisaden1 = signal.sosfiltfilt(_sos, palisaden1, axis=0)
-    
-    q = 2  # Decimation factor
+    # Decimation
+    q = 4  # Decimation factor
     palisaden1 = signal.decimate(palisaden1, q, axis=0)  # Decimation
     fs1 = fs1/q  # [Hz] Decimated sampling frequency
-    # # create single setup 1
-    # q = 2  # Decimation factor
-    # palisaden1 = signal.decimate(palisaden1, q, axis=0)  # Decimation
-    # fs1 = fs1/q  # [Hz] Decimated sampling frequency
+# ------------------------------------------------------------------------------
 
+    # create single setup
     Pali_ss = SingleSetup(palisaden1, fs1)
+
+    # Plot the Time Histories
     # fig, ax = Pali_ss.plot_data()
+    
 # =============================================================================
 # 
 # =============================================================================
-    # # INITIALIZE ALGORITHM WITHOUT RUN PARAMETERS # #
-# Se diventa troppo complicato settare i run param dopo, allora obblighiamo
-# gli utenti a definire subito i run param specifici per ciascun algoritmo.
-    # fdd = FDD_algo(name="FDD",nxseg=1024, method_SD="cor")
-    # FIXME TUTTO SI ROMPE
-    # efdd = EFDD_algo(name="EFDD", nxseg=1024, method_SD="cor")
-    fsdd = FSDD_algo(name="FSDD", nxseg=4096, method_SD="per", pov=0.5)
-    ssicov = SSIcov_algo(name="SSIcov", method="cov_matmul", br=30, ordmax=60)
-    # ssidat = SSIdat_algo(name="SSIdat", br=20, ordmax=100,)
-# N.B. gli algo FDD, EFDD e FSDD potrebbero anche essere definiti soltanto
-# usando name, dato che comunque i run param hanno tutti dei valori di default
-# SSI invece no perche ha br che non ha valori di default
+    # Initialise the algorithms
+    fdd = FDD_algo(name="FDD")
+    fsdd = FSDD_algo(name="FSDD", nxseg=2048, method_SD="per", pov=0.5)
+    ssicov = SSIcov_algo(name="SSIcov", method="cov_matmul", br=40, ordmax=80)
+    ssidat = SSIdat_algo(name="SSIdat", br=20, ordmax=50,)
+    # Overwrite/update run parameters for an algorithm
+    fdd.run_params = FDD_algo.RunParamCls(nxseg=1024, method_SD="cor")
 
-# certo non sarebbe male avere anche l opzione di:
-    # fdd.set_run_param = FDD_algo.RunParamCls(nxseg=512, method_SD="per", pov=0.5)
-# (chiaramente sovrascrivendo quelli gia definiti all iniz o di default)
+    # save run_params for SSIcov algorithm
+    # run_param_ssi = dict(ssicov.run_params)
+    run_param_ssidat = dict(ssidat.run_params)
+    run_param_fdd = dict(fdd.run_params)
 
-# Comunque un MUST deve essere l opzione per poter chiamare i run param dall
-# algo e ottenere qualcosa tipo un dizionario.
-    run_param_ssi = dict(ssicov.run_params)
-# oppure 
-    # run_param_ssi = Pali_ss[ssicov.name].run_params
+    # Add algorithms to the class
+    Pali_ss.add_algorithms(ssidat,ssicov, fsdd, fdd)
+    # After having added the algo, its methods are accessible from the class
+    run_param_ssi = dict(Pali_ss[ssicov.name].run_params)
 
-    Pali_ss.add_algorithms(ssicov, fsdd)
-    # Pali_ss.add_algorithms(ssidat,ssicov, fsdd, fdd)
+    # Run all or run by name
     # Pali_ss.run_by_name("SSIcov")
+    # Pali_ss.run_by_name("FSDD")
     Pali_ss.run_all()
-# =============================================================================
+# ------------------------------------------------------------------------------
     # plot "statici"
-    # efdd.plot_CMIF()
-    # fdd.plot_CMIF(freqlim=5)
+    fdd.plot_CMIF(freqlim=5)
     fsdd.plot_CMIF(freqlim=5)
 
     ssicov.plot_STDiag(freqlim=5,hide_poles=False)
-    # ssidat.plot_STDiag(freqlim=5,hide_poles=False)
-
-    # ssicov.plot_cluster()
+    ssidat.plot_STDiag(freqlim=5,hide_poles=False)
+    ssicov.plot_cluster(freqlim=5)
+# ------------------------------------------------------------------------------
+    # save dict of results
     ssi_res = dict(ssicov.result)
+    ssi1_res = dict(ssidat.result)
     fsdd_res = dict(fsdd.result)
     
 #%% =============================================================================
-    # Pali_ss.MPE_fromPlot("SSIcov",freqlim=5)
+    Pali_ss.MPE_fromPlot("SSIcov",freqlim=5)
     Pali_ss.MPE_fromPlot("FSDD",freqlim=5)
     
+#%% =============================================================================
+    # GEO
+    
+
+
+
+
 #%% =============================================================================
     # e poi
 #     fsdd.mpe_fromPlot()

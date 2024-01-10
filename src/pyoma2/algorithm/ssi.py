@@ -53,8 +53,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
             Yref = Y
 
         # Build Hankel matrix
-        # qui method deve essere uno nell elseif del file SSI_func (vedi 10 01:00)
-
         H = SSI_funct.BuildHank(Y, Yref, br, self.fs, method=self.method)
         # Get state matrix and output matrix
         A, C = SSI_funct.SSI_FAST(H, br, ordmax)

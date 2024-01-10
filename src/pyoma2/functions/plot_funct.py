@@ -51,7 +51,7 @@ def CMIF_plot(S_val, freq, freqlim=None, nSv="all", fig=None, ax=None):
     ax.set_xlabel("Frequency [Hz]")
     ax.set_xlim(0, freqlim)
     ax.grid()
-    plt.show()
+    # plt.show()
     return fig, ax
 
 
