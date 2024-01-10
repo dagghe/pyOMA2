@@ -40,11 +40,16 @@ cercarlo in tutto il codice
 
 PROBLEMI / DA FARE
 
-L'argomento method per ssicov 
+1) L'argomento method per ssicov 
 (che può essere o “cov_unb”, cov_bias”, “cov_matmul”) anche se viene 
 passato all’ inst dell algoritmo non viene usato 
 (viene salvato giusto nei run_params, ma non viene usato dal metodo)
 
-Aggiungere griglia a canvas tk (bassa priorita)
+2) Aggiungere griglia a canvas tk (bassa priorita)
+2bis) Aggiungere linee verticali e orizzontali a canvas tk per fdd e ssi
+rispettivamente (bassa priorita)
+2ter) se possibile nei plot stdiag bloccare l'ordine selezionabile
+al primo ordine selezionato (tutti le sel_freq iesime dopo 0 avranno
+l'ordine forzato dalla prima scelta)
 
-Aggiungere linee verticali e orizzontali a canvas tk (bassa priorita)
+3) salvare order_in/order_out per ssi
