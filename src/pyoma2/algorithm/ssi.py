@@ -3,6 +3,10 @@
 import typing
 
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
 from pydantic import (  # controlla che i parametri passati siano quelli giusti
     validate_call,
 )
@@ -21,6 +25,9 @@ from pyoma2.functions import (  # noqa: F401
 
 # from .run_params import BaseRunParams
 from pyoma2.plot.Sel_from_plot import SelFromPlot
+from pyoma2.plot.anim_mode import AniMode
+
+from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
 
 from .base import BaseAlgorithm
 
@@ -37,7 +44,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         print(self.run_params)
         Y = self.data.T
         br = self.run_params.br
-        method = self.method
+        method = self.run_params.method or self.method
         ordmin = self.run_params.ordmin
         ordmax = self.run_params.ordmax
         step = self.run_params.step
@@ -53,7 +60,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
             Yref = Y
 
         # Build Hankel matrix
-        H = SSI_funct.BuildHank(Y, Yref, br, self.fs, method=self.method)
+        H = SSI_funct.BuildHank(Y, Yref, br, self.fs, method=method)
         # Get state matrix and output matrix
         A, C = SSI_funct.SSI_FAST(H, br, ordmax)
         # Get frequency poles (and damping and mode shapes)
@@ -65,8 +72,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
             Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
         )
 
-        # FIXME Non serve fare così, basta ritornare la classe result, poi saraà SingleSetup a salvarla
-        # Fake result: FIXME return real SSIResult
+        # Return results
         return SSIResult(
             A=A,
             C=C,
@@ -97,7 +103,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         )
 
         # Save results
-        # Qui è corretto perchè result esiste dopo che si è fatto il run()
         self.result.Fn = Fn_SSI
         self.result.Xi = Xi_SSI
         self.result.Phi = Phi_SSI
@@ -194,33 +199,95 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         # fig, ax = 
         # return fig, ax
 
-    def plot_mode_g2(self, *args, **kwargs) -> typing.Any:
+    def plot_mode_g2(self,
+                     Geo2: Geometry2,
+                     mode_numb: typing.Optional[int],
+                     scaleF: int = 1,
+                     view:typing.Literal["3D","xy","xz","yz","x","y","z"]="3D",
+                     remove_fill: True | False = True, 
+                     remove_grid: True | False = True, 
+                     remove_axis: True | False = True,
+                     *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        if not self.geometry2:
-            raise ValueError("Definde the geometry first")
-
-        if not self.result.Fn:
+        if self.result.Fn is None:
             raise ValueError("Run algorithm first")
-        # argomenti plot mode:
-        # modenumb: int # (da 1 a result.Phi.shape[1]+1)
 
-        # fig, ax = 
-        # return fig, ax
+        # Select the (real) mode shape
+        phi = self.result.Phi[:,int(mode_numb-1)].real*scaleF
+        # create mode shape dataframe
+        df_phi = pd.DataFrame({
+            "sName":Geo2.sens_names,
+            "Phi":phi
+            },)
+        mapping = dict(zip(df_phi['sName'], df_phi['Phi']))
+        # reshape the mode shape dataframe to fit the pts coord
+        df_phi_map = Geo2.sens_map.replace(mapping).astype(float)
+        # add together coordinates and mode shape displacement
+        newpoints = Geo2.pts_coord.add(df_phi_map*Geo2.sens_sign, fill_value=0)
+        # extract only the displacement array
+        newpoints = newpoints.to_numpy()[:,1:]
 
-    def anim_mode(self, *args, **kwargs) -> typing.Any:
+        # create fig and ax
+        fig = plt.figure(figsize=(8,8),tight_layout=True)
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Check that BG nodes are defined
+        if Geo2.bg_nodes is not None:
+            # if True plot
+            plot_funct.plt_nodes(ax,Geo2.bg_nodes,color="gray",alpha=0.5)
+            # Check that BG lines are defined
+            if Geo2.bg_lines is not None:
+                # if True plot
+                plot_funct.plt_lines(ax,Geo2.bg_nodes,Geo2.bg_lines,
+                      color="gray",alpha=0.5)
+            if Geo2.bg_surf is not None:
+                # if True plot
+                plot_funct.plt_surf(ax,Geo2.bg_nodes,Geo2.bg_surf
+                         ,alpha=0.1)
+        # PLOT MODE SHAPE
+        plot_funct.plt_nodes(ax,newpoints,color="red")
+        # check for sens_lines
+        if Geo2.sens_lines is not None:
+            # if True plot
+            plot_funct.plt_lines(ax,newpoints,Geo2.sens_lines,
+                      color="red")
+
+        # Set ax options
+        plot_funct.set_ax_options(ax,bg_color="w",
+                       remove_fill=remove_fill,
+                       remove_grid=remove_grid,
+                       remove_axis=remove_axis)
+
+        # Set view
+        plot_funct.set_view(ax, view=view)
+
+        return fig, ax
+
+    def anim_mode_g2(self,
+                     Geo2: Geometry2,
+                     mode_numb: typing.Optional[int],
+                     scaleF: int = 1,
+                     view: typing.Literal["3D","xy","xz","yz","x","y","z"] = "3D",
+                     remove_fill: True | False =True, 
+                     remove_grid: True | False =True, 
+                     remove_axis: True | False =True,
+                     *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        if not self.geometry2:
-            raise ValueError("Definde the geometry (method 2) first")
-
-        if not self.result:
+        if self.result.Fn is None:
             raise ValueError("Run algorithm first")
-
-        # fig, ax = 
-        # return fig, ax
+            
+        Res = self.result
+        AniMode(Geo=Geo2,Res=Res, mode_numb=mode_numb,
+                scaleF=scaleF,view=view,remove_axis=remove_axis,
+                remove_fill=remove_fill,remove_grid=remove_grid)
+        
+        
+        # FIXME
+        # CHIAMARE CLASSE ANIMAZIONE MODO
     
 
 
@@ -231,8 +298,3 @@ class SSIcov_algo(SSIdat_algo):
 
 
 
-# =============================================================================
-# ------------------------------------------------------------------------------
-
-
-"""...same for other alghorithms"""

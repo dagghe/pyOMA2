@@ -628,7 +628,7 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
                 ax.plot(
                     time,
                     np.repeat(a_rmss[kk], len(time)),
-                    label=f"arms={a_rmss[kk][0]:.3f}",
+                    label=f"arms={a_rmss[kk]:.3f}",
                 )
                 ax.legend()
             ax.set_ylabel(f"{unit}")
