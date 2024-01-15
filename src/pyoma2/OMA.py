@@ -6,10 +6,14 @@ import numpy as np
 import numpy.typing as npt
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
+from pyoma2.functions.plot_funct import( 
+plt_data, plt_nodes,plt_lines,plt_quiver,plt_surf,set_ax_options,set_view)
+from pyoma2.functions.Gen_funct import find_map
+from pyoma2.algorithm.data.geometry import Geometry1,Geometry2
 
-from pyoma2.functions.plot_funct import plt_data
-
+# Questa non l ho capita
 if typing.TYPE_CHECKING:
     from pyoma2.algorithm import BaseAlgorithm
 
@@ -81,50 +85,194 @@ class SingleSetup:
     def def_geo1(
         self,
         ## MANDATORY
-        sens_name: npt.NDArray[np.string] | list[str],
-        # FIXME sens coor e meglio se lo facciamo come dataframe
+        sens_names: npt.NDArray[np.string] | list[str], # sensors' names
         sens_coord: pd.DataFrame, # sensors' coordinates
-        sens_dir: npt.NDArray[np.float32], # sensors' directions (array(n,3))
+        sens_dir: npt.NDArray[np.int64], # sensors' directions
         ## OPTIONAL
-        sens_lines: npt.NDArray[np.float32] = None, # lines connection sensors (array(n,2))
-        bg_nodes: npt.NDArray[np.float32] = None, # Background nodes
-        bg_lines: npt.NDArray[np.float32] = None, # Background lines
-
+        sens_lines: npt.NDArray[np.int64] = None, # lines connecting sensors 
+        bg_nodes: npt.NDArray[np.float64] = None, # Background nodes
+        bg_lines: npt.NDArray[np.int64] = None, # Background lines
+        bg_surf: npt.NDArray[np.float64] = None, # Background surfaces
     ):
-        # self.geometry = 
-        pass
+# =============================================================================
+# Checks on input       
+        nr_s = len(sens_names)
+        # check that nr_s == to data.shape[1]
+        assert nr_s == self.data.shape[1]
+        # check that nr_s == sens_coord.shape[0] and == sens_dir.shape[0]
+        assert nr_s == sens_coord.to_numpy().shape[0]
+        assert nr_s == sens_dir.shape[0]
+# Altri controlli ???
+# =============================================================================
+        # adapt to 0 indexing
+        if bg_lines is not None:
+            bg_lines = np.subtract(bg_lines,1)
+
+        # Find the indices that rearrange sens_coord to sens_names
+        newIDX = find_map(sens_names, sens_coord["sName"].to_numpy())
+        # reorder if necessary
+        sens_coord = sens_coord.reindex(labels=newIDX)
+        sens_dir = sens_dir[newIDX,:]
+        # # Transform into numpy array
+        # sens_coord= sens_coord[["x","y","z"]].to_numpy()
+
+        self.Geo1 = Geometry1(sens_names=sens_names,
+                              sens_coord=sens_coord,
+                              sens_dir=sens_dir,
+                              sens_lines=sens_lines,
+                              bg_nodes=bg_nodes,
+                              bg_lines=bg_lines,
+                              bg_surf=bg_surf)
 
     # metodo per plottare geometria 1
     def plot_geo1(
         self,
+        scaleF: int = 1,
+        view: typing.Literal["3D","xy","xz","yz","x","y","z"] = "3D",
+        remove_fill: True | False =True, 
+        remove_grid: True | False =True, 
+        remove_axis: True | False =True
         ):
-        pass
+        
+        fig = plt.figure(figsize=(10,10),tight_layout=True)
+        ax = fig.add_subplot(111, projection='3d')
+
+        # plot sensors' nodes
+        sens_coord= self.Geo1.sens_coord[["x","y","z"]].to_numpy()
+        plt_nodes(ax,sens_coord,color="red")
+
+        # plot sensors' directions
+        plt_quiver(ax,sens_coord,self.Geo1.sens_dir,
+                   scaleF=scaleF,names=self.Geo1.sens_names)
+
+        # Check that BG nodes are defined
+        if self.Geo1.bg_nodes is not None:
+            # if True plot
+            plt_nodes(ax,self.Geo1.bg_nodes,color="gray",alpha=0.5)
+            # Check that BG lines are defined
+            if self.Geo1.bg_lines is not None:
+                # if True plot
+                plt_lines(ax,self.Geo1.bg_nodes,self.Geo1.bg_lines,
+                      color="gray",alpha=0.5)
+            if self.Geo1.bg_surf is not None:
+                # if True plot
+                plt_surf(ax,self.Geo1.bg_nodes,self.Geo1.bg_surf
+                         ,alpha=0.1)
+
+        # check for sens_lines
+        if self.Geo1.sens_lines is not None:
+            # if True plot
+            plt_lines(ax,sens_coord,self.Geo1.sens_lines,
+                      color="red")
+
+        # Set ax options
+        set_ax_options(ax,bg_color="w",
+                       remove_fill=remove_fill,
+                       remove_grid=remove_grid,
+                       remove_axis=remove_axis)
+
+        # Set view
+        set_view(ax, view=view)
+
+        return fig, ax
 
     # metodo per definire geometria 2
     def def_geo2(
         self,
         ## MANDATORY
-        # uno tra ["None", "xy","xz","yz","x","y","z"]
-        sens_name: npt.NDArray[np.string],# sensors' names (n, 1)
-        # FIXME sens coor e meglio se lo facciamo come dataframe
-        pts_coord: npt.NDArray[np.float32], # points' coordinates (n, 4or3)
-        # sens_sign: npt.NDArray[np.float32], # sensors' sign (n, 1)
-        sens_map: npt.NDArray[np.float32], # mapping (n, 3)
+        sens_names: npt.NDArray[np.string] | list[str],# sensors' names 
+        pts_coord: pd.DataFrame, # points' coordinates 
+        sens_map: pd.DataFrame, # mapping 
+        sens_sign: pd.DataFrame,
         ## OPTIONAL
-        order_red: None | str = None, 
-        sens_dir: npt.NDArray[np.float32] = None, # sensors' directions (array(n,3))
-        sens_lines: npt.NDArray[np.float32] = None, # lines connection sensors (array(n,2))
-        bg_nodes: npt.NDArray[np.float32] = None, # Background nodes
-        bg_lines: npt.NDArray[np.float32] = None, # Background lines
-        # bg_surf: npt.NDArray[np.float32], # Background surfaces
+        order_red: None | typing.Literal["xy","xz","yz","x","y","z"] = None, 
+        sens_lines: npt.NDArray[np.int64] = None, # lines connecting sensors
+        bg_nodes: npt.NDArray[np.float64] = None, # Background nodes
+        bg_lines: npt.NDArray[np.float64] = None, # Background lines
+        bg_surf: npt.NDArray[np.float64] = None, # Background lines
     ):
-        pass
+# =============================================================================
+# Checks on input     
+        if order_red == "xy" or order_red == "xz" or order_red == "yz":
+            nc = 2
+            assert sens_map.to_numpy()[:,1:].shape[1] == nc
+            assert sens_sign.to_numpy()[:,1:].shape[1] == nc
+        elif order_red == "x" or order_red == "y" or order_red == "z":
+            nc = 1
+            assert sens_map.to_numpy()[:,1:].shape[1] == nc
+            assert sens_sign.to_numpy()[:,1:].shape[1] == nc
+        elif order_red == None:
+            nc = 3
+            assert sens_map.to_numpy()[:,1:].shape[1] == nc
+            assert sens_sign.to_numpy()[:,1:].shape[1] == nc
+# FIXME Controllo su Dimensioni (DA FARE)
+
+# =============================================================================
+        # adapt to 0 indexed lines
+        if bg_lines is not None:
+            bg_lines = np.subtract(bg_lines,1)
+        if sens_lines is not None:
+            sens_lines = np.subtract(sens_lines,1)
+        
+
+        self.Geo2 = Geometry2(sens_names=sens_names,
+                              pts_coord=pts_coord,
+                              sens_map=sens_map,
+                              sens_sign=sens_sign,
+                              order_red=order_red,
+                              sens_lines=sens_lines,
+                              bg_nodes=bg_nodes,
+                              bg_lines=bg_lines,
+                              bg_surf=bg_surf)
 
     # metodo per plottare geometria 2
     def plot_geo2(
         self,
+        scaleF: int = 1,
+        view: typing.Literal["3D","xy","xz","yz","x","y","z"] = "3D",
+        remove_fill: True | False =True, 
+        remove_grid: True | False =True, 
+        remove_axis: True | False =True
         ):
-        pass
+        
+        fig = plt.figure(figsize=(10,10))
+        ax = fig.add_subplot(111, projection='3d')
+
+        # plot sensors' nodes
+        plt_nodes(ax,self.Geo2.pts_coord,color="red")
+        
+        # plot sensors' directions
+        plt_quiver(ax,self.Geo2.pts_coord,self.Geo2.sens_map,
+                   scaleF=scaleF,names=self.Geo2.sens_names)
+
+        # Check that BG nodes are defined
+        if self.Geo2.bg_nodes is not None:
+            # if True plot
+            plt_nodes(ax,self.Geo2.bg_nodes,color="gray",alpha=0.5)
+            # Check that BG lines are defined
+            if self.Geo2.bg_lines is not None:
+                # if True plot
+                plt_lines(ax,self.Geo2.bg_nodes,self.Geo2.bg_lines,
+                      color="gray",alpha=0.5)
+            if self.Geo2.bg_surf is not None:
+                # if True plot
+                plt_surf(ax,self.Geo2.bg_nodes,self.Geo2.bg_surf
+                         ,alpha=0.1)
+
+        # check for sens_lines
+        if self.Geo2.sens_lines is not None:
+            # if True plot
+            plt_lines(ax,self.Geo2.pts_coord,self.Geo2.sens_lines,
+                      color="red")
+
+        # Set ax options
+        set_ax_options(ax,bg_color="w",
+                       remove_fill=remove_fill,
+                       remove_grid=remove_grid,
+                       remove_axis=remove_axis)
+
+        # Set view
+        set_view(ax, view=view)
 
     def __getitem__(self, name: str) -> BaseAlgorithm:
         """

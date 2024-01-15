@@ -226,3 +226,21 @@ def PRE_MultiSetup(DataList, reflist):
         )
 
     return Y
+
+
+# -----------------------------------------------------------------------------
+
+
+def invperm(p):
+    q = np.empty_like(p)
+    q[p] = np.arange(len(p))
+    return q
+
+
+# -----------------------------------------------------------------------------
+
+
+def find_map(arr1, arr2):
+    o1 = np.argsort(arr1)
+    o2 = np.argsort(arr2)
+    return o2[invperm(o1)]

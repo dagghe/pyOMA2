@@ -3,15 +3,15 @@
 import typing
 
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
 from pydantic import (  # controlla che i parametri passati siano quelli giusti
     validate_call,
 )
-
 from pyoma2.algorithm.data.result import (
     FDDResult, EFDDResult,
 )
-
-# from .result import BaseResult
 from pyoma2.algorithm.data.run_params import (
     FDDRunParams, EFDDRunParams,
 )
@@ -23,16 +23,11 @@ from pyoma2.functions import (  # noqa: F401
     pLSCF_funct,
 )
 
-# from .run_params import BaseRunParams
 from pyoma2.plot.Sel_from_plot import SelFromPlot
-
 from pyoma2.algorithm.base import BaseAlgorithm
 
-
-# METODI PER PLOT "STATICI" DOVE SI AGGIUNGONO?
-# ALLA CLASSE BASE o A QUELLA SPECIFICA?
 # =============================================================================
-# BASIC FREQUENCY DOMAIN DECOMPOSITION
+# FREQUENCY DOMAIN DECOMPOSITION
 class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
     RunParamCls = FDDRunParams
     ResultCls = FDDResult
@@ -48,7 +43,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, method=method)
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
-        # Fake result: FIXME return real FDDResult
+        # Return results
         return self.ResultCls(
             freq=freq,
             Sy=Sy,
@@ -69,7 +64,6 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(Sy, freq, sel_freq, DF=DF)
 
         # Save results
-        # Qui è corretto perchè result esiste dopo che si è fatto il run()
         self.result.Fn = Fn_FDD
         self.result.Phi = Phi_FDD
 
@@ -92,7 +86,6 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(Sy, freq, sel_freq, DF=DF)
 
         # Save results
-        # Qui è corretto perchè result esiste dopo che si è fatto il run()
         self.result.Fn = Fn_FDD
         self.result.Phi = Phi_FDD
 
@@ -113,35 +106,135 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         )
         return fig, ax
 
-    def plot_mode_g1(self, *args, **kwargs) -> typing.Any:
+    def plot_mode_g1(self,
+                     mode_numb: typing.Optional[int],
+                     scaleF: int = 1,
+                     view: typing.Literal["3D","xy","xz","yz","x","y","z"] = "3D",
+                     remove_fill: True | False =True, 
+                     remove_grid: True | False =True, 
+                     remove_axis: True | False =True,
+                     *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        if not self.geometry1:
+        if not self.Geo1:
             raise ValueError("Definde the geometry first")
 
         if not self.result.Fn:
             raise ValueError("Run algorithm first")
-        # argomenti plot mode:
-        # modenumb: int # (da 1 a result.Phi.shape[1]+1)
+        # Select the mode shape
+        phi = self.result.Fn[:,int(mode_numb-1)]
+        
+        fig = plt.figure(figsize=(10,10))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        # plot sensors' nodes
+        plot_funct.plt_nodes(ax,self.Geo1.sens_coord,color="red")
 
-        # fig, ax = 
-        # return fig, ax
+        # FIXME plot mode shape
+        # plot_funct.plt_quiver(ax,self.Geo1.sens_coord,asd,
+        #            scaleF=scaleF,names=self.Geo1.sens_names)
 
-    def plot_mode_g2(self, *args, **kwargs) -> typing.Any:
+        # Check that BG nodes are defined
+        if self.Geo1.bg_nodes is not None:
+            # if True plot
+            plot_funct.plt_nodes(ax,self.Geo1.bg_nodes,color="gray",alpha=0.5)
+            # Check that BG lines are defined
+            if self.Geo1.bg_lines is not None:
+                # if True plot
+                plot_funct.plt_lines(ax,self.Geo1.bg_nodes,self.Geo1.bg_lines,
+                      color="gray",alpha=0.5)
+            if self.Geo1.bg_surf is not None:
+                # if True plot
+                plot_funct.plt_surf(ax,self.Geo1.bg_nodes,self.Geo1.bg_surf
+                         ,alpha=0.1)
+
+        # check for sens_lines
+        if self.Geo1.sens_lines is not None:
+            # if True plot
+            plot_funct.plt_lines(ax,self.Geo1.sens_coord,self.Geo1.sens_lines,
+                      color="red")
+
+        # Set ax options
+        plot_funct.set_ax_options(ax,bg_color="w",
+                       remove_fill=remove_fill,
+                       remove_grid=remove_grid,
+                       remove_axis=remove_axis)
+
+        # Set view
+        plot_funct.set_view(ax, view=view)
+
+        return fig, ax
+
+
+    def plot_mode_g2(self,
+                     mode_numb: typing.Optional[int],
+                     scaleF: int = 1,
+                     view: typing.Literal["3D","xy","xz","yz","x","y","z"] = "3D",
+                     remove_fill: True | False =True, 
+                     remove_grid: True | False =True, 
+                     remove_axis: True | False =True,
+                     *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        if not self.geometry2:
+        if not self.Geo2:
             raise ValueError("Definde the geometry first")
 
         if not self.result.Fn:
             raise ValueError("Run algorithm first")
-        # argomenti plot mode:
-        # modenumb: int # (da 1 a result.Phi.shape[1]+1)
 
-        # fig, ax = 
-        # return fig, ax
+        # Select the mode shape
+        phi = self.result.Fn[:,int(mode_numb-1)]
+        # create mode shape dataframe
+        df_phi = pd.DataFrame({
+            "sName":self.Geo2.sens_names,
+            "Phi":phi
+            },)
+        mapping = dict(zip(df_phi['sName'], df_phi['Phi']))
+        # reshape the mode shape dataframe to fit the pts coord
+        df_phi_map = self.Geo2.sens_map.replace(mapping)
+        # add together coordinates and mode shape displacement
+        newpoints = self.Geo2.pts_coord.add(df_phi_map, fill_value=0)
+        # extract only the displacement array
+        newpoints = newpoints.to_numpy()[:,1:]
+
+        # create fig and ax
+        fig = plt.figure(figsize=(10,10))
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Check that BG nodes are defined
+        if self.Geo2.bg_nodes is not None:
+            # if True plot
+            plot_funct.plt_nodes(ax,self.Geo2.bg_nodes,color="gray",alpha=0.5)
+            # Check that BG lines are defined
+            if self.Geo2.bg_lines is not None:
+                # if True plot
+                plot_funct.plt_lines(ax,self.Geo2.bg_nodes,self.Geo2.bg_lines,
+                      color="gray",alpha=0.5)
+            if self.Geo2.bg_surf is not None:
+                # if True plot
+                plot_funct.plt_surf(ax,self.Geo2.bg_nodes,self.Geo2.bg_surf
+                         ,alpha=0.1)
+        # PLOT MODE SHAPE
+        plot_funct.plt_nodes(ax,newpoints,color="red")
+        # check for sens_lines
+        if self.Geo2.sens_lines is not None:
+            # if True plot
+            plot_funct.plt_lines(ax,newpoints,self.Geo2.sens_lines,
+                      color="red")
+
+        # Set ax options
+        plot_funct.set_ax_options(ax,bg_color="w",
+                       remove_fill=remove_fill,
+                       remove_grid=remove_grid,
+                       remove_axis=remove_axis)
+
+        # Set view
+        plot_funct.set_view(ax, view=view)
+
+        return fig, ax
+
 
     def anim_mode(self, *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
@@ -169,10 +262,6 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
     def mpe(
         self,
         sel_freq: float,
-        # method: typing.Literal[
-        #     "EFDD", "FSDD"
-        # ],  # ATTENZIONE puo essere soltanto o "EFDD" o "FSDD"
-        # method_SD: str = "cor",  # o "cor" o "per"
         DF1: float = 0.1,
         DF2: float = 1.0,
         cm: int = 1,
@@ -197,7 +286,6 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
         )
 
         # Save results
-        # Qui è corretto perchè result esiste dopo che si è fatto il run()
         self.result.Fn = Fn_FDD
         self.result.Xi = Xi_FDD
         self.result.Phi = Phi_FDD
@@ -206,8 +294,6 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
     @validate_call
     def mpe_fromPlot(
         self,
-        # method: typing.Literal["EFDD", "FSDD"],
-        # method_SD: str = "cor",
         DF1: float = 0.1,
         DF2: float = 1.0,
         cm: int = 1,
@@ -238,13 +324,14 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
         )
 
         # Save results
-        # Qui è corretto perchè result esiste dopo che si è fatto il run()
         self.result.Fn = Fn_FDD
         self.result.Xi = Xi_FDD
         self.result.Phi = Phi_FDD
         self.result.forPlot = forPlot
 
-    def plot_FIT(self, *args, **kwargs) -> typing.Any:
+    def plot_FIT(self,
+                 freqlim: typing.Optional[float] = None,
+                 *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
@@ -255,7 +342,7 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
             Fn=self.result.Fn,
             Xi=self.result.Xi,
             PerPlot = self.result.perPlot,
-            # freqlim=freqlim,
+            freqlim=freqlim,
         )
         return fig, ax
 
