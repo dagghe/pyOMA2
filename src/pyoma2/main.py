@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # Initialise the algorithms
     fdd = FDD_algo(name="FDD")
     fsdd = FSDD_algo(name="FSDD", nxseg=2048, method_SD="per", pov=0.5)
-    ssicov = SSIcov_algo(name="SSIcov", method="cov_matmul", br=40, ordmax=80)
+    ssicov = SSIcov_algo(name="SSIcov", method="cov_mm", br=40, ordmax=80)
     ssicov1 = SSIcov_algo(name="SSIcov1", method="cov_unb", br=40, ordmax=80)
     # Overwrite/update run parameters for an algorithm
     fdd.run_params = FDD_algo.RunParamCls(nxseg=1024, method_SD="cor")
@@ -60,16 +60,16 @@ if __name__ == "__main__":
 
     # Run all or run by name
     Pali_ss.run_by_name("SSIcov")
-    # Pali_ss.run_by_name("SSIcov1")
+    Pali_ss.run_by_name("FSDD")
     # Pali_ss.run_all()
 # ------------------------------------------------------------------------------
     # plot "statici"
     # fdd.plot_CMIF(freqlim=5)
-    # fsdd.plot_CMIF(freqlim=5)
+    fsdd.plot_CMIF(freqlim=5)
     # ssicov1.plot_STDiag(freqlim=5,hide_poles=False)
     ssicov.plot_STDiag(freqlim=5,hide_poles=False)
     # ssidat.plot_STDiag(freqlim=5,hide_poles=False)
-    # ssicov.plot_cluster(freqlim=5)
+    ssicov.plot_cluster(freqlim=5)
 # ------------------------------------------------------------------------------
     # save dict of results
     ssi_res = ssicov.result.model_dump()
@@ -78,10 +78,10 @@ if __name__ == "__main__":
     
 #%% =============================================================================
     Pali_ss.MPE_fromPlot("SSIcov",freqlim=5)
-    # Pali_ss.MPE_fromPlot("FSDD",freqlim=5)
+    Pali_ss.MPE_fromPlot("FSDD",freqlim=5)
     
     ssi_res = dict(ssicov.result)
-    # fsdd_res = dict(fsdd.result)
+    fsdd_res = dict(fsdd.result)
 
 #%% =============================================================================
     # GEO
@@ -120,13 +120,19 @@ if __name__ == "__main__":
     Geo1 = dict(Pali_ss.Geo1)
     Geo2 = dict(Pali_ss.Geo2)
     geo = Pali_ss.Geo2
-
+    geo1 = Pali_ss.Geo1
 
     Pali_ss.plot_geo1(scaleF=2)
-    Pali_ss[ssicov.name].plot_mode_g2(Geo2=geo, mode_numb=2,
-                                      view="xy", scaleF=5)
     
-    Pali_ss[ssicov.name].anim_mode_g2(Geo2=geo, mode_numb=3,
+    Pali_ss[fsdd.name].plot_FIT(freqlim=5)
+    
+    Pali_ss[fsdd.name].plot_mode_g1(Geo1=geo1, mode_numb=2,
+                                      view="3D", scaleF=2)
+    
+    Pali_ss[ssicov.name].anim_mode_g2(Geo2=geo, mode_numb=1,
+                                      view="xy", scaleF=3)
+    
+    Pali_ss[fsdd.name].anim_mode_g2(Geo2=geo, mode_numb=3,
                                       view="xy", scaleF=3)
     # Pali_ss.plot_geo2()
 

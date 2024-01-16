@@ -63,16 +63,16 @@ def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
     axs = []
     for numb_mode in range(len(PerPlot)):
         freq = PerPlot[numb_mode][0]
-        time = PerPlot[numb_mode][0]
-        SDOFbell = PerPlot[numb_mode][1]
-        Sval = PerPlot[numb_mode][2]
-        idSV = PerPlot[numb_mode][3]
+        time = PerPlot[numb_mode][1]
+        SDOFbell = PerPlot[numb_mode][2]
+        Sval = PerPlot[numb_mode][3]
+        idSV = PerPlot[numb_mode][4]
         fsval = freq[idSV]
 
-        normSDOFcorr = PerPlot[numb_mode][4]
-        minmax_fit_idx = PerPlot[numb_mode][5]
-        lam = PerPlot[numb_mode][6]
-        delta = PerPlot[numb_mode][7]
+        normSDOFcorr = PerPlot[numb_mode][5]
+        minmax_fit_idx = PerPlot[numb_mode][6]
+        lam = PerPlot[numb_mode][7]
+        delta = PerPlot[numb_mode][8]
 
         xi_EFDD = Xi[numb_mode]
         fn_EFDD = Fn[numb_mode]
@@ -543,26 +543,6 @@ def set_view(ax, view):
         raise ValueError(f"view must be one of (3D, xy, xz, yz), your input was '{view}'")
     return ax
 
-
-def Transf_Matr(Nsens, mapping, s_names=None):
-    mapp = mapping.flatten(order="c")
-    if type(mapp[0]) is np.str_ and s_names is None:
-        raise ValueError(
-            "If the mapping matrix elements are string, you need to specify the sensor's names"
-        )
-    Tr_Mat = np.zeros((len(mapp), Nsens))
-    for ii in range(len(mapp)):
-        try:
-            Tr_Mat[ii, int(mapp[ii])] = 1
-        except Exception as e:
-            logger.exception("Error %s in the mapping matrix, try to fix it", e)
-            try:
-                mappe = str(mapp[ii])
-                ind = np.where(s_names == mappe)
-                Tr_Mat[ii, int(ind[0][0])] = 1
-            except Exception as e:
-                logger.exception(e)
-    return Tr_Mat
 
 
 # =============================================================================

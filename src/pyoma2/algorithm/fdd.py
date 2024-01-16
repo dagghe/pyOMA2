@@ -22,9 +22,13 @@ from pyoma2.functions import (  # noqa: F401
     plot_funct,
     pLSCF_funct,
 )
+from pyoma2.functions.plot_funct import( 
+plt_nodes,plt_lines,plt_quiver,plt_surf,set_ax_options,set_view)
 
 from pyoma2.plot.Sel_from_plot import SelFromPlot
 from pyoma2.algorithm.base import BaseAlgorithm
+from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
+from pyoma2.plot.anim_mode import AniMode
 
 # =============================================================================
 # FREQUENCY DOMAIN DECOMPOSITION
@@ -107,121 +111,129 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
         return fig, ax
 
     def plot_mode_g1(self,
-                     mode_numb: typing.Optional[int],
+                     Geo1: Geometry1,
+                     mode_numb : int,
                      scaleF: int = 1,
                      view: typing.Literal["3D","xy","xz","yz","x","y","z"] = "3D",
                      remove_fill: True | False =True, 
                      remove_grid: True | False =True, 
-                     remove_axis: True | False =True,
-                     *args, **kwargs) -> typing.Any:
+                     remove_axis: True | False =True
+                     ) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        if not self.Geo1:
-            raise ValueError("Definde the geometry first")
 
-        if not self.result.Fn:
+        if self.result.Fn is None:
             raise ValueError("Run algorithm first")
-        # Select the mode shape
-        phi = self.result.Fn[:,int(mode_numb-1)]
-        
-        fig = plt.figure(figsize=(10,10))
-        ax = fig.add_subplot(111, projection='3d')
-        
-        # plot sensors' nodes
-        plot_funct.plt_nodes(ax,self.Geo1.sens_coord,color="red")
 
-        # FIXME plot mode shape
-        # plot_funct.plt_quiver(ax,self.Geo1.sens_coord,asd,
-        #            scaleF=scaleF,names=self.Geo1.sens_names)
+        # Select the (real) mode shape
+        phi = self.result.Phi[:,int(mode_numb-1)].real
+        fn = self.result.Fn[int(mode_numb-1)]
+
+        fig = plt.figure(figsize=(10,10),tight_layout=True)
+        ax = fig.add_subplot(111, projection='3d')
+
+        # set title
+        ax.set_title(f"Mode nr. {mode_numb}, $f_n$={fn:.3f}Hz"
+                          )
+
+        # plot sensors' nodes
+        sens_coord= Geo1.sens_coord[["x","y","z"]].to_numpy()
+        plt_nodes(ax,sens_coord,color="red")
+
+        # plot Mode shape
+        plt_quiver(ax,sens_coord,Geo1.sens_dir*phi.reshape(-1,1),
+                   scaleF=scaleF,names=Geo1.sens_names)
 
         # Check that BG nodes are defined
-        if self.Geo1.bg_nodes is not None:
+        if Geo1.bg_nodes is not None:
             # if True plot
-            plot_funct.plt_nodes(ax,self.Geo1.bg_nodes,color="gray",alpha=0.5)
+            plt_nodes(ax,Geo1.bg_nodes,color="gray",alpha=0.5)
             # Check that BG lines are defined
-            if self.Geo1.bg_lines is not None:
+            if Geo1.bg_lines is not None:
                 # if True plot
-                plot_funct.plt_lines(ax,self.Geo1.bg_nodes,self.Geo1.bg_lines,
+                plt_lines(ax,Geo1.bg_nodes,Geo1.bg_lines,
                       color="gray",alpha=0.5)
-            if self.Geo1.bg_surf is not None:
+            if Geo1.bg_surf is not None:
                 # if True plot
-                plot_funct.plt_surf(ax,self.Geo1.bg_nodes,self.Geo1.bg_surf
+                plt_surf(ax,Geo1.bg_nodes,Geo1.bg_surf
                          ,alpha=0.1)
 
         # check for sens_lines
-        if self.Geo1.sens_lines is not None:
+        if Geo1.sens_lines is not None:
             # if True plot
-            plot_funct.plt_lines(ax,self.Geo1.sens_coord,self.Geo1.sens_lines,
+            plt_lines(ax,sens_coord,Geo1.sens_lines,
                       color="red")
 
         # Set ax options
-        plot_funct.set_ax_options(ax,bg_color="w",
+        set_ax_options(ax,bg_color="w",
                        remove_fill=remove_fill,
                        remove_grid=remove_grid,
                        remove_axis=remove_axis)
 
         # Set view
-        plot_funct.set_view(ax, view=view)
-
+        set_view(ax, view=view)
         return fig, ax
 
 
     def plot_mode_g2(self,
+                     Geo2: Geometry2,
                      mode_numb: typing.Optional[int],
                      scaleF: int = 1,
-                     view: typing.Literal["3D","xy","xz","yz","x","y","z"] = "3D",
-                     remove_fill: True | False =True, 
-                     remove_grid: True | False =True, 
-                     remove_axis: True | False =True,
+                     view:typing.Literal["3D","xy","xz","yz","x","y","z"]="3D",
+                     remove_fill: True | False = True, 
+                     remove_grid: True | False = True, 
+                     remove_axis: True | False = True,
                      *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        if not self.Geo2:
-            raise ValueError("Definde the geometry first")
-
-        if not self.result.Fn:
+        if self.result.Fn is None:
             raise ValueError("Run algorithm first")
 
-        # Select the mode shape
-        phi = self.result.Fn[:,int(mode_numb-1)]
+        # Select the (real) mode shape
+        fn = self.result.Fn[int(mode_numb-1)]
+        phi = self.result.Phi[:,int(mode_numb-1)].real*scaleF
         # create mode shape dataframe
         df_phi = pd.DataFrame({
-            "sName":self.Geo2.sens_names,
+            "sName":Geo2.sens_names,
             "Phi":phi
             },)
         mapping = dict(zip(df_phi['sName'], df_phi['Phi']))
         # reshape the mode shape dataframe to fit the pts coord
-        df_phi_map = self.Geo2.sens_map.replace(mapping)
+        df_phi_map = Geo2.sens_map.replace(mapping).astype(float)
         # add together coordinates and mode shape displacement
-        newpoints = self.Geo2.pts_coord.add(df_phi_map, fill_value=0)
+        newpoints = Geo2.pts_coord.add(df_phi_map*Geo2.sens_sign, fill_value=0)
         # extract only the displacement array
         newpoints = newpoints.to_numpy()[:,1:]
 
         # create fig and ax
-        fig = plt.figure(figsize=(10,10))
+        fig = plt.figure(figsize=(8,8),tight_layout=True)
         ax = fig.add_subplot(111, projection='3d')
+        
+        # set title
+        ax.set_title(f"Mode nr. {mode_numb}, $f_n$={fn:.3f}Hz"
+                          )
 
         # Check that BG nodes are defined
-        if self.Geo2.bg_nodes is not None:
+        if Geo2.bg_nodes is not None:
             # if True plot
-            plot_funct.plt_nodes(ax,self.Geo2.bg_nodes,color="gray",alpha=0.5)
+            plot_funct.plt_nodes(ax,Geo2.bg_nodes,color="gray",alpha=0.5)
             # Check that BG lines are defined
-            if self.Geo2.bg_lines is not None:
+            if Geo2.bg_lines is not None:
                 # if True plot
-                plot_funct.plt_lines(ax,self.Geo2.bg_nodes,self.Geo2.bg_lines,
+                plot_funct.plt_lines(ax,Geo2.bg_nodes,Geo2.bg_lines,
                       color="gray",alpha=0.5)
-            if self.Geo2.bg_surf is not None:
+            if Geo2.bg_surf is not None:
                 # if True plot
-                plot_funct.plt_surf(ax,self.Geo2.bg_nodes,self.Geo2.bg_surf
+                plot_funct.plt_surf(ax,Geo2.bg_nodes,Geo2.bg_surf
                          ,alpha=0.1)
         # PLOT MODE SHAPE
         plot_funct.plt_nodes(ax,newpoints,color="red")
         # check for sens_lines
-        if self.Geo2.sens_lines is not None:
+        if Geo2.sens_lines is not None:
             # if True plot
-            plot_funct.plt_lines(ax,newpoints,self.Geo2.sens_lines,
+            plot_funct.plt_lines(ax,newpoints,Geo2.sens_lines,
                       color="red")
 
         # Set ax options
@@ -235,20 +247,25 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult]):
 
         return fig, ax
 
-
-    def anim_mode(self, *args, **kwargs) -> typing.Any:
+    def anim_mode_g2(self,
+                     Geo2: Geometry2,
+                     mode_numb: typing.Optional[int],
+                     scaleF: int = 1,
+                     view: typing.Literal["3D","xy","xz","yz","x","y","z"] = "3D",
+                     remove_fill: True | False =True, 
+                     remove_grid: True | False =True, 
+                     remove_axis: True | False =True,
+                     *args, **kwargs) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        if not self.geometry2:
-            raise ValueError("Definde the geometry (method 2) first")
-
-        if not self.result:
+        if self.result.Fn is None:
             raise ValueError("Run algorithm first")
-
-        # fig, ax = 
-        # return fig, ax
-
+            
+        Res = self.result
+        AniMode(Geo=Geo2,Res=Res, mode_numb=mode_numb,
+                scaleF=scaleF,view=view,remove_axis=remove_axis,
+                remove_fill=remove_fill,remove_grid=remove_grid)
 
 # =============================================================================
 # ENHANCED FREQUENCY DOMAIN DECOMPOSITION EFDD
@@ -286,8 +303,8 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
         )
 
         # Save results
-        self.result.Fn = Fn_FDD
-        self.result.Xi = Xi_FDD
+        self.result.Fn = Fn_FDD.reshape(-1)
+        self.result.Xi = Xi_FDD.reshape(-1)
         self.result.Phi = Phi_FDD
         self.result.forPlot = forPlot
 
@@ -324,8 +341,8 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
         )
 
         # Save results
-        self.result.Fn = Fn_FDD
-        self.result.Xi = Xi_FDD
+        self.result.Fn = Fn_FDD.reshape(-1)
+        self.result.Xi = Xi_FDD.reshape(-1)
         self.result.Phi = Phi_FDD
         self.result.forPlot = forPlot
 
@@ -341,7 +358,7 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult]):
         fig, ax = plot_funct.EFDD_FIT_plot(
             Fn=self.result.Fn,
             Xi=self.result.Xi,
-            PerPlot = self.result.perPlot,
+            PerPlot = self.result.forPlot,
             freqlim=freqlim,
         )
         return fig, ax

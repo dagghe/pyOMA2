@@ -159,7 +159,7 @@ class SelFromPlot:
 
         if not update_ticks:
             self.ax2.clear()
-            self.ax2.grid(True)
+            # self.ax2.grid(True)
             # NB nel plot INTERATTIVO chiama anche metodi del plot STATICI
             CMIF_plot(
                 S_val,
@@ -187,7 +187,6 @@ class SelFromPlot:
             )
 
         self.ax2.grid()
-
         self.fig.canvas.draw()
 
     # ------------------------------------------------------------------------------
@@ -225,7 +224,7 @@ class SelFromPlot:
         if not update_ticks:
             # self.ax1.clear()
             self.ax2.clear()
-            self.ax2.grid(True)
+            # self.ax2.grid(True)
 
             # -----------------------
             if plot == "SSI":
@@ -279,15 +278,14 @@ class SelFromPlot:
                 self.pole_legend = self.ax2.legend(
                     loc="lower center", ncol=4, frameon=True
                 )
+            self.fig.canvas.draw()
 
         else:
             self.MARKER.set_xdata(np.asarray(self.sel_freq))  # update data
             self.MARKER.set_ydata([i for i in self.pole_ind])
 
-        self.ax2.grid()
-
-        self.fig.canvas.draw()
-
+            self.fig.canvas.draw()
+    
     # ------------------------------------------------------------------------------
 
     def get_closest_pole(self, plot):
