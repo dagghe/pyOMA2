@@ -22,6 +22,8 @@ from pyoma2.functions import (  # noqa: F401
     plot_funct,
     pLSCF_funct,
 )
+from pyoma2.functions.plot_funct import( 
+plt_nodes,plt_lines,plt_quiver,plt_surf,set_ax_options,set_view)
 
 # from .run_params import BaseRunParams
 from pyoma2.plot.Sel_from_plot import SelFromPlot
@@ -184,20 +186,71 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
             hide_poles=hide_poles,)
         return fig, ax
 
-    def plot_mode_g1(self, *args, **kwargs) -> typing.Any:
+    def plot_mode_g1(self,
+                     Geo1: Geometry1,
+                     mode_numb : int,
+                     scaleF: int = 1,
+                     view: typing.Literal["3D","xy","xz","yz","x","y","z"] = "3D",
+                     remove_fill: True | False =True, 
+                     remove_grid: True | False =True, 
+                     remove_axis: True | False =True
+                     ) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        if not self.geometry1:
-            raise ValueError("Definde the geometry first")
 
-        if not self.result.Fn:
+        if self.result.Fn is None:
             raise ValueError("Run algorithm first")
-        # argomenti plot mode:
-        # modenumb: int # (da 1 a result.Phi.shape[1]+1)
 
-        # fig, ax = 
-        # return fig, ax
+        # Select the (real) mode shape
+        phi = self.result.Phi[:,int(mode_numb-1)].real
+        fn = self.result.Fn[int(mode_numb-1)]
+
+        fig = plt.figure(figsize=(10,10),tight_layout=True)
+        ax = fig.add_subplot(111, projection='3d')
+
+        # set title
+        ax.set_title(f"Mode nr. {mode_numb}, $f_n$={fn:.3f}Hz"
+                          )
+
+        # plot sensors' nodes
+        sens_coord= Geo1.sens_coord[["x","y","z"]].to_numpy()
+        plt_nodes(ax,sens_coord,color="red")
+
+        # plot Mode shape
+        plt_quiver(ax,sens_coord,Geo1.sens_dir*phi.reshape(-1,1),
+                   scaleF=scaleF,names=Geo1.sens_names)
+
+        # Check that BG nodes are defined
+        if Geo1.bg_nodes is not None:
+            # if True plot
+            plt_nodes(ax,Geo1.bg_nodes,color="gray",alpha=0.5)
+            # Check that BG lines are defined
+            if Geo1.bg_lines is not None:
+                # if True plot
+                plt_lines(ax,Geo1.bg_nodes,Geo1.bg_lines,
+                      color="gray",alpha=0.5)
+            if Geo1.bg_surf is not None:
+                # if True plot
+                plt_surf(ax,Geo1.bg_nodes,Geo1.bg_surf
+                         ,alpha=0.1)
+
+        # check for sens_lines
+        if Geo1.sens_lines is not None:
+            # if True plot
+            plt_lines(ax,sens_coord,Geo1.sens_lines,
+                      color="red")
+
+        # Set ax options
+        set_ax_options(ax,bg_color="w",
+                       remove_fill=remove_fill,
+                       remove_grid=remove_grid,
+                       remove_axis=remove_axis)
+
+        # Set view
+        set_view(ax, view=view)
+        return fig, ax
+
 
     def plot_mode_g2(self,
                      Geo2: Geometry2,
@@ -215,6 +268,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
             raise ValueError("Run algorithm first")
 
         # Select the (real) mode shape
+        fn = self.result.Fn[int(mode_numb-1)]
         phi = self.result.Phi[:,int(mode_numb-1)].real*scaleF
         # create mode shape dataframe
         df_phi = pd.DataFrame({
@@ -232,6 +286,10 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         # create fig and ax
         fig = plt.figure(figsize=(8,8),tight_layout=True)
         ax = fig.add_subplot(111, projection='3d')
+
+        
+        ax.set_title(f"Mode nr. {self.mode_numb}, $f_n$={fn:.3f}Hz"
+                          )
 
         # Check that BG nodes are defined
         if Geo2.bg_nodes is not None:
@@ -284,17 +342,12 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
         AniMode(Geo=Geo2,Res=Res, mode_numb=mode_numb,
                 scaleF=scaleF,view=view,remove_axis=remove_axis,
                 remove_fill=remove_fill,remove_grid=remove_grid)
-        
-        
-        # FIXME
-        # CHIAMARE CLASSE ANIMAZIONE MODO
-    
 
 
 # =============================================================================
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIcov_algo(SSIdat_algo):
-    method: typing.Literal["cov_bias", "cov_matmul", "cov_unb"] = "cov_bias"
+    method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
 
 
 

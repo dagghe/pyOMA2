@@ -136,9 +136,6 @@ class AniMode:
         self.ax = self.fig.add_subplot(111, projection='3d')
         
         self.ax.set_title(f"Mode nr. {self.mode_numb}, $f_n$={self.fn:.3f}Hz"
-# MCF = {self.MCF:.3f}
-# """
-                          # ", $f_n$="f"{self.fn:.3f},"
                           )
         # Setting the axes properties
         self.ax.set_xlim3d([np.min(Data[:,0,:]), np.max(Data[:,0,:])])

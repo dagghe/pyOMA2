@@ -49,7 +49,7 @@ def BuildHank(Y, Yref, br, fs, method):
     p = int(br)  # number of block row (to use same notation as Dohler)
     q = int(p + 1)  # block column
     N = Ndat - p - q  # lenght of the Hankel matrix
-    if method == "cov_matmul":
+    if method == "cov_mm":
         # Future and past Output
         Yf = np.vstack(
             [(1 / N**0.5) * Y[:, q + 1 + i : N + q + i] for i in range(p + 1)]
@@ -113,7 +113,7 @@ def BuildHank(Y, Yref, br, fs, method):
     else:
         raise ValueError(
             f'{method} is not a valid argument. "method" must be \
-                         one of: "cov_matmul", "cov_unb", "cov_bias", "dat", \
+                         one of: "cov_mm", "cov_unb", "cov_bias", "dat", \
                          "YfYp"'
         )
 
