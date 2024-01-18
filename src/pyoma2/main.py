@@ -2,8 +2,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
-from pyoma2.algorithm import EFDD_algo, FDD_algo, FSDD_algo, SSIcov_algo, SSIdat_algo
-from pyoma2.OMA import MultiSetup, SingleSetup  # noqa: F401
+from pyoma2.algorithm import (  # noqa: F401
+    EFDD_algo,
+    FDD_algo,
+    FSDD_algo,
+    SSIcov_algo,
+    SSIdat_algo,
+)
+from pyoma2.functions.Gen_funct import PRE_MultiSetup, merge_mode_shapes  # noqa: F401
+from pyoma2.OMA import MultiSetupPost_V1, SingleSetup  # noqa: F401
 from pyoma2.utils.utils import read_from_test_data
 
 if __name__ == "__main__":

@@ -13,7 +13,9 @@ import numpy as np
 # =============================================================================
 
 
-def merge_mode_shapes(MSarr_list, reflist):
+def merge_mode_shapes(
+    MSarr_list: list[np.ndarray], reflist: list[list[int]]
+) -> np.ndarray:
     Nsetup = len(MSarr_list)  # number of setup
     Nmodes = MSarr_list[0].shape[1]  # number of modes
     Nref = len(reflist[0])  # number of reference sensors
@@ -161,7 +163,7 @@ def MAC(phi_X, phi_A):
 
     # mine
     MAC = np.abs(np.dot(phi_X.conj().T, phi_A)) ** 2 / (
-    (np.dot(phi_X.conj().T, phi_X)) * (np.dot(phi_A.conj().T, phi_A))
+        (np.dot(phi_X.conj().T, phi_X)) * (np.dot(phi_A.conj().T, phi_A))
     )
     # original
     # MAC = np.abs(np.conj(phi_X).T @ phi_A)**2
