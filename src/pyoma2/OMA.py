@@ -12,6 +12,9 @@ from pyoma2.functions.plot_funct import(
 plt_data, plt_nodes,plt_lines,plt_quiver,plt_surf,set_ax_options,set_view)
 from pyoma2.functions.Gen_funct import find_map
 from pyoma2.algorithm.data.geometry import Geometry1,Geometry2
+from pyoma2.functions.Gen_funct import merge_mode_shapes, PRE_MultiSetup  # noqa: F401
+
+
 
 # Questa non l ho capita
 if typing.TYPE_CHECKING:
@@ -295,25 +298,48 @@ class SingleSetup:
 
 
 # LA CLASSE MULTISETUP VA PROBABILMENTE RIVISTA...
-class MultiSetup:
-    """Come il Single setup ma prende nell'init una lista degli stessi argomenti"""
+class MultiSetupPost_V1:
+    """Prende una lista di single setups e mergia tutti i risultati di tutti gli algoritmi di tutti i setup."""
 
-    def __init__(self, data: list[typing.Iterable[float]], fs: list[float]):
-        self.data = data
+    def __init__(self, fs: float, ref_ind: list[list[int]] , single_setups: list[SingleSetup] | None = None):
+        self.setups = [el for el in self._init_setups(single_setups)] if single_setups else []
         self.fs = fs
-        self.setups = []
+        self.ref_ind = ref_ind
+
+    def _init_setups(self, setups: list[SingleSetup]) -> typing.Generator[SingleSetup, None, None]:
+        """Set the data and fs for all the setups."""
+        for setup in setups:
+            # force the same fs for all the setups
+            setup.fs = self.fs
+            # ensure that all the algorithms have the same fs
+            for alg in setup.algorithms.values():
+                if alg.result is None:
+                    alg.run()
+            yield setup
 
     def add_setups(self, *setups: SingleSetup):
-        self.setups.extend(setups)
+        self.setups.extend(
+            [el for el in self._init_setups(setups)]
+        )
 
     def run_all(self):
         for setup in self.setups:
             setup.run_all()
         print("all done")
 
-    def merge_results(self):
+    def merge_results(self) -> npt.NDArray[np.float64]:
+        results = []
         for setup in self.setups:
-            for alg in setup.algorithms:
-                if not alg.result:
-                    raise ValueError(f"Run {alg.name} first")
+            for alg in setup.algorithms.values():
                 print(f"Merging {alg.name} results")
+                results.append(alg.result.Phi)
+
+        return merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
+    
+
+
+class MultiSetupPre_V1:
+    """
+    Qui non ho capito, abbiamo dei dati che arrivano da dove? poi su questi dati facciamo
+    un merge e sul merge applichiamo un algoritmo comune 
+    """
