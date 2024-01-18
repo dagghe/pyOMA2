@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
@@ -35,6 +36,9 @@ if __name__ == "__main__":
 
     # Plot the Time Histories
     fig, ax = Pali_ss.plot_data(unit="Volts", show_rms=True)
+    # # to show fig 
+    # fig.show()
+    # plt.show()
     
 # =============================================================================
 # 

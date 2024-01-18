@@ -187,7 +187,7 @@ def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1,):
     Fi = []
     index = []
     maxSy_diff = []
-    print("Extracting modal parameters")
+    print("Extracting FDD modal parameters")
     for sel_fn in tqdm(sel_freq):
         # Frequency bandwidth where the peak is searched
         lim = (sel_fn - DF, sel_fn + DF)
@@ -311,7 +311,7 @@ def EFDD_MPE(
     Phi_E = []
     Xi_E = []
 
-    print("Extracting modal parameters")
+    print("Extracting EFDD modal parameters")
     for n in trange(len(sel_freq)):  # looping through all frequencies to estimate
         phi_FDD = Phi_FDD[:, n]  # Select reference mode shape (from FDD)
         sel_fn = sel_freq[n]
