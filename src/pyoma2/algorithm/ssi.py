@@ -339,9 +339,11 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult]):
             raise ValueError("Run algorithm first")
             
         Res = self.result
+        print("Running AniMode SSI...")
         AniMode(Geo=Geo2,Res=Res, mode_numb=mode_numb,
                 scaleF=scaleF,view=view,remove_axis=remove_axis,
                 remove_fill=remove_fill,remove_grid=remove_grid)
+        print("...end AniMode SSI...")
 
 
 # =============================================================================

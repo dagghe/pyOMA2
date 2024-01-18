@@ -552,7 +552,7 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     sel_phi = []
     sel_freq1 = []
     # Loop through the frequencies given in the input list
-    print("Extracting modal parameters")
+    print("Extracting SSI modal parameters")
     for fj in tqdm(sel_freq):
 # =============================================================================
 # OPZIONE order = "find_min"

@@ -94,13 +94,15 @@ class AniMode:
         canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
         
 # =============================================================================
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        NavigationToolbar2Tk(canvas, self.root)
+
+        canvas.draw()
         self.plot3D()
 # =============================================================================
 
         # Integrate matplotlib figure
-        NavigationToolbar2Tk(canvas, self.root)
-        canvas.draw()
-        self.root.protocol("WM_DELETE_WINDOW", lambda: self.on_closing())
         self.root.mainloop()
     
     def plot3D(self):
@@ -194,4 +196,8 @@ class AniMode:
         plt.show()
 
     def on_closing(self):
+        print('called animode on_closing()')
+        self.root.quit()
+        print('called animode root.quit()')
         self.root.destroy()
+        print('called animode root.destroy()')

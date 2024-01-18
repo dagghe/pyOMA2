@@ -395,7 +395,11 @@ class SelFromPlot:
             self.shift_is_held = False
 
     def on_closing(self):
+        print('called selfrommplot on_closing()')
+        self.root.quit()
+        print('called selfrommplot root.quit()')
         self.root.destroy()
+        print('called selfrommplot root.destroy()')
 
     def toggle_legend(self, x):
         if x:
