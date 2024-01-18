@@ -51,11 +51,15 @@ def SD_PreGER(Y, fs, ref_idx, nxseg=1024, pov=0.5, method="per"):
     # Scale spectrum to reference spectrum
     for ff in range(len(freq)):
         G1 = [
-            np.dot(np.dot(Gyy[ii][n_ref:, :n_ref][:, :, ff],
-            np.linalg.inv(Gyy[ii][:n_ref, :n_ref][:, :, ff])),
-            Gy_refref[:, :, ff])
-    for ii in range(n_setup)
-]
+            np.dot(
+                np.dot(
+                    Gyy[ii][n_ref:, :n_ref][:, :, ff],
+                    np.linalg.inv(Gyy[ii][:n_ref, :n_ref][:, :, ff]),
+                ),
+                Gy_refref[:, :, ff],
+            )
+            for ii in range(n_setup)
+        ]
         G2 = np.vstack(G1)
         G3 = np.vstack([Gy_refref[:, :, ff], G2])
         Gg.append(G3)
@@ -102,10 +106,12 @@ def SD_Est(
         # n_all = Yall.shape[0]
         # Calculating Auto e Cross-Spectral Density (Y_all, Y_ref)
         print("Estimating spectrum...")
-        R_i = np.array([
-            1 / (Ndat - ii) * np.dot(Yall[:, : Ndat - ii], Yref[:, ii:].T)
-            for ii in trange(nxseg)
-        ])
+        R_i = np.array(
+            [
+                1 / (Ndat - ii) * np.dot(Yall[:, : Ndat - ii], Yref[:, ii:].T)
+                for ii in trange(nxseg)
+            ]
+        )
         print("... Done!")
 
         nxseg, nr, nc = R_i.shape
@@ -179,7 +185,13 @@ def SD_svalsvec(SD):
 # -----------------------------------------------------------------------------
 
 
-def FDD_MPE(Sval, Svec, freq, sel_freq, DF=0.1,):
+def FDD_MPE(
+    Sval,
+    Svec,
+    freq,
+    sel_freq,
+    DF=0.1,
+):
     # Sval, Svec = SD_svalsvec(Sy)
     Nch, Nref, Nf = Sval.shape
 
@@ -243,7 +255,9 @@ def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF
             # Save values that satisfy MAC > MAClim condition
             SDOFbell += np.array(
                 [
-                    np.dot(np.dot(phi_FDD.conj().T, Sy[:, :, el]), phi_FDD) # Enhanced PSD matrix (frequency filtered)
+                    np.dot(
+                        np.dot(phi_FDD.conj().T, Sy[:, :, el]), phi_FDD
+                    )  # Enhanced PSD matrix (frequency filtered)
                     if GF.MAC(phi_FDD, Svec[csm, :, el]) > MAClim
                     else 0
                     for el in range(int(idxlim[0]), int(idxlim[1]))

@@ -7,15 +7,17 @@ Created on Sat Oct 21 18:48:38 2023
 import numpy as np
 from tqdm import tqdm, trange
 
+
 # from . import Gen_funct as GF
 # from Gen_funct import *
 # =============================================================================
 # FUNZIONI SSI
 # =============================================================================
-def MAC(phi_X,phi_A):
+def MAC(phi_X, phi_A):
     return np.abs(np.dot(phi_X.conj().T, phi_A)) ** 2 / (
-    (np.dot(phi_X.conj().T, phi_X)) * (np.dot(phi_A.conj().T, phi_A))
+        (np.dot(phi_X.conj().T, phi_X)) * (np.dot(phi_A.conj().T, phi_A))
     )
+
 
 def BuildHank(Y, Yref, br, fs, method):
     # -----------------------------------------------------------------------------
@@ -63,7 +65,10 @@ def BuildHank(Y, Yref, br, fs, method):
     elif method == "cov_unb":
         # Correlations
         Ri = np.array(
-            [1 / (Ndat - k) * np.dot(Y[:, : Ndat - k], Yref[:, k:].T) for k in trange(p + q)]
+            [
+                1 / (Ndat - k) * np.dot(Y[:, : Ndat - k], Yref[:, k:].T)
+                for k in trange(p + q)
+            ]
         )
         # Assembling the Toepliz matrix
         Hank = np.vstack(
@@ -97,7 +102,7 @@ def BuildHank(Y, Yref, br, fs, method):
             Ys.T, mode="r"
         )  # X DIEGO si puo usare tqdm per tenere d'occhio questa?
         R3 = R3.T
-        print(n_ref,p)
+        print(n_ref, p)
         Hank = R3[n_ref * (p + 1) :, : n_ref * (p + 1)]
         return Hank
 
@@ -231,7 +236,7 @@ def SSI_FAST(H, br, ordmax, step=1):
     U1, S1, V1_t = np.linalg.svd(H)
     S1rad = np.sqrt(np.diag(S1))
     # initializing arrays
-    Obs = np.dot(U1[:, :ordmax], S1rad[:ordmax, :ordmax]) # Observability matrix
+    Obs = np.dot(U1[:, :ordmax], S1rad[:ordmax, :ordmax])  # Observability matrix
     O_p = Obs[: Obs.shape[0] - Nch, :]
     O_m = Obs[Nch:, :]
     # QR decomposition
@@ -554,10 +559,10 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     # Loop through the frequencies given in the input list
     print("Extracting SSI modal parameters")
     for fj in tqdm(sel_freq):
-# =============================================================================
-# OPZIONE order = "find_min"
-# here we find the minimum model order so to get a stable pole for every mode of interest
-# -----------------------------------------------------------------------------
+        # =============================================================================
+        # OPZIONE order = "find_min"
+        # here we find the minimum model order so to get a stable pole for every mode of interest
+        # -----------------------------------------------------------------------------
         if order == "find_min":
             # keep only Stable pole
             a = np.where(Lab == 7, Fn_pol, np.nan)
@@ -568,14 +573,14 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
                 np.where(((a < limits[ii][1]) & (a > limits[ii][0])), a, np.nan)
                 for ii in range(len(sel_freq))
             ]
-# =============================================================================
-# N.B if deltaf is too big and a +- limits includes also another frequency from
-# sel_freq, then the method of adding the matrices together in the next loop
-# wont work.
-# DOVREI ESCLUDERE LE FREQUENZE CHE HANNO FORME MODALI DIVERSE (MAC<0.85?)
-# RISPETTO AD UNA FORMA DI RIFERIMENTO FORNITA
-# =============================================================================
-# then loop through list
+            # =============================================================================
+            # N.B if deltaf is too big and a +- limits includes also another frequency from
+            # sel_freq, then the method of adding the matrices together in the next loop
+            # wont work.
+            # DOVREI ESCLUDERE LE FREQUENZE CHE HANNO FORME MODALI DIVERSE (MAC<0.85?)
+            # RISPETTO AD UNA FORMA DI RIFERIMENTO FORNITA
+            # =============================================================================
+            # then loop through list
             aa = 0
             for bb in aas:
                 # transform nan into 0 (so to be able to add the matrices together)
@@ -616,9 +621,9 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
                     sel_xi.append(Sm_pol[r_ind, ii])
                     sel_phi.append(Ms_pol[r_ind, ii, :])
             order_out = ii
-# =============================================================================
-# OPZIONE 2 order = int
-# -----------------------------------------------------------------------------
+        # =============================================================================
+        # OPZIONE 2 order = int
+        # -----------------------------------------------------------------------------
         elif type(order) == int:
             sel = np.nanargmin(np.abs(Fn_pol[:, order] - fj))
             fns_at_ord_ii = Fn_pol[:, order][sel]
