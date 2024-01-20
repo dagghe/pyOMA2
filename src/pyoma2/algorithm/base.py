@@ -7,10 +7,8 @@ from pydantic import BaseModel
 T_RunParams = typing.TypeVar("T_RunParams", bound=BaseModel)
 T_Result = typing.TypeVar("T_Result", bound=BaseResult)
 
-
-# METODI PER PLOT "STATICI" DOVE SI AGGIUNGONO?
-# ALLA CLASSE BASE o A QUELLA SPECIFICA?
-
+# FIXME
+# SERVE UN BASE ALGORITM PER IL MS anche se l unica cosa che cambia e data
 
 class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
     """Abstract class for Modal Analysis algorithms"""
@@ -107,6 +105,3 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
             raise ValueError(
                 f"{cls.__name__}: ResultCls must be defined in subclasses of BaseResult"
             )
-
-# FIXME
-# SERVE UN BASE ALGORITM PER IL MS anche se l unica cosa che cambia e data
