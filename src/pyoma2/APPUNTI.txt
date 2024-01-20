@@ -1,55 +1,31 @@
 DOMANDE
 
 - la cartella temp_old si può eliminare?
-- ancora non so come usare il method, a volte viene usato nel run, a volte nell'mpe
-- capire se il Plot_StDiag e Plot_MIF vanno messi nel Single setup o negli algoritmi
-- proposta per la Geometria
-   - creare classe a parte Geometria con metodi 1 e 2 che sono indipendenti dagli algoritmi (salva i risultati internamente)
-   - creare metodo in single setup che prende una istanza di geometria e la usa insieme agli algoritmi
-
+    - si
 
 --
 
-COSA CAMBIA
-
-1) tolte dataclass, messo pydantic Basemodel ovunque
-2) unite diverse cose sotto famiglie di algoritmi:
-    - uniti file famiglia FDD e SSI
-    - uniti run parameter FDD e SSI
-    - uniti result FDD e SSI
-3) adesso i metodi run() devono tornare la classe Result dell'algoritmo,
-   sarà poi il single setup a salvarla nella variabile .result dell'algoritmo
-4) algoritmo può essere inizializzato senza o con runparameter, nel caso
-   si possono settare dopo
-5) bisogna solo importare l'algoritmo senza importare la classe diei run parameter
-   perchè già bindata dentro l'algoritmo
-6) aggiunti diagrammi generati automaticamente in ./docs/diagram/
-7) in Sel_from_plot.py sistemato nell'initi l'uso di algo
-
+FUNZIONALITA DA AGGIUNGERE IN FUTURO
+- sistemare polyMAX.
+- calcolo intervalli di confidenza.
 
 
 --
 
 DA SITEMARE
 
-Nel codice ho messo in alcuni punti un commento con FIXME,
-cercarlo in tutto il codice
-
+BASSA PRIORITA:
+- MPE_fromPlot per SSI_algo: la griglia compare solo dopo primo click.
+- aggiungere linee verticali per indicare sel_freq a CMIF_plot
+- aggiungere linea orizzontale in corrispondenza dell ordine del primo 
+polo selezionato (prima sel_freq). Forzare poi gli ordini per le sel_freq 
+successive alla prima ad essere uguali all ordine della prima sel_freq.
+- includere opzione per aggiungere plot valori singolari (CMIF_plot) ai
+plot dei diagrammi di stabilizzazione.
+- riguardare i print a schermo su stato di esecuzione algoritmi.
+- riguardare i file di esempio e decidere dove hostarli in futuro
 
 --
 
-PROBLEMI / DA FARE
 
-1) L'argomento method per ssicov 
-(che può essere o “cov_unb”, cov_bias”, “cov_matmul”) anche se viene 
-passato all’ inst dell algoritmo non viene usato 
-(viene salvato giusto nei run_params, ma non viene usato dal metodo)
 
-2) Aggiungere griglia a canvas tk (bassa priorita)
-2bis) Aggiungere linee verticali e orizzontali a canvas tk per fdd e ssi
-rispettivamente (bassa priorita)
-2ter) se possibile nei plot stdiag bloccare l'ordine selezionabile
-al primo ordine selezionato (tutti le sel_freq iesime dopo 0 avranno
-l'ordine forzato dalla prima scelta)
-
-3) salvare order_in/order_out per ssi
