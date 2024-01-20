@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from pyoma2.algorithm.data.result import MsPoserResult
 
 from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
 from pyoma2.functions.Gen_funct import (  # noqa: F401
@@ -29,12 +30,10 @@ if typing.TYPE_CHECKING:
     from pyoma2.algorithm import BaseAlgorithm
 
 
-class SingleSetup:
-    def __init__(self, data: typing.Iterable[float], fs: float):
-        self.data = data  # data
-        self.fs = fs  # sampling frequency
-        self.dt = 1 / fs  # sampling interval
-        self.algorithms: dict[str, BaseAlgorithm] = {}  # set of algo
+class BaseSetup:
+    algorithms: dict[str, BaseAlgorithm]
+    data: np.ndarray | None = None  # TODO use generic typing
+    fs: float | None = None  # sampling frequency
 
     # add algorithm (method) to the set.
     def add_algorithms(self, *algorithms: BaseAlgorithm):
@@ -64,16 +63,42 @@ class SingleSetup:
         self[name].set_result(result)
 
     # get the modal properties (all results).
-    #  QUESTO è IL METODO 2 (manuale)
     def MPE(self, name: str, *args, **kwargs):
         print(f"Getting MPE modal parameters from {name}")
         self[name].mpe(*args, **kwargs)
 
     # get the modal properties (all results) from the plots.
-    # QUESTO è IL METODO 2 (grafico)
     def MPE_fromPlot(self, name: str, *args, **kwargs):
         print(f"Getting MPE modal parameters from plot... {name}")
         self[name].mpe_fromPlot(*args, **kwargs)
+
+    def __getitem__(self, name: str) -> BaseAlgorithm:
+        """
+        Retrieve an algorithm from the set by its name.
+        Raises a KeyError if the algorithm does not exist.
+        """
+        if name in self.algorithms:
+            return self.algorithms[name]
+        else:
+            raise KeyError(f"No algorithm named '{name}' exists.")
+
+    def get(
+        self, name: str, default: BaseAlgorithm | None = None
+    ) -> BaseAlgorithm | None:
+        """
+        Retrieve an algorithm from the set by its name.
+        Returns the default value if the algorithm does not exist.
+        """
+        return self.algorithms.get(name, default)
+
+
+class SingleSetup(BaseSetup):
+
+    def __init__(self, data: typing.Iterable[float], fs: float):
+        self.data = data  # data
+        self.fs = fs  # sampling frequency
+        self.dt = 1 / fs  # sampling interval
+        self.algorithms: dict[str, BaseAlgorithm] = {}  # set of algo
 
     # method to plot the time histories of the data channels.
     def plot_data(
@@ -325,6 +350,7 @@ class MultiSetup_PoSER:
     """
     Multi setup merging with "Post Separate Estimation Re-scaling" approach
     """
+    result: MsPoserResult | None = None
 
     def __init__(
         self,
@@ -335,38 +361,65 @@ class MultiSetup_PoSER:
             [el for el in self._init_setups(single_setups)] if single_setups else []
         )
         self.ref_ind = ref_ind
+        self.result = None
 
     def _init_setups(
         self, setups: list[SingleSetup]
     ) -> typing.Generator[SingleSetup, None, None]:
         """Set the data and fs for all the setups."""
-        Algs= []
+        if len(setups) == 0:
+            raise ValueError("You must pass at least one setup")
+        if any(not setup.algorithms for setup in setups):
+            raise ValueError("You must pass setups with at least one algorithm")
+        alg_type = type(next(iter(setups[0].algorithms.values()), None))
+        print(f"Initializing {len(setups)} setups with {alg_type.__name__} algorithms")
         for setup in setups:
-            Algs.append([setup.algorithms.values()])
             for alg in setup.algorithms.values():
+                if not isinstance(alg, alg_type):
+                    raise ValueError(
+                        f"You must pass setups with {alg_type.__name__} algorithms"
+                    )
                 if alg.result.Fn is None:
-                    raise Exception("You must pass Single setups that have already been run")
-        # check that we have the same algorithm(s) for every setup
-        if not all(alg == Algs[0] for alg in Algs):
-            raise Exception("""
-            You must pass the same type of algorithms for every setup
-            """)
-            pass
+                    raise ValueError("You must pass Single setups that have already been run")
 
-    def merge_results(self) -> npt.NDArray[np.float64]:
+    def merge_results(self) -> MsPoserResult:
         # FIXME
         # Questo mi sembra perfetto
         # magari aggiungiamo una classe risultato per multisetup
         # dove salviamo solo la forma modale mergiata
         # ma anche la media (e cov??) 
         # delle frequenze e degli smorzamenti (result.Fn e result.Xi)
+
+        all_fn = []
+        all_xi = []
         results = []
         for setup in self.setups:
             for alg in setup.algorithms.values():
                 print(f"Merging {alg.name} results")
+                all_fn.append(alg.result.Fn)
+                all_xi.append(alg.result.Xi)
                 results.append(alg.result.Phi)
 
-        return merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
+        # Convert lists to numpy arrays
+        all_fn = np.array(all_fn)
+        all_xi = np.array(all_xi)
+
+        # Calculate mean and covariance
+        fn_mean = np.mean(all_fn)
+        xi_mean = np.mean(all_xi)
+
+        fn_cov = np.cov(all_fn)
+        xi_cov = np.cov(all_xi)
+        merged_result = merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
+
+        self.result = MsPoserResult(
+            merged_result=merged_result,
+            fn_mean=fn_mean,
+            fn_cov=fn_cov,
+            xi_mean=xi_mean,
+            xi_cov=xi_cov,
+        )
+        return self.result
 
 # FIXME DA SISTEMARE
     # metodo per definire geometria 1
@@ -579,7 +632,7 @@ class MultiSetup_PoSER:
 # =============================================================================
 # =============================================================================
 
-class MultiSetup_PreGER:
+class MultiSetup_PreGER(BaseSetup):
     """
     Multi setup merging with "Pre Global Estimation Re-scaling" approach
     """
@@ -592,46 +645,9 @@ class MultiSetup_PreGER:
         self.fs = fs
         self.ref_ind = ref_ind
         Y = PRE_MultiSetup(datasets, ref_ind)
-        self.Y = Y
+        self.data = Y
 
-    # add algorithm (method) to the set.
-    def add_algorithms(self, *algorithms: BaseAlgorithm):
-        """
-        Add algorithms to the set and set the data and fs.
-        N.B:
-            the algorithms must be instantiated before adding them to the set.
-            algorithms names must be unique.
-        """
-        self.algorithms = {
-            **self.algorithms,
-            **{alg.name: alg.set_data(data=self.data, fs=self.fs) for alg in algorithms},
-        }
-
-    # run the whole set of algorithms (methods). METODO 1 di tutti
-    def run_all(self):
-        for alg_name in self.algorithms:
-            self.run_by_name(name=alg_name)
-        print("all done")
-
-    # run algorithm (method) by name. QUESTO è IL METODO 1 di un singolo
-    def run_by_name(self, name: str):
-        """Run an algorithm by its name and save the result in the algorithm itself."""
-        print(f"Running {name}...with parameters: {self[name].run_params}")
-        result = self[name].run()
-        print(f"...saving {name} result\n")
-        self[name].set_result(result)
-
-    # get the modal properties (all results).
-    def MPE(self, name: str, *args, **kwargs):
-        print(f"Getting MPE modal parameters from {name}")
-        self[name].mpe(*args, **kwargs)
-
-    # get the modal properties (all results) from the plots.
-    def MPE_fromPlot(self, name: str, *args, **kwargs):
-        print(f"Getting MPE modal parameters from plot... {name}")
-        self[name].mpe_fromPlot(*args, **kwargs)
-
-# FIXME DA SISTEMARE
+    # FIXME DA SISTEMARE
     # metodo per definire geometria 1
     def def_geo1(
         self,

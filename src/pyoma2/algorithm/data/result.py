@@ -44,3 +44,15 @@ class SSIResult(BaseResult):
 # dopo MPE, MPE_forPlot
     Xi: npt.NDArray[np.float64] | None = None # array of damping ratios
     order_out: int | None = None
+
+
+class MsPoserResult(BaseModel):
+    # FIXME non molto corretto che sia sotto la cartella algorithms..
+    # valutare se creare una cartella apposita per i setups
+    """Base class for MultiSetup Poser result"""
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+    merged_result: npt.NDArray[np.float64]
+    fn_mean: float
+    fn_cov: float
+    xi_mean: float
+    xi_cov: float
