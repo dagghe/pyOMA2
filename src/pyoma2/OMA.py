@@ -6,15 +6,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from pyoma2.algorithm.data.result import MsPoserResult
 
 from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
+from pyoma2.algorithm.data.result import MsPoserResult
 from pyoma2.functions.Gen_funct import (  # noqa: F401
     PRE_MultiSetup,
     find_map,
     merge_mode_shapes,
 )
-
 from pyoma2.functions.plot_funct import (
     plt_data,
     plt_lines,
@@ -93,7 +92,6 @@ class BaseSetup:
 
 
 class SingleSetup(BaseSetup):
-
     def __init__(self, data: typing.Iterable[float], fs: float):
         self.data = data  # data
         self.fs = fs  # sampling frequency
@@ -350,12 +348,11 @@ class MultiSetup_PoSER:
     """
     Multi setup merging with "Post Separate Estimation Re-scaling" approach
     """
+
     result: MsPoserResult | None = None
 
     def __init__(
-        self,
-        ref_ind: list[list[int]],
-        single_setups: list[SingleSetup] #| None = None,
+        self, ref_ind: list[list[int]], single_setups: list[SingleSetup]  # | None = None,
     ):
         self.setups = (
             [el for el in self._init_setups(single_setups)] if single_setups else []
@@ -380,14 +377,16 @@ class MultiSetup_PoSER:
                         f"You must pass setups with {alg_type.__name__} algorithms"
                     )
                 if alg.result.Fn is None:
-                    raise ValueError("You must pass Single setups that have already been run")
+                    raise ValueError(
+                        "You must pass Single setups that have already been run"
+                    )
 
     def merge_results(self) -> MsPoserResult:
         # FIXME
         # Questo mi sembra perfetto
         # magari aggiungiamo una classe risultato per multisetup
         # dove salviamo solo la forma modale mergiata
-        # ma anche la media (e cov??) 
+        # ma anche la media (e cov??)
         # delle frequenze e degli smorzamenti (result.Fn e result.Xi)
 
         all_fn = []
@@ -421,7 +420,7 @@ class MultiSetup_PoSER:
         )
         return self.result
 
-# FIXME DA SISTEMARE
+    # FIXME DA SISTEMARE
     # metodo per definire geometria 1
     def def_geo1(
         self,
@@ -632,13 +631,15 @@ class MultiSetup_PoSER:
 # =============================================================================
 # =============================================================================
 
+
 class MultiSetup_PreGER(BaseSetup):
     """
     Multi setup merging with "Pre Global Estimation Re-scaling" approach
     """
+
     def __init__(
         self,
-        fs: float, # ! list[float]
+        fs: float,  # ! list[float]
         ref_ind: list[list[int]],
         datasets: list[npt.NDArray[np.float64]],
     ):

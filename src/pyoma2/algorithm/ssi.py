@@ -73,7 +73,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         A, C = SSI_funct.SSI_FAST(H, br, ordmax)
         return A, C, H
 
-
     def run(self) -> SSIResult:
         super()._pre_run()
         print(self.run_params)
@@ -94,7 +93,9 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         else:
             Yref = Y
 
-        A, C, H = self._build_matrixes(Y=Y, br=br, method=method, ordmax=ordmax, Yref=Yref)
+        A, C, H = self._build_matrixes(
+            Y=Y, br=br, method=method, ordmax=ordmax, Yref=Yref
+        )
         # Get frequency poles (and damping and mode shapes)
         Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
         # Get the labels of the poles
@@ -398,24 +399,25 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 class SSIcov_algo(SSIdat_algo):
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
 
+
 # FIXME
 # =============================================================================
 # MULTISETUP
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]):
-
     def _build_matrixes(
         self,
         Y: np.ndarray,
         br: int,
-        method: typing.Literal['dat'],
-        ordmax: int, 
-        Yref: np.ndarray | None = None
+        method: typing.Literal["dat"],
+        ordmax: int,
+        Yref: np.ndarray | None = None,
     ) -> tuple[np.ndarray, ...]:
         # Build Hankel matrix and Get state matrix and output matrix
         A, C = SSI_funct.SSI_MulSet(
-            Y, self.fs, br, ordmax, step=1, methodHank=method, method="FAST")
+            Y, self.fs, br, ordmax, step=1, methodHank=method, method="FAST"
+        )
         return A, C, None
 
 
@@ -423,4 +425,3 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIcov_algo_MS(SSIdat_algo_MS):
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
-
