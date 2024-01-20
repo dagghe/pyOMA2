@@ -182,7 +182,9 @@ def MAC(phi_X, phi_A):
 # -----------------------------------------------------------------------------
 
 
-def PRE_MultiSetup(DataList: list[np.ndarray], reflist: list[list[int]]) -> list[dict[str, np.ndarray]]:
+def PRE_MultiSetup(
+    DataList: list[np.ndarray], reflist: list[list[int]]
+) -> list[dict[str, np.ndarray]]:
     """
     Preprocesses multiple setups of data by separating reference and moving
     sensor information.
@@ -229,6 +231,7 @@ def PRE_MultiSetup(DataList: list[np.ndarray], reflist: list[list[int]]) -> list
         )
 
     return Y
+
 
 # -----------------------------------------------------------------------------
 

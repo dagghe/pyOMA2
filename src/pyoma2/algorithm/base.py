@@ -1,8 +1,9 @@
 import abc
 import typing
 
-from pyoma2.algorithm.data.result import BaseResult
 from pydantic import BaseModel
+
+from pyoma2.algorithm.data.result import BaseResult
 
 T_RunParams = typing.TypeVar("T_RunParams", bound=BaseModel)
 T_Result = typing.TypeVar("T_Result", bound=BaseResult)
@@ -10,6 +11,7 @@ T_Data = typing.TypeVar("T_Data", bound=typing.Iterable)
 
 # FIXME
 # SERVE UN BASE ALGORITM PER IL MS anche se l unica cosa che cambia e data
+
 
 class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     """Abstract class for Modal Analysis algorithms"""
@@ -29,7 +31,8 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         self,
         run_params: T_RunParams | None = None,
         name: typing.Optional[str] = None,
-        *args, **kwargs
+        *args,
+        **kwargs,
     ):
         """Initialize the algorithm with the run parameters"""
         if run_params:
@@ -38,7 +41,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
             self.run_params = self.RunParamCls(**kwargs)
 
         self.name = name or self.__class__.__name__
-        
+
     def _pre_run(self):
         if self.fs is None or self.data is None:
             raise ValueError(
@@ -96,9 +99,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     def __init_subclass__(cls, **kwargs):
         """Check that subclasses define RunParamCls and ResultCls"""
         super().__init_subclass__(**kwargs)
-        if not hasattr(cls, "RunParamCls") or not issubclass(
-            cls.RunParamCls, BaseModel
-        ):
+        if not hasattr(cls, "RunParamCls") or not issubclass(cls.RunParamCls, BaseModel):
             raise ValueError(
                 f"{cls.__name__}: RunParamCls must be defined in subclasses of BaseAlgorithm"
             )

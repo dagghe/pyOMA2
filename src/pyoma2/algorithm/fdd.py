@@ -395,6 +395,7 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
 class FSDD_algo(EFDD_algo):
     method: typing.Literal["EFDD", "FSDD"] = "FSDD"
 
+
 # FIXME
 # =============================================================================
 # MULTI SETUP
@@ -404,8 +405,8 @@ class FDD_algo_MS(FDD_algo[FDDRunParams, FDDResult, typing.Iterable[dict]]):
     RunParamCls = FDDRunParams
     ResultCls = FDDResult
 
-# FIXME
-# ATTENZIONE DA RIVEDERE
+    # FIXME
+    # ATTENZIONE DA RIVEDERE
     def plot_mode_g1(
         self,
         Geo1: Geometry1,
@@ -419,7 +420,7 @@ class FDD_algo_MS(FDD_algo[FDDRunParams, FDDResult, typing.Iterable[dict]]):
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
         """
-        # FIXME se è da rivedere la lascio vuota l'implementazione, 
+        # FIXME se è da rivedere la lascio vuota l'implementazione,
         # al momento eredita da FDD_algo, quindi se cancelliamo
         # da qui questo metodo userà quello di FDD_algo
 
