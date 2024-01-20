@@ -6,11 +6,12 @@ from pydantic import BaseModel
 
 T_RunParams = typing.TypeVar("T_RunParams", bound=BaseModel)
 T_Result = typing.TypeVar("T_Result", bound=BaseResult)
+T_Data = typing.TypeVar("T_Data", bound=typing.Iterable)
 
 # FIXME
 # SERVE UN BASE ALGORITM PER IL MS anche se l unica cosa che cambia e data
 
-class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
+class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     """Abstract class for Modal Analysis algorithms"""
 
     result: T_Result | None = None
@@ -20,9 +21,9 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
     ResultCls: typing.Type[T_Result]
 
     # additional attributes set by the Setup Class
-    fs: float | None = None  # sampling frequency
-    dt: float | None = None  # sampling interval
-    data: typing.Iterable[float] | None = None  # data
+    fs: float | None  # sampling frequency
+    dt: float | None  # sampling interval
+    data: T_Data | None  # data
 
     def __init__(
         self,
@@ -79,7 +80,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
         if not self.result:
             raise ValueError(f"{self.name}:Run algorithm first")
 
-    def set_data(self, data: typing.Iterable[float], fs: float) -> "BaseAlgorithm":
+    def set_data(self, data: T_Data, fs: float) -> "BaseAlgorithm":
         """Set data and sampling frequency for the algorithm"""
         self.data = data
         self.fs = fs
