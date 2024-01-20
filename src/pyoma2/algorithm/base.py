@@ -107,3 +107,6 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result], abc.ABC):
             raise ValueError(
                 f"{cls.__name__}: ResultCls must be defined in subclasses of BaseResult"
             )
+
+# FIXME
+# SERVE UN BASE ALGORITM PER IL MS anche se l unica cosa che cambia e data
