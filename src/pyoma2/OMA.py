@@ -318,43 +318,73 @@ class SingleSetup:
 
 
 # LA CLASSE MULTISETUP VA PROBABILMENTE RIVISTA...
-class MultiSetupPost_V1:
-    """Prende una lista di single setups e mergia tutti i risultati di tutti gli algoritmi di tutti i setup."""
+class MultiSetup_PoSER:
+    """
+    Multi setup merging with "Post Separate Estimation Re-scaling" approach
+    """
+# Forse la organizzerei cosi:
+# gli utenti inizializzano la classe con una lista di SingleSetup gia runnati
+# e una lista di indici di riferimento.
+# Noi controlliamo solo che per ogni setup vengano siano stati runnati
+# gli stessi algoritmi e che siano stati estratti/returnati lo stesso
+# numero di risultati per tutti gli algoritmi.
+# Sara compito dell utente assicurarsi che si stia "mergiando" modi giusti
+# Noi facciamo solo un controllo su len(Result.Fn) 
+# (che poi e la stessa cosa di Result.Phi.shape[1])
 
     def __init__(
         self,
-        fs: float,
+        # fs: float, # non e necessario
         ref_ind: list[list[int]],
-        single_setups: list[SingleSetup] | None = None,
+        single_setups: list[SingleSetup] #| None = None,
     ):
         self.setups = (
             [el for el in self._init_setups(single_setups)] if single_setups else []
         )
-        self.fs = fs
+        # self.fs = fs
         self.ref_ind = ref_ind
 
     def _init_setups(
         self, setups: list[SingleSetup]
     ) -> typing.Generator[SingleSetup, None, None]:
         """Set the data and fs for all the setups."""
+        Algs= []
         for setup in setups:
+            Algs.append([setup.algorithms.values()])
+
             # force the same fs for all the setups
-            setup.fs = self.fs
+            # setup.fs = self.fs # non e piu necessario
             # ensure that all the algorithms have the same fs
+            
+            # qui bisognera assicurarsi di quanto detto sopra
             for alg in setup.algorithms.values():
                 if alg.result is None:
-                    alg.run()
-            yield setup
+                    # raise Exception("You must pass Single setups that have already been run")
+                    pass
+                    # alg.run() # non e piu necessario
+            # yield setup # non e piu necessario
 
+        # controllo su stesso numero e tipo di algoritmi per ogni setup
+        if not all(alg == Algs[0] for alg in Algs):
+            # raise Exception("You must pass the same algorithms for e")
+            pass
+
+    # se i controlli li facciamo all inizializzazione forse non possiamo 
+    # aggiungere altri setup giusto?
     def add_setups(self, *setups: SingleSetup):
         self.setups.extend([el for el in self._init_setups(setups)])
-
-    def run_all(self):
-        for setup in self.setups:
-            setup.run_all()
-        print("all done")
+    # io questo lo toglierei proprio
+    # def run_all(self):
+    #     for setup in self.setups:
+    #         setup.run_all()
+    #     print("all done")
 
     def merge_results(self) -> npt.NDArray[np.float64]:
+        # Questo mi sembra perfetto
+        # magari aggiungiamo una classe risultato per multisetup
+        # dove salviamo solo la forma modale mergiata
+        # ma anche la media (e cov??) 
+        # delle frequenze e degli smorzamenti (result.Fn e result.Xi)
         results = []
         for setup in self.setups:
             for alg in setup.algorithms.values():
@@ -363,9 +393,67 @@ class MultiSetupPost_V1:
 
         return merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
 
+    # Ci sara poi da aggiungere i metodi per i plot delle forme modali globali
+    # forse abbiamo bisogno di una geometria globale?
 
-class MultiSetupPre_V1:
+
+# probabilmente serviranno delle classi run_param e result dedicate
+class MultiSetup_PreGER:
     """
-    Qui non ho capito, abbiamo dei dati che arrivano da dove? poi su questi dati facciamo
-    un merge e sul merge applichiamo un algoritmo comune
+    Multi setup merging with "Pre Global Estimation Re-scaling" approach
     """
+    def __init__(
+        self,
+        fs: float, # ! list[float]
+        ref_ind: list[list[int]],
+        datasets: list[npt.NDArray[np.float64]],
+    ):
+        self.fs = fs
+        self.ref_ind = ref_ind
+        self.datasets = datasets
+
+    # Sempre nell inizializzazione va poi chiamata la funzione 
+    # PRE_MultiSetup
+    
+    
+    # DOPO pero sara simile a single setup
+    # add algorithm (method) to the set.
+    def add_algorithms(self, *algorithms: BaseAlgorithm):
+        """
+        Add algorithms to the set and set the data and fs.
+        N.B:
+            the algorithms must be instantiated before adding them to the set.
+            algorithms names must be unique.
+        """
+        self.algorithms = {
+            **self.algorithms,
+            **{alg.name: alg.set_data(data=self.data, fs=self.fs) for alg in algorithms},
+        }
+
+    # run the whole set of algorithms (methods). METODO 1 di tutti
+    def run_all(self):
+        for alg_name in self.algorithms:
+            self.run_by_name(name=alg_name)
+        print("all done")
+
+    # run algorithm (method) by name. QUESTO è IL METODO 1 di un singolo
+    def run_by_name(self, name: str):
+        """Run an algorithm by its name and save the result in the algorithm itself."""
+        print(f"Running {name}...with parameters: {self[name].run_params}")
+        result = self[name].run()
+        print(f"...saving {name} result\n")
+        self[name].set_result(result)
+
+    # get the modal properties (all results).
+    #  QUESTO è IL METODO 2 (manuale)
+    def MPE(self, name: str, *args, **kwargs):
+        print(f"Getting MPE modal parameters from {name}")
+        self[name].mpe(*args, **kwargs)
+
+    # get the modal properties (all results) from the plots.
+    # QUESTO è IL METODO 2 (grafico)
+    def MPE_fromPlot(self, name: str, *args, **kwargs):
+        print(f"Getting MPE modal parameters from plot... {name}")
+        self[name].mpe_fromPlot(*args, **kwargs)
+
+    
