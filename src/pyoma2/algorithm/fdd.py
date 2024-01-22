@@ -418,7 +418,7 @@ class FDD_algo_MS(FDD_algo[FDDRunParams, FDDResult, typing.Iterable[dict]]):
         pov = self.run_params.pov
         # self.run_params.df = 1 / dt / nxseg
 
-        freq, Sy = FDD_funct.SD_PreGER(Y, self.dt, nxseg,
+        freq, Sy = FDD_funct.SD_PreGER(Y, self.fs, nxseg=nxseg,
                                        method=method, pov=pov)
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
@@ -447,7 +447,7 @@ class EFDD_algo_MS(EFDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
         pov = self.run_params.pov
         # self.run_params.df = 1 / dt / nxseg
 
-        freq, Sy = FDD_funct.SD_PreGER(Y, self.dt, nxseg,
+        freq, Sy = FDD_funct.SD_PreGER(Y, self.fs, nxseg=nxseg,
                                        method=method, pov=pov)
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
