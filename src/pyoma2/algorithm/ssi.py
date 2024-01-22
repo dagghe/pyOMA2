@@ -46,35 +46,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
     ResultCls = SSIResult
     method: typing.Literal["dat"] = "dat"
 
-    def _build_matrixes(
-        self,
-        Y: np.ndarray,
-        br: int,
-        method: typing.Literal["dat"],
-        ordmax: int,
-        Yref: typing.Optional[np.ndarray] = None,
-    ) -> tuple[np.ndarray, ...]:
-        """Build Hankel matrix and Get state matrix and output matrix
-
-        Parameters
-        ----------
-        Y : np.ndarray
-        br : int
-        method : typing.Literal[&quot;dat&quot;]
-        ordmax : int
-        Yref : typing.Optional[np.ndarray], optional, by default None
-
-        Returns
-        -------
-        tuple[np.ndarray, ...]
-            State matrix, output matrix, Hankel matrix
-        """
-        # Build Hankel matrix
-        H = SSI_funct.BuildHank(Y, Yref, br, self.fs, method=method)
-        # Get state matrix and output matrix
-        A, C = SSI_funct.SSI_FAST(H, br, ordmax)
-        return A, C, H
-
     def run(self) -> SSIResult:
         super()._pre_run()
         print(self.run_params)
@@ -95,9 +66,10 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         else:
             Yref = Y
 
-        A, C, H = self._build_matrixes(
-            Y=Y, br=br, method=method, ordmax=ordmax, Yref=Yref
-        )
+        # Build Hankel matrix
+        H = SSI_funct.BuildHank(Y, Yref, 1 / self.dt, self.fs, method=method)
+        # Get state matrix and output matrix
+        A, C = SSI_funct.SSI_FAST(H, br, ordmax)
         # Get frequency poles (and damping and mode shapes)
         Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
         # Get the labels of the poles
@@ -399,20 +371,41 @@ class SSIcov_algo(SSIdat_algo):
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]):
-    def _build_matrixes(
-        self,
-        Y: np.ndarray,
-        br: int,
-        method: typing.Literal["dat"],
-        ordmax: int,
-        Yref: np.ndarray | None = None,
-    ) -> tuple[np.ndarray, ...]:
+    def run(self) -> SSIResult:
+        super()._pre_run()
+        # print(self.run_params)
+        Y = self.data
+        br = self.run_params.br
+        method = self.run_params.method or self.method
+        ordmin = self.run_params.ordmin
+        ordmax = self.run_params.ordmax
+        step = self.run_params.step
+        err_fn = self.run_params.err_fn
+        err_xi = self.run_params.err_xi
+        err_phi = self.run_params.err_phi
+        xi_max = self.run_params.xi_max
+
         # Build Hankel matrix and Get state matrix and output matrix
         A, C = SSI_funct.SSI_MulSet(
             Y, self.fs, br, ordmax, step=1, methodHank=method, method="FAST"
         )
-        return A, C, None
-
+        
+        # Get frequency poles (and damping and mode shapes)
+        Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
+        # Get the labels of the poles
+        Lab = SSI_funct.Lab_stab_SSI(
+            Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
+        )
+        
+        # Return results
+        return SSIResult(
+            A=A,
+            C=C,
+            Fn_poles=Fn_pol,
+            xi_poles=Sm_pol,
+            Phi_poles=Ms_pol,
+            Lab=Lab,
+        )
 
 # ------------------------------------------------------------------------------
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION

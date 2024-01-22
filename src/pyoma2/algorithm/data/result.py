@@ -35,8 +35,8 @@ class EFDDResult(BaseResult):
 
 class SSIResult(BaseResult):
     # dopo run
-    A: list(npt.NDArray[np.float64]) or None = None
-    C: list(npt.NDArray[np.float64]) or None = None
+    A: list[npt.NDArray[np.float64]] or None = None
+    C: list[npt.NDArray[np.float64]] or None = None
     H: npt.NDArray[np.float64] | None = None
 
     Fn_poles: npt.NDArray[np.float64] | None = None
