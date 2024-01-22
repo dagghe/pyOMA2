@@ -9,9 +9,6 @@ T_RunParams = typing.TypeVar("T_RunParams", bound=BaseModel)
 T_Result = typing.TypeVar("T_Result", bound=BaseResult)
 T_Data = typing.TypeVar("T_Data", bound=typing.Iterable)
 
-# FIXME
-# SERVE UN BASE ALGORITM PER IL MS anche se l unica cosa che cambia e data
-
 
 class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     """Abstract class for Modal Analysis algorithms"""
