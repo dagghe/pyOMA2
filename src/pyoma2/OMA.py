@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+import copy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -90,6 +91,119 @@ class BaseSetup:
         """
         return self.algorithms.get(name, default)
 
+    # metodo per plottare geometria 1
+    def plot_geo1(
+        self,
+        scaleF: int = 1,
+        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
+        remove_fill: True | False = True,
+        remove_grid: True | False = True,
+        remove_axis: True | False = True,
+    ):
+
+        fig = plt.figure(figsize=(10, 10), tight_layout=True)
+        ax = fig.add_subplot(111, projection="3d")
+
+        # plot sensors' nodes
+        sens_coord = self.Geo1.sens_coord[["x", "y", "z"]].to_numpy()
+        plt_nodes(ax, sens_coord, color="red")
+
+        # plot sensors' directions
+        plt_quiver(
+            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, 
+            names=self.Geo1.sens_names
+        )
+
+        # Check that BG nodes are defined
+        if self.Geo1.bg_nodes is not None:
+            # if True plot
+            plt_nodes(ax, self.Geo1.bg_nodes, color="gray", alpha=0.5)
+            # Check that BG lines are defined
+            if self.Geo1.bg_lines is not None:
+                # if True plot
+                plt_lines(
+                    ax, self.Geo1.bg_nodes, self.Geo1.bg_lines, color="gray", alpha=0.5
+                )
+            if self.Geo1.bg_surf is not None:
+                # if True plot
+                plt_surf(ax, self.Geo1.bg_nodes, self.Geo1.bg_surf, alpha=0.1)
+
+        # check for sens_lines
+        if self.Geo1.sens_lines is not None:
+            # if True plot
+            plt_lines(ax, sens_coord, self.Geo1.sens_lines, color="red")
+
+        # Set ax options
+        set_ax_options(
+            ax,
+            bg_color="w",
+            remove_fill=remove_fill,
+            remove_grid=remove_grid,
+            remove_axis=remove_axis,
+        )
+
+        # Set view
+        set_view(ax, view=view)
+
+        return fig, ax
+
+    # metodo per plottare geometria 2
+    def plot_geo2(
+        self,
+        scaleF: int = 1,
+        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
+        remove_fill: True | False = True,
+        remove_grid: True | False = True,
+        remove_axis: True | False = True,
+    ):
+
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot(111, projection="3d")
+
+        # plot sensors' nodes
+        plt_nodes(ax, self.Geo2.pts_coord, color="red")
+
+        # plot sensors' directions
+        plt_quiver(
+            ax,
+            self.Geo2.pts_coord,
+            self.Geo2.sens_map,
+            scaleF=scaleF,
+            names=self.Geo2.sens_names,
+        )
+
+        # Check that BG nodes are defined
+        if self.Geo2.bg_nodes is not None:
+            # if True plot
+            plt_nodes(ax, self.Geo2.bg_nodes, color="gray", alpha=0.5)
+            # Check that BG lines are defined
+            if self.Geo2.bg_lines is not None:
+                # if True plot
+                plt_lines(
+                    ax, self.Geo2.bg_nodes, self.Geo2.bg_lines, color="gray", alpha=0.5
+                )
+            if self.Geo2.bg_surf is not None:
+                # if True plot
+                plt_surf(ax, self.Geo2.bg_nodes, self.Geo2.bg_surf, alpha=0.1)
+
+        # check for sens_lines
+        if self.Geo2.sens_lines is not None:
+            # if True plot
+            plt_lines(ax, self.Geo2.pts_coord, self.Geo2.sens_lines, color="red")
+
+        # Set ax options
+        set_ax_options(
+            ax,
+            bg_color="w",
+            remove_fill=remove_fill,
+            remove_grid=remove_grid,
+            remove_axis=remove_axis,
+        )
+
+        # Set view
+        set_view(ax, view=view)
+
+        return fig, ax
 
 class SingleSetup(BaseSetup):
     def __init__(self, data: typing.Iterable[float], fs: float):
@@ -128,7 +242,7 @@ class SingleSetup(BaseSetup):
         bg_lines: npt.NDArray[np.int64] = None,  # Background lines
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
-        # =============================================================================
+        # ---------------------------------------------------------------------
         # Checks on input
         nr_s = len(sens_names)
         # check that nr_s == to data.shape[1]
@@ -137,7 +251,7 @@ class SingleSetup(BaseSetup):
         assert nr_s == sens_coord.to_numpy().shape[0]
         assert nr_s == sens_dir.shape[0]
         # Altri controlli ???
-        # =============================================================================
+        # ---------------------------------------------------------------------
         # adapt to 0 indexing
         if bg_lines is not None:
             bg_lines = np.subtract(bg_lines, 1)
@@ -160,61 +274,6 @@ class SingleSetup(BaseSetup):
             bg_surf=bg_surf,
         )
 
-    # metodo per plottare geometria 1
-    def plot_geo1(
-        self,
-        scaleF: int = 1,
-        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
-    ):
-
-        fig = plt.figure(figsize=(10, 10), tight_layout=True)
-        ax = fig.add_subplot(111, projection="3d")
-
-        # plot sensors' nodes
-        sens_coord = self.Geo1.sens_coord[["x", "y", "z"]].to_numpy()
-        plt_nodes(ax, sens_coord, color="red")
-
-        # plot sensors' directions
-        plt_quiver(
-            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, names=self.Geo1.sens_names
-        )
-
-        # Check that BG nodes are defined
-        if self.Geo1.bg_nodes is not None:
-            # if True plot
-            plt_nodes(ax, self.Geo1.bg_nodes, color="gray", alpha=0.5)
-            # Check that BG lines are defined
-            if self.Geo1.bg_lines is not None:
-                # if True plot
-                plt_lines(
-                    ax, self.Geo1.bg_nodes, self.Geo1.bg_lines, color="gray", alpha=0.5
-                )
-            if self.Geo1.bg_surf is not None:
-                # if True plot
-                plt_surf(ax, self.Geo1.bg_nodes, self.Geo1.bg_surf, alpha=0.1)
-
-        # check for sens_lines
-        if self.Geo1.sens_lines is not None:
-            # if True plot
-            plt_lines(ax, sens_coord, self.Geo1.sens_lines, color="red")
-
-        # Set ax options
-        set_ax_options(
-            ax,
-            bg_color="w",
-            remove_fill=remove_fill,
-            remove_grid=remove_grid,
-            remove_axis=remove_axis,
-        )
-
-        # Set view
-        set_view(ax, view=view)
-
-        return fig, ax
-
     # metodo per definire geometria 2
     def def_geo2(
         self,
@@ -230,7 +289,7 @@ class SingleSetup(BaseSetup):
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
-        # =============================================================================
+        # ---------------------------------------------------------------------
         # Checks on input
         if order_red == "xy" or order_red == "xz" or order_red == "yz":
             nc = 2
@@ -244,9 +303,8 @@ class SingleSetup(BaseSetup):
             nc = 3
             assert sens_map.to_numpy()[:, 1:].shape[1] == nc
             assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
-        # FIXME Controllo su Dimensioni (DA FARE)
-
-        # =============================================================================
+        # altri controlli??
+        # ---------------------------------------------------------------------
         # adapt to 0 indexed lines
         if bg_lines is not None:
             bg_lines = np.subtract(bg_lines, 1)
@@ -264,64 +322,6 @@ class SingleSetup(BaseSetup):
             bg_lines=bg_lines,
             bg_surf=bg_surf,
         )
-
-    # metodo per plottare geometria 2
-    def plot_geo2(
-        self,
-        scaleF: int = 1,
-        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
-    ):
-
-        fig = plt.figure(figsize=(10, 10))
-        ax = fig.add_subplot(111, projection="3d")
-
-        # plot sensors' nodes
-        plt_nodes(ax, self.Geo2.pts_coord, color="red")
-
-        # plot sensors' directions
-        plt_quiver(
-            ax,
-            self.Geo2.pts_coord,
-            self.Geo2.sens_map,
-            scaleF=scaleF,
-            names=self.Geo2.sens_names,
-        )
-
-        # Check that BG nodes are defined
-        if self.Geo2.bg_nodes is not None:
-            # if True plot
-            plt_nodes(ax, self.Geo2.bg_nodes, color="gray", alpha=0.5)
-            # Check that BG lines are defined
-            if self.Geo2.bg_lines is not None:
-                # if True plot
-                plt_lines(
-                    ax, self.Geo2.bg_nodes, self.Geo2.bg_lines, color="gray", alpha=0.5
-                )
-            if self.Geo2.bg_surf is not None:
-                # if True plot
-                plt_surf(ax, self.Geo2.bg_nodes, self.Geo2.bg_surf, alpha=0.1)
-
-        # check for sens_lines
-        if self.Geo2.sens_lines is not None:
-            # if True plot
-            plt_lines(ax, self.Geo2.pts_coord, self.Geo2.sens_lines, color="red")
-
-        # Set ax options
-        set_ax_options(
-            ax,
-            bg_color="w",
-            remove_fill=remove_fill,
-            remove_grid=remove_grid,
-            remove_axis=remove_axis,
-        )
-
-        # Set view
-        set_view(ax, view=view)
-
-        return fig, ax
 
     def __getitem__(self, name: str) -> BaseAlgorithm:
         """
@@ -342,8 +342,9 @@ class SingleSetup(BaseSetup):
         """
         return self.algorithms.get(name, default)
 
-
-# LA CLASSE MULTISETUP VA PROBABILMENTE RIVISTA...
+# =============================================================================
+# MULTISETUP
+# =============================================================================
 class MultiSetup_PoSER:
     """
     Multi setup merging with "Post Separate Estimation Re-scaling" approach
@@ -359,7 +360,10 @@ class MultiSetup_PoSER:
         )
         self.ref_ind = ref_ind
         self.result = None
-
+# ???
+# forse dobbiamo aggiungere limitazione sulla classe: max 1 tipo di algoritmo
+# per setup (cioè non ci potranno essere 2 SSIcov nello stesso setup) per non 
+# fare casini nel merge 
     def _init_setups(
         self, setups: list[SingleSetup]
     ) -> typing.Generator[SingleSetup, None, None]:
@@ -383,11 +387,7 @@ class MultiSetup_PoSER:
 
     def merge_results(self) -> MsPoserResult:
         # FIXME
-        # Questo mi sembra perfetto
-        # magari aggiungiamo una classe risultato per multisetup
-        # dove salviamo solo la forma modale mergiata
-        # ma anche la media (e cov??)
-        # delle frequenze e degli smorzamenti (result.Fn e result.Xi)
+        # come facciamo a differenziare i risultati per tipo di algoritmo??
 
         all_fn = []
         all_xi = []
@@ -425,7 +425,7 @@ class MultiSetup_PoSER:
     def def_geo1(
         self,
         ## MANDATORY
-        sens_names: npt.NDArray[np.string] | list[str],  # sensors' names
+        sens_names: list[list[str]],  # sensors' names MS
         sens_coord: pd.DataFrame,  # sensors' coordinates
         sens_dir: npt.NDArray[np.int64],  # sensors' directions
         ## OPTIONAL
@@ -434,22 +434,30 @@ class MultiSetup_PoSER:
         bg_lines: npt.NDArray[np.int64] = None,  # Background lines
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
-        # =============================================================================
+        # ---------------------------------------------------------------------
+        sens_names_c = copy.deepcopy(sens_names)
+        ref_ind = self.ref_ind
+        ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
+        
+        # Iterate and remove indices
+        for string_list, index_list in zip(sens_names_c, ref_ind):
+            for index in sorted(index_list, reverse=True):
+                if 0 <= index < len(string_list):
+                    string_list.pop(index)
+
+        # flatten (reduced) sens_name list
+        fr_sens_names = [x for xs in sens_names_c for x in xs]
+        sens_names_final = ini + fr_sens_names
+
         # Checks on input
-        nr_s = len(sens_names)
-        # check that nr_s == to data.shape[1]
-        assert nr_s == self.data.shape[1]
-        # check that nr_s == sens_coord.shape[0] and == sens_dir.shape[0]
-        assert nr_s == sens_coord.to_numpy().shape[0]
-        assert nr_s == sens_dir.shape[0]
         # Altri controlli ???
-        # =============================================================================
+        # ---------------------------------------------------------------------
         # adapt to 0 indexing
         if bg_lines is not None:
             bg_lines = np.subtract(bg_lines, 1)
 
         # Find the indices that rearrange sens_coord to sens_names
-        newIDX = find_map(sens_names, sens_coord["sName"].to_numpy())
+        newIDX = find_map(sens_names_final, sens_coord["sName"].to_numpy())
         # reorder if necessary
         sens_coord = sens_coord.reindex(labels=newIDX)
         sens_dir = sens_dir[newIDX, :]
@@ -457,7 +465,7 @@ class MultiSetup_PoSER:
         # sens_coord= sens_coord[["x","y","z"]].to_numpy()
 
         self.Geo1 = Geometry1(
-            sens_names=sens_names,
+            sens_names=sens_names_final,
             sens_coord=sens_coord,
             sens_dir=sens_dir,
             sens_lines=sens_lines,
@@ -466,7 +474,7 @@ class MultiSetup_PoSER:
             bg_surf=bg_surf,
         )
 
-    # metodo per plottare geometria 1
+    # metodo per plottare geometria 1 - OK
     def plot_geo1(
         self,
         scaleF: int = 1,
@@ -485,7 +493,8 @@ class MultiSetup_PoSER:
 
         # plot sensors' directions
         plt_quiver(
-            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, names=self.Geo1.sens_names
+            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, 
+            names=self.Geo1.sens_names
         )
 
         # Check that BG nodes are defined
@@ -496,7 +505,8 @@ class MultiSetup_PoSER:
             if self.Geo1.bg_lines is not None:
                 # if True plot
                 plt_lines(
-                    ax, self.Geo1.bg_nodes, self.Geo1.bg_lines, color="gray", alpha=0.5
+                    ax, self.Geo1.bg_nodes, self.Geo1.bg_lines, 
+                    color="gray", alpha=0.5
                 )
             if self.Geo1.bg_surf is not None:
                 # if True plot
@@ -521,6 +531,7 @@ class MultiSetup_PoSER:
 
         return fig, ax
 
+    # FIXME DA SISTEMARE
     # metodo per definire geometria 2
     def def_geo2(
         self,
@@ -536,6 +547,20 @@ class MultiSetup_PoSER:
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
+        # ---------------------------------------------------------------------
+        sens_names_c = copy.deepcopy(sens_names)
+        ref_ind = self.ref_ind
+        ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
+        
+        # Iterate and remove indices
+        for string_list, index_list in zip(sens_names_c, ref_ind):
+            for index in sorted(index_list, reverse=True):
+                if 0 <= index < len(string_list):
+                    string_list.pop(index)
+
+        # flatten (reduced) sens_name list
+        fr_sens_names = [x for xs in sens_names_c for x in xs]
+        sens_names_final = ini + fr_sens_names
 
         # Checks on input
         if order_red == "xy" or order_red == "xz" or order_red == "yz":
@@ -550,7 +575,7 @@ class MultiSetup_PoSER:
             nc = 3
             assert sens_map.to_numpy()[:, 1:].shape[1] == nc
             assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
-
+        # ---------------------------------------------------------------------
         # adapt to 0 indexed lines
         if bg_lines is not None:
             bg_lines = np.subtract(bg_lines, 1)
@@ -558,7 +583,7 @@ class MultiSetup_PoSER:
             sens_lines = np.subtract(sens_lines, 1)
 
         self.Geo2 = Geometry2(
-            sens_names=sens_names,
+            sens_names=sens_names_final,
             pts_coord=pts_coord,
             sens_map=sens_map,
             sens_sign=sens_sign,
@@ -569,7 +594,7 @@ class MultiSetup_PoSER:
             bg_surf=bg_surf,
         )
 
-    # metodo per plottare geometria 2
+    # metodo per plottare geometria 2 - OK
     def plot_geo2(
         self,
         scaleF: int = 1,
@@ -602,7 +627,8 @@ class MultiSetup_PoSER:
             if self.Geo2.bg_lines is not None:
                 # if True plot
                 plt_lines(
-                    ax, self.Geo2.bg_nodes, self.Geo2.bg_lines, color="gray", alpha=0.5
+                    ax, self.Geo2.bg_nodes, self.Geo2.bg_lines, 
+                    color="gray", alpha=0.5
                 )
             if self.Geo2.bg_surf is not None:
                 # if True plot
@@ -627,10 +653,7 @@ class MultiSetup_PoSER:
 
         return fig, ax
 
-
-# =============================================================================
-# =============================================================================
-
+# -----------------------------------------------------------------------------
 
 class MultiSetup_PreGER(BaseSetup):
     """
@@ -653,7 +676,7 @@ class MultiSetup_PreGER(BaseSetup):
     def def_geo1(
         self,
         ## MANDATORY
-        sens_names: npt.NDArray[np.string] | list[str],  # sensors' names
+        sens_names:  list[list[str]],  # sensors' names MS
         sens_coord: pd.DataFrame,  # sensors' coordinates
         sens_dir: npt.NDArray[np.int64],  # sensors' directions
         ## OPTIONAL
@@ -662,20 +685,27 @@ class MultiSetup_PreGER(BaseSetup):
         bg_lines: npt.NDArray[np.int64] = None,  # Background lines
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
-        # Checks on input
-        nr_s = len(sens_names)
-        # check that nr_s == to data.shape[1]
-        assert nr_s == self.data.shape[1]
-        # check that nr_s == sens_coord.shape[0] and == sens_dir.shape[0]
-        assert nr_s == sens_coord.to_numpy().shape[0]
-        assert nr_s == sens_dir.shape[0]
+        # ---------------------------------------------------------------------
+        sens_names_c = copy.deepcopy(sens_names)
+        ref_ind = self.ref_ind
+        ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
+        
+        # Iterate and remove indices
+        for string_list, index_list in zip(sens_names_c, ref_ind):
+            for index in sorted(index_list, reverse=True):
+                if 0 <= index < len(string_list):
+                    string_list.pop(index)
 
+        # flatten (reduced) sens_name list
+        fr_sens_names = [x for xs in sens_names_c for x in xs]
+        sens_names_final = ini + fr_sens_names
+        # ---------------------------------------------------------------------
         # adapt to 0 indexing
         if bg_lines is not None:
             bg_lines = np.subtract(bg_lines, 1)
 
         # Find the indices that rearrange sens_coord to sens_names
-        newIDX = find_map(sens_names, sens_coord["sName"].to_numpy())
+        newIDX = find_map(sens_names_final, sens_coord["sName"].to_numpy())
         # reorder if necessary
         sens_coord = sens_coord.reindex(labels=newIDX)
         sens_dir = sens_dir[newIDX, :]
@@ -683,7 +713,7 @@ class MultiSetup_PreGER(BaseSetup):
         # sens_coord= sens_coord[["x","y","z"]].to_numpy()
 
         self.Geo1 = Geometry1(
-            sens_names=sens_names,
+            sens_names=sens_names_final,
             sens_coord=sens_coord,
             sens_dir=sens_dir,
             sens_lines=sens_lines,
@@ -692,61 +722,7 @@ class MultiSetup_PreGER(BaseSetup):
             bg_surf=bg_surf,
         )
 
-    # metodo per plottare geometria 1
-    def plot_geo1(
-        self,
-        scaleF: int = 1,
-        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
-    ):
-
-        fig = plt.figure(figsize=(10, 10), tight_layout=True)
-        ax = fig.add_subplot(111, projection="3d")
-
-        # plot sensors' nodes
-        sens_coord = self.Geo1.sens_coord[["x", "y", "z"]].to_numpy()
-        plt_nodes(ax, sens_coord, color="red")
-
-        # plot sensors' directions
-        plt_quiver(
-            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, names=self.Geo1.sens_names
-        )
-
-        # Check that BG nodes are defined
-        if self.Geo1.bg_nodes is not None:
-            # if True plot
-            plt_nodes(ax, self.Geo1.bg_nodes, color="gray", alpha=0.5)
-            # Check that BG lines are defined
-            if self.Geo1.bg_lines is not None:
-                # if True plot
-                plt_lines(
-                    ax, self.Geo1.bg_nodes, self.Geo1.bg_lines, color="gray", alpha=0.5
-                )
-            if self.Geo1.bg_surf is not None:
-                # if True plot
-                plt_surf(ax, self.Geo1.bg_nodes, self.Geo1.bg_surf, alpha=0.1)
-
-        # check for sens_lines
-        if self.Geo1.sens_lines is not None:
-            # if True plot
-            plt_lines(ax, sens_coord, self.Geo1.sens_lines, color="red")
-
-        # Set ax options
-        set_ax_options(
-            ax,
-            bg_color="w",
-            remove_fill=remove_fill,
-            remove_grid=remove_grid,
-            remove_axis=remove_axis,
-        )
-
-        # Set view
-        set_view(ax, view=view)
-
-        return fig, ax
-
+    # FIXME DA SISTEMARE
     # metodo per definire geometria 2
     def def_geo2(
         self,
@@ -756,27 +732,28 @@ class MultiSetup_PreGER(BaseSetup):
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
         ## OPTIONAL
-        order_red: None | typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
+        order_red: None | typing.Literal["xy", "xz", "yz", "x", "y", "z"]=None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
+        # ---------------------------------------------------------------------
+        # ---------------------------------------------------------------------
+        sens_names_c = copy.deepcopy(sens_names)
+        ref_ind = self.ref_ind
+        ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
+        
+        # Iterate and remove indices
+        for string_list, index_list in zip(sens_names_c, ref_ind):
+            for index in sorted(index_list, reverse=True):
+                if 0 <= index < len(string_list):
+                    string_list.pop(index)
 
-        # Checks on input
-        if order_red == "xy" or order_red == "xz" or order_red == "yz":
-            nc = 2
-            assert sens_map.to_numpy()[:, 1:].shape[1] == nc
-            assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
-        elif order_red == "x" or order_red == "y" or order_red == "z":
-            nc = 1
-            assert sens_map.to_numpy()[:, 1:].shape[1] == nc
-            assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
-        elif order_red == None:
-            nc = 3
-            assert sens_map.to_numpy()[:, 1:].shape[1] == nc
-            assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
-
+        # flatten (reduced) sens_name list
+        fr_sens_names = [x for xs in sens_names_c for x in xs]
+        sens_names_final = ini + fr_sens_names
+        # ---------------------------------------------------------------------
         # adapt to 0 indexed lines
         if bg_lines is not None:
             bg_lines = np.subtract(bg_lines, 1)
@@ -784,7 +761,7 @@ class MultiSetup_PreGER(BaseSetup):
             sens_lines = np.subtract(sens_lines, 1)
 
         self.Geo2 = Geometry2(
-            sens_names=sens_names,
+            sens_names=sens_names_final,
             pts_coord=pts_coord,
             sens_map=sens_map,
             sens_sign=sens_sign,
@@ -794,61 +771,3 @@ class MultiSetup_PreGER(BaseSetup):
             bg_lines=bg_lines,
             bg_surf=bg_surf,
         )
-
-    # metodo per plottare geometria 2
-    def plot_geo2(
-        self,
-        scaleF: int = 1,
-        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
-    ):
-
-        fig = plt.figure(figsize=(10, 10))
-        ax = fig.add_subplot(111, projection="3d")
-
-        # plot sensors' nodes
-        plt_nodes(ax, self.Geo2.pts_coord, color="red")
-
-        # plot sensors' directions
-        plt_quiver(
-            ax,
-            self.Geo2.pts_coord,
-            self.Geo2.sens_map,
-            scaleF=scaleF,
-            names=self.Geo2.sens_names,
-        )
-
-        # Check that BG nodes are defined
-        if self.Geo2.bg_nodes is not None:
-            # if True plot
-            plt_nodes(ax, self.Geo2.bg_nodes, color="gray", alpha=0.5)
-            # Check that BG lines are defined
-            if self.Geo2.bg_lines is not None:
-                # if True plot
-                plt_lines(
-                    ax, self.Geo2.bg_nodes, self.Geo2.bg_lines, color="gray", alpha=0.5
-                )
-            if self.Geo2.bg_surf is not None:
-                # if True plot
-                plt_surf(ax, self.Geo2.bg_nodes, self.Geo2.bg_surf, alpha=0.1)
-
-        # check for sens_lines
-        if self.Geo2.sens_lines is not None:
-            # if True plot
-            plt_lines(ax, self.Geo2.pts_coord, self.Geo2.sens_lines, color="red")
-
-        # Set ax options
-        set_ax_options(
-            ax,
-            bg_color="w",
-            remove_fill=remove_fill,
-            remove_grid=remove_grid,
-            remove_axis=remove_axis,
-        )
-
-        # Set view
-        set_view(ax, view=view)
-
-        return fig, ax

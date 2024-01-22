@@ -38,6 +38,8 @@ from .base import BaseAlgorithm
 
 
 # =============================================================================
+# SINGLE SETUP
+# =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
     RunParamCls = SSIRunParams
@@ -162,7 +164,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         )
 
         # Save results
-        # Qui è corretto perchè result esiste dopo che si è fatto il run()
         self.result.Fn = Fn_SSI
         self.result.Xi = Xi_SSI
         self.result.Phi = Phi_SSI
@@ -171,12 +172,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         self,
         freqlim: typing.Optional[float] = None,
         hide_poles: typing.Optional[bool] = True,
-        # # da testare (per aggiungere CMIF_plot su ax2=ax1.twin())
-        # plotSval: typing.Optional[False,True] = False,
-        # nSv: typing.Optional[int] = "all",
-        # nxseg: typing.Optional[int] = 1024,
-        # method_SD : typing.Literal["cor", "per"] = "cor",
-        # pov: typing.Optional[float] = 0.5,
     ) -> typing.Any:
         """Tobe implemented, plot for SSIdat, SSIcov
         Stability Diagram
@@ -206,8 +201,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         if not self.result:
             raise ValueError("Run algorithm first")
 
-        # step= self.run_params.step,
-        # ordmax= self.run_params.ordmax,
         fig, ax = plot_funct.Cluster_SSI_plot(
             Fn=self.result.Fn_poles,
             Sm=self.result.xi_poles,
@@ -394,13 +387,13 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         print("...end AniMode SSI...")
 
 
-# =============================================================================
+# ------------------------------------------------------------------------------
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIcov_algo(SSIdat_algo):
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
 
 
-# FIXME
+# FIXME - DOVREBBE ESSERE OK
 # =============================================================================
 # MULTISETUP
 # =============================================================================
@@ -421,7 +414,7 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
         return A, C, None
 
 
-# =============================================================================
+# ------------------------------------------------------------------------------
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIcov_algo_MS(SSIdat_algo_MS):
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"

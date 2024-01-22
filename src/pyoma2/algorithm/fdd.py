@@ -39,6 +39,8 @@ from pyoma2.plot.Sel_from_plot import SelFromPlot
 
 
 # =============================================================================
+# SINGLE SETUP
+# =============================================================================
 # FREQUENCY DOMAIN DECOMPOSITION
 class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
     RunParamCls = FDDRunParams
@@ -50,9 +52,11 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         Y = self.data.T
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
+        pov = self.run_params.pov
         # self.run_params.df = 1 / dt / nxseg
 
-        freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, method=method)
+        freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, 
+                                    method=method, pov=pov)
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
         # Return results
@@ -293,7 +297,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         print("...end AniMode FDD...")
 
 
-# =============================================================================
+# ------------------------------------------------------------------------------
 # ENHANCED FREQUENCY DOMAIN DECOMPOSITION EFDD
 class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
     method: typing.Literal["EFDD", "FSDD"] = "EFDD"
@@ -404,65 +408,53 @@ class FSDD_algo(EFDD_algo):
 class FDD_algo_MS(FDD_algo[FDDRunParams, FDDResult, typing.Iterable[dict]]):
     RunParamCls = FDDRunParams
     ResultCls = FDDResult
+    
+    def run(self) -> FDDResult:
+        super()._pre_run()
+        print(self.run_params)
+        Y = self.data.T
+        nxseg = self.run_params.nxseg
+        method = self.run_params.method_SD
+        pov = self.run_params.pov
+        # self.run_params.df = 1 / dt / nxseg
 
-    # FIXME
-    # ATTENZIONE DA RIVEDERE
-    def plot_mode_g1(
-        self,
-        Geo1: Geometry1,
-        mode_numb: int,
-        scaleF: int = 1,
-        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
-    ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
-        """
-        # FIXME se è da rivedere la lascio vuota l'implementazione,
-        # al momento eredita da FDD_algo, quindi se cancelliamo
-        # da qui questo metodo userà quello di FDD_algo
+        freq, Sy = FDD_funct.SD_PreGER(Y, self.dt, nxseg,
+                                       method=method, pov=pov)
+        Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
-    def plot_mode_g2(
-        self,
-        Geo2: Geometry2,
-        mode_numb: typing.Optional[int],
-        scaleF: int = 1,
-        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
-        *args,
-        **kwargs,
-    ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
-        """
-        # FIXME anche questa usa quella di FDD_algo, cancellarla da qui se non cambia
-
-    def anim_mode_g2(
-        self,
-        Geo2: Geometry2,
-        mode_numb: typing.Optional[int],
-        scaleF: int = 1,
-        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
-        *args,
-        **kwargs,
-    ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
-        """
-        # FIXME anche questa usa quella di FDD_algo, cancellarla da qui se non cambia
+        # Return results
+        return self.ResultCls(
+            freq=freq,
+            Sy=Sy,
+            S_val=Sval,
+            S_vec=Svec,
+        )
 
 
-# =============================================================================
+# ------------------------------------------------------------------------------
 # ENHANCED FREQUENCY DOMAIN DECOMPOSITION EFDD
-class EFDD_algo_MS(FDD_algo_MS[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
+class EFDD_algo_MS(EFDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
     method = "EFDD"
-
     RunParamCls = EFDDRunParams
     ResultCls = EFDDResult
+    
+    def run(self) -> FDDResult:
+        super()._pre_run()
+        print(self.run_params)
+        Y = self.data.T
+        nxseg = self.run_params.nxseg
+        method = self.run_params.method_SD
+        pov = self.run_params.pov
+        # self.run_params.df = 1 / dt / nxseg
+
+        freq, Sy = FDD_funct.SD_PreGER(Y, self.dt, nxseg,
+                                       method=method, pov=pov)
+        Sval, Svec = FDD_funct.SD_svalsvec(Sy)
+
+        # Return results
+        return self.ResultCls(
+            freq=freq,
+            Sy=Sy,
+            S_val=Sval,
+            S_vec=Svec,
+        )
