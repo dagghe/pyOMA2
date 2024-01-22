@@ -3,7 +3,7 @@ Created on Sat Oct 21 18:39:20 2023
 
 @author: dagpa
 """
-
+import copy
 import numpy as np
 
 # =============================================================================
@@ -32,7 +32,7 @@ def merge_mode_shapes(
     for k in range(Nmodes):
         phi_1_k = MSarr_list[0][:, k]  # Save the mode shape from first setup
         phi_ref_1_k = phi_1_k[reflist[0]]  # Save the reference sensors
-        merged_mode_k = phi_1_k.copy()  # initialise the merged mode shape
+        merged_mode_k = phi_ref_1_k + np.delete(phi_1_k, reflist[0]) # initialise the merged mode shape
         # Loop through each setup
         for i in range(1, Nsetup):
             ref_ind = reflist[i]  # reference sensors indices for the specific setup

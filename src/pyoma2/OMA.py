@@ -25,7 +25,6 @@ from pyoma2.functions.plot_funct import (
     set_view,
 )
 
-# Questa non l ho capita
 if typing.TYPE_CHECKING:
     from pyoma2.algorithm import BaseAlgorithm
 
@@ -536,7 +535,7 @@ class MultiSetup_PoSER:
     def def_geo2(
         self,
         ## MANDATORY
-        sens_names: npt.NDArray[np.string] | list[str],  # sensors' names
+        sens_names: list[list[str]],  # sensors' names MS
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
@@ -561,7 +560,9 @@ class MultiSetup_PoSER:
         # flatten (reduced) sens_name list
         fr_sens_names = [x for xs in sens_names_c for x in xs]
         sens_names_final = ini + fr_sens_names
-
+        
+        # Check that length of sens_names_final == len(result.Phi[:,i])
+        
         # Checks on input
         if order_red == "xy" or order_red == "xz" or order_red == "yz":
             nc = 2
@@ -738,7 +739,6 @@ class MultiSetup_PreGER(BaseSetup):
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
-        # ---------------------------------------------------------------------
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
