@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import typing
 import copy
+import typing
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -109,8 +109,7 @@ class BaseSetup:
 
         # plot sensors' directions
         plt_quiver(
-            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, 
-            names=self.Geo1.sens_names
+            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, names=self.Geo1.sens_names
         )
 
         # Check that BG nodes are defined
@@ -203,6 +202,7 @@ class BaseSetup:
         set_view(ax, view=view)
 
         return fig, ax
+
 
 class SingleSetup(BaseSetup):
     def __init__(self, data: typing.Iterable[float], fs: float):
@@ -298,7 +298,7 @@ class SingleSetup(BaseSetup):
             nc = 1
             assert sens_map.to_numpy()[:, 1:].shape[1] == nc
             assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
-        elif order_red == None:
+        elif order_red is None:
             nc = 3
             assert sens_map.to_numpy()[:, 1:].shape[1] == nc
             assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
@@ -341,6 +341,7 @@ class SingleSetup(BaseSetup):
         """
         return self.algorithms.get(name, default)
 
+
 # =============================================================================
 # MULTISETUP
 # =============================================================================
@@ -349,75 +350,137 @@ class MultiSetup_PoSER:
     Multi setup merging with "Post Separate Estimation Re-scaling" approach
     """
 
-    result: MsPoserResult | None = None
+    __result: dict[str, MsPoserResult] | None = None
+    __alg_ref: dict[type[BaseAlgorithm], str] | None = None
 
     def __init__(
         self, ref_ind: list[list[int]], single_setups: list[SingleSetup]  # | None = None,
     ):
-        self.setups = (
+        self._setups = (
             [el for el in self._init_setups(single_setups)] if single_setups else []
         )
         self.ref_ind = ref_ind
-        self.result = None
-# ???
-# forse dobbiamo aggiungere limitazione sulla classe: max 1 tipo di algoritmo
-# per setup (cioè non ci potranno essere 2 SSIcov nello stesso setup) per non 
-# fare casini nel merge 
+        self.__result = None
+
+    @property
+    def setups(self):
+        return self._setups
+
+    @setups.setter
+    def setups(self, setups):
+        # not allow to set setups after initialization
+        if hasattr(self, "_setups"):
+            raise AttributeError("Cannot set setups after initialization")
+        self._setups = setups
+
+    @property
+    def result(self) -> dict[str, MsPoserResult]:
+        if self.__result is None:
+            raise ValueError("You must run merge_results() first")
+        return self.__result
+
     def _init_setups(
         self, setups: list[SingleSetup]
     ) -> typing.Generator[SingleSetup, None, None]:
-        """Set the data and fs for all the setups."""
+        """Ensure that each setup has run its algorithms and that internally consistent algorithms.
+
+        Parameters
+        ----------
+        setups : list[SingleSetup]
+
+        Raises
+        ------
+        ValueError
+            if no setups are passed
+        ValueError
+            if any setup has no algorithms
+        ValueError
+            if any setup has multiple algorithms of same type
+        ValueError
+            if any setup has algorithms that have not been run
+        """
         if len(setups) == 0:
             raise ValueError("You must pass at least one setup")
         if any(not setup.algorithms for setup in setups):
             raise ValueError("You must pass setups with at least one algorithm")
-        alg_type = type(next(iter(setups[0].algorithms.values()), None))
-        print(f"Initializing {len(setups)} setups with {alg_type.__name__} algorithms")
-        for setup in setups:
+
+        self.__alg_ref: dict[type[BaseAlgorithm], str] = {
+            alg.__class__: alg.name for alg in setups[0].algorithms.values()
+        }
+
+        for i, setup in enumerate(setups):
+            tot_alg = len(setup.algorithms)
+            tot__alg_ref = len(self.__alg_ref)
+            if tot_alg > tot__alg_ref:
+                # check for duplicates algorithms in a setup
+                duplicates = [
+                    (alg.__class__, alg.name)
+                    for alg in setup.algorithms.values()
+                    if alg.name not in self.__alg_ref.values()
+                ]
+                raise ValueError(
+                    f"You must pass distinct algorithms for setup {i+1}. Duplicates: {duplicates}"
+                )
+            if tot_alg < tot__alg_ref:
+                # check for missing algorithms in a setup
+                setup_algs = [alg.__class__ for alg in setup.algorithms.values()]
+                missing = [
+                    alg_cl for alg_cl in self.__alg_ref.keys() if alg_cl not in setup_algs
+                ]
+                raise ValueError(
+                    f"You must pass all algorithms for setup {i+1}. Missing: {missing}"
+                )
+
+            print(f"Initializing {i+1}/{len(setups)} setups")
             for alg in setup.algorithms.values():
-                if not isinstance(alg, alg_type):
-                    raise ValueError(
-                        f"You must pass setups with {alg_type.__name__} algorithms"
-                    )
-                if alg.result.Fn is None:
+                if not alg.result or alg.result.Fn is None:
                     raise ValueError(
                         "You must pass Single setups that have already been run"
                     )
+            yield setup
 
-    def merge_results(self) -> MsPoserResult:
-        # FIXME
-        # come facciamo a differenziare i risultati per tipo di algoritmo??
-
-        all_fn = []
-        all_xi = []
-        results = []
+    def merge_results(self) -> dict[str, MsPoserResult]:
+        # group algorithms by type
+        alg_groups: dict[type[BaseAlgorithm], BaseAlgorithm] = {}
         for setup in self.setups:
             for alg in setup.algorithms.values():
+                alg_groups.setdefault(alg.__class__, []).append(alg)
+
+        for alg_cl, algs in alg_groups.items():
+            print(f"Merging {alg_cl.__name__} results")
+            # get the reference algorithm
+            all_fn = []
+            all_xi = []
+            results = []
+            for alg in algs:
                 print(f"Merging {alg.name} results")
                 all_fn.append(alg.result.Fn)
                 all_xi.append(alg.result.Xi)
                 results.append(alg.result.Phi)
 
-        # Convert lists to numpy arrays
-        all_fn = np.array(all_fn)
-        all_xi = np.array(all_xi)
+            # Convert lists to numpy arrays
+            all_fn = np.array(all_fn)
+            all_xi = np.array(all_xi)
 
-        # Calculate mean and covariance
-        fn_mean = np.mean(all_fn)
-        xi_mean = np.mean(all_xi)
+            # Calculate mean and covariance
+            fn_mean = np.mean(all_fn)
+            xi_mean = np.mean(all_xi)
 
-        fn_cov = np.cov(all_fn)
-        xi_cov = np.cov(all_xi)
-        merged_result = merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
+            fn_cov = np.cov(all_fn)
+            xi_cov = np.cov(all_xi)
+            merged_result = merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
 
-        self.result = MsPoserResult(
-            merged_result=merged_result,
-            fn_mean=fn_mean,
-            fn_cov=fn_cov,
-            xi_mean=xi_mean,
-            xi_cov=xi_cov,
-        )
-        return self.result
+            if self.__result is None:
+                self.__result = {}
+
+            self.__result[alg_cl.__name__] = MsPoserResult(
+                merged_result=merged_result,
+                fn_mean=fn_mean,
+                fn_cov=fn_cov,
+                xi_mean=xi_mean,
+                xi_cov=xi_cov,
+            )
+        return self.__result
 
     # FIXME DA SISTEMARE
     # metodo per definire geometria 1
@@ -437,7 +500,7 @@ class MultiSetup_PoSER:
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
         ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
-        
+
         # Iterate and remove indices
         for string_list, index_list in zip(sens_names_c, ref_ind):
             for index in sorted(index_list, reverse=True):
@@ -492,8 +555,7 @@ class MultiSetup_PoSER:
 
         # plot sensors' directions
         plt_quiver(
-            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, 
-            names=self.Geo1.sens_names
+            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, names=self.Geo1.sens_names
         )
 
         # Check that BG nodes are defined
@@ -504,8 +566,7 @@ class MultiSetup_PoSER:
             if self.Geo1.bg_lines is not None:
                 # if True plot
                 plt_lines(
-                    ax, self.Geo1.bg_nodes, self.Geo1.bg_lines, 
-                    color="gray", alpha=0.5
+                    ax, self.Geo1.bg_nodes, self.Geo1.bg_lines, color="gray", alpha=0.5
                 )
             if self.Geo1.bg_surf is not None:
                 # if True plot
@@ -550,7 +611,7 @@ class MultiSetup_PoSER:
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
         ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
-        
+
         # Iterate and remove indices
         for string_list, index_list in zip(sens_names_c, ref_ind):
             for index in sorted(index_list, reverse=True):
@@ -560,9 +621,9 @@ class MultiSetup_PoSER:
         # flatten (reduced) sens_name list
         fr_sens_names = [x for xs in sens_names_c for x in xs]
         sens_names_final = ini + fr_sens_names
-        
+
         # Check that length of sens_names_final == len(result.Phi[:,i])
-        
+
         # Checks on input
         if order_red == "xy" or order_red == "xz" or order_red == "yz":
             nc = 2
@@ -572,7 +633,7 @@ class MultiSetup_PoSER:
             nc = 1
             assert sens_map.to_numpy()[:, 1:].shape[1] == nc
             assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
-        elif order_red == None:
+        elif order_red is None:
             nc = 3
             assert sens_map.to_numpy()[:, 1:].shape[1] == nc
             assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
@@ -628,8 +689,7 @@ class MultiSetup_PoSER:
             if self.Geo2.bg_lines is not None:
                 # if True plot
                 plt_lines(
-                    ax, self.Geo2.bg_nodes, self.Geo2.bg_lines, 
-                    color="gray", alpha=0.5
+                    ax, self.Geo2.bg_nodes, self.Geo2.bg_lines, color="gray", alpha=0.5
                 )
             if self.Geo2.bg_surf is not None:
                 # if True plot
@@ -654,7 +714,9 @@ class MultiSetup_PoSER:
 
         return fig, ax
 
+
 # -----------------------------------------------------------------------------
+
 
 class MultiSetup_PreGER(BaseSetup):
     """
@@ -678,7 +740,7 @@ class MultiSetup_PreGER(BaseSetup):
     def def_geo1(
         self,
         ## MANDATORY
-        sens_names:  list[list[str]],  # sensors' names MS
+        sens_names: list[list[str]],  # sensors' names MS
         sens_coord: pd.DataFrame,  # sensors' coordinates
         sens_dir: npt.NDArray[np.int64],  # sensors' directions
         ## OPTIONAL
@@ -691,7 +753,7 @@ class MultiSetup_PreGER(BaseSetup):
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
         ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
-        
+
         # Iterate and remove indices
         for string_list, index_list in zip(sens_names_c, ref_ind):
             for index in sorted(index_list, reverse=True):
@@ -734,7 +796,7 @@ class MultiSetup_PreGER(BaseSetup):
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
         ## OPTIONAL
-        order_red: None | typing.Literal["xy", "xz", "yz", "x", "y", "z"]=None,
+        order_red: None | typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
@@ -744,7 +806,7 @@ class MultiSetup_PreGER(BaseSetup):
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
         ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
-        
+
         # Iterate and remove indices
         for string_list, index_list in zip(sens_names_c, ref_ind):
             for index in sorted(index_list, reverse=True):
