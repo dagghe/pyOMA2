@@ -15,7 +15,7 @@ from . import Gen_funct as GF
 # =============================================================================
 
 
-def SD_PreGER(Y, fs, ref_idx, nxseg=1024, pov=0.5, method="per"):
+def SD_PreGER(Y, fs, nxseg=1024, pov=0.5, method="per"):
     dt = 1 / fs
     n_setup = len(Y)  # number of setup
     n_ref = Y[0]["ref"].shape[0]  # number of reference sensor

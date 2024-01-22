@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # =============================================================================
     # Initialise the algorithms
     fdd = FDD_algo(name="FDD")
-    fsdd = FSDD_algo(name="FSDD", nxseg=2048, method_SD="per", pov=0.5)
+    fsdd = FSDD_algo(name="FSDD", nxseg=512, method_SD="per", pov=0.5)
     ssicov = SSIcov_algo(name="SSIcov", method="cov_mm", br=40, ordmax=80)
 
     # Overwrite/update run parameters for an algorithm
@@ -171,7 +171,8 @@ if __name__ == "__main__":
     build_ms.add_algorithms(ssicov, efdd)
     build_ms.run_all()
 
-
+    run_param_ssi = dict(build_ms[ssicov.name].run_params)
+    run_param_efdd = dict(build_ms[efdd.name].run_params)
     ssi_res = dict(ssicov.result)
     efdd_res = dict(efdd.result)
 
