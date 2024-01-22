@@ -671,6 +671,7 @@ class MultiSetup_PreGER(BaseSetup):
         self.ref_ind = ref_ind
         Y = PRE_MultiSetup(datasets, ref_ind)
         self.data = Y
+        self.algorithms: dict[str, BaseAlgorithm] = {}  # set of algo
 
     # FIXME DA SISTEMARE
     # metodo per definire geometria 1

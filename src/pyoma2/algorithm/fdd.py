@@ -412,7 +412,7 @@ class FDD_algo_MS(FDD_algo[FDDRunParams, FDDResult, typing.Iterable[dict]]):
     def run(self) -> FDDResult:
         super()._pre_run()
         print(self.run_params)
-        Y = self.data.T
+        Y = self.data
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         pov = self.run_params.pov
@@ -441,7 +441,7 @@ class EFDD_algo_MS(EFDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
     def run(self) -> FDDResult:
         super()._pre_run()
         print(self.run_params)
-        Y = self.data.T
+        Y = self.data
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         pov = self.run_params.pov
