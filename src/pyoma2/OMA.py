@@ -463,11 +463,11 @@ class MultiSetup_PoSER:
             all_xi = np.array(all_xi)
 
             # Calculate mean and covariance
-            fn_mean = np.mean(all_fn)
-            xi_mean = np.mean(all_xi)
+            fn_mean = np.mean(all_fn,axis=0)
+            xi_mean = np.mean(all_xi,axis=0)
 
-            fn_cov = np.cov(all_fn)
-            xi_cov = np.cov(all_xi)
+            fn_cov = np.std(all_fn,axis=0)/fn_mean
+            xi_cov = np.std(all_xi,axis=0)/xi_mean
             merged_result = merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
 
             if self.__result is None:
