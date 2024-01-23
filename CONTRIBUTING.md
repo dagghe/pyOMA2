@@ -48,6 +48,22 @@ Windows
 ```powershell
 pdm run .\src\pyoma2\main.py
 ```
+
+You'll probably need to install **tk** for the GUI on your system, here some instructions:
+
+Windows:
+
+https://www.pythonguis.com/installation/install-tkinter-windows/
+
+
+Linux:
+
+https://www.pythonguis.com/installation/install-tkinter-linux/
+
+Mac:
+
+https://www.pythonguis.com/installation/install-tkinter-mac/
+
 ## Conventions
 
 ### Commits

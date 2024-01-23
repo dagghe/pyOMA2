@@ -1,16 +1,18 @@
+import pathlib
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
 from pyoma2.algorithm import (  # noqa: F401
     EFDD_algo,
+    EFDD_algo_MS,
     FDD_algo,
+    FDD_algo_MS,
     FSDD_algo,
     SSIcov_algo,
-    SSIdat_algo,
-    EFDD_algo_MS,
-    FDD_algo_MS,
     SSIcov_algo_MS,
+    SSIdat_algo,
     SSIdat_algo_MS,
 )
 from pyoma2.functions.Gen_funct import PRE_MultiSetup, merge_mode_shapes  # noqa: F401
@@ -157,12 +159,12 @@ if __name__ == "__main__":
     set1=np.load(r"src\pyoma2\test_data\3SL\set1.npy",allow_pickle=True)
     set2=np.load(r"src\pyoma2\test_data\3SL\set2.npy",allow_pickle=True)
     set3=np.load(r"src\pyoma2\test_data\3SL\set3.npy",allow_pickle=True)
-    
+
     data = [set1,set2,set3]
     ref_ind=[[0,1,2],[0,1,2],[0,1,2]]
-    
+
     build_ms = MultiSetup_PreGER(fs=100., ref_ind=ref_ind, datasets=data)
-    
+
     # Initialise the algorithms
     efdd = EFDD_algo_MS(name="EFDD", nxseg=1024, method_SD="per", pov=0.5)
     ssicov = SSIcov_algo_MS(name="SSIcov", method="cov_mm", br=80, ordmax=100)
@@ -181,3 +183,93 @@ if __name__ == "__main__":
     efdd.plot_CMIF(freqlim=25)
     ssicov.plot_STDiag(freqlim=25, hide_poles=False)
     ssicov.plot_cluster(freqlim=25)
+
+
+#%% =============================================================================
+
+if __name__ == "__main__":
+    """Running multi setup POSER"""
+    print("**** Running multi setup POSER ****")
+
+    # import data for single setup
+    pali = np.loadtxt(
+        pathlib.Path(r"src/pyoma2/test_data/palisaden/Palisaden_dataset.txt")
+    )
+
+    # create single setup
+    fs = 200
+    # ------------------------------------------------------------------------------
+    # filtering
+    # _sos = signal.butter(12, (0.5, 40.0), "bandpass", output="sos", fs=fs1)
+    # pali = signal.sosfiltfilt(_sos, pali, axis=0)
+    # Decimation
+    q = 5  # Decimation factor
+    pali = signal.decimate(pali, q, axis=0)  # Decimation
+    fs = fs / q  # [Hz] Decimated sampling frequency
+    # ------------------------------------------------------------------------------
+
+    # create single setup
+    Pali_ss1 = SingleSetup(pali, fs)
+    Pali_ss2 = SingleSetup(pali, fs)
+
+    # # Plot the Time Histories
+    # fig, ax = Pali_ss1.plot_data(unit="Volts", show_rms=True)
+
+    # =============================================================================
+    #
+    # =============================================================================
+    # # Initialise the algorithms for setup 1
+    fdd1 = FDD_algo(name="FDD")
+    fsdd1 = FSDD_algo(name="FSDD", nxseg=512, method_SD="per", pov=0.5)
+    ssicov1 = SSIcov_algo(name="SSIcov", method="cov_mm", br=40, ordmax=80)
+
+    # Overwrite/update run parameters for an algorithm
+    fdd1.run_params = FDD_algo.RunParamCls(nxseg=1024, method_SD="cor")
+
+    # Add algorithms to the class
+    Pali_ss1.add_algorithms(ssicov1, fsdd1, fdd1)
+    Pali_ss1.run_all()
+
+    # # Initialise the algorithms for setup 2
+    fdd2 = FDD_algo(name="FDD")
+    fsdd2 = FSDD_algo(name="FSDD", nxseg=512, method_SD="per", pov=0.5)
+    ssicov2 = SSIcov_algo(name="SSIcov", method="cov_mm", br=40, ordmax=80)
+
+    # Overwrite/update run parameters for an algorithm
+    fdd2.run_params = FDD_algo.RunParamCls(nxseg=1024, method_SD="cor")
+
+    # Add algorithms to the class
+    Pali_ss2.add_algorithms(ssicov2, fsdd2, fdd2)
+    Pali_ss2.run_all()
+
+    # ------------------------------------------------------------------------------
+    # plot
+    # fdd.plot_CMIF(freqlim=5)
+    fsdd1.plot_CMIF(freqlim=5)
+    ssicov1.plot_STDiag(freqlim=5, hide_poles=False)
+    ssicov1.plot_cluster(freqlim=5)
+    # ------------------------------------------------------------------------------
+
+    #%% =============================================================================
+    Pali_ss1.MPE_fromPlot("SSIcov", freqlim=5)
+    Pali_ss1.MPE_fromPlot("FSDD", freqlim=5)
+
+    # plot
+    # fdd.plot_CMIF(freqlim=5)
+    fsdd2.plot_CMIF(freqlim=5)
+    ssicov2.plot_STDiag(freqlim=5, hide_poles=False)
+    ssicov2.plot_cluster(freqlim=5)
+    # ------------------------------------------------------------------------------
+
+    #%% =============================================================================
+    Pali_ss2.MPE_fromPlot("SSIcov", freqlim=5)
+    Pali_ss2.MPE_fromPlot("FSDD", freqlim=5)
+
+    ################ INITIALIZATION OF THE MULTISETUP #############################
+    ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
+    msp = MultiSetup_PoSER(ref_ind=ref_ind, single_setups=[Pali_ss1, Pali_ss2])
+    result = msp.merge_results()
+
+    fdd_merged = result[FDD_algo.__class__.__name__]
+    fsdd_merged = result[FSDD_algo.__class__.__name__]
+    ssicov_merged = result[SSIcov_algo.__class__.__name__]
