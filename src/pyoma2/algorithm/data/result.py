@@ -55,7 +55,7 @@ class MsPoserResult(BaseModel):
     """Base class for MultiSetup Poser result"""
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     merged_result: npt.NDArray[np.float64]
-    fn_mean: float
-    fn_cov: float
-    xi_mean: float
-    xi_cov: float
+    fn_mean: npt.NDArray[np.float64]
+    fn_cov: npt.NDArray[np.float64]
+    xi_mean: npt.NDArray[np.float64]
+    xi_cov: npt.NDArray[np.float64]
