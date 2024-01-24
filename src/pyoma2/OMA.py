@@ -27,6 +27,7 @@ from pyoma2.functions.plot_funct import (
 
 if typing.TYPE_CHECKING:
     from pyoma2.algorithm import BaseAlgorithm
+from pyoma2.plot.anim_mode import AniMode
 
 
 class BaseSetup:
@@ -468,17 +469,17 @@ class MultiSetup_PoSER:
 
             fn_cov = np.std(all_fn,axis=0)/fn_mean
             xi_cov = np.std(all_xi,axis=0)/xi_mean
-            merged_result = merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
+            Phi = merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
 
             if self.__result is None:
                 self.__result = {}
 
             self.__result[alg_cl.__name__] = MsPoserResult(
-                merged_result=merged_result,
-                fn_mean=fn_mean,
-                fn_cov=fn_cov,
-                xi_mean=xi_mean,
-                xi_cov=xi_cov,
+                Phi=Phi,
+                Fn=fn_mean,
+                Fn_cov=fn_cov,
+                Xi=xi_mean,
+                Xi_cov=xi_cov,
             )
         return self.__result
 
@@ -714,6 +715,184 @@ class MultiSetup_PoSER:
 
         return fig, ax
 
+    def plot_mode_g1(
+        self,
+        Algo_Res: MsPoserResult,
+        Geo1: Geometry1,
+        mode_numb: int,
+        scaleF: int = 1,
+        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
+        remove_fill: True | False = True,
+        remove_grid: True | False = True,
+        remove_axis: True | False = True,
+    ) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+
+        if Algo_Res.Fn is None:
+            raise ValueError("Run algorithm first")
+
+        # Select the (real) mode shape
+        phi = Algo_Res.Phi[:, int(mode_numb - 1)].real
+        fn = Algo_Res.Fn[int(mode_numb - 1)]
+
+        fig = plt.figure(figsize=(10, 10), tight_layout=True)
+        ax = fig.add_subplot(111, projection="3d")
+
+        # set title
+        ax.set_title(f"Mode nr. {mode_numb}, $f_n$={fn:.3f}Hz")
+
+        # plot sensors' nodes
+        sens_coord = Geo1.sens_coord[["x", "y", "z"]].to_numpy()
+        plt_nodes(ax, sens_coord, color="red")
+
+        # plot Mode shape
+        plt_quiver(
+            ax,
+            sens_coord,
+            Geo1.sens_dir * phi.reshape(-1, 1),
+            scaleF=scaleF,
+            names=Geo1.sens_names,
+        )
+
+        # Check that BG nodes are defined
+        if Geo1.bg_nodes is not None:
+            # if True plot
+            plt_nodes(ax, Geo1.bg_nodes, color="gray", alpha=0.5)
+            # Check that BG lines are defined
+            if Geo1.bg_lines is not None:
+                # if True plot
+                plt_lines(ax, Geo1.bg_nodes, Geo1.bg_lines, color="gray", alpha=0.5)
+            if Geo1.bg_surf is not None:
+                # if True plot
+                plt_surf(ax, Geo1.bg_nodes, Geo1.bg_surf, alpha=0.1)
+
+        # check for sens_lines
+        if Geo1.sens_lines is not None:
+            # if True plot
+            plt_lines(ax, sens_coord, Geo1.sens_lines, color="red")
+
+        # Set ax options
+        set_ax_options(
+            ax,
+            bg_color="w",
+            remove_fill=remove_fill,
+            remove_grid=remove_grid,
+            remove_axis=remove_axis,
+        )
+
+        # Set view
+        set_view(ax, view=view)
+        return fig, ax
+
+    def plot_mode_g2(
+        self,
+        Algo_Res: MsPoserResult,
+        Geo2: Geometry2,
+        mode_numb: typing.Optional[int],
+        scaleF: int = 1,
+        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
+        remove_fill: True | False = True,
+        remove_grid: True | False = True,
+        remove_axis: True | False = True,
+        *args,
+        **kwargs,
+    ) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if Algo_Res.Fn is None:
+            raise ValueError("Run algorithm first")
+
+        # Select the (real) mode shape
+        fn = Algo_Res.Fn[int(mode_numb - 1)]
+        phi = Algo_Res.Phi[:, int(mode_numb - 1)].real * scaleF
+        # create mode shape dataframe
+        df_phi = pd.DataFrame(
+            {"sName": Geo2.sens_names, "Phi": phi},
+        )
+        mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
+        # reshape the mode shape dataframe to fit the pts coord
+        df_phi_map = Geo2.sens_map.replace(mapping).astype(float)
+        # add together coordinates and mode shape displacement
+        newpoints = Geo2.pts_coord.add(df_phi_map * Geo2.sens_sign, fill_value=0)
+        # extract only the displacement array
+        newpoints = newpoints.to_numpy()[:, 1:]
+
+        # create fig and ax
+        fig = plt.figure(figsize=(8, 8), tight_layout=True)
+        ax = fig.add_subplot(111, projection="3d")
+
+        # set title
+        ax.set_title(f"Mode nr. {mode_numb}, $f_n$={fn:.3f}Hz")
+
+        # Check that BG nodes are defined
+        if Geo2.bg_nodes is not None:
+            # if True plot
+            plt_nodes(ax, Geo2.bg_nodes, color="gray", alpha=0.5)
+            # Check that BG lines are defined
+            if Geo2.bg_lines is not None:
+                # if True plot
+                plt_lines(
+                    ax, Geo2.bg_nodes, Geo2.bg_lines, color="gray", alpha=0.5
+                )
+            if Geo2.bg_surf is not None:
+                # if True plot
+                plt_surf(ax, Geo2.bg_nodes, Geo2.bg_surf, alpha=0.1)
+        # PLOT MODE SHAPE
+        plt_nodes(ax, newpoints, color="red")
+        # check for sens_lines
+        if Geo2.sens_lines is not None:
+            # if True plot
+            plt_lines(ax, newpoints, Geo2.sens_lines, color="red")
+
+        # Set ax options
+        set_ax_options(
+            ax,
+            bg_color="w",
+            remove_fill=remove_fill,
+            remove_grid=remove_grid,
+            remove_axis=remove_axis,
+        )
+
+        # Set view
+        set_view(ax, view=view)
+
+        return fig, ax
+
+    def anim_mode_g2(
+        self,
+        Algo_Res: MsPoserResult,
+        Geo2: Geometry2,
+        mode_numb: typing.Optional[int],
+        scaleF: int = 1,
+        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
+        remove_fill: True | False = True,
+        remove_grid: True | False = True,
+        remove_axis: True | False = True,
+        *args,
+        **kwargs,
+    ) -> typing.Any:
+        """Tobe implemented, plot for FDD, EFDD, FSDD
+        Mode Identification Function (MIF)
+        """
+        if Algo_Res.Fn is None:
+            raise ValueError("Run algorithm first")
+
+
+        print("Running Anim Mode FDD")
+        AniMode(
+            Geo=Geo2,
+            Res=Algo_Res,
+            mode_numb=mode_numb,
+            scaleF=scaleF,
+            view=view,
+            remove_axis=remove_axis,
+            remove_fill=remove_fill,
+            remove_grid=remove_grid,
+        )
+        print("...end AniMode FDD...")
 
 # -----------------------------------------------------------------------------
 

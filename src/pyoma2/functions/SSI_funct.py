@@ -541,14 +541,11 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     """
     Bla bla bla
     """
-    try:
-        order = int(order)
-    except:
-        pass
-    if order != "find_min" and type(order) != int:
-        raise ValueError(
-            f"The argument order must either be 'find_min' or be and integer, your input is {order}"
-        )
+
+    # if order != "find_min" and type(order) != int and type(order) != list[int]:
+    #     raise ValueError(
+    #         f"The argument order must either be 'find_min' or be and integer, your input is {order}"
+    #     )
     if order == "find_min" and Lab is None:
         raise ValueError(
             "When order ='find_min', one must also provide the Lab list for the poles"
@@ -558,7 +555,8 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     sel_freq1 = []
     # Loop through the frequencies given in the input list
     print("Extracting SSI modal parameters")
-    for fj in tqdm(sel_freq):
+    order_out=np.empty(len(sel_freq))
+    for ii,fj in enumerate(tqdm(sel_freq)):
         # =============================================================================
         # OPZIONE order = "find_min"
         # here we find the minimum model order so to get a stable pole for every mode of interest
@@ -636,6 +634,21 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
                 sel_xi.append(Sm_pol[:, order][sel])
                 sel_phi.append(Ms_pol[:, order][sel, :])
                 order_out = order
+        # =============================================================================
+        # OPZIONE 3 order = list[int]
+        # -----------------------------------------------------------------------------
+        elif type(order) == list:
+            sel = np.nanargmin(np.abs(Fn_pol[:, order[ii]] - fj))
+            fns_at_ord_ii = Fn_pol[:, order[ii]][sel]
+            check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)
+            if not check.any():
+                print("Could not find any values")
+                order_out[ii] = order[ii]
+            else:
+                sel_freq1.append(Fn_pol[:, order[ii]][sel])
+                sel_xi.append(Sm_pol[:, order[ii]][sel])
+                sel_phi.append(Ms_pol[:, order[ii]][sel, :])
+                order_out[ii] = order[ii]
         else:
             raise ValueError('order must be either of type(int) or "find_min"')
     print("Done!")
@@ -643,7 +656,8 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     Fn = np.array(sel_freq1)
     Phi = np.array(sel_phi).T
     Xi = np.array(sel_xi)
-    if order == "find_min":
-        return Fn, Xi, Phi, order_out
-    else:
-        return Fn, Xi, Phi
+    return Fn, Xi, Phi, order_out
+    # if order == "find_min":
+    #     return Fn, Xi, Phi, order_out
+    # else:
+    #     return Fn, Xi, Phi

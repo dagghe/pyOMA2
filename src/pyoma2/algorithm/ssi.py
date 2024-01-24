@@ -67,7 +67,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
             Yref = Y
 
         # Build Hankel matrix
-        H = SSI_funct.BuildHank(Y, Yref, 1 / self.dt, self.fs, method=method)
+        H = SSI_funct.BuildHank(Y, Yref, br, self.fs, method=method)
         # Get state matrix and output matrix
         A, C = SSI_funct.SSI_FAST(H, br, ordmax)
         # Get frequency poles (and damping and mode shapes)
@@ -91,23 +91,24 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
     @validate_call
     def mpe(
         self,
-        sel_freq: float,
-        order: str = "find_min",
+        sel_freq: list[float],
+        order: int | str = "find_min",
         deltaf: float = 0.05,
         rtol: float = 1e-2,
     ) -> typing.Any:
         super().mpe(sel_freq=sel_freq, order=order, deltaf=deltaf, rtol=rtol)
 
-        Fn_pol = self.result.Fn_pol
-        Sm_pol = self.result.Sm_pol
-        Ms_pol = self.result.Ms_pol
+        Fn_pol = self.result.Fn_poles
+        Sm_pol = self.result.xi_poles
+        Ms_pol = self.result.Phi_poles
         Lab = self.result.Lab
 
-        Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI, order_out = SSI_funct.SSI_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, deltaf=deltaf, rtol=rtol
         )
 
         # Save results
+        self.result.order_out = order_out
         self.result.Fn = Fn_SSI
         self.result.Xi = Xi_SSI
         self.result.Phi = Phi_SSI
@@ -128,14 +129,15 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         # chiamare plot interattivo
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
         sel_freq = SFP.result[0]
-        order = SFP.result[1][0]
+        order = SFP.result[1]
 
         # e poi estrarre risultati
-        Fn_SSI, Xi_SSI, Phi_SSI = SSI_funct.SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI, order_out = SSI_funct.SSI_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=deltaf, rtol=rtol
         )
 
         # Save results
+        self.result.order_out = order_out
         self.result.Fn = Fn_SSI
         self.result.Xi = Xi_SSI
         self.result.Phi = Phi_SSI
