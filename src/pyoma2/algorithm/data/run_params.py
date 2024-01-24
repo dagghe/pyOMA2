@@ -51,7 +51,7 @@ class SSIRunParams(BaseModel):
     err_phi: float = 0.03
     xi_max: float = 0.1
 # METODO 2: MPE e MPE_fromPlot
-    sel_freq: npt.NDArray[np.float64] | None = None
+    sel_freq: list[float] | None = None
     order_in: int | str = "find_min"
     deltaf: float = 0.05,
     rtol: float = 1e-2,

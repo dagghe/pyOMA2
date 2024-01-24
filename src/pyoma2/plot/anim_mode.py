@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d.art3d import Line3D
 
 from pyoma2.algorithm.data.geometry import Geometry2
-from pyoma2.algorithm.data.result import BaseResult
+from pyoma2.algorithm.data.result import BaseResult, MsPoserResult
 from pyoma2.functions import Gen_funct, plot_funct
 
 
@@ -58,7 +58,7 @@ class AniMode:
     def __init__(
         self,
         Geo: Geometry2,
-        Res: BaseResult,
+        Res: BaseResult | MsPoserResult,
         mode_numb: int,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",

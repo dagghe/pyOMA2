@@ -68,7 +68,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         )
 
     @validate_call
-    def mpe(self, sel_freq: float, DF: float = 0.1) -> typing.Any:
+    def mpe(self, sel_freq: list[float], DF: float = 0.1) -> typing.Any:
         super().mpe(sel_freq=sel_freq, DF=DF)
 
         self.run_params.sel_freq = sel_freq
@@ -308,7 +308,7 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
     @validate_call
     def mpe(
         self,
-        sel_freq: float,
+        sel_freq: list[float],
         DF1: float = 0.1,
         DF2: float = 1.0,
         cm: int = 1,
@@ -322,7 +322,7 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
             self.result.freq,
             self.dt,
             sel_freq,
-            self.run_param.method_SD,
+            self.run_params.method_SD,
             method=self.method,
             DF1=DF1,
             DF2=DF2,
