@@ -4,6 +4,7 @@ Created on Tue Jan 23 21:46:10 2024
 @author: dagpa
 """
 import os
+import pathlib
 
 import numpy as np
 import pandas as pd
@@ -17,7 +18,10 @@ from pyoma2.algorithm import (
 from pyoma2.OMA import SingleSetup
 
 # import data for single setup
-pali = np.load(r"src\pyoma2\test_data\palisaden\Palisaden_dataset.npy", allow_pickle=True)
+pali = np.load(
+    pathlib.Path(r"src/pyoma2/test_data/palisaden/Palisaden_dataset.npy"),
+    allow_pickle=True,
+)
 
 # import geometry files
 _fold = r"src/pyoma2/test_data/palisaden"
