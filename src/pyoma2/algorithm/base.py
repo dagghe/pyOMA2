@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import abc
 import typing
 
@@ -13,20 +15,20 @@ T_Data = typing.TypeVar("T_Data", bound=typing.Iterable)
 class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     """Abstract class for Modal Analysis algorithms"""
 
-    result: T_Result | None = None
-    run_params: T_RunParams | None = None
-    name: str | None = None
+    result: typing.Optional[T_Result] = None
+    run_params: typing.Optional[T_RunParams] = None
+    name: typing.Optional[str] = None
     RunParamCls: typing.Type[T_RunParams]
     ResultCls: typing.Type[T_Result]
 
     # additional attributes set by the Setup Class
-    fs: float | None  # sampling frequency
-    dt: float | None  # sampling interval
-    data: T_Data | None  # data
+    fs: typing.Optional[float]  # sampling frequency
+    dt: typing.Optional[float]  # sampling interval
+    data: typing.Optional[T_Data]  # data
 
     def __init__(
         self,
-        run_params: T_RunParams | None = None,
+        run_params: typing.Optional[T_RunParams] = None,
         name: typing.Optional[str] = None,
         *args,
         **kwargs,

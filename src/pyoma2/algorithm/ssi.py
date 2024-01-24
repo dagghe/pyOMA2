@@ -1,25 +1,20 @@
 """STOCHASTIC SUBSPACE IDENTIFICATION (SSI) ALGORITHM"""
+from __future__ import annotations
 
 import logging
 import typing
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from pydantic import (  # controlla che i parametri passati siano quelli giusti
-    validate_call,
-)
 
 from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
 from pyoma2.algorithm.data.result import SSIResult
 
 # from .result import BaseResult
 from pyoma2.algorithm.data.run_params import SSIRunParams
-from pyoma2.functions import (  # noqa: F401
-    FDD_funct,
-    Gen_funct,
+from pyoma2.functions import (
     SSI_funct,
     plot_funct,
-    pLSCF_funct,
 )
 from pyoma2.functions.plot_funct import (
     plt_lines,
@@ -89,11 +84,10 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
             Lab=Lab,
         )
 
-    @validate_call
     def mpe(
         self,
-        sel_freq: list[float],
-        order: int | str = "find_min",
+        sel_freq: typing.List[float],
+        order: typing.Union[int, str] = "find_min",
         deltaf: float = 0.05,
         rtol: float = 1e-2,
     ) -> typing.Any:
@@ -114,7 +108,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         self.result.Xi = Xi_SSI
         self.result.Phi = Phi_SSI
 
-    @validate_call
     def mpe_fromPlot(
         self,
         freqlim: typing.Optional[float] = None,
@@ -192,9 +185,9 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         mode_numb: int,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
     ) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
@@ -262,9 +255,9 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         mode_numb: typing.Optional[int],
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -335,9 +328,9 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         mode_numb: typing.Optional[int],
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
         *args,
         **kwargs,
     ) -> typing.Any:
