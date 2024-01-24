@@ -3,9 +3,12 @@ Created on Sat Oct 21 18:48:38 2023
 
 @author: dagpa
 """
+import logging
 
 import numpy as np
 from tqdm import tqdm, trange
+
+logger = logging.getLogger(__name__)
 
 
 # from . import Gen_funct as GF
@@ -102,7 +105,6 @@ def BuildHank(Y, Yref, br, fs, method):
             Ys.T, mode="r"
         )  # X DIEGO si puo usare tqdm per tenere d'occhio questa?
         R3 = R3.T
-        print(n_ref, p)
         Hank = R3[n_ref * (p + 1) :, : n_ref * (p + 1)]
         return Hank
 
@@ -192,7 +194,7 @@ def SSI(H, br, ordmax, step=1):
     A = []
     C = []
     # loop for increasing order of the system
-    print("SSI for increasing model order...")
+    logger.info("SSI for increasing model order...")
     for ii in trange(0, ordmax + 1, step):
         Obs = np.dot(U1[:, :ii], S1rad[:ii, :ii])  # Observability matrix
         # Con = np.dot(S1rad[:ii, :ii], V1_t[: ii, :]) # Controllability matrix
@@ -201,7 +203,7 @@ def SSI(H, br, ordmax, step=1):
         # Output Influence Matrix
         C.append(Obs[:Nch, :])
         # G = Con[:, Nch:]
-    print("... Done!")
+    logger.debug("... Done!")
     return A, C
 
 
@@ -246,13 +248,13 @@ def SSI_FAST(H, br, ordmax, step=1):
     A = []
     C = []
     # loop for increasing order of the system
-    print("SSI for increasing model order...")
+    logger.info("SSI for increasing model order...")
     for ii in trange(0, ordmax + 1, step):
         # System Matrix
         A.append(np.dot(np.linalg.inv(R[:ii, :ii]), S[:ii, :ii]))
         # Output Influence Matrix
         C.append(Obs[:Nch, :ii])
-    print("... Done!")
+    logger.debug("... Done!")
     return A, C
 
 
@@ -349,7 +351,7 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
     dt = 1 / fs
     O_mov_s = []  # initialise the scaled moving part of the observability matrix
     for kk in trange(n_setup):
-        print(f"Analyising setup nr.:{kk}...")
+        logger.debug("Analyising setup nr.: %s...", kk)
         Y_ref = Y[kk]["ref"]
         # Ndat = Y_ref.shape[1] # number of data points
 
@@ -381,7 +383,7 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
         # scale the moving observability matrix to the reference basis
         O_movs = np.dot(np.dot(O_mov, np.linalg.pinv(O_ref)), O1_ref)
         O_mov_s.append(O_movs)
-        print(f"... Done with setup nr.:{kk}!")
+        logger.debug("... Done with setup nr.: %s!", kk)
 
     # global observability matrix formation via block-interleaving
     Obs_all = np.zeros((n_DOF * br, ordmax))
@@ -554,9 +556,9 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     sel_phi = []
     sel_freq1 = []
     # Loop through the frequencies given in the input list
-    print("Extracting SSI modal parameters")
-    order_out=np.empty(len(sel_freq))
-    for ii,fj in enumerate(tqdm(sel_freq)):
+    logger.info("Extracting SSI modal parameters")
+    order_out = np.empty(len(sel_freq))
+    for ii, fj in enumerate(tqdm(sel_freq)):
         # =============================================================================
         # OPZIONE order = "find_min"
         # here we find the minimum model order so to get a stable pole for every mode of interest
@@ -601,7 +603,7 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
                 else:
                     pass
                 if ii == aa.shape[1] - 1:
-                    print("Could not find any values")
+                    logger.warning("Could not find any values")
                     break
                 ii += 1
                 # except:
@@ -627,7 +629,7 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
             fns_at_ord_ii = Fn_pol[:, order][sel]
             check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)
             if not check.any():
-                print("Could not find any values")
+                logger.warning("Could not find any values")
                 order_out = order
             else:
                 sel_freq1.append(Fn_pol[:, order][sel])
@@ -642,7 +644,7 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
             fns_at_ord_ii = Fn_pol[:, order[ii]][sel]
             check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)
             if not check.any():
-                print("Could not find any values")
+                logger.warning("Could not find any values")
                 order_out[ii] = order[ii]
             else:
                 sel_freq1.append(Fn_pol[:, order[ii]][sel])
@@ -651,7 +653,7 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
                 order_out[ii] = order[ii]
         else:
             raise ValueError('order must be either of type(int) or "find_min"')
-    print("Done!")
+    logger.debug("Done!")
 
     Fn = np.array(sel_freq1)
     Phi = np.array(sel_phi).T

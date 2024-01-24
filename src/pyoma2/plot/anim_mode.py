@@ -221,8 +221,5 @@ class AniMode:
         plt.show()
 
     def on_closing(self):
-        print("called animode on_closing()")
         self.root.quit()
-        print("called animode root.quit()")
         self.root.destroy()
-        print("called animode root.destroy()")
