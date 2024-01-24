@@ -5,6 +5,7 @@ Created on Wed Jan 24 09:28:43 2024
 """
 
 import os
+import pathlib
 
 import numpy as np
 import pandas as pd
@@ -16,9 +17,9 @@ from pyoma2.algorithm import (
 from pyoma2.OMA import MultiSetup_PreGER
 
 # import data files
-set1 = np.load(r"src\pyoma2\test_data\3SL\set1.npy", allow_pickle=True)
-set2 = np.load(r"src\pyoma2\test_data\3SL\set2.npy", allow_pickle=True)
-set3 = np.load(r"src\pyoma2\test_data\3SL\set3.npy", allow_pickle=True)
+set1 = np.load(pathlib.Path(r"src/pyoma2/test_data/3SL/set1.npy"), allow_pickle=True)
+set2 = np.load(pathlib.Path(r"src/pyoma2/test_data/3SL/set2.npy"), allow_pickle=True)
+set3 = np.load(pathlib.Path(r"src/pyoma2/test_data/3SL/set3.npy"), allow_pickle=True)
 
 # import geometry files
 _fold = r"src/pyoma2/test_data/3SL"
