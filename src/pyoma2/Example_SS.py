@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Jan 23 21:46:10 2024
 
@@ -7,20 +6,18 @@ Created on Tue Jan 23 21:46:10 2024
 import os
 
 import numpy as np
-from scipy import signal
 import pandas as pd
+from scipy import signal
 
 from pyoma2.algorithm import (
-    EFDD_algo,
     FDD_algo,
     FSDD_algo,
     SSIcov_algo,
-    SSIdat_algo,
 )
 from pyoma2.OMA import SingleSetup
 
 # import data for single setup
-pali=np.load(r"src\pyoma2\test_data\palisaden\Palisaden_dataset.npy",allow_pickle=True)
+pali = np.load(r"src\pyoma2\test_data\palisaden\Palisaden_dataset.npy", allow_pickle=True)
 
 # import geometry files
 _fold = r"src/pyoma2/test_data/palisaden"
@@ -39,7 +36,7 @@ sens_map = pd.read_csv(_fold + os.sep + "sens_map.txt", sep="\t")
 sens_sign = pd.read_csv(_fold + os.sep + "sens_sign.txt", sep="\t")
 
 # =============================================================================
-fs = 100 # sampling frequency
+fs = 100  # sampling frequency
 
 # -----------------------------------------------------------------------------
 # filtering and decimation
@@ -48,28 +45,30 @@ fs = 100 # sampling frequency
 
 _DecFac = 2  # Decimation factor
 pali = signal.decimate(pali, _DecFac, axis=0)  # Decimation
-fs = fs / _DecFac # [Hz] Decimated sampling frequency
+fs = fs / _DecFac  # [Hz] Decimated sampling frequency
 
 # -----------------------------------------------------------------------------
 # create single setup
 Pali_ss = SingleSetup(pali, fs)
 
 # Plot the Time Histories
-fig, ax = Pali_ss.plot_data(unit="Volts",)
+fig, ax = Pali_ss.plot_data(
+    unit="Volts",
+)
 
 # -----------------------------------------------------------------------------
 # Define geometry1
 Pali_ss.def_geo1(
-    Names, # Names of the channels
-    sens_coord, # coordinates of the sensors
-    sens_dir, # sensors' direction
-    bg_nodes=BG_nodes, # BG nodes
-    bg_lines=BG_lines # BG lines
+    Names,  # Names of the channels
+    sens_coord,  # coordinates of the sensors
+    sens_dir,  # sensors' direction
+    bg_nodes=BG_nodes,  # BG nodes
+    bg_lines=BG_lines,  # BG lines
 )
 
 # Define geometry 2
 Pali_ss.def_geo2(
-    Names, # Names of the channels
+    Names,  # Names of the channels
     pts_coord,
     sens_map,
     order_red="xy",
@@ -99,7 +98,7 @@ Pali_ss.run_by_name("SSIcov")
 Pali_ss.run_by_name("FSDD")
 # Pali_ss.run_all()
 
-# plot 
+# plot
 fsdd.plot_CMIF(freqlim=5)
 ssicov.plot_STDiag(freqlim=5, hide_poles=False)
 ssicov.plot_cluster(freqlim=5)
@@ -108,7 +107,7 @@ ssicov.plot_cluster(freqlim=5)
 ssi_res = ssicov.result.model_dump()
 fsdd_res = dict(fsdd.result)
 
-#%% =============================================================================
+# %% =============================================================================
 # Select modes to extract from plots
 # Pali_ss.MPE_fromPlot("SSIcov", freqlim=5)
 # Pali_ss.MPE_fromPlot("FSDD", freqlim=5)
@@ -123,14 +122,11 @@ fsdd_res = dict(fsdd.result)
 # plot additional info (goodness of fit) for EFDD or FSDD
 Pali_ss[fsdd.name].plot_FIT(freqlim=5)
 
-#%% =============================================================================
+# %% =============================================================================
 # MODE SHAPES PLOT
 # Plot mode 2 (geometry 1)
-Pali_ss[fsdd.name].plot_mode_g1(Geo1=Pali_ss.Geo1, mode_numb=2,
-                                view="3D", scaleF=2)
+Pali_ss[fsdd.name].plot_mode_g1(Geo1=Pali_ss.Geo1, mode_numb=2, view="3D", scaleF=2)
 # Animate mode 1 (geometry 2)
-Pali_ss[ssicov.name].anim_mode_g2(Geo2=Pali_ss.Geo2, mode_numb=1,
-                                  view="xy", scaleF=3)
+Pali_ss[ssicov.name].anim_mode_g2(Geo2=Pali_ss.Geo2, mode_numb=1, view="xy", scaleF=3)
 # Animate mode 3 (geometry 2)
-Pali_ss[fsdd.name].anim_mode_g2(Geo2=Pali_ss.Geo2, mode_numb=3,
-                                view="xy", scaleF=3)
+Pali_ss[fsdd.name].anim_mode_g2(Geo2=Pali_ss.Geo2, mode_numb=3, view="xy", scaleF=3)

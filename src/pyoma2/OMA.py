@@ -237,11 +237,11 @@ class SingleSetup(BaseSetup):
     # metodo per definire geometria 1
     def def_geo1(
         self,
-        ## MANDATORY
+        # # MANDATORY
         sens_names: npt.NDArray[np.string] | list[str],  # sensors' names
         sens_coord: pd.DataFrame,  # sensors' coordinates
         sens_dir: npt.NDArray[np.int64],  # sensors' directions
-        ## OPTIONAL
+        # # OPTIONAL
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.int64] = None,  # Background lines
@@ -282,12 +282,12 @@ class SingleSetup(BaseSetup):
     # metodo per definire geometria 2
     def def_geo2(
         self,
-        ## MANDATORY
+        # # MANDATORY
         sens_names: npt.NDArray[np.string] | list[str],  # sensors' names
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
-        ## OPTIONAL
+        # # OPTIONAL
         order_red: None | typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
@@ -492,11 +492,11 @@ class MultiSetup_PoSER:
     # metodo per definire geometria 1
     def def_geo1(
         self,
-        ## MANDATORY
+        # # MANDATORY
         sens_names: list[list[str]],  # sensors' names MS
         sens_coord: pd.DataFrame,  # sensors' coordinates
         sens_dir: npt.NDArray[np.int64],  # sensors' directions
-        ## OPTIONAL
+        # # OPTIONAL
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.int64] = None,  # Background lines
@@ -601,12 +601,12 @@ class MultiSetup_PoSER:
     # metodo per definire geometria 2
     def def_geo2(
         self,
-        ## MANDATORY
+        # # MANDATORY
         sens_names: list[list[str]],  # sensors' names MS
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
-        ## OPTIONAL
+        # # OPTIONAL
         order_red: None | typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
@@ -921,11 +921,11 @@ class MultiSetup_PreGER(BaseSetup):
     # metodo per definire geometria 1
     def def_geo1(
         self,
-        ## MANDATORY
+        # # MANDATORY
         sens_names: list[list[str]],  # sensors' names MS
         sens_coord: pd.DataFrame,  # sensors' coordinates
         sens_dir: npt.NDArray[np.int64],  # sensors' directions
-        ## OPTIONAL
+        # # OPTIONAL
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.int64] = None,  # Background lines
@@ -972,12 +972,12 @@ class MultiSetup_PreGER(BaseSetup):
     # metodo per definire geometria 2
     def def_geo2(
         self,
-        ## MANDATORY
+        # # MANDATORY
         sens_names: npt.NDArray[np.string] | list[str],  # sensors' names
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
-        ## OPTIONAL
+        # # OPTIONAL
         order_red: None | typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes

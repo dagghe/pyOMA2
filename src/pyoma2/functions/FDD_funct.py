@@ -279,16 +279,18 @@ def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF
         elif method == "EFDD":
             SDOFbell += np.array(
                 [
-                    Sval[csm, csm, l] if GF.MAC(phi_FDD, Svec[csm, :, l]) > MAClim else 0
-                    for l in range(int(idxlim[0]), int(idxlim[1]))
+                    Sval[csm, csm, l_]
+                    if GF.MAC(phi_FDD, Svec[csm, :, l_]) > MAClim
+                    else 0
+                    for l_ in range(int(idxlim[0]), int(idxlim[1]))
                 ]
             )
             SDOFms += np.array(
                 [
-                    Svec[csm, :, l]
-                    if GF.MAC(phi_FDD, Svec[csm, :, l]) > MAClim
+                    Svec[csm, :, l_]
+                    if GF.MAC(phi_FDD, Svec[csm, :, l_]) > MAClim
                     else np.zeros(Nch)
-                    for l in range(int(idxlim[0]), int(idxlim[1]))
+                    for l_ in range(int(idxlim[0]), int(idxlim[1]))
                 ]
             )
 

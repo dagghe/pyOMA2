@@ -4,7 +4,6 @@ import logging
 import typing
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from pydantic import (  # controlla che i parametri passati siano quelli giusti
     validate_call,
@@ -44,6 +43,8 @@ logger = logging.getLogger(__name__)
 # SINGLE SETUP
 # =============================================================================
 # FREQUENCY DOMAIN DECOMPOSITION
+
+
 class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
     RunParamCls = FDDRunParams
     ResultCls = FDDResult

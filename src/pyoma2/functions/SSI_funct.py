@@ -75,7 +75,10 @@ def BuildHank(Y, Yref, br, fs, method):
         )
         # Assembling the Toepliz matrix
         Hank = np.vstack(
-            [np.hstack([Ri[k, :, :] for k in range(p + l, l - 1, -1)]) for l in range(q)]
+            [
+                np.hstack([Ri[k, :, :] for k in range(p + l_, l_ - 1, -1)])
+                for l_ in range(q)
+            ]
         )
         return Hank
 
@@ -86,7 +89,10 @@ def BuildHank(Y, Yref, br, fs, method):
         )
         # Assembling the Toepliz matrix
         Hank = np.vstack(
-            [np.hstack([Ri[k, :, :] for k in range(p + l, l - 1, -1)]) for l in range(q)]
+            [
+                np.hstack([Ri[k, :, :] for k in range(p + l_, l_ - 1, -1)])
+                for l_ in range(q)
+            ]
         )
         return Hank
 
@@ -530,9 +536,9 @@ def Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_x
 
                         else:
                             Lab[i, ii] = 0  # Nuovo polo o polo instabile
-                    except:
+                    except Exception as e:
                         # If f_n[i] is nan, do nothin, n.b. the lab stays 0
-                        pass
+                        logger.debug(e)
     return Lab
 
 
