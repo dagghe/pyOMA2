@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import logging
 import typing
 
 import matplotlib.pyplot as plt
@@ -27,7 +28,10 @@ from pyoma2.functions.plot_funct import (
 
 if typing.TYPE_CHECKING:
     from pyoma2.algorithm import BaseAlgorithm
+
 from pyoma2.plot.anim_mode import AniMode
+
+logger = logging.getLogger(__name__)
 
 
 class BaseSetup:
@@ -52,24 +56,25 @@ class BaseSetup:
     def run_all(self):
         for alg_name in self.algorithms:
             self.run_by_name(name=alg_name)
-        print("all done")
+        logger.info("all done")
 
     # run algorithm (method) by name. QUESTO è IL METODO 1 di un singolo
     def run_by_name(self, name: str):
         """Run an algorithm by its name and save the result in the algorithm itself."""
-        print(f"Running {name}...with parameters: {self[name].run_params}")
+        logger.info("Running %s...", name)
+        logger.debug("...with parameters: %s", self[name].run_params)
         result = self[name].run()
-        print(f"...saving {name} result\n")
+        logger.debug("...saving %s result", name)
         self[name].set_result(result)
 
     # get the modal properties (all results).
     def MPE(self, name: str, *args, **kwargs):
-        print(f"Getting MPE modal parameters from {name}")
+        logger.info("Getting MPE modal parameters from %s", name)
         self[name].mpe(*args, **kwargs)
 
     # get the modal properties (all results) from the plots.
     def MPE_fromPlot(self, name: str, *args, **kwargs):
-        print(f"Getting MPE modal parameters from plot... {name}")
+        logger.info("Getting MPE modal parameters from plot... %s", name)
         self[name].mpe_fromPlot(*args, **kwargs)
 
     def __getitem__(self, name: str) -> BaseAlgorithm:
@@ -432,7 +437,7 @@ class MultiSetup_PoSER:
                     f"You must pass all algorithms for setup {i+1}. Missing: {missing}"
                 )
 
-            print(f"Initializing {i+1}/{len(setups)} setups")
+            logger.debug("Initializing %s/%s setups", i + 1, len(setups))
             for alg in setup.algorithms.values():
                 if not alg.result or alg.result.Fn is None:
                     raise ValueError(
@@ -448,13 +453,13 @@ class MultiSetup_PoSER:
                 alg_groups.setdefault(alg.__class__, []).append(alg)
 
         for alg_cl, algs in alg_groups.items():
-            print(f"Merging {alg_cl.__name__} results")
+            logger.info("Merging %s results", alg_cl.__name__)
             # get the reference algorithm
             all_fn = []
             all_xi = []
             results = []
             for alg in algs:
-                print(f"Merging {alg.name} results")
+                logger.info("Merging %s results", alg.name)
                 all_fn.append(alg.result.Fn)
                 all_xi.append(alg.result.Xi)
                 results.append(alg.result.Phi)
@@ -464,11 +469,11 @@ class MultiSetup_PoSER:
             all_xi = np.array(all_xi)
 
             # Calculate mean and covariance
-            fn_mean = np.mean(all_fn,axis=0)
-            xi_mean = np.mean(all_xi,axis=0)
+            fn_mean = np.mean(all_fn, axis=0)
+            xi_mean = np.mean(all_xi, axis=0)
 
-            fn_cov = np.std(all_fn,axis=0)/fn_mean
-            xi_cov = np.std(all_xi,axis=0)/xi_mean
+            fn_cov = np.std(all_fn, axis=0) / fn_mean
+            xi_cov = np.std(all_xi, axis=0) / xi_mean
             Phi = merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
 
             if self.__result is None:
@@ -790,7 +795,7 @@ class MultiSetup_PoSER:
         self,
         Algo_Res: MsPoserResult,
         Geo2: Geometry2,
-        mode_numb: typing.Optional[int],
+        mode_numb: int | None,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
         remove_fill: True | False = True,
@@ -834,9 +839,7 @@ class MultiSetup_PoSER:
             # Check that BG lines are defined
             if Geo2.bg_lines is not None:
                 # if True plot
-                plt_lines(
-                    ax, Geo2.bg_nodes, Geo2.bg_lines, color="gray", alpha=0.5
-                )
+                plt_lines(ax, Geo2.bg_nodes, Geo2.bg_lines, color="gray", alpha=0.5)
             if Geo2.bg_surf is not None:
                 # if True plot
                 plt_surf(ax, Geo2.bg_nodes, Geo2.bg_surf, alpha=0.1)
@@ -865,7 +868,7 @@ class MultiSetup_PoSER:
         self,
         Algo_Res: MsPoserResult,
         Geo2: Geometry2,
-        mode_numb: typing.Optional[int],
+        mode_numb: int | None,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
         remove_fill: True | False = True,
@@ -880,8 +883,7 @@ class MultiSetup_PoSER:
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
 
-
-        print("Running Anim Mode FDD")
+        logger.info("Running Anim Mode FDD")
         AniMode(
             Geo=Geo2,
             Res=Algo_Res,
@@ -892,7 +894,8 @@ class MultiSetup_PoSER:
             remove_fill=remove_fill,
             remove_grid=remove_grid,
         )
-        print("...end AniMode FDD...")
+        logger.info("...end AniMode FDD...")
+
 
 # -----------------------------------------------------------------------------
 

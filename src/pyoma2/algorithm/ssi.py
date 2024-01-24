@@ -1,5 +1,6 @@
 """STOCHASTIC SUBSPACE IDENTIFICATION (SSI) ALGORITHM"""
 
+import logging
 import typing
 
 import matplotlib.pyplot as plt
@@ -36,6 +37,8 @@ from pyoma2.plot.Sel_from_plot import SelFromPlot
 
 from .base import BaseAlgorithm
 
+logger = logging.getLogger(__name__)
+
 
 # =============================================================================
 # SINGLE SETUP
@@ -48,7 +51,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 
     def run(self) -> SSIResult:
         super()._pre_run()
-        print(self.run_params)
         Y = self.data.T
         br = self.run_params.br
         method = self.run_params.method or self.method
@@ -347,7 +349,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
             raise ValueError("Run algorithm first")
 
         Res = self.result
-        print("Running AniMode SSI...")
+        logger.debug("Running AniMode SSI...")
         AniMode(
             Geo=Geo2,
             Res=Res,
@@ -358,7 +360,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
             remove_fill=remove_fill,
             remove_grid=remove_grid,
         )
-        print("...end AniMode SSI...")
+        logger.debug("...end AniMode SSI...")
 
 
 # ------------------------------------------------------------------------------
@@ -375,7 +377,6 @@ class SSIcov_algo(SSIdat_algo):
 class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]):
     def run(self) -> SSIResult:
         super()._pre_run()
-        # print(self.run_params)
         Y = self.data
         br = self.run_params.br
         method = self.run_params.method or self.method
@@ -391,14 +392,14 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
         A, C = SSI_funct.SSI_MulSet(
             Y, self.fs, br, ordmax, step=1, methodHank=method, method="FAST"
         )
-        
+
         # Get frequency poles (and damping and mode shapes)
         Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
         # Get the labels of the poles
         Lab = SSI_funct.Lab_stab_SSI(
             Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
         )
-        
+
         # Return results
         return SSIResult(
             A=A,
@@ -408,6 +409,7 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
             Phi_poles=Ms_pol,
             Lab=Lab,
         )
+
 
 # ------------------------------------------------------------------------------
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION

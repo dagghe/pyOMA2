@@ -1,5 +1,6 @@
 """FREQUENCY DOMAIN DECOMPOSITION (FDD) ALGORITHM"""
 
+import logging
 import typing
 
 import matplotlib.pyplot as plt
@@ -37,6 +38,7 @@ from pyoma2.functions.plot_funct import (
 from pyoma2.plot.anim_mode import AniMode
 from pyoma2.plot.Sel_from_plot import SelFromPlot
 
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # SINGLE SETUP
@@ -48,15 +50,13 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
 
     def run(self) -> FDDResult:
         super()._pre_run()
-        print(self.run_params)
         Y = self.data.T
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         pov = self.run_params.pov
         # self.run_params.df = 1 / dt / nxseg
 
-        freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, 
-                                    method=method, pov=pov)
+        freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, method=method, pov=pov)
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
         # Return results
@@ -283,7 +283,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
             raise ValueError("Run algorithm first")
 
         Res = self.result
-        print("Running Anim Mode FDD")
+        logger.debug("Running Anim Mode FDD")
         AniMode(
             Geo=Geo2,
             Res=Res,
@@ -294,7 +294,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
             remove_fill=remove_fill,
             remove_grid=remove_grid,
         )
-        print("...end AniMode FDD...")
+        logger.debug("...end AniMode FDD...")
 
 
 # ------------------------------------------------------------------------------
@@ -408,18 +408,16 @@ class FSDD_algo(EFDD_algo):
 class FDD_algo_MS(FDD_algo[FDDRunParams, FDDResult, typing.Iterable[dict]]):
     RunParamCls = FDDRunParams
     ResultCls = FDDResult
-    
+
     def run(self) -> FDDResult:
         super()._pre_run()
-        print(self.run_params)
         Y = self.data
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         pov = self.run_params.pov
         # self.run_params.df = 1 / dt / nxseg
 
-        freq, Sy = FDD_funct.SD_PreGER(Y, self.fs, nxseg=nxseg,
-                                       method=method, pov=pov)
+        freq, Sy = FDD_funct.SD_PreGER(Y, self.fs, nxseg=nxseg, method=method, pov=pov)
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
         # Return results
@@ -437,18 +435,16 @@ class EFDD_algo_MS(EFDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
     method = "EFDD"
     RunParamCls = EFDDRunParams
     ResultCls = EFDDResult
-    
+
     def run(self) -> FDDResult:
         super()._pre_run()
-        print(self.run_params)
         Y = self.data
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         pov = self.run_params.pov
         # self.run_params.df = 1 / dt / nxseg
 
-        freq, Sy = FDD_funct.SD_PreGER(Y, self.fs, nxseg=nxseg,
-                                       method=method, pov=pov)
+        freq, Sy = FDD_funct.SD_PreGER(Y, self.fs, nxseg=nxseg, method=method, pov=pov)
         Sval, Svec = FDD_funct.SD_svalsvec(Sy)
 
         # Return results
