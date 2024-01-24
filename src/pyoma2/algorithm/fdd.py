@@ -1,13 +1,11 @@
 """FREQUENCY DOMAIN DECOMPOSITION (FDD) ALGORITHM"""
+from __future__ import annotations
 
 import logging
 import typing
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from pydantic import (  # controlla che i parametri passati siano quelli giusti
-    validate_call,
-)
 
 from pyoma2.algorithm.base import BaseAlgorithm
 from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
@@ -19,12 +17,9 @@ from pyoma2.algorithm.data.run_params import (
     EFDDRunParams,
     FDDRunParams,
 )
-from pyoma2.functions import (  # noqa: F401
+from pyoma2.functions import (
     FDD_funct,
-    Gen_funct,
-    SSI_funct,
     plot_funct,
-    pLSCF_funct,
 )
 from pyoma2.functions.plot_funct import (
     plt_lines,
@@ -68,8 +63,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
             S_vec=Svec,
         )
 
-    @validate_call
-    def mpe(self, sel_freq: list[float], DF: float = 0.1) -> typing.Any:
+    def mpe(self, sel_freq: typing.List[float], DF: float = 0.1) -> typing.Any:
         super().mpe(sel_freq=sel_freq, DF=DF)
 
         self.run_params.sel_freq = sel_freq
@@ -84,7 +78,6 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         self.result.Fn = Fn_FDD
         self.result.Phi = Phi_FDD
 
-    @validate_call
     def mpe_fromPlot(
         self, freqlim: typing.Optional[float] = None, DF: float = 0.1
     ) -> typing.Any:
@@ -127,9 +120,9 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         mode_numb: int,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
     ) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
@@ -197,9 +190,9 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         mode_numb: typing.Optional[int],
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -271,9 +264,9 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         mode_numb: typing.Optional[int],
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -306,10 +299,9 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
     RunParamCls = EFDDRunParams
     ResultCls = EFDDResult
 
-    @validate_call
     def mpe(
         self,
-        sel_freq: list[float],
+        sel_freq: typing.List[float],
         DF1: float = 0.1,
         DF2: float = 1.0,
         cm: int = 1,
@@ -339,7 +331,6 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         self.result.Phi = Phi_FDD
         self.result.forPlot = forPlot
 
-    @validate_call
     def mpe_fromPlot(
         self,
         DF1: float = 0.1,

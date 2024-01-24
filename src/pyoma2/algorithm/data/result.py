@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import typing
+
 import numpy as np
 import numpy.typing as npt
 from pydantic import BaseModel, ConfigDict
@@ -10,43 +14,43 @@ class BaseResult(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # dopo MPE o MPE_fromPlot
-    Fn: npt.NDArray[np.float64] | None = None  # array of natural frequencies
-    Phi: npt.NDArray[np.float64] | None = None  # array of Mode shape vectors
+    Fn: typing.Optional[npt.NDArray[np.float64]] = None  # array of natural frequencies
+    Phi: typing.Optional[npt.NDArray[np.float64]] = None  # array of Mode shape vectors
 
 
 class FDDResult(BaseResult):
     # dopo run
-    freq: npt.NDArray[np.float64] | None = None
-    Sy: npt.NDArray[np.float64] | None = None
-    S_val: npt.NDArray[np.float64] | None = None
-    S_vec: npt.NDArray[np.float64] | None = None
+    freq: typing.Optional[npt.NDArray[np.float64]] = None
+    Sy: typing.Optional[npt.NDArray[np.float64]] = None
+    S_val: typing.Optional[npt.NDArray[np.float64]] = None
+    S_vec: typing.Optional[npt.NDArray[np.float64]] = None
 
 
 class EFDDResult(BaseResult):
     # dopo run
-    freq: npt.NDArray[np.float64] | None = None
-    Sy: npt.NDArray[np.float64] | None = None
-    S_val: npt.NDArray[np.float64] | None = None
-    S_vec: npt.NDArray[np.float64] | None = None
+    freq: typing.Optional[npt.NDArray[np.float64]] = None
+    Sy: typing.Optional[npt.NDArray[np.float64]] = None
+    S_val: typing.Optional[npt.NDArray[np.float64]] = None
+    S_vec: typing.Optional[npt.NDArray[np.float64]] = None
     # dopo MPE, MPE_forPlot
-    Xi: npt.NDArray[np.float64] | None = None  # array of damping ratios
-    forPlot: list | None = None
+    Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
+    forPlot: typing.Optional[typing.List] = None
 
 
 class SSIResult(BaseResult):
     # dopo run
-    A: list[npt.NDArray[np.float64]] or None = None
-    C: list[npt.NDArray[np.float64]] or None = None
-    H: npt.NDArray[np.float64] | None = None
+    A: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
+    C: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
+    H: typing.Optional[npt.NDArray[np.float64]] = None
 
-    Fn_poles: npt.NDArray[np.float64] | None = None
-    xi_poles: npt.NDArray[np.float64] | None = None
-    Phi_poles: npt.NDArray[np.float64] | None = None
+    Fn_poles: typing.Optional[npt.NDArray[np.float64]] = None
+    xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
+    Phi_poles: typing.Optional[npt.NDArray[np.float64]] = None
     # lam_poles: npt.NDArray[np.float64]
-    Lab: npt.NDArray[np.float64] | None = None
+    Lab: typing.Optional[npt.NDArray[np.float64]] = None
     # dopo MPE, MPE_forPlot
-    Xi: npt.NDArray[np.float64] | None = None  # array of damping ratios
-    order_out: list[int] | int | None = None
+    Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
+    order_out: typing.Union[typing.List[int], int, None] = None
 
 
 class MsPoserResult(BaseModel):

@@ -17,10 +17,6 @@ from matplotlib.backends.backend_tkagg import (
     NavigationToolbar2Tk,
 )
 from matplotlib.figure import Figure
-from matplotlib.ticker import (  # noqa: F401
-    FormatStrFormatter,
-    MultipleLocator,
-)
 
 if typing.TYPE_CHECKING:
     from pyoma2.algorithm import BaseAlgorithm

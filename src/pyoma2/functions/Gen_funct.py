@@ -3,6 +3,8 @@ Created on Sat Oct 21 18:39:20 2023
 
 @author: dagpa
 """
+import typing
+
 import numpy as np
 
 # =============================================================================
@@ -13,7 +15,7 @@ import numpy as np
 
 
 def merge_mode_shapes(
-    MSarr_list: list[np.ndarray], reflist: list[list[int]]
+    MSarr_list: typing.List[np.ndarray], reflist: typing.List[typing.List[int]]
 ) -> np.ndarray:
     Nsetup = len(MSarr_list)  # number of setup
     Nmodes = MSarr_list[0].shape[1]  # number of modes
@@ -184,8 +186,8 @@ def MAC(phi_X, phi_A):
 
 
 def PRE_MultiSetup(
-    DataList: list[np.ndarray], reflist: list[list[int]]
-) -> list[dict[str, np.ndarray]]:
+    DataList: typing.List[np.ndarray], reflist: typing.List[typing.List[int]]
+) -> typing.List[typing.Dict[str, np.ndarray]]:
     """
     Preprocesses multiple setups of data by separating reference and moving
     sensor information.

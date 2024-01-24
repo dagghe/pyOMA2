@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 
 import numpy as np
@@ -15,7 +17,7 @@ class FDDRunParams(BaseModel):
     # (eventualmente) le kwarg di scipy.signal.csd ?? tipo window ecc
 
     # METODO 2: MPE e MPE_fromPlot
-    sel_freq: npt.NDArray[np.float64] | None = None
+    sel_freq: typing.Optional[npt.NDArray[np.float64]] = None
     DF: float = 0.1
 
 
@@ -29,7 +31,7 @@ class EFDDRunParams(BaseModel):
     # (eventualmente) le kwarg di scipy.signal.csd ?? tipo window ecc
 
     # METODO 2: MPE e MPE_fromPlot
-    sel_freq: npt.NDArray[np.float64] | None = None
+    sel_freq: typing.Optional[npt.NDArray[np.float64]] = None
     DF1: float = (0.1,)
     DF2: float = (1.0,)
     cm: int = (1,)
@@ -43,7 +45,7 @@ class SSIRunParams(BaseModel):
     # METODO 1: run
     br: int
     method: str = None
-    ref_ind: typing.Optional[list[int]] = None  # lista di indici ?
+    ref_ind: typing.Optional[typing.List[int]] = None  # lista di indici ?
     ordmin: int = 0
     ordmax: typing.Optional[int] = None
     step: int = 1
@@ -52,8 +54,8 @@ class SSIRunParams(BaseModel):
     err_phi: float = 0.03
     xi_max: float = 0.1
     # METODO 2: MPE e MPE_fromPlot
-    sel_freq: list[float] | None = None
-    order_in: int | str = "find_min"
+    sel_freq: typing.Optional[typing.List[float]] = None
+    order_in: typing.Union[int, str] = "find_min"
     deltaf: float = (0.05,)
     rtol: float = (1e-2,)
 

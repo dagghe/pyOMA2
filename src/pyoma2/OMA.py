@@ -11,7 +11,7 @@ import pandas as pd
 
 from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
 from pyoma2.algorithm.data.result import MsPoserResult
-from pyoma2.functions.Gen_funct import (  # noqa: F401
+from pyoma2.functions.Gen_funct import (
     PRE_MultiSetup,
     find_map,
     merge_mode_shapes,
@@ -35,9 +35,9 @@ logger = logging.getLogger(__name__)
 
 
 class BaseSetup:
-    algorithms: dict[str, BaseAlgorithm]
-    data: np.ndarray | None = None  # TODO use generic typing
-    fs: float | None = None  # sampling frequency
+    algorithms: typing.Dict[str, BaseAlgorithm]
+    data: typing.Optional[np.ndarray] = None  # TODO use generic typing
+    fs: typing.Optional[float] = None  # sampling frequency
 
     # add algorithm (method) to the set.
     def add_algorithms(self, *algorithms: BaseAlgorithm):
@@ -88,8 +88,8 @@ class BaseSetup:
             raise KeyError(f"No algorithm named '{name}' exists.")
 
     def get(
-        self, name: str, default: BaseAlgorithm | None = None
-    ) -> BaseAlgorithm | None:
+        self, name: str, default: typing.Optional[BaseAlgorithm] = None
+    ) -> typing.Optional[BaseAlgorithm]:
         """
         Retrieve an algorithm from the set by its name.
         Returns the default value if the algorithm does not exist.
@@ -101,9 +101,9 @@ class BaseSetup:
         self,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
     ):
 
         fig = plt.figure(figsize=(10, 10), tight_layout=True)
@@ -156,9 +156,9 @@ class BaseSetup:
         self,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
     ):
 
         fig = plt.figure(figsize=(10, 10))
@@ -215,13 +215,13 @@ class SingleSetup(BaseSetup):
         self.data = data  # data
         self.fs = fs  # sampling frequency
         self.dt = 1 / fs  # sampling interval
-        self.algorithms: dict[str, BaseAlgorithm] = {}  # set of algo
+        self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
 
     # method to plot the time histories of the data channels.
     def plot_data(
         self,
         nc: int = 1,
-        names: None | list[str] = None,
+        names: typing.Optional[typing.List[str]] = None,
         unit: str = "unit",
         show_rms: bool = False,
     ):
@@ -238,7 +238,9 @@ class SingleSetup(BaseSetup):
     def def_geo1(
         self,
         # # MANDATORY
-        sens_names: npt.NDArray[np.string] | list[str],  # sensors' names
+        sens_names: typing.Union[
+            npt.NDArray[np.string], typing.List[str]
+        ],  # sensors' names
         sens_coord: pd.DataFrame,  # sensors' coordinates
         sens_dir: npt.NDArray[np.int64],  # sensors' directions
         # # OPTIONAL
@@ -283,12 +285,14 @@ class SingleSetup(BaseSetup):
     def def_geo2(
         self,
         # # MANDATORY
-        sens_names: npt.NDArray[np.string] | list[str],  # sensors' names
+        sens_names: typing.Union[
+            npt.NDArray[np.string], typing.List[str]
+        ],  # sensors' names
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
         # # OPTIONAL
-        order_red: None | typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
+        order_red: typing.Optiona[typing.Literal["xy", "xz", "yz", "x", "y", "z"]] = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
@@ -339,8 +343,8 @@ class SingleSetup(BaseSetup):
             raise KeyError(f"No algorithm named '{name}' exists.")
 
     def get(
-        self, name: str, default: BaseAlgorithm | None = None
-    ) -> BaseAlgorithm | None:
+        self, name: str, default: typing.Optional[BaseAlgorithm] = None
+    ) -> typing.Optional[BaseAlgorithm]:
         """
         Retrieve an algorithm from the set by its name.
         Returns the default value if the algorithm does not exist.
@@ -356,11 +360,13 @@ class MultiSetup_PoSER:
     Multi setup merging with "Post Separate Estimation Re-scaling" approach
     """
 
-    __result: dict[str, MsPoserResult] | None = None
-    __alg_ref: dict[type[BaseAlgorithm], str] | None = None
+    __result: typing.Optional[typing.Dict[str, MsPoserResult]] = None
+    __alg_ref: typing.Optional[typing.Dict[type[BaseAlgorithm], str]] = None
 
     def __init__(
-        self, ref_ind: list[list[int]], single_setups: list[SingleSetup]  # | None = None,
+        self,
+        ref_ind: typing.List[typing.List[int]],
+        single_setups: typing.List[SingleSetup],  # | None = None,
     ):
         self._setups = (
             [el for el in self._init_setups(single_setups)] if single_setups else []
@@ -380,13 +386,13 @@ class MultiSetup_PoSER:
         self._setups = setups
 
     @property
-    def result(self) -> dict[str, MsPoserResult]:
+    def result(self) -> typing.Dict[str, MsPoserResult]:
         if self.__result is None:
             raise ValueError("You must run merge_results() first")
         return self.__result
 
     def _init_setups(
-        self, setups: list[SingleSetup]
+        self, setups: typing.List[SingleSetup]
     ) -> typing.Generator[SingleSetup, None, None]:
         """Ensure that each setup has run its algorithms and that internally consistent algorithms.
 
@@ -410,7 +416,7 @@ class MultiSetup_PoSER:
         if any(not setup.algorithms for setup in setups):
             raise ValueError("You must pass setups with at least one algorithm")
 
-        self.__alg_ref: dict[type[BaseAlgorithm], str] = {
+        self.__alg_ref: typing.Dict[type[BaseAlgorithm], str] = {
             alg.__class__: alg.name for alg in setups[0].algorithms.values()
         }
 
@@ -445,9 +451,9 @@ class MultiSetup_PoSER:
                     )
             yield setup
 
-    def merge_results(self) -> dict[str, MsPoserResult]:
+    def merge_results(self) -> typing.Dict[str, MsPoserResult]:
         # group algorithms by type
-        alg_groups: dict[type[BaseAlgorithm], BaseAlgorithm] = {}
+        alg_groups: typing.Dict[type[BaseAlgorithm], BaseAlgorithm] = {}
         for setup in self.setups:
             for alg in setup.algorithms.values():
                 alg_groups.setdefault(alg.__class__, []).append(alg)
@@ -493,7 +499,7 @@ class MultiSetup_PoSER:
     def def_geo1(
         self,
         # # MANDATORY
-        sens_names: list[list[str]],  # sensors' names MS
+        sens_names: typing.List[typing.List[str]],  # sensors' names MS
         sens_coord: pd.DataFrame,  # sensors' coordinates
         sens_dir: npt.NDArray[np.int64],  # sensors' directions
         # # OPTIONAL
@@ -547,9 +553,9 @@ class MultiSetup_PoSER:
         self,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
     ):
 
         fig = plt.figure(figsize=(10, 10), tight_layout=True)
@@ -602,12 +608,14 @@ class MultiSetup_PoSER:
     def def_geo2(
         self,
         # # MANDATORY
-        sens_names: list[list[str]],  # sensors' names MS
+        sens_names: typing.List[typing.List[str]],  # sensors' names MS
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
         # # OPTIONAL
-        order_red: None | typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
+        order_red: typing.Optional[
+            typing.Literal["xy", "xz", "yz", "x", "y", "z"]
+        ] = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
@@ -667,9 +675,9 @@ class MultiSetup_PoSER:
         self,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
     ):
 
         fig = plt.figure(figsize=(10, 10))
@@ -727,9 +735,9 @@ class MultiSetup_PoSER:
         mode_numb: int,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
     ) -> typing.Any:
         """Tobe implemented, plot for FDD, EFDD, FSDD
         Mode Identification Function (MIF)
@@ -795,12 +803,12 @@ class MultiSetup_PoSER:
         self,
         Algo_Res: MsPoserResult,
         Geo2: Geometry2,
-        mode_numb: int | None,
+        mode_numb: typing.Optional[int],
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -868,12 +876,12 @@ class MultiSetup_PoSER:
         self,
         Algo_Res: MsPoserResult,
         Geo2: Geometry2,
-        mode_numb: int | None,
+        mode_numb: typing.Optional[int],
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -908,21 +916,21 @@ class MultiSetup_PreGER(BaseSetup):
     def __init__(
         self,
         fs: float,  # ! list[float]
-        ref_ind: list[list[int]],
-        datasets: list[npt.NDArray[np.float64]],
+        ref_ind: typing.List[typing.List[int]],
+        datasets: typing.List[npt.NDArray[np.float64]],
     ):
         self.fs = fs
         self.ref_ind = ref_ind
         Y = PRE_MultiSetup(datasets, ref_ind)
         self.data = Y
-        self.algorithms: dict[str, BaseAlgorithm] = {}  # set of algo
+        self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
 
     # FIXME DA SISTEMARE
     # metodo per definire geometria 1
     def def_geo1(
         self,
         # # MANDATORY
-        sens_names: list[list[str]],  # sensors' names MS
+        sens_names: typing.List[typing.List[str]],  # sensors' names MS
         sens_coord: pd.DataFrame,  # sensors' coordinates
         sens_dir: npt.NDArray[np.int64],  # sensors' directions
         # # OPTIONAL
@@ -973,12 +981,14 @@ class MultiSetup_PreGER(BaseSetup):
     def def_geo2(
         self,
         # # MANDATORY
-        sens_names: npt.NDArray[np.string] | list[str],  # sensors' names
+        sens_names: typing.Union[
+            npt.NDArray[np.string], typing.List[str]
+        ],  # sensors' names
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
         # # OPTIONAL
-        order_red: None | typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
+        order_red: typing.Union[typing.Literal["xy", "xz", "yz", "x", "y", "z"]] = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines

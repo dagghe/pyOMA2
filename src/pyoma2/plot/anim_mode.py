@@ -3,6 +3,7 @@ Created on Mon Jan  8 11:33:32 2024
 
 @author: dpa
 """
+from __future__ import annotations
 
 import tkinter as tk
 import typing
@@ -58,13 +59,13 @@ class AniMode:
     def __init__(
         self,
         Geo: Geometry2,
-        Res: BaseResult | MsPoserResult,
+        Res: typing.Union[BaseResult, MsPoserResult],
         mode_numb: int,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: True | False = True,
-        remove_grid: True | False = True,
-        remove_axis: True | False = True,
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
         *args,
         **kwargs,
     ) -> typing.Any:
