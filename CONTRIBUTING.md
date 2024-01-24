@@ -64,6 +64,10 @@ Mac:
 
 https://www.pythonguis.com/installation/install-tkinter-mac/
 
+If using python with `pyenv`:
+
+https://dev.to/xshapira/using-tkinter-with-pyenv-a-simple-two-step-guide-hh5
+
 ## Conventions
 
 ### Commits
