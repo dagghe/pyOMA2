@@ -1,5 +1,52 @@
+[project]
+name = "pyOMA2"
+version = "0.1.0"
+description = "Software for Structural Health Monitoring with Advanced Signal Processing Techniques"
+authors = [
+    {name = "Dag Pasca", email = "dpa@treteknisk.no"},
+    {name = "Marco Martino Rosso", email = "marco.rosso@polito.it"},
+    {name = "Diego Federico Margoni", email = "diegofederico.margoni@studenti.polito.it"},
+]
+dependencies = [
+    "numpy>=1.24.4",
+    "pandas>=2.0.3",
+    "scipy>=1.9.3",
+    "pydantic>=2.5.1",
+    "tqdm>=4.66.1",
+    "matplotlib>=3.7.4",
+]
+requires-python = ">=3.8,<3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
 [tool.isort]
 split_on_trailing_comma = true
+multi_line_output = 3
+line_length = 90
+profile="black"
 
 [tool.black]
 line-length = 90
+
+[tool.pdm.dev-dependencies]
+docs = [
+    "mkdocs-material>=9.4.10",
+    "mkdocstrings-python>=1.7.5",
+]
+qa = [
+    "pre-commit>=3.5.0",
+    "ipdb>=0.13.13",
+    "pytest>=7.4.4",
+]
+
+
+[project.entry-points."console_scripts"]
+pyoma2_example_SS = "pyoma2.Example_SS:main"
+pyoma2_example_MSposER = "pyoma2.Example_MSposER:main"
+pyoma2_example_MSpreGER = "pyoma2.Example_MSpreGER:main"
