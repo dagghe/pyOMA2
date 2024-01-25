@@ -44,3 +44,9 @@ qa = [
     "ipdb>=0.13.13",
     "pytest>=7.4.4",
 ]
+
+
+[project.entry-points."console_scripts"]
+pyoma2_example_SS = "pyoma2.Example_SS:main"
+pyoma2_example_MSposER = "pyoma2.Example_MSposER:main"
+pyoma2_example_MSpreGER = "pyoma2.Example_MSpreGER:main"
