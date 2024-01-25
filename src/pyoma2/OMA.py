@@ -106,7 +106,7 @@ class BaseSetup:
         remove_axis: bool = True,
     ):
 
-        fig = plt.figure(figsize=(10, 10), tight_layout=True)
+        fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
 
         # plot sensors' nodes
@@ -161,7 +161,7 @@ class BaseSetup:
         remove_axis: bool = True,
     ):
 
-        fig = plt.figure(figsize=(10, 10))
+        fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
 
         # plot sensors' nodes
@@ -494,7 +494,6 @@ class MultiSetup_PoSER:
             )
         return self.__result
 
-    # FIXME DA SISTEMARE
     # metodo per definire geometria 1
     def def_geo1(
         self,
@@ -558,7 +557,7 @@ class MultiSetup_PoSER:
         remove_axis: bool = True,
     ):
 
-        fig = plt.figure(figsize=(10, 10), tight_layout=True)
+        fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
 
         # plot sensors' nodes
@@ -603,7 +602,6 @@ class MultiSetup_PoSER:
 
         return fig, ax
 
-    # FIXME DA SISTEMARE
     # metodo per definire geometria 2
     def def_geo2(
         self,
@@ -680,7 +678,7 @@ class MultiSetup_PoSER:
         remove_axis: bool = True,
     ):
 
-        fig = plt.figure(figsize=(10, 10))
+        fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
 
         # plot sensors' nodes
@@ -750,7 +748,7 @@ class MultiSetup_PoSER:
         phi = Algo_Res.Phi[:, int(mode_numb - 1)].real
         fn = Algo_Res.Fn[int(mode_numb - 1)]
 
-        fig = plt.figure(figsize=(10, 10), tight_layout=True)
+        fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
 
         # set title
@@ -925,7 +923,6 @@ class MultiSetup_PreGER(BaseSetup):
         self.data = Y
         self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
 
-    # FIXME DA SISTEMARE
     # metodo per definire geometria 1
     def def_geo1(
         self,
@@ -976,7 +973,6 @@ class MultiSetup_PreGER(BaseSetup):
             bg_surf=bg_surf,
         )
 
-    # FIXME DA SISTEMARE
     # metodo per definire geometria 2
     def def_geo2(
         self,

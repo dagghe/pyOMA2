@@ -93,11 +93,19 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
     ) -> typing.Any:
         super().mpe(sel_freq=sel_freq, order=order, deltaf=deltaf, rtol=rtol)
 
+        # Save run parameters
+        self.run_params.sel_freq = sel_freq
+        self.run_params.order_in = order
+        self.run_params.deltaf = deltaf
+        self.run_params.rtol = rtol
+
+        # Get poles
         Fn_pol = self.result.Fn_poles
         Sm_pol = self.result.xi_poles
         Ms_pol = self.result.Phi_poles
         Lab = self.result.Lab
 
+        # Extract modal results
         Fn_SSI, Xi_SSI, Phi_SSI, order_out = SSI_funct.SSI_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, deltaf=deltaf, rtol=rtol
         )
@@ -116,6 +124,11 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
     ) -> typing.Any:
         super().mpe_fromPlot(freqlim=freqlim, deltaf=deltaf, rtol=rtol)
 
+        # Save run parameters
+        self.run_params.deltaf = deltaf
+        self.run_params.rtol = rtol
+
+        # Get poles
         Fn_pol = self.result.Fn_poles
         Sm_pol = self.result.xi_poles
         Ms_pol = self.result.Phi_poles
@@ -200,7 +213,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         phi = self.result.Phi[:, int(mode_numb - 1)].real
         fn = self.result.Fn[int(mode_numb - 1)]
 
-        fig = plt.figure(figsize=(10, 10), tight_layout=True)
+        fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
 
         # set title
@@ -361,7 +374,6 @@ class SSIcov_algo(SSIdat_algo):
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
 
 
-# FIXME - DOVREBBE ESSERE OK
 # =============================================================================
 # MULTISETUP
 # =============================================================================

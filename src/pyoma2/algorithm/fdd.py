@@ -135,7 +135,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         phi = self.result.Phi[:, int(mode_numb - 1)].real
         fn = self.result.Fn[int(mode_numb - 1)]
 
-        fig = plt.figure(figsize=(10, 10), tight_layout=True)
+        fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
 
         # set title
@@ -310,6 +310,16 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         npmax: int = 20,
     ) -> typing.Any:
 
+        # Save run parameters
+        self.run_params.sel_freq = sel_freq
+        self.run_params.DF1 = DF1
+        self.run_params.DF2 = DF2
+        self.run_params.cm = cm
+        self.run_params.MAClim = MAClim
+        self.run_params.sppk = sppk
+        self.run_params.npmax = npmax
+        
+        # Extract modal results
         Fn_FDD, Xi_FDD, Phi_FDD, forPlot = FDD_funct.EFDD_MPE(
             self.result.Sy,
             self.result.freq,
@@ -342,6 +352,14 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         freqlim: typing.Optional[float] = None,
     ) -> typing.Any:
 
+        # Save run parameters
+        self.run_params.DF1 = DF1
+        self.run_params.DF2 = DF2
+        self.run_params.cm = cm
+        self.run_params.MAClim = MAClim
+        self.run_params.sppk = sppk
+        self.run_params.npmax = npmax
+        
         # chiamare plot interattivo
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
         sel_freq = SFP.result[0]
@@ -392,7 +410,6 @@ class FSDD_algo(EFDD_algo):
     method: typing.Literal["EFDD", "FSDD"] = "FSDD"
 
 
-# FIXME
 # =============================================================================
 # MULTI SETUP
 # =============================================================================
