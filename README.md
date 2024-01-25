@@ -35,3 +35,8 @@ pyoma2_example_MSpreGER
 from pyoma2.Example_MSpoSER import main as main_MSpoSER
 from pyoma2.Example_MSpreGER import main as main_MSpreGER
 from pyoma2.Example_SS import main as main_SS
+
+
+if __name__ == '__main__':
+    main_MSpoSER()
+```
