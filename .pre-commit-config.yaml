@@ -17,12 +17,6 @@ repos:
     -   id: check-ast
         language_version: python3
 
--   repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.2
-    hooks:
-    -   id: pyupgrade
-        args: [--py37-plus]
-
 -   repo: https://github.com/PyCQA/flake8
     rev: 3.9.2
     hooks:

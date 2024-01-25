@@ -1,0 +1,6 @@
+- assert that a child alg must define RunParamType and ResultCls
+- assert that run can't be called without set data first
+- assert that run can't be called without set run_params first
+- assert result is not none after run with the setupclass or after call set_result
+- assert run_params is not none after init or after call set_run_param
+- assert single setup can get a algoritm like a dict by name

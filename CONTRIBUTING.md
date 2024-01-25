@@ -1,34 +1,72 @@
 # Contribution Guide
 
-This project runs on python>=3.7,<3.11
+This project runs on python>=3.8,<3.11
 
 ## Setup
 
-Create and activate a virtual environment
+We use PDM as a dependency manager. Check the updated installation instructions from here, or follow these steps:
+
+Linux/MAC:
 
 ```shell
-python3 -m venv .venv
+# Install PDM Linux/MAC
 
-# Unix
-source .venv/bin/activate
-
-# Windows cmd
-.\.venv\Scripts\Activate.bat
-# Windows Powershell
-.\.venv\Scripts\Activate.ps1
+curl -sSL https://pdm-project.org/install-pdm.py | python3 -
 ```
+
+Windows:
+
+```powershell
+# Install PDM Windows
+
+(Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py -UseBasicParsing).Content | python -
+```
+
+Add PATH to environment manager and then run this command to install all the dependencies
 
 Install dependencies
 
 ```shell
-pip install -r requirements.txt
+pdm install
 ```
 
 Install pre-commit
 
 ```shell
-pre-commit install --hook-type pre-commit --hook-type pre-push
+pdm run pre-commit install --hook-type pre-commit --hook-type pre-push
 ```
+ Run the project
+
+ Linux/MAC
+
+ ```shell
+ pdm run src/pyoma2/main.py
+ ```
+
+Windows
+
+```powershell
+pdm run .\src\pyoma2\main.py
+```
+
+You'll probably need to install **tk** for the GUI on your system, here some instructions:
+
+Windows:
+
+https://www.pythonguis.com/installation/install-tkinter-windows/
+
+
+Linux:
+
+https://www.pythonguis.com/installation/install-tkinter-linux/
+
+Mac:
+
+https://www.pythonguis.com/installation/install-tkinter-mac/
+
+If using python with `pyenv`:
+
+https://dev.to/xshapira/using-tkinter-with-pyenv-a-simple-two-step-guide-hh5
 
 ## Conventions
 
