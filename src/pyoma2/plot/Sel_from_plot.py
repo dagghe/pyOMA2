@@ -41,13 +41,33 @@ class SelFromPlot:
         plot: typing.Literal["FDD", "SSI"] = "FDD",
     ):
         """
-        Bla bla bla
+The `SelFromPlot` class is a tool for interactive selection of poles from charts created by the algorithms.
+It integrates matplotlib plots into a Tkinter window and allows users to select or deselect poles using mouse clicks and keyboard shortcuts. 
+The class supports both Frequency Domain Decomposition (FDD) and Stochastic Subspace Identification (SSI) algorithms.
 
-        passare l'algoritmo nell'init in modo cche nell'if
-        possa fare il check e poi chiamare la funzione giusta
+Attributes:
+    algo (BaseAlgorithm): An instance of a base algorithm class that provides the necessary data for plotting, such as frequencies, damping ratios, and labels.
+    freqlim (float, optional): The upper frequency limit for the plot. Defaults to half the Nyquist frequency if not provided.
+    plot (str): Type of plot to be displayed. Supported values are "FDD", "SSI", and "pLSCF".
 
-        e tornare i valori che sono stati selezionati dal plot
-        """
+Methods:
+    __init__: Initializes the GUI, setting up the plot type, Tkinter window, and event bindings.
+    plot_svPSD: Plots the Singular Values of the Power Spectral Density matrix for FDD.
+    get_closest_freq: Selects the frequency closest to the mouse click location for FDD.
+    plot_stab: Plots the stabilization chart for SSI or pLSCF methods.
+    get_closest_pole: Selects the pole closest to the mouse click location for SSI or pLSCF.
+    on_click_FDD: Handles mouse click events for FDD plots.
+    on_click_SSI: Handles mouse click events for SSI or pLSCF plots.
+    on_key_press: Handles key press events (SHIFT key for selecting poles).
+    on_key_release: Handles key release events.
+    on_closing: Handles the closing event of the Tkinter window.
+    toggle_legend: Toggles the visibility of the legend in the plot.
+    toggle_hide_poles: Toggles the visibility of unstable poles in the plot.
+    sort_selected_poles: Sorts the selected poles based on their frequencies.
+    show_help: Displays a help dialog with instructions for selecting poles.
+    save_this_figure: Saves the current plot to a file.
+
+"""
         self.algo = algo
         self.plot = plot
 
