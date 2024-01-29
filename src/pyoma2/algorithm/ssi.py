@@ -299,7 +299,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
 
-        ax.set_title(f"Mode nr. {self.mode_numb}, $f_n$={fn:.3f}Hz")
+        ax.set_title(f"Mode nr. {mode_numb}, $f_n$={fn:.3f}Hz")
 
         # Check that BG nodes are defined
         if Geo2.bg_nodes is not None:

@@ -24,6 +24,7 @@ from pyoma2.functions.plot_funct import (
     plt_surf,
     set_ax_options,
     set_view,
+    plt_ch_info
 )
 
 if typing.TYPE_CHECKING:
@@ -232,6 +233,31 @@ class SingleSetup(BaseSetup):
         unit = unit  # str label for the y-axis (unit of measurement)
         show_rms = show_rms  # wheter to show or not the rms acc in the plot
         fig, ax = plt_data(data, dt, nc, names, unit, show_rms)
+        return fig, ax
+
+    # method to plot the time histories of the data channels.
+    def plot_ch_info(
+            self,
+            ch_names: typing.Optional[typing.List[str]] = None, 
+            freqlim: float | None = None, 
+            logscale: bool = True, 
+            nxseg: float | None = None,
+            pov: float = 0.,
+            window: str = "boxcar"
+    ):
+
+        data = self.data
+        fs = self.fs
+        ch_names = ch_names  # list of names (str) of the channnels
+        freqlim = freqlim 
+        logscale = logscale
+        nxseg= nxseg
+        pov=pov
+        window=window
+
+        fig, ax = plt_ch_info(data, fs, ch_names=ch_names, freqlim=freqlim,
+                              logscale=logscale, 
+                              nxseg=nxseg, pov=pov, window=window)
         return fig, ax
 
     # metodo per definire geometria 1
