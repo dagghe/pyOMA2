@@ -20,6 +20,14 @@ readme = "README.md"
 license = {text = "MIT"}
 
 
+[project.urls]
+Homepage = "https://github.com/dagghe/pyOMA2"
+Documentation = "https://github.com/dagghe/pyOMA2/blob/main/README.md"
+Repository = "https://github.com/dagghe/pyOMA2"
+Changelog = "https://github.com/dagghe/pyOMA2/blob/main/CHANGELOG.md"
+Contributing = "https://github.com/dagghe/pyOMA2/blob/main/CONTRIBUTING.md"
+
+
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
