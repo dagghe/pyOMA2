@@ -17,6 +17,29 @@ Please note that this is still an alpha release, and we are continuously refinin
 
 ## Quick start
 
+Install the library
+
+```shell
+pip install pyOMA-2
+```
+
+You'll probably need to install **tk** for the GUI on your system, here some instructions:
+
+Windows:
+
+https://www.pythonguis.com/installation/install-tkinter-windows/
+
+
+Linux:
+
+https://www.pythonguis.com/installation/install-tkinter-linux/
+
+Mac:
+
+https://www.pythonguis.com/installation/install-tkinter-mac/
+
+____
+
 To see example usage go to `pyoma2/Example*` files.
 
 To run them, after have installed the package you can do as follow:
