@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from scipy.signal import decimate, detrend
 
 from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
 from pyoma2.algorithm.data.result import MsPoserResult
@@ -235,12 +236,13 @@ class SingleSetup(BaseSetup):
         fig, ax = plt_data(data, dt, nc, names, unit, show_rms)
         return fig, ax
 
-    # method to plot the time histories of the data channels.
+    # method to plot TH, PSD and KDE for each channel
     def plot_ch_info(
             self,
-            ch_names: typing.Optional[typing.List[str]] = None, 
-            freqlim: float | None = None, 
-            logscale: bool = True, 
+            ch_idx: str | list[int] = "all",
+            ch_names: typing.Optional[typing.List[str]] = None,
+            freqlim: float | None = None,
+            logscale: bool = True,
             nxseg: float | None = None,
             pov: float = 0.,
             window: str = "boxcar"
@@ -248,17 +250,40 @@ class SingleSetup(BaseSetup):
 
         data = self.data
         fs = self.fs
-        ch_names = ch_names  # list of names (str) of the channnels
-        freqlim = freqlim 
-        logscale = logscale
-        nxseg= nxseg
-        pov=pov
-        window=window
 
-        fig, ax = plt_ch_info(data, fs, ch_names=ch_names, freqlim=freqlim,
-                              logscale=logscale, 
+        fig, ax = plt_ch_info(data, fs, ch_idx, ch_names=ch_names,
+                              freqlim=freqlim, logscale=logscale,
                               nxseg=nxseg, pov=pov, window=window)
         return fig, ax
+
+
+    # method to decimate data
+    def decimate_data(
+            self,
+            q:int,
+            n: int|None=None,
+            ftype:typing.Literal["iir", "fir"]='iir',
+            axis:int =-1,
+            zero_phase: bool =True):
+        """
+wrapper method for scipy.signal.decimate function
+"""
+
+        self.data = decimate(self.data,q,n,ftype,axis,zero_phase)
+        self.fs = self.fs / q
+        self.dt = 1 / self.fs
+
+    # method to detrend data
+    def detrend_data(
+            self,
+            axis:int =-1,
+            type:typing.Literal["linear", "constant"]='linear',
+            bp:  int | npt.NDArray[np.int64] = 0,
+            ):
+        """
+wrapper method for scipy.signal.detrend function
+"""
+        self.data = detrend(self.data,axis,type,bp)
 
     # metodo per definire geometria 1
     def def_geo1(

@@ -890,7 +890,7 @@ Notes:
 # -----------------------------------------------------------------------------
 
 
-def plt_ch_info(data, fs, ch_names=None, freqlim=None, logscale=True, 
+def plt_ch_info(data, fs, ch_idx ="all", ch_names=None, freqlim=None, logscale=True,
                 nxseg=None, pov=0., window="boxcar"):
     """
 Generates plots for time history, power spectral density (PSD), and kernel density estimation (KDE) for each channel in a multi-channel dataset.
@@ -910,12 +910,14 @@ tuple: A tuple (fig, axs), where `fig` is the matplotlib figure object and `axs`
 
 Notes:
 - This function requires `matplotlib.pyplot` for plotting, `scipy.signal` for PSD calculation, and `scipy.stats` for KDE.
-- The function plots three subplots for each channel: time history, PSD, and KDE. 
+- The function plots three subplots for each channel: time history, PSD, and KDE.
 - The function returns the figure and a list of axes for further customization or saving.
 - If `ch_names` is provided, each figure is titled with the corresponding channel name.
 - The PSD plot's frequency range can be limited using the `freqlim` parameter.
 - The function assumes that the input data is properly formatted and does not perform error checking.
 """
+    if ch_idx != "all":
+        data = data[:,ch_idx]
     ndat, nch = data.shape
     figs= []
     for ii in range(nch):
@@ -930,15 +932,16 @@ Notes:
         ax0.plot(ch)
         ax0.set_xlabel("Time [s]")
         ax0.set_title("Time History")
+        ax0.set_ylabel("Unit")
 
         # plot psd
         if nxseg == None:
             nxseg = len(ch)
         noverlap = nxseg * pov
         # FFT = np.fft.rfft(ch,nxseg)
-        # freq = np.fft.rfftfreq(nxseg,dt) 
-        freq, psd = signal.welch(ch, fs, nperseg=nxseg, 
-                                 noverlap=noverlap, window=window, 
+        # freq = np.fft.rfftfreq(nxseg,dt)
+        freq, psd = signal.welch(ch, fs, nperseg=nxseg,
+                                 noverlap=noverlap, window=window,
                                  scaling="spectrum")
         ax10 = fig.add_subplot(spec[1, 0])
 
@@ -948,6 +951,7 @@ Notes:
             ax10.plot(freq, np.sqrt(psd))
         ax10.set_xlim(0,freqlim)
         ax10.set_xlabel("Frequency [Hz]")
+        ax10.set_ylabel("dB rel. to unit")
         ax10.set_title("PSD")
 
         # KDE of TH
@@ -959,8 +963,7 @@ Notes:
 
         if ch_names is not None:
             fig.suptitle(f'{ch_names[ii]}')
-        
+
         axs = [ax0, ax10, ax11]
         figs.append(fig)
     return figs, axs
-    

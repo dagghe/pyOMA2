@@ -42,7 +42,7 @@ class SelFromPlot:
     ):
         """
 The `SelFromPlot` class is a tool for interactive selection of poles from charts created by the algorithms.
-It integrates matplotlib plots into a Tkinter window and allows users to select or deselect poles using mouse clicks and keyboard shortcuts. 
+It integrates matplotlib plots into a Tkinter window and allows users to select or deselect poles using mouse clicks and keyboard shortcuts.
 The class supports both Frequency Domain Decomposition (FDD) and Stochastic Subspace Identification (SSI) algorithms.
 
 Attributes:
@@ -306,14 +306,19 @@ Methods:
             if self.show_legend:
                 self.pole_legend = self.ax2.legend(
                     loc="lower center", ncol=4, frameon=True
-                )
-            self.fig.canvas.draw()
+)
+                self.ax2.grid()
+                self.fig.canvas.draw()
 
         else:
             self.MARKER.set_xdata(np.asarray(self.sel_freq))  # update data
             self.MARKER.set_ydata([i for i in self.pole_ind])
 
-            self.fig.canvas.draw()
+            # self.fig.canvas.draw()
+
+        self.ax2.grid()
+        self.fig.canvas.draw()
+
 
     # ------------------------------------------------------------------------------
 
