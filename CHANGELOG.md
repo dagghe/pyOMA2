@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- methods: `plot_data()`, `plot_ch_info()`, `detrend_data()`, `decimate_data()` to Multisetup preGER class
+- info.svg chart to README
+- Multisetup PoSER and PreGER examples notebook
+
+### Removed
+- channels name from `plot_mode_g1()` method
+
+### Changed
+- default ax value to 0 for `detrend_data()` and `decimate_data()` methods
+- name to single setup example notebook
+- minor reorganisation of `pLSCF_funct.py`
 
 ## [0.2.0] - 2024-01-30
 

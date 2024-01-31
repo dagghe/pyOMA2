@@ -196,89 +196,9 @@ def Lab_stab_pLSCF(Fn, Sm, ordmax, err_fn, err_xi, max_xi):
 
 # -----------------------------------------------------------------------------
 
-
-def pLSCF_MPE(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
-    """
-    Bla bla bla
-    """
-    sel_freq1 = []
-    sel_xi = []
-    sel_lam = []
-    for fj in sel_freq:
-        if order == "find_min":
-            # here we find the minimum model order so to get a stable pole for every mode of interest
-            pass
-        else:  # when the model order is provided
-            # Find closest frequency index
-
-            sel = np.nanargmin(np.abs(Fn_pol[:, order] - fj))
-
-            sel_freq1.append(Fn_pol[:, order][sel])
-            sel_xi.append(Sm_pol[:, order][sel])
-            sel_lam.append(Ls_pol[:, order][sel])
-
-    Nch, Nref, Nf = Sy.shape
-    w_sel = np.array(sel_freq) * (2 * np.pi)
-    Nm = len(sel_lam)  # numero modi
-    Phi = np.zeros((Nch, Nm), dtype=complex)
-    freq = np.arange(0, Nf) * (1 / dt / (2 * Nf))
-    freq_rad = 2 * np.pi * freq
-    LL = np.zeros((Nch * Nm, Nch * Nm), dtype=complex)  # inizializzo
-    GL = np.zeros((Nch * Nm, Nch), dtype=complex)  # inizializzo
-    Sy = np.moveaxis(Sy, 2, 0)
-    for ww in w_sel:  # loop su poli selezionati
-
-        # =============================================================================
-        # QUI MI SA CHE MI SON SCORDATO UN PEZZO (i coniguati) SU LAMBDA_L e GAMMA_L
-        # =============================================================================
-        # idx_w = np.argmin(np.abs(freq_rad-ww)) # trovo indice
-        # df = int(1/dt/Nf)
-        # nn = DF*df
-        # loop sulle linee di frequenza intorno al polo fisico (+nn e -nn)
-        # for kk in range(idx_w-nn, idx_w+nn):
-        for kk in range(Nf):
-            GL += np.array(
-                [Sy[kk, :, :] / (1j * freq_rad[kk] - sel_lam[jj]) for jj in range(Nm)]
-            ).reshape(-1, Nch)
-
-            LL += np.array(
-                [
-                    np.array(
-                        [
-                            np.eye(Nch)
-                            / (
-                                (1j * freq_rad[kk] - sel_lam[jj1])
-                                * (1j * freq_rad[kk] - sel_lam[jj2])
-                            )
-                            for jj2 in range(Nm)
-                        ]
-                    )
-                    .reshape((Nch * Nm, Nch), order="c")
-                    .T
-                    for jj1 in range(Nm)
-                ]
-            ).reshape((Nch * Nm, Nch * Nm))
-
-    R = np.linalg.solve(LL, GL)  # matrice dei residui (fi@fi^T
-
-    for jj in range(len(w_sel)):
-        # SVD della matrice dei residui per ciascun modo fisico del sistema
-        U, S, VT = np.linalg.svd(R[jj * Nch : (jj + 1) * Nch, :])
-
-        phi = U[:, 0]  # la forma modale è la prima colonna di U
-
-        idmax = np.argmax(abs(phi))
-        phiN = phi / phi[idmax]  # normalised (unity displacement)
-
-        Phi[:, jj] = phiN
-    # Save results
-    Fn = np.array(sel_freq1)
-    Xi = np.array(sel_xi)
-
-    return Fn, Xi, Phi
-
-
-
+#FIXME
+# The returned mode shapes are wrong!
+# find the error!
 def pLSCF_MPE_New(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
     """
     Bla bla bla
@@ -292,7 +212,6 @@ def pLSCF_MPE_New(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
             pass
         else:  # when the model order is provided
             # Find closest frequency index
-
             sel = np.nanargmin(np.abs(Fn_pol[:, order] - fj))
 
             sel_freq1.append(Fn_pol[:, order][sel])
@@ -312,7 +231,7 @@ def pLSCF_MPE_New(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
     sel_lam1 = np.empty((len(sel_lam)*2), dtype=complex)
     sel_lam1[0::2] = sel_lam
     sel_lam1[1::2] = sel_lam_conj
-    
+
     for kk in range(Nf):
         GL += np.array(
             [Sy[kk, :, :] / (1j * freq_rad[kk] - sel_lam1[jj]) for jj in range(2*Nm)]

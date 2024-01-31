@@ -63,3 +63,7 @@ from pyoma2.Example_SS import main as main_SS
 if __name__ == '__main__':
     main_MSpoSER()
 ```
+
+# Schematic organisation of the module showing inheritance between classes. 
+
+![](info.svg "")
