@@ -151,7 +151,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
             sens_coord,
             Geo1.sens_dir * phi.reshape(-1, 1),
             scaleF=scaleF,
-            names=Geo1.sens_names,
+#            names=Geo1.sens_names,
         )
 
         # Check that BG nodes are defined

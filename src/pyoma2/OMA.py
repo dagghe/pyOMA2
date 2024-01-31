@@ -263,7 +263,7 @@ class SingleSetup(BaseSetup):
             q:int,
             n: int|None=None,
             ftype:typing.Literal["iir", "fir"]='iir',
-            axis:int =-1,
+            axis:int = 0,
             zero_phase: bool =True):
         """
 wrapper method for scipy.signal.decimate function
@@ -815,7 +815,7 @@ class MultiSetup_PoSER:
             sens_coord,
             Geo1.sens_dir * phi.reshape(-1, 1),
             scaleF=scaleF,
-            names=Geo1.sens_names,
+#            names=Geo1.sens_names,
         )
 
         # Check that BG nodes are defined
@@ -969,10 +969,113 @@ class MultiSetup_PreGER(BaseSetup):
         datasets: typing.List[npt.NDArray[np.float64]],
     ):
         self.fs = fs
+        self.dt = 1 / fs
         self.ref_ind = ref_ind
         Y = PRE_MultiSetup(datasets, ref_ind)
         self.data = Y
         self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
+        self.datasets = datasets
+
+    # method to plot the time histories of the data channels.
+    def plot_data(
+        self,
+        data_idx: str | list[int] = "all",
+        nc: int = 1,
+        names: typing.Optional[typing.List[str]] = None,
+        # names: list[list[str]] = None,
+        unit: str = "unit",
+        show_rms: bool = False,
+    ):
+        if data_idx != "all":
+            datasets = [self.datasets[i] for i in data_idx]
+        else:
+            datasets = self.datasets
+
+        dt = self.dt
+        figs, axs = [],[]
+        for ii, data in enumerate(datasets):
+            nc = nc  # number of columns for subplot
+            if names is not None:
+                nam = names[ii]  # list of names (str) of the channnels
+            else:
+                nam = None
+            unit = unit  # str label for the y-axis (unit of measurement)
+            show_rms = show_rms  # wheter to show or not the rms acc in the plot
+            fig, ax = plt_data(data, dt, nc, nam, unit, show_rms)
+            figs.append(fig)
+            axs.append(ax)
+        return figs, axs
+
+    # method to plot TH, PSD and KDE for each channel
+    def plot_ch_info(
+            self,
+            data_idx: str | list[int] = "all",
+            ch_idx: str | list[int] = "all",
+            ch_names: typing.Optional[typing.List[str]] = None,
+            freqlim: float | None = None,
+            logscale: bool = True,
+            nxseg: float | None = None,
+            pov: float = 0.,
+            window: str = "boxcar"
+    ):
+
+        if data_idx != "all":
+            datasets = [self.datasets[i] for i in data_idx]
+        else:
+            datasets = self.datasets
+        fs = self.fs
+        figs, axs = [],[]
+        for data in datasets:
+            fig, ax = plt_ch_info(data, fs, ch_idx, ch_names=ch_names,
+                                  freqlim=freqlim, logscale=logscale,
+                                  nxseg=nxseg, pov=pov, window=window)
+            figs.append(fig)
+            axs.append(ax)
+        return figs, axs
+
+
+    # method to decimate data
+    def decimate_data(
+            self,
+            q:int,
+            n: int|None=None,
+            ftype:typing.Literal["iir", "fir"]='iir',
+            axis:int = 0,
+            zero_phase: bool =True):
+        """
+wrapper method for scipy.signal.decimate function
+"""
+        datasets = self.datasets
+        newdatasets=[]
+        for data in datasets:
+            newdata = decimate(data,q,n,ftype,axis,zero_phase)
+            newdatasets.append(newdata)
+
+        Y = PRE_MultiSetup(newdatasets, self.ref_ind)
+        self.data = Y
+        self.fs = self.fs / q
+        self.dt = 1 / self.fs
+
+
+    # method to detrend data
+    def detrend_data(
+            self,
+            axis:int = 0,
+            type:typing.Literal["linear", "constant"]='linear',
+            bp:  int | npt.NDArray[np.int64] = 0,
+            ):
+        """
+wrapper method for scipy.signal.detrend function
+"""
+        datasets = self.datasets
+        newdatasets=[]
+        for data in datasets:
+            newdata = detrend(data,axis,type,bp)
+            newdatasets.append(newdata)
+
+        Y = PRE_MultiSetup(newdatasets, self.ref_ind)
+        self.data = Y
+
 
     # metodo per definire geometria 1
     def def_geo1(
