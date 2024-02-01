@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - default ax value to 0 for `detrend_data()` and `decimate_data()` methods
 - name to single setup example notebook
 - minor reorganisation of `pLSCF_funct.py`
-- updated README.md with the example notebooks
+- updated README.md with link to the example notebooks
 
 ## [0.2.0] - 2024-01-30
 
