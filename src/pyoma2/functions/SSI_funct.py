@@ -23,31 +23,30 @@ def MAC(phi_X, phi_A):
 
 
 def BuildHank(Y, Yref, br, fs, method):
-    # -----------------------------------------------------------------------------
-    #     OLD DOCSTRING!!!!!
-    # -----------------------------------------------------------------------------
     """
     Build a Hankel matrix based on input data matrices.
 
     Parameters:
-    - Y (numpy.ndarray): Input data matrix for the system.
-    - Yref (numpy.ndarray): Reference data matrix for the system.
-    - br (int): Number of block rows (p, to use the same notation as Dohler).
-    - fs (int): Sampling frequency (1/dt, sampling interval).
-    - method (str, optional):
-        Method to build the Hankel matrix.
-            Options: "1", "2unb", "2bias", "YfYp".
+    - Y (numpy array): Time series data array, typically representing the system's output.
+    - Yref (numpy array): Reference data array, used in certain methods for Hankel matrix construction.
+    - br (int): The number of block rows in the Hankel matrix.
+    - fs (float): Sampling frequency of the data.
+    - method (str): Specifies the method for Hankel matrix construction. Supported methods include 
+      'cov_mm', 'cov_unb', 'cov_bias', 'dat', and 'YfYp'.
 
     Returns:
-    - numpy.ndarray: The Hankel matrix based on the chosen method.
+    - numpy array or tuple of numpy arrays: Depending on the method, either a single Hankel matrix 
+      or a tuple of matrices (Yf, Yp) representing future and past data blocks.
 
     Raises:
-    - ValueError: If the method is not one of the valid options.
+    - ValueError: If an invalid method is specified.
 
     Notes:
-    - "1": Builds Hankel matrix using future and past output data.
-    - "2unb": Builds Hankel matrix using correlations with unbiased estimator.
-    - "2bias": Builds Hankel matrix using correlations with biased estimator.
+    Notes:
+    - "dat": Efficient method for assembling the Hankel matrix for data driven SSI.
+    - "cov_mm": Builds Hankel matrix using future and past output data with matrix multiplication.
+    - "cov_unb": Builds Hankel matrix using correlations with unbiased estimator.
+    - "cov_bias": Builds Hankel matrix using correlations with biased estimator.
     - "YfYp": Returns the future and past output data matrices Yf and Yp.
     """
     Ndat = Y.shape[1]
@@ -62,7 +61,7 @@ def BuildHank(Y, Yref, br, fs, method):
         Yp = np.vstack(
             [(1 / N**0.5) * Yref[:, q + i : N + q - 1 + i] for i in range(0, -q, -1)]
         )
-        Hank = np.dot(Yf, Yp.T)  # X DIEGO si puo usare tqdm per tenere d'occhio questa?
+        Hank = np.dot(Yf, Yp.T)  
         return Hank
 
     elif method == "cov_unb":
@@ -109,7 +108,7 @@ def BuildHank(Y, Yref, br, fs, method):
         Ys = np.vstack((Yp, Yf))
         R3 = np.linalg.qr(
             Ys.T, mode="r"
-        )  # X DIEGO si puo usare tqdm per tenere d'occhio questa?
+        )  
         R3 = R3.T
         Hank = R3[n_ref * (p + 1) :, : n_ref * (p + 1)]
         return Hank
@@ -326,26 +325,20 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
     setup measurements.
 
     Parameters:
-    Y (list of dicts): List of dictionaries containing sensor data for each
-        setup. Each dictionary has keys 'ref' (reference sensor data) and 'mov'
-        (moving sensor data).
-    fs (float): Sampling frequency.
-    br (int): Block rows.
-    ordmax (int): Maximum model order.
-    step (int, optional): Step size for incrementing the model order.
-        Default is 1.
-    methodHank (str, optional): Method for building the Hankel matrix.
-        Default is "1".
-    method (str, optional): Method for subspace identification, either "FAST"
-        or "SLOW". Default is "FAST".
+    - Y (list of dictionaries): List of dictionaries, each representing data from a different setup. Each dictionary 
+      must have keys 'ref' (reference sensor data) and 'mov' (moving sensor data), with corresponding numpy arrays.
+    - fs (float): Sampling frequency of the data.
+    - br (int): Number of block rows in the Hankel matrix.
+    - ordmax (int): Maximum order for the system identification process.
+    - methodHank (str): Method for Hankel matrix construction. Can be 'cov_mm', 'cov_unb', 'cov_bias', 'dat'.
+    - step (int, optional): Step size for increasing the order in the identification process. Default is 1.
+    - method (str, optional): Method for system matrix computation, either 'FAST' or 'SLOW'. Default is 'FAST'.
 
     Returns:
-    tuple: A tuple containing the system matrices A and the output influence
-        matrices C.
-        A (list of 2D arrays): List of system matrices for different model
-            orders.
-        C (list of 2D arrays): List of output influence matrices for different
-            model orders."""
+    - tuple:
+        - A (list of numpy arrays): System matrices for each model order.
+        - C (list of numpy arrays): Output influence matrices for each model order.
+."""
     n_setup = len(Y)  # number of setup
     n_ref = Y[0]["ref"].shape[0]  # number of reference sensor
 
@@ -447,11 +440,11 @@ def Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_x
     :param Ms: Mode shape array, shape: ``(ordmax, ordmax/step+1, nch(n_DOF))``
     :param ordmin: Minimum order of model
     :param ordmax: Maximum order of model
-    :param stpe: step when iterating through model orders
+    :param step: step when iterating through model orders
     :param err_fn: Threshold for relative frequency difference for stability checks
     :param err_xi: Threshold for relative damping ratio difference for stability checks
     :param err_ms: Threshold for Modal Assurance Criterion (MAC) for stability checks
-    :param max_xi: Threshold for max allowed damping             ##### DA IMPLEMENTARE #####
+    :param max_xi: Threshold for max allowed damping
 
     :return: Stability label matrix (Lab), shape: ``(ordmax, ordmax/step+1)``
         - 7: Stable (frequency, damping, mode shape)
@@ -547,7 +540,29 @@ def Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_x
 
 def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2):
     """
-    Bla bla bla
+    Extracts modal parameters for Stochastic Subspace Identification (SSI) method for selected frequencies.
+
+    Parameters:
+    - sel_freq (list): List of selected frequencies for modal parameter extraction.
+    - Fn_pol (numpy array): Array of natural frequencies obtained from SSI for each model order.
+    - Sm_pol (numpy array): Array of damping ratios obtained from SSI for each model order.
+    - Ms_pol (numpy array): 3D array of mode shapes obtained from SSI for each model order.
+    - order (int, list of int, or 'find_min'): Specifies the model order(s) for which the modal parameters 
+      are to be extracted. If 'find_min', the function attempts to find the minimum model order that provides 
+      stable poles for each mode of interest.
+    - Lab (numpy array, optional): Array of labels identifying stable poles. Required if order='find_min'.
+    - deltaf (float, optional): Frequency bandwidth around each selected frequency for searching poles. Default is 0.05.
+    - rtol (float, optional): Relative tolerance for comparing frequencies. Default is 1e-2.
+
+    Returns:
+    - tuple:
+        - Fn (numpy array): Extracted natural frequencies.
+        - Xi (numpy array): Extracted damping ratios.
+        - Phi (numpy array): Extracted mode shapes.
+        - order_out (numpy array or int): Output model order used for extraction for each frequency.
+
+    Raises:
+    - ValueError: If 'order' is not an int, list of int, or 'find_min', or if 'order' is 'find_min' but 'Lab' is not provided.
     """
 
     # if order != "find_min" and type(order) != int and type(order) != list[int]:
@@ -665,7 +680,4 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     Phi = np.array(sel_phi).T
     Xi = np.array(sel_xi)
     return Fn, Xi, Phi, order_out
-    # if order == "find_min":
-    #     return Fn, Xi, Phi, order_out
-    # else:
-    #     return Fn, Xi, Phi
+

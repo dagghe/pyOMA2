@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class BaseResult(BaseModel):
-    """Base class for output results."""
+    """Base class for storing results data."""
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # dopo MPE o MPE_fromPlot
@@ -19,7 +19,7 @@ class BaseResult(BaseModel):
 
 
 class FDDResult(BaseResult):
-    # dopo run
+    """Class for storing FDD results data."""
     freq: typing.Optional[npt.NDArray[np.float64]] = None
     Sy: typing.Optional[npt.NDArray[np.float64]] = None
     S_val: typing.Optional[npt.NDArray[np.float64]] = None
@@ -27,7 +27,7 @@ class FDDResult(BaseResult):
 
 
 class EFDDResult(BaseResult):
-    # dopo run
+    """Class for storing EFDD/FSDD results data."""
     freq: typing.Optional[npt.NDArray[np.float64]] = None
     Sy: typing.Optional[npt.NDArray[np.float64]] = None
     S_val: typing.Optional[npt.NDArray[np.float64]] = None
@@ -38,7 +38,7 @@ class EFDDResult(BaseResult):
 
 
 class SSIResult(BaseResult):
-    # dopo run
+    """Class for storing SSIcov/dat results data."""
     A: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
     C: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
     H: typing.Optional[npt.NDArray[np.float64]] = None

@@ -39,11 +39,31 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
+    """
+Data-Driven Stochastic Subspace Identification (SSI) algorithm for single setup.
+
+Attributes:
+- br (int): Number of block row
+- ref_ind(list[int], optional): List of index of reference sensors. Default is None 
+- ordmin (int, optional): Minimum model order. Default is 0.
+- ordmax (int, optional): Maximum model order. Default is None.
+- step (int, optional): Step size for increasing system order.
+- err_fn (float, optional): Threshold for relative frequency difference for stability checks. Default is 0.01
+- err_xi (float, optional): Threshold for relative damping ratio difference for stability checks. Default is 0.05
+- err_phi (float, optional):Threshold for mode shampes difference for stability checks. Default is 0.03
+- xi_max (float, optional): Threshold for max allowed damping. Default is  0.1
+
+Methods:
+    
+"""
     RunParamCls = SSIRunParams
     ResultCls = SSIResult
     method: typing.Literal["dat"] = "dat"
 
     def run(self) -> SSIResult:
+        """
+Executes the algorithm and save the results.
+"""
         super()._pre_run()
         Y = self.data.T
         br = self.run_params.br
@@ -91,6 +111,16 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         deltaf: float = 0.05,
         rtol: float = 1e-2,
     ) -> typing.Any:
+        """
+Extract the modal parameters at the selected frequencies and saves the results.
+
+Parameters:
+- sel_freq (list[float]): Selected frequencies for modal parameter extraction.
+- order (int, optional]): Model order for extraction, or 'find_min' to find the minimum stable order.
+- deltaf (float, optional): Frequency bandwidth for searching poles. Default is 0.05.
+- rtol (float, optional): Relative tolerance for comparing frequencies. Default is 1e-2.
+
+"""
         super().mpe(sel_freq=sel_freq, order=order, deltaf=deltaf, rtol=rtol)
 
         # Save run parameters
@@ -122,6 +152,15 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         deltaf: float = 0.05,
         rtol: float = 1e-2,
     ) -> typing.Any:
+        """
+Allows user to extract modal parameters from plot.
+
+Parameters:
+- freqlim (float, optional): Frequency limit for the plot. Default is None.
+- deltaf (float, optional): Frequency bandwidth for searching poles. Default is 0.05.
+- rtol (float, optional): Relative tolerance for comparing frequencies. Default is 1e-2.
+
+"""
         super().mpe_fromPlot(freqlim=freqlim, deltaf=deltaf, rtol=rtol)
 
         # Save run parameters
@@ -154,8 +193,15 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         freqlim: typing.Optional[float] = None,
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
-        """Tobe implemented, plot for SSIdat, SSIcov
-        Stability Diagram
+        """
+        Plots the Stability Diagram for SSIdat, SSIcov.
+
+        Parameters:
+        - freqlim (typing.Optional[float]): Frequency limit for the plot.
+        - hide_poles (typing.Optional[bool]): Option to hide poles. Default is True.
+
+        Returns:
+        - matplotlib.figure.Figure, matplotlib.axes.Axes: The figure and axes of the plot.
         """
 
         fig, ax = plot_funct.Stab_SSI_plot(
@@ -202,8 +248,20 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         remove_grid: bool = True,
         remove_axis: bool = True,
     ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
+        """
+        Plots a 3D mode shape for a given mode number using Geometry1.
+
+        Parameters:
+        - Geo1 (Geometry1): Geometry object containing sensor coordinates and other information.
+        - mode_numb (int): Mode number to visualize.
+        - scaleF (int, optional): Scale factor for mode shape visualization. Default is 1.
+        - view (str, optional): View for the 3D plot, can be '3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'. Default is '3D'.
+        - remove_fill (bool, optional): Whether to remove fill from the plot. Default is True.
+        - remove_grid (bool, optional): Whether to remove grid from the plot. Default is True.
+        - remove_axis (bool, optional): Whether to remove axis from the plot. Default is True.
+
+        Returns:
+        - matplotlib.figure.Figure, matplotlib.axes.Axes: The figure and axes of the plot.
         """
 
         if self.result.Fn is None:
@@ -274,8 +332,21 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         *args,
         **kwargs,
     ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
+        """
+        Plots a 3D mode shape for a given mode number using Geometry2.
+
+        Parameters:
+        - Geo2 (Geometry2): Geometry object containing nodes, sensor information, and additional geometrical data.
+        - mode_numb (int): Mode number to visualize.
+        - scaleF (int): Scale factor for mode shape visualization. Default is 1.
+        - view (str): View for the 3D plot, can be '3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'. Default is '3D'.
+        - remove_fill (bool): Whether to remove fill from the plot. Default is True.
+        - remove_grid (bool): Whether to remove grid from the plot. Default is True.
+        - remove_axis (bool): Whether to remove axis from the plot. Default is True.
+        - args, kwargs: Additional arguments for customizations.
+
+        Returns:
+        - matplotlib.figure.Figure, matplotlib.axes.Axes: The figure and axes of the plot.
         """
         if self.result.Fn is None:
             raise ValueError("Run algorithm first")
@@ -347,8 +418,20 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         *args,
         **kwargs,
     ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
+        """
+        Creates an animated 3D mode shape visualization for a given mode number using Geometry2.
+
+        Parameters:
+        - Geo2 (Geometry2): Geometry object containing nodes, sensor information, and additional geometrical data.
+        - mode_numb (int): Mode number to visualize.
+        - scaleF (int): Scale factor for mode shape animation. Default is 1.
+        - view (str): View for the 3D animation, can be '3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'. Default is '3D'.
+        - remove_fill (bool): Whether to remove fill from the animation. Default is True.
+        - remove_grid (bool): Whether to remove grid from the animation. Default is True.
+        - remove_axis (bool): Whether to remove axis from the animation. Default is True.
+        - args, kwargs: Additional arguments for customization.
+
+        Initiates an animation of the mode shape using Tkinter and Matplotlib.
         """
         if self.result.Fn is None:
             raise ValueError("Run algorithm first")
@@ -371,6 +454,23 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 # ------------------------------------------------------------------------------
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIcov_algo(SSIdat_algo):
+    """
+Covariance-based Stochastic Subspace Identification (SSI) algorithm for single setup.
+
+Attributes:
+- br (int): Number of block row
+- ref_ind(list[int], optional): List of index of reference sensors. Default is None 
+- ordmin (int, optional): Minimum model order. Default is 0.
+- ordmax (int, optional): Maximum model order. Default is None.
+- step (int, optional): Step size for increasing system order.
+- err_fn (float, optional): Threshold for relative frequency difference for stability checks. Default is 0.01
+- err_xi (float, optional): Threshold for relative damping ratio difference for stability checks. Default is 0.05
+- err_phi (float, optional):Threshold for mode shampes difference for stability checks. Default is 0.03
+- xi_max (float, optional): Threshold for max allowed damping. Default is  0.1
+
+Methods:
+    
+"""
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
 
 
