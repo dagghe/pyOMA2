@@ -40,29 +40,16 @@ https://www.pythonguis.com/installation/install-tkinter-mac/
 
 ____
 
-To see example usage go to `pyoma2/Example*` files.
+# Examples
+To see how the module works please take a look at the jupyter notebook provided:
 
-To run them, after have installed the package you can do as follow:
+-[Example 1: single setup](Example1_SingleSetup.ipynb)
 
-**Unix**
+-[Example 2: multi setup Post-Single Estimation Rescaling](Example2_MultiSetupPoSER.ipynb)
 
-```shell
-pyoma2_example_SS
-pyoma2_example_MSposER
-pyoma2_example_MSpreGER
-```
+-[Example 3: multi setup Pre-Global Estimation Rescaling](Example3_MultiSetupPreGER.ipynb)
 
-**Windows**
-
-```python
-from pyoma2.Example_MSpoSER import main as main_MSpoSER
-from pyoma2.Example_MSpreGER import main as main_MSpreGER
-from pyoma2.Example_SS import main as main_SS
-
-
-if __name__ == '__main__':
-    main_MSpoSER()
-```
+____
 
 # Schematic organisation of the module showing inheritance between classes. 
 
