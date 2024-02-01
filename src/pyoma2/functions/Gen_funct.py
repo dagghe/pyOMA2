@@ -7,7 +7,7 @@ import typing
 
 import numpy as np
 
-# =============================================================================
+#FIXME =============================================================================
 # FUNZIONI GENERALI
 # N.B. citare e ringraziare JANKO E PYEMA!!
 # (SDypy https://github.com/sdypy/sdypy)
@@ -264,3 +264,55 @@ def PRE_MultiSetup(
 # -----------------------------------------------------------------------------
 
 
+def invperm(p):
+    """
+    Compute the inverse permutation of a given array.
+
+    Given a permutation array `p`, this function creates an array `q` such 
+    that `q[p[i]] = i` for each element `i` in `p`. This effectively computes 
+    the inverse of the permutation represented by `p`.
+
+    Parameters:
+    p (array-like): A permutation of integers from 0 to n-1, where n is the 
+                    length of the array.
+
+    Returns:
+    ndarray: An array representing the inverse permutation of `p`.
+
+    Example:
+    >>> invperm(np.array([3, 0, 2, 1]))
+    array([1, 3, 2, 0])
+    """
+    q = np.empty_like(p)
+    q[p] = np.arange(len(p))
+    return q
+
+
+# -----------------------------------------------------------------------------
+
+
+def find_map(arr1, arr2):
+    """
+    Map the elements of one array to another based on sorting order.
+
+    This function finds a mapping from the elements of `arr1` to `arr2` such 
+    that the order of elements in `arr1` is preserved in `arr2`. It first 
+    sorts both arrays and then uses the inverse permutation of the sorting 
+    order of `arr1` to map its elements to the corresponding elements in `arr2`.
+
+    Parameters:
+    arr1 (array-like): The first input array.
+    arr2 (array-like): The second input array, which should have the same 
+                       length as `arr1`.
+
+    Returns:
+    ndarray: An array of indices that maps the sorted version of `arr1` to 
+             the sorted version of `arr2`.
+
+    Example:
+    >>> find_map(np.array([10, 30, 20]), np.array([3, 2, 1]))
+    array([2, 0, 1])
+    """
+    o1 = np.argsort(arr1)
+    o2 = np.argsort(arr2)
+    return o2[invperm(o1)]

@@ -837,6 +837,7 @@ Notes:
 
     nr = round(Nch / nc)  # number of rows in the subplot
     fig, axs = plt.subplots(nrows=nr, ncols=nc, sharex=True, sharey=True)
+    fig.suptitle('Plot of the Time Histories of all channels')
 
     kk = 0  # iterator for the dataset
     for ii in range(nr):
