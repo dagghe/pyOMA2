@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - updated README.md with link to the example notebooks
 
 ### Fixed
-- error to `plot_geo2()` method for both SS and MS
+- error to `plot_geo2()` method for both SS and MS ***(WARNING posx,posy)***
 - restored functions removed by mistake from `Gen_funct.py`
 
 ## [0.2.0] - 2024-01-30

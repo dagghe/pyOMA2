@@ -171,7 +171,12 @@ class BaseSetup:
         plt_nodes(ax, pts, color="red")
 
         # plot sensors' directions
-        s_sign = self.Geo2.sens_sign.to_numpy()[:,1:]
+        ch_names=self.Geo2.sens_map.to_numpy()[:,1:]
+        s_sign = self.Geo2.sens_sign.to_numpy()[:,1:] # array of signs
+        # N.B. the size of s_sign will vary depending on the order_red
+        # parameter. order_red="None" size(npts,3); 
+        # order_red="xy/xz/yz" size(npts,2);
+        # order_red="x/y/z" size(npts,1)
         ord_red = self.Geo2.order_red
         zero1=np.zeros(s_sign.shape[0]).reshape(-1,1)
         zero2=np.zeros((s_sign.shape[0],2))
@@ -179,17 +184,25 @@ class BaseSetup:
             pass
         elif ord_red == "xy":
             s_sign = np.hstack((s_sign, zero1))
+            ch_names = np.hstack((ch_names, zero1))
         elif ord_red == "xz":
             s_sign = np.insert(s_sign,1,0)
+            ch_names = np.insert(ch_names,1,0)
         elif ord_red == "yz":
             s_sign = np.hstack((zero1,s_sign))
+            ch_names = np.hstack((zero1,ch_names))
         elif ord_red == "x":
             s_sign = np.hstack((s_sign,zero2))
+            ch_names = np.hstack((ch_names,zero2))
         elif ord_red == "y":
             s_sign = np.insert(zero2,1,s_sign)
+            ch_names = np.insert(zero2,1,ch_names)
         elif ord_red == "z":
             s_sign = np.hstack((zero2,s_sign))
+            ch_names = np.hstack((zero2,ch_names))
         
+        s_sign[s_sign == 0] = 'nan'
+        ch_names[ch_names == 0] = 'nan'
         for ii in range(3):
             s_sign1 = np.hstack((s_sign[:,0].reshape(-1,1), zero2))
             s_sign2 = np.insert(zero2, 1, s_sign[:,1], axis=1)
@@ -200,21 +213,21 @@ class BaseSetup:
                 pts,
                 s_sign1,
                 scaleF=scaleF,
-                # names=self.Geo2.pts_coord.ptName,
+                names=ch_names[:,0],
             )
             plt_quiver(
                 ax,
                 pts,
                 s_sign2,
                 scaleF=scaleF,
-                # names=self.Geo2.pts_coord.ptName,
+                names=ch_names[:,1],
             )
             plt_quiver(
                 ax,
                 pts,
                 s_sign3,
                 scaleF=scaleF,
-                # names=self.Geo2.pts_coord.ptName,
+                names=ch_names[:,2],
             )
 
         # Check that BG nodes are defined
