@@ -110,7 +110,7 @@ class BaseSetup:
 
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
-
+        ax.set_title("Plot of the geometry and sensors' placement and direction")
         # plot sensors' nodes
         sens_coord = self.Geo1.sens_coord[["x", "y", "z"]].to_numpy()
         plt_nodes(ax, sens_coord, color="red")
@@ -165,18 +165,57 @@ class BaseSetup:
 
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
-
-        # plot sensors' nodes
-        plt_nodes(ax, self.Geo2.pts_coord, color="red")
+        ax.set_title("Plot of the geometry and sensors' placement and direction")
+        # plot sensors' 
+        pts = self.Geo2.pts_coord.to_numpy()[:,1:]
+        plt_nodes(ax, pts, color="red")
 
         # plot sensors' directions
-        plt_quiver(
-            ax,
-            self.Geo2.pts_coord,
-            self.Geo2.sens_map,
-            scaleF=scaleF,
-            names=self.Geo2.sens_names,
-        )
+        s_sign = self.Geo2.sens_sign.to_numpy()[:,1:]
+        ord_red = self.Geo2.order_red
+        zero1=np.zeros(s_sign.shape[0]).reshape(-1,1)
+        zero2=np.zeros((s_sign.shape[0],2))
+        if ord_red == None:
+            pass
+        elif ord_red == "xy":
+            s_sign = np.hstack((s_sign, zero1))
+        elif ord_red == "xz":
+            s_sign = np.insert(s_sign,1,0)
+        elif ord_red == "yz":
+            s_sign = np.hstack((zero1,s_sign))
+        elif ord_red == "x":
+            s_sign = np.hstack((s_sign,zero2))
+        elif ord_red == "y":
+            s_sign = np.insert(zero2,1,s_sign)
+        elif ord_red == "z":
+            s_sign = np.hstack((zero2,s_sign))
+        
+        for ii in range(3):
+            s_sign1 = np.hstack((s_sign[:,0].reshape(-1,1), zero2))
+            s_sign2 = np.insert(zero2, 1, s_sign[:,1], axis=1)
+            s_sign3 = np.hstack((zero2, s_sign[:,2].reshape(-1,1)))
+
+            plt_quiver(
+                ax,
+                pts,
+                s_sign1,
+                scaleF=scaleF,
+                # names=self.Geo2.pts_coord.ptName,
+            )
+            plt_quiver(
+                ax,
+                pts,
+                s_sign2,
+                scaleF=scaleF,
+                # names=self.Geo2.pts_coord.ptName,
+            )
+            plt_quiver(
+                ax,
+                pts,
+                s_sign3,
+                scaleF=scaleF,
+                # names=self.Geo2.pts_coord.ptName,
+            )
 
         # Check that BG nodes are defined
         if self.Geo2.bg_nodes is not None:
@@ -195,7 +234,7 @@ class BaseSetup:
         # check for sens_lines
         if self.Geo2.sens_lines is not None:
             # if True plot
-            plt_lines(ax, self.Geo2.pts_coord, self.Geo2.sens_lines, color="red")
+            plt_lines(ax, pts, self.Geo2.sens_lines, color="red")
 
         # Set ax options
         set_ax_options(
@@ -610,7 +649,7 @@ class MultiSetup_PoSER:
 
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
-
+        ax.set_title("Plot of the geometry and sensors' placement and direction")
         # plot sensors' nodes
         sens_coord = self.Geo1.sens_coord[["x", "y", "z"]].to_numpy()
         plt_nodes(ax, sens_coord, color="red")
@@ -719,7 +758,7 @@ class MultiSetup_PoSER:
             bg_surf=bg_surf,
         )
 
-    # metodo per plottare geometria 2 - OK
+    # metodo per plottare geometria 2
     def plot_geo2(
         self,
         scaleF: int = 1,
@@ -731,18 +770,57 @@ class MultiSetup_PoSER:
 
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
-
-        # plot sensors' nodes
-        plt_nodes(ax, self.Geo2.pts_coord, color="red")
+        ax.set_title("Plot of the geometry and sensors' placement and direction")
+        # plot sensors' 
+        pts = self.Geo2.pts_coord.to_numpy()[:,1:]
+        plt_nodes(ax, pts, color="red")
 
         # plot sensors' directions
-        plt_quiver(
-            ax,
-            self.Geo2.pts_coord,
-            self.Geo2.sens_map,
-            scaleF=scaleF,
-            names=self.Geo2.sens_names,
-        )
+        s_sign = self.Geo2.sens_sign.to_numpy()[:,1:]
+        ord_red = self.Geo2.order_red
+        zero1=np.zeros(s_sign.shape[0]).reshape(-1,1)
+        zero2=np.zeros((s_sign.shape[0],2))
+        if ord_red == None:
+            pass
+        elif ord_red == "xy":
+            s_sign = np.hstack((s_sign, zero1))
+        elif ord_red == "xz":
+            s_sign = np.insert(s_sign,1,0)
+        elif ord_red == "yz":
+            s_sign = np.hstack((zero1,s_sign))
+        elif ord_red == "x":
+            s_sign = np.hstack((s_sign,zero2))
+        elif ord_red == "y":
+            s_sign = np.insert(zero2,1,s_sign)
+        elif ord_red == "z":
+            s_sign = np.hstack((zero2,s_sign))
+        
+        for ii in range(3):
+            s_sign1 = np.hstack((s_sign[:,0].reshape(-1,1), zero2))
+            s_sign2 = np.insert(zero2, 1, s_sign[:,1], axis=1)
+            s_sign3 = np.hstack((zero2, s_sign[:,2].reshape(-1,1)))
+
+            plt_quiver(
+                ax,
+                pts,
+                s_sign1,
+                scaleF=scaleF,
+                # names=self.Geo2.pts_coord.ptName,
+            )
+            plt_quiver(
+                ax,
+                pts,
+                s_sign2,
+                scaleF=scaleF,
+                # names=self.Geo2.pts_coord.ptName,
+            )
+            plt_quiver(
+                ax,
+                pts,
+                s_sign3,
+                scaleF=scaleF,
+                # names=self.Geo2.pts_coord.ptName,
+            )
 
         # Check that BG nodes are defined
         if self.Geo2.bg_nodes is not None:
@@ -761,7 +839,7 @@ class MultiSetup_PoSER:
         # check for sens_lines
         if self.Geo2.sens_lines is not None:
             # if True plot
-            plt_lines(ax, self.Geo2.pts_coord, self.Geo2.sens_lines, color="red")
+            plt_lines(ax, pts, self.Geo2.sens_lines, color="red")
 
         # Set ax options
         set_ax_options(
