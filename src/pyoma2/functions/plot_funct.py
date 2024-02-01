@@ -900,10 +900,10 @@ Parameters:
 - fs (float): The sampling frequency of the data.
 - ch_names (list of str, optional): A list containing the names of the channels. Used for titling plots if provided. Default is None.
 - freqlim (float, optional): The upper limit for the frequency range in the PSD plot. If None, no limit is applied. Default is None.
-- logscale (bool): If True, the PSD plot uses a logarithmic scale. If False, a linear scale is used. Default is True.
+- logscale (bool, optional): If True, the PSD plot uses a logarithmic scale. If False, a linear scale is used. Default is True.
 - nxseg (int, optional): The number of data points per segment for the Welch method in PSD calculation. If None, uses the full length of the channel data. Default is None.
-- pov (float): Proportion of overlap between segments in the Welch method. Should be between 0 (no overlap) and 1 (full overlap). Default is 0.
-- window (str): The type of window function used in the Welch method. Default is "boxcar".
+- pov (float, optional): Proportion of overlap between segments in the Welch method. Should be between 0 (no overlap) and 1 (full overlap). Default is 0.
+- window (str, optional): The type of window function used in the Welch method. Default is "boxcar".
 
 Returns:
 tuple: A tuple (fig, axs), where `fig` is the matplotlib figure object and `axs` is a list of axis objects for the generated subplots.

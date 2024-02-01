@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class FDDRunParams(BaseModel):
+    """Class for storing FDD run parameters data."""
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # METODO 1: run
     nxseg: int = 1024
@@ -22,14 +23,12 @@ class FDDRunParams(BaseModel):
 
 
 class EFDDRunParams(BaseModel):
+    """Class for storing EFDD/FSDD run parameters data."""
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # METODO 1: run
     nxseg: int = 1024
     method_SD: str = "per"
     pov: float = 0.5
-    # se method_SD = "per" allora ho anche bisogno di "pov"
-    # (eventualmente) le kwarg di scipy.signal.csd ?? tipo window ecc
-
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[npt.NDArray[np.float64]] = None
     DF1: float = (0.1,)
@@ -41,6 +40,7 @@ class EFDDRunParams(BaseModel):
 
 
 class SSIRunParams(BaseModel):
+    """Class for storing SSIcov/dat run parameters data."""
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # METODO 1: run
     br: int

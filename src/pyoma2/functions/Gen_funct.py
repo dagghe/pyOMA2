@@ -17,6 +17,31 @@ import numpy as np
 def merge_mode_shapes(
     MSarr_list: typing.List[np.ndarray], reflist: typing.List[typing.List[int]]
 ) -> np.ndarray:
+    """
+Merges multiple mode shape arrays from different setups into a single mode shape array.
+
+This function combines mode shape arrays from different experimental setups into a single array. 
+It uses a list of reference sensor indices for each setup to align and scale the mode shapes. 
+The function ensures that all mode shape arrays have the same number of modes and merges them 
+by keeping the reference sensor data from the first setup and appropriately scaling and appending 
+the data from roving sensors of subsequent setups.
+
+Parameters:
+- MSarr_list (List[np.ndarray]): A list of mode shape arrays. Each array in the list corresponds 
+  to a different experimental setup. Each array should have dimensions [N x M], where N is the number 
+  of sensors (including both reference and roving sensors) and M is the number of modes.
+- reflist (List[List[int]]): A list of lists containing the indices of reference sensors. Each sublist 
+  corresponds to the indices of the reference sensors used in the corresponding setup in `MSarr_list`. 
+  Each sublist should contain the same number of elements.
+
+Returns:
+- np.ndarray: A merged mode shape array. The number of rows in the array equals the sum of the number 
+  of unique sensors across all setups minus the number of reference sensors in each setup (except the first one). 
+  The number of columns equals the number of modes.
+
+Raises:
+- ValueError: If the mode shape arrays in `MSarr_list` do not have the same number of modes.
+"""
     Nsetup = len(MSarr_list)  # number of setup
     Nmodes = MSarr_list[0].shape[1]  # number of modes
     Nref = len(reflist[0])  # number of reference sensors
@@ -239,16 +264,3 @@ def PRE_MultiSetup(
 # -----------------------------------------------------------------------------
 
 
-def invperm(p):
-    q = np.empty_like(p)
-    q[p] = np.arange(len(p))
-    return q
-
-
-# -----------------------------------------------------------------------------
-
-
-def find_map(arr1, arr2):
-    o1 = np.argsort(arr1)
-    o2 = np.argsort(arr2)
-    return o2[invperm(o1)]

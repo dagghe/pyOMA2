@@ -16,16 +16,16 @@ from pydantic import BaseModel, ConfigDict
 
 
 class Geometry1(BaseModel):
-    """Base class for output results."""
+    """Class for storing Geometry 1 data."""
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
-    # # MANDATORY
+    # MANDATORY
     sens_names: typing.List[str]
     sens_coord: typing.Union[
         pd.DataFrame, npt.NDArray[np.float64]
     ]  # sensors' coordinates
     sens_dir: npt.NDArray[np.float64]  # sensors' directions
-    # # OPTIONAL
+    # OPTIONAL
     sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines connecting sensors
     bg_nodes: typing.Optional[npt.NDArray[np.float64]] = None  # Background nodes
     bg_lines: typing.Optional[npt.NDArray[np.int64]] = None  # Background lines
@@ -33,18 +33,19 @@ class Geometry1(BaseModel):
 
 
 class Geometry2(BaseModel):
-    """Base class for output results."""
+    """Class for storing Geometry 2 data."""
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
-    # # MANDATORY
+    # MANDATORY
     sens_names: typing.List[str]  # sensors' names
     pts_coord: typing.Union[pd.DataFrame, npt.NDArray[np.float64]]  # points' coordinates
     sens_map: typing.Union[pd.DataFrame, npt.NDArray[np.float64]]  # mapping
     sens_sign: typing.Union[pd.DataFrame, npt.NDArray[np.float64]]  # sign
 
     # # OPTIONAL
-    # Order reduction uno tra ["None", "xy","xz","yz","x","y","z"]
-    order_red: typing.Optional[str] = None
+    #FIXME x DIEGO si puo fare cosi qui?
+    # order_red: typing.Literal["xy","xz","yz","x","y","z"] = None
+    order_red: typing.Optional[str] = None # string to reduce the n* of DOF per point
     sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines connection sensors
     bg_nodes: typing.Optional[npt.NDArray[np.float64]] = None  # Background nodes
     bg_lines: typing.Optional[npt.NDArray[np.int64]] = None  # Background lines
