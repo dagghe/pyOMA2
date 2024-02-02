@@ -43,9 +43,9 @@ class Geometry2(BaseModel):
     sens_sign: typing.Union[pd.DataFrame, npt.NDArray[np.float64]]  # sign
 
     # # OPTIONAL
-    #FIXME x DIEGO si puo fare cosi qui?
+    # FIXME x DIEGO si puo fare cosi qui?
     # order_red: typing.Literal["xy","xz","yz","x","y","z"] = None
-    order_red: typing.Optional[str] = None # string to reduce the n* of DOF per point
+    order_red: typing.Optional[str] = None  # string to reduce the n* of DOF per point
     sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines connection sensors
     bg_nodes: typing.Optional[npt.NDArray[np.float64]] = None  # Background nodes
     bg_lines: typing.Optional[npt.NDArray[np.int64]] = None  # Background lines

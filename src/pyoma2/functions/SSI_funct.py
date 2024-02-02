@@ -31,11 +31,11 @@ def BuildHank(Y, Yref, br, fs, method):
     - Yref (numpy array): Reference data array, used in certain methods for Hankel matrix construction.
     - br (int): The number of block rows in the Hankel matrix.
     - fs (float): Sampling frequency of the data.
-    - method (str): Specifies the method for Hankel matrix construction. Supported methods include 
+    - method (str): Specifies the method for Hankel matrix construction. Supported methods include
       'cov_mm', 'cov_unb', 'cov_bias', 'dat', and 'YfYp'.
 
     Returns:
-    - numpy array or tuple of numpy arrays: Depending on the method, either a single Hankel matrix 
+    - numpy array or tuple of numpy arrays: Depending on the method, either a single Hankel matrix
       or a tuple of matrices (Yf, Yp) representing future and past data blocks.
 
     Raises:
@@ -61,7 +61,7 @@ def BuildHank(Y, Yref, br, fs, method):
         Yp = np.vstack(
             [(1 / N**0.5) * Yref[:, q + i : N + q - 1 + i] for i in range(0, -q, -1)]
         )
-        Hank = np.dot(Yf, Yp.T)  
+        Hank = np.dot(Yf, Yp.T)
         return Hank
 
     elif method == "cov_unb":
@@ -106,9 +106,7 @@ def BuildHank(Y, Yref, br, fs, method):
             [(1 / N**0.5) * Yref[:, q + i : N + q - 1 + i] for i in range(0, -q, -1)]
         )
         Ys = np.vstack((Yp, Yf))
-        R3 = np.linalg.qr(
-            Ys.T, mode="r"
-        )  
+        R3 = np.linalg.qr(Ys.T, mode="r")
         R3 = R3.T
         Hank = R3[n_ref * (p + 1) :, : n_ref * (p + 1)]
         return Hank
@@ -321,24 +319,28 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
     #     OLD DOCSTRING
     # =============================================================================
     """
-    Perform Subspace System Identification using Covariance-driven SSI to multi
-    setup measurements.
+        Perform Subspace System Identification using Covariance-driven SSI to multi
+        setup measurements.
 
-    Parameters:
-    - Y (list of dictionaries): List of dictionaries, each representing data from a different setup. Each dictionary 
-      must have keys 'ref' (reference sensor data) and 'mov' (moving sensor data), with corresponding numpy arrays.
-    - fs (float): Sampling frequency of the data.
-    - br (int): Number of block rows in the Hankel matrix.
-    - ordmax (int): Maximum order for the system identification process.
-    - methodHank (str): Method for Hankel matrix construction. Can be 'cov_mm', 'cov_unb', 'cov_bias', 'dat'.
-    - step (int, optional): Step size for increasing the order in the identification process. Default is 1.
-    - method (str, optional): Method for system matrix computation, either 'FAST' or 'SLOW'. Default is 'FAST'.
+        Parameters:
+        - Y (list of dictionaries): List of dictionaries, each representing data from a different setup.
+          Each dictionary must have keys 'ref' (reference sensor data) and 'mov' (moving sensor data),
+          with corresponding numpy arrays.
+        - fs (float): Sampling frequency of the data.
+        - br (int): Number of block rows in the Hankel matrix.
+        - ordmax (int): Maximum order for the system identification process.
+        - methodHank (str): Method for Hankel matrix construction.
+          Can be 'cov_mm', 'cov_unb', 'cov_bias', 'dat'.
+        - step (int, optional): Step size for increasing the order in the identification process.
+          Default is 1.
+        - method (str, optional): Method for system matrix computation, either 'FAST' or 'SLOW'.
+          Default is 'FAST'.
 
-    Returns:
-    - tuple:
-        - A (list of numpy arrays): System matrices for each model order.
-        - C (list of numpy arrays): Output influence matrices for each model order.
-."""
+        Returns:
+        - tuple:
+            - A (list of numpy arrays): System matrices for each model order.
+            - C (list of numpy arrays): Output influence matrices for each model order.
+    ."""
     n_setup = len(Y)  # number of setup
     n_ref = Y[0]["ref"].shape[0]  # number of reference sensor
 
@@ -547,11 +549,12 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     - Fn_pol (numpy array): Array of natural frequencies obtained from SSI for each model order.
     - Sm_pol (numpy array): Array of damping ratios obtained from SSI for each model order.
     - Ms_pol (numpy array): 3D array of mode shapes obtained from SSI for each model order.
-    - order (int, list of int, or 'find_min'): Specifies the model order(s) for which the modal parameters 
-      are to be extracted. If 'find_min', the function attempts to find the minimum model order that provides 
+    - order (int, list of int, or 'find_min'): Specifies the model order(s) for which the modal parameters
+      are to be extracted. If 'find_min', the function attempts to find the minimum model order that provides
       stable poles for each mode of interest.
     - Lab (numpy array, optional): Array of labels identifying stable poles. Required if order='find_min'.
-    - deltaf (float, optional): Frequency bandwidth around each selected frequency for searching poles. Default is 0.05.
+    - deltaf (float, optional): Frequency bandwidth around each selected frequency for searching poles.
+      Default is 0.05.
     - rtol (float, optional): Relative tolerance for comparing frequencies. Default is 1e-2.
 
     Returns:
@@ -562,7 +565,8 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
         - order_out (numpy array or int): Output model order used for extraction for each frequency.
 
     Raises:
-    - ValueError: If 'order' is not an int, list of int, or 'find_min', or if 'order' is 'find_min' but 'Lab' is not provided.
+    - ValueError: If 'order' is not an int, list of int, or 'find_min',
+      or if 'order' is 'find_min' but 'Lab' is not provided.
     """
 
     # if order != "find_min" and type(order) != int and type(order) != list[int]:
@@ -680,4 +684,3 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
     Phi = np.array(sel_phi).T
     Xi = np.array(sel_xi)
     return Fn, Xi, Phi, order_out
-

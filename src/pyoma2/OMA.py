@@ -18,6 +18,7 @@ from pyoma2.functions.Gen_funct import (
     merge_mode_shapes,
 )
 from pyoma2.functions.plot_funct import (
+    plt_ch_info,
     plt_data,
     plt_lines,
     plt_nodes,
@@ -25,7 +26,6 @@ from pyoma2.functions.plot_funct import (
     plt_surf,
     set_ax_options,
     set_view,
-    plt_ch_info
 )
 
 if typing.TYPE_CHECKING:
@@ -38,13 +38,14 @@ logger = logging.getLogger(__name__)
 
 class BaseSetup:
     """
-    This is the BaseSetup class. This class has methods used by both 
+    This is the BaseSetup class. This class has methods used by both
     SingleSetup and MultiSetup_PreGER classes.
-    
+
     N.B.
         This class is not instantiated by the users
-    
+
     """
+
     algorithms: typing.Dict[str, BaseAlgorithm]
     data: typing.Optional[np.ndarray] = None  # TODO use generic typing
     fs: typing.Optional[float] = None  # sampling frequency
@@ -125,32 +126,32 @@ class BaseSetup:
         remove_axis: bool = True,
     ):
         """
-    Plots the geometry (type 1) of tested structure.
+        Plots the geometry (type 1) of tested structure.
 
-    This method visualizes the geometry of a structure, including sensor placements and directions. 
-    It allows customization of the plot through various parameters such as scaling factor, 
-    view type, and options to remove fill, grid, and axis from the plot.
+        This method visualizes the geometry of a structure, including sensor placements and directions.
+        It allows customization of the plot through various parameters such as scaling factor,
+        view type, and options to remove fill, grid, and axis from the plot.
 
-    Parameters
-    ----------
-    scaleF : int, optional
-        The scaling factor for the sensor direction quivers. A higher value results in 
-        longer quivers. Default is 1.
-    view : {'3D', 'xy', 'xz', 'yz'}, optional
-        The type of view for plotting the geometry. Options include 3D and 2D projections 
-        on various planes. Default is "3D".
-    remove_fill : bool, optional
-        If True, removes the fill from the plot. Default is True.
-    remove_grid : bool, optional
-        If True, removes the grid from the plot. Default is True.
-    remove_axis : bool, optional
-        If True, removes the axis labels and ticks from the plot. Default is True.
+        Parameters
+        ----------
+        scaleF : int, optional
+            The scaling factor for the sensor direction quivers. A higher value results in
+            longer quivers. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            The type of view for plotting the geometry. Options include 3D and 2D projections
+            on various planes. Default is "3D".
+        remove_fill : bool, optional
+            If True, removes the fill from the plot. Default is True.
+        remove_grid : bool, optional
+            If True, removes the grid from the plot. Default is True.
+        remove_axis : bool, optional
+            If True, removes the axis labels and ticks from the plot. Default is True.
 
-    Returns
-    -------
-    tuple
-        A tuple containing the figure and axis objects of the plot. This can be used for 
-        further customization or saving the plot externally.
+        Returns
+        -------
+        tuple
+            A tuple containing the figure and axis objects of the plot. This can be used for
+            further customization or saving the plot externally.
 
         """
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
@@ -208,100 +209,100 @@ class BaseSetup:
         remove_axis: bool = True,
     ):
         """
-    Plots the geometry (type 2) of tested structure.
+        Plots the geometry (type 2) of tested structure.
 
-    This method creates a 3D or 2D plot of a specific geometric configuration (Geo2) with 
-    customizable features such as scaling factor, view type, and visibility options for 
-    fill, grid, and axes. It involves plotting sensor points, directions, and additional 
-    geometric elements if available.
+        This method creates a 3D or 2D plot of a specific geometric configuration (Geo2) with
+        customizable features such as scaling factor, view type, and visibility options for
+        fill, grid, and axes. It involves plotting sensor points, directions, and additional
+        geometric elements if available.
 
-    Parameters
-    ----------
-    scaleF : int, optional
-        Scaling factor for the quiver plots representing sensors' directions. Default is 1.
-    view : {'3D', 'xy', 'xz', 'yz'}, optional
-        Specifies the type of view for the plot. Can be a 3D view or 2D projections on 
-        various planes. Default is "3D".
-    remove_fill : bool, optional
-        If True, the plot's fill is removed. Default is True.
-    remove_grid : bool, optional
-        If True, the plot's grid is removed. Default is True.
-    remove_axis : bool, optional
-        If True, the plot's axes are removed. Default is True.
+        Parameters
+        ----------
+        scaleF : int, optional
+            Scaling factor for the quiver plots representing sensors' directions. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            Specifies the type of view for the plot. Can be a 3D view or 2D projections on
+            various planes. Default is "3D".
+        remove_fill : bool, optional
+            If True, the plot's fill is removed. Default is True.
+        remove_grid : bool, optional
+            If True, the plot's grid is removed. Default is True.
+        remove_axis : bool, optional
+            If True, the plot's axes are removed. Default is True.
 
-    Returns
-    -------
-    tuple
-        Returns a tuple containing the figure and axis objects of the matplotlib plot. 
-        This allows for further customization or saving outside the method.
+        Returns
+        -------
+        tuple
+            Returns a tuple containing the figure and axis objects of the matplotlib plot.
+            This allows for further customization or saving outside the method.
 
-    """
+        """
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
-        # plot sensors' 
-        pts = self.Geo2.pts_coord.to_numpy()[:,1:]
+        # plot sensors'
+        pts = self.Geo2.pts_coord.to_numpy()[:, 1:]
         plt_nodes(ax, pts, color="red")
 
         # plot sensors' directions
-        ch_names=self.Geo2.sens_map.to_numpy()[:,1:]
-        s_sign = self.Geo2.sens_sign.to_numpy()[:,1:] # array of signs
+        ch_names = self.Geo2.sens_map.to_numpy()[:, 1:]
+        s_sign = self.Geo2.sens_sign.to_numpy()[:, 1:]  # array of signs
         # N.B. the size of s_sign will vary depending on the order_red
-        # parameter. order_red="None" size(npts,3); 
+        # parameter. order_red="None" size(npts,3);
         # order_red="xy/xz/yz" size(npts,2);
         # order_red="x/y/z" size(npts,1)
         # (same for ch_names)
         ord_red = self.Geo2.order_red
-        zero1=np.zeros(s_sign.shape[0]).reshape(-1,1)
-        zero2=np.zeros((s_sign.shape[0],2))
-        if ord_red == None:
+        zero1 = np.zeros(s_sign.shape[0]).reshape(-1, 1)
+        zero2 = np.zeros((s_sign.shape[0], 2))
+        if ord_red is None:
             pass
         elif ord_red == "xy":
             s_sign = np.hstack((s_sign, zero1))
             ch_names = np.hstack((ch_names, zero1))
         elif ord_red == "xz":
-            s_sign = np.insert(s_sign,1,0)
-            ch_names = np.insert(ch_names,1,0)
+            s_sign = np.insert(s_sign, 1, 0)
+            ch_names = np.insert(ch_names, 1, 0)
         elif ord_red == "yz":
-            s_sign = np.hstack((zero1,s_sign))
-            ch_names = np.hstack((zero1,ch_names))
+            s_sign = np.hstack((zero1, s_sign))
+            ch_names = np.hstack((zero1, ch_names))
         elif ord_red == "x":
-            s_sign = np.hstack((s_sign,zero2))
-            ch_names = np.hstack((ch_names,zero2))
+            s_sign = np.hstack((s_sign, zero2))
+            ch_names = np.hstack((ch_names, zero2))
         elif ord_red == "y":
-            s_sign = np.insert(zero2,1,s_sign)
-            ch_names = np.insert(zero2,1,ch_names)
+            s_sign = np.insert(zero2, 1, s_sign)
+            ch_names = np.insert(zero2, 1, ch_names)
         elif ord_red == "z":
-            s_sign = np.hstack((zero2,s_sign))
-            ch_names = np.hstack((zero2,ch_names))
-        
+            s_sign = np.hstack((zero2, s_sign))
+            ch_names = np.hstack((zero2, ch_names))
+
         s_sign[s_sign == 0] = np.nan
         ch_names[ch_names == 0] = np.nan
         for ii in range(3):
-            s_sign1 = np.hstack((s_sign[:,0].reshape(-1,1), zero2))
-            s_sign2 = np.insert(zero2, 1, s_sign[:,1], axis=1)
-            s_sign3 = np.hstack((zero2, s_sign[:,2].reshape(-1,1)))
+            s_sign1 = np.hstack((s_sign[:, 0].reshape(-1, 1), zero2))
+            s_sign2 = np.insert(zero2, 1, s_sign[:, 1], axis=1)
+            s_sign3 = np.hstack((zero2, s_sign[:, 2].reshape(-1, 1)))
 
             plt_quiver(
                 ax,
                 pts,
                 s_sign1,
                 scaleF=scaleF,
-                names=ch_names[:,0],
+                names=ch_names[:, 0],
             )
             plt_quiver(
                 ax,
                 pts,
                 s_sign2,
                 scaleF=scaleF,
-                names=ch_names[:,1],
+                names=ch_names[:, 1],
             )
             plt_quiver(
                 ax,
                 pts,
                 s_sign3,
                 scaleF=scaleF,
-                names=ch_names[:,2],
+                names=ch_names[:, 2],
             )
 
         # Check that BG nodes are defined
@@ -341,31 +342,30 @@ class BaseSetup:
 class SingleSetup(BaseSetup):
     def __init__(self, data: typing.Iterable[float], fs: float):
         """
-Initialize a SingleSetup instance with data and sampling frequency.
+        Initialize a SingleSetup instance with data and sampling frequency.
 
-Parameters
-----------
-data : np.array(float)
-    The data to be processed, expected as an iterable of floats.
-fs : float
-    The sampling frequency of the data.
+        Parameters
+        ----------
+        data : np.array(float)
+            The data to be processed, expected as an iterable of floats.
+        fs : float
+            The sampling frequency of the data.
 
-Attributes
-----------
-data : typing.Iterable[float]
-    Stores the input data.
-fs : float
-    Stores the sampling frequency.
-dt : float
-    The sampling interval, calculated as the inverse of the sampling frequency.
-algorithms : typing.Dict[str, BaseAlgorithm]
-    A dictionary to store algorithms associated with the setup.
+        Attributes
+        ----------
+        data : typing.Iterable[float]
+            Stores the input data.
+        fs : float
+            Stores the sampling frequency.
+        dt : float
+            The sampling interval, calculated as the inverse of the sampling frequency.
+        algorithms : typing.Dict[str, BaseAlgorithm]
+            A dictionary to store algorithms associated with the setup.
 
-Notes
------
-- The sampling interval `dt` is calculated automatically from the provided sampling frequency.
-- `algorithms` dictionary is initialized empty and is meant to store various algorithms as needed.
-"""
+        Notes
+        -----
+        - The sampling interval `dt` is calculated automatically from the provided sampling frequency.
+        - `algorithms` dictionary is initialized empty and is meant to store various algorithms as needed."""
         self.data = data  # data
         self.fs = fs  # sampling frequency
         self.dt = 1 / fs  # sampling interval
@@ -380,36 +380,35 @@ Notes
         show_rms: bool = False,
     ):
         """
-Plots the time histories of the data channels in a subplot format.
+        Plots the time histories of the data channels in a subplot format.
 
-This method generates plots for each channel of the dataset. It can display these 
-in multiple subplots with customizable number of columns, names, units, and an 
-option to show RMS acceleration.
+        This method generates plots for each channel of the dataset. It can display these
+        in multiple subplots with customizable number of columns, names, units, and an
+        option to show RMS acceleration.
 
-Parameters
-----------
-nc : int, optional
-    Number of columns for the subplot. Default is 1.
-names : list[str], optional
-    List of names for the channels. If provided, these names are used as labels.
-    Default is None.
-unit : str, optional
-    String label for the y-axis representing the unit of measurement. Default is "unit".
-show_rms : bool, optional
-    If True, the RMS acceleration is shown in the plot. Default is False.
+        Parameters
+        ----------
+        nc : int, optional
+            Number of columns for the subplot. Default is 1.
+        names : list[str], optional
+            List of names for the channels. If provided, these names are used as labels.
+            Default is None.
+        unit : str, optional
+            String label for the y-axis representing the unit of measurement. Default is "unit".
+        show_rms : bool, optional
+            If True, the RMS acceleration is shown in the plot. Default is False.
 
-Returns
--------
-tuple
-    A tuple containing the figure and axis objects of the plot for further customization
-    or saving externally.
+        Returns
+        -------
+        tuple
+            A tuple containing the figure and axis objects of the plot for further customization
+            or saving externally.
 
-Notes
------
-- Utilizes the `plt_data` function for plotting.
-- The method assumes that the data is structured in a way that each column represents 
-  a channel.
-"""
+        Notes
+        -----
+        - Utilizes the `plt_data` function for plotting.
+        - The method assumes that the data is structured in a way that each column represents
+          a channel."""
         data = self.data
         dt = self.dt
         nc = nc  # number of columns for subplot
@@ -421,20 +420,21 @@ Notes
 
     # method to plot TH, PSD and KDE for each channel
     def plot_ch_info(
-            self,
-            ch_idx: str | list[int] = "all",
-            ch_names: typing.Optional[typing.List[str]] = None,
-            freqlim: float | None = None,
-            logscale: bool = True,
-            nxseg: float | None = None,
-            pov: float = 0.,
-            window: str = "boxcar"
+        self,
+        ch_idx: str | list[int] = "all",
+        ch_names: typing.Optional[typing.List[str]] = None,
+        freqlim: float | None = None,
+        logscale: bool = True,
+        nxseg: float | None = None,
+        pov: float = 0.0,
+        window: str = "boxcar",
     ):
         """
-        Plots Time History (TH), Power Spectral Density (PSD), and Kernel Density Estimation (KDE) for each channel.
+        Plots Time History (TH), Power Spectral Density (PSD),
+        and Kernel Density Estimation (KDE) for each channel.
 
-        This method generates plots for TH, PSD, and KDE based on the specified channel indices. 
-        It allows customization of frequency limits, log scale, number of segments for PSD, 
+        This method generates plots for TH, PSD, and KDE based on the specified channel indices.
+        It allows customization of frequency limits, log scale, number of segments for PSD,
         percentage of overlap, and windowing function.
 
         Parameters
@@ -467,39 +467,45 @@ Notes
         data = self.data
         fs = self.fs
 
-        fig, ax = plt_ch_info(data, fs, ch_idx, ch_names=ch_names,
-                              freqlim=freqlim, logscale=logscale,
-                              nxseg=nxseg, pov=pov, window=window)
+        fig, ax = plt_ch_info(
+            data,
+            fs,
+            ch_idx,
+            ch_names=ch_names,
+            freqlim=freqlim,
+            logscale=logscale,
+            nxseg=nxseg,
+            pov=pov,
+            window=window,
+        )
         return fig, ax
-
 
     # method to decimate data
     def decimate_data(
-            self,
-            q:int,
-            n: int|None=None,
-            ftype:typing.Literal["iir", "fir"]='iir',
-            axis:int = 0,
-            zero_phase: bool =True):
+        self,
+        q: int,
+        n: int | None = None,
+        ftype: typing.Literal["iir", "fir"] = "iir",
+        axis: int = 0,
+        zero_phase: bool = True,
+    ):
         """
-wrapper method for scipy.signal.decimate function
-"""
+        wrapper method for scipy.signal.decimate function"""
 
-        self.data = decimate(self.data,q,n,ftype,axis,zero_phase)
+        self.data = decimate(self.data, q, n, ftype, axis, zero_phase)
         self.fs = self.fs / q
         self.dt = 1 / self.fs
 
     # method to detrend data
     def detrend_data(
-            self,
-            axis:int =-1,
-            type:typing.Literal["linear", "constant"]='linear',
-            bp:  int | npt.NDArray[np.int64] = 0,
-            ):
+        self,
+        axis: int = -1,
+        type: typing.Literal["linear", "constant"] = "linear",
+        bp: int | npt.NDArray[np.int64] = 0,
+    ):
         """
-wrapper method for scipy.signal.detrend function
-"""
-        self.data = detrend(self.data,axis,type,bp)
+        wrapper method for scipy.signal.detrend function"""
+        self.data = detrend(self.data, axis, type, bp)
 
     # metodo per definire geometria 1
     def def_geo1(
@@ -517,39 +523,38 @@ wrapper method for scipy.signal.detrend function
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
         """
-Defines the first geometry setup (Geo1) for the instance.
+        Defines the first geometry setup (Geo1) for the instance.
 
-This method sets up the geometry involving sensors' names, coordinates, directions, 
-and optional elements like sensor lines, background nodes, lines, and surfaces.
+        This method sets up the geometry involving sensors' names, coordinates, directions,
+        and optional elements like sensor lines, background nodes, lines, and surfaces.
 
-Parameters
-----------
-sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
-    An array or list containing the names of the sensors.
-sens_coord : pd.DataFrame
-    A pandas DataFrame containing the coordinates of the sensors.
-sens_dir : npt.NDArray[np.int64]
-    An array defining the directions of the sensors.
-sens_lines : npt.NDArray[np.int64], optional
-    An array defining lines connecting sensors. Default is None.
-bg_nodes : npt.NDArray[np.float64], optional
-    An array defining background nodes. Default is None.
-bg_lines : npt.NDArray[np.int64], optional
-    An array defining background lines. Default is None.
-bg_surf : npt.NDArray[np.float64], optional
-    An array defining background surfaces. Default is None.
+        Parameters
+        ----------
+        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+            An array or list containing the names of the sensors.
+        sens_coord : pd.DataFrame
+            A pandas DataFrame containing the coordinates of the sensors.
+        sens_dir : npt.NDArray[np.int64]
+            An array defining the directions of the sensors.
+        sens_lines : npt.NDArray[np.int64], optional
+            An array defining lines connecting sensors. Default is None.
+        bg_nodes : npt.NDArray[np.float64], optional
+            An array defining background nodes. Default is None.
+        bg_lines : npt.NDArray[np.int64], optional
+            An array defining background lines. Default is None.
+        bg_surf : npt.NDArray[np.float64], optional
+            An array defining background surfaces. Default is None.
 
-Raises
-------
-AssertionError
-    If the number of sensors does not match between data, coordinates, and directions.
+        Raises
+        ------
+        AssertionError
+            If the number of sensors does not match between data, coordinates, and directions.
 
-Notes
------
-- The method performs various checks to ensure the integrity and consistency of the input data.
-- Adapts to zero-indexing for background lines if provided.
-- Reorders sensor coordinates and directions to match the provided sensor names.
-"""
+        Notes
+        -----
+        - The method performs various checks to ensure the integrity and consistency of the input data.
+        - Adapts to zero-indexing for background lines if provided.
+        - Reorders sensor coordinates and directions to match the provided sensor names."""
         # ---------------------------------------------------------------------
         # Checks on input
         nr_s = len(sens_names)
@@ -600,44 +605,43 @@ Notes
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
         """
-Defines the second geometry setup (Geo2) for the instance.
+        Defines the second geometry setup (Geo2) for the instance.
 
-This method sets up an alternative geometry configuration, including sensors' names, 
-points' coordinates, mapping, sign data, and optional elements like order reduction, 
-sensor lines, background nodes, lines, and surfaces.
+        This method sets up an alternative geometry configuration, including sensors' names,
+        points' coordinates, mapping, sign data, and optional elements like order reduction,
+        sensor lines, background nodes, lines, and surfaces.
 
-Parameters
-----------
-sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
-    An array or list containing the names of the sensors.
-pts_coord : pd.DataFrame
-    A DataFrame containing the coordinates of the points.
-sens_map : pd.DataFrame
-    A DataFrame containing the mapping data for sensors.
-sens_sign : pd.DataFrame
-    A DataFrame containing sign data for the sensors.
-order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
-    Specifies the order reduction if any. Default is None.
-sens_lines : npt.NDArray[np.int64], optional
-    An array defining lines connecting sensors. Default is None.
-bg_nodes : npt.NDArray[np.float64], optional
-    An array defining background nodes. Default is None.
-bg_lines : npt.NDArray[np.float64], optional
-    An array defining background lines. Default is None.
-bg_surf : npt.NDArray[np.float64], optional
-    An array defining background surfaces. Default is None.
+        Parameters
+        ----------
+        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+            An array or list containing the names of the sensors.
+        pts_coord : pd.DataFrame
+            A DataFrame containing the coordinates of the points.
+        sens_map : pd.DataFrame
+            A DataFrame containing the mapping data for sensors.
+        sens_sign : pd.DataFrame
+            A DataFrame containing sign data for the sensors.
+        order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
+            Specifies the order reduction if any. Default is None.
+        sens_lines : npt.NDArray[np.int64], optional
+            An array defining lines connecting sensors. Default is None.
+        bg_nodes : npt.NDArray[np.float64], optional
+            An array defining background nodes. Default is None.
+        bg_lines : npt.NDArray[np.float64], optional
+            An array defining background lines. Default is None.
+        bg_surf : npt.NDArray[np.float64], optional
+            An array defining background surfaces. Default is None.
 
-Raises
-------
-AssertionError
-    If the number of columns in mapping and sign data does not match the expected 
-    dimensions based on the order reduction.
+        Raises
+        ------
+        AssertionError
+            If the number of columns in mapping and sign data does not match the expected
+            dimensions based on the order reduction.
 
-Notes
------
-- Performs checks to ensure consistency and correctness of input data based on the order reduction.
-- Adapts to zero-indexing for sensor and background lines if provided.
-"""
+        Notes
+        -----
+        - Performs checks to ensure consistency and correctness of input data based on the order reduction.
+        - Adapts to zero-indexing for sensor and background lines if provided."""
         # ---------------------------------------------------------------------
         # Checks on input
         if order_red == "xy" or order_red == "xz" or order_red == "yz":
@@ -695,7 +699,7 @@ Notes
 # =============================================================================
 # MULTISETUP
 # =============================================================================
-#FIXME add references!
+# FIXME add references!
 class MultiSetup_PoSER:
     """
     A class to conduct OMA of multi-setup experiments, with the
@@ -721,6 +725,7 @@ class MultiSetup_PoSER:
     anim_mode_g2(...)
         Creates an animation for the mode shapes for Geometry 2 setup using results from an algorithm.
     """
+
     __result: typing.Optional[typing.Dict[str, MsPoserResult]] = None
     __alg_ref: typing.Optional[typing.Dict[type[BaseAlgorithm], str]] = None
 
@@ -730,20 +735,19 @@ class MultiSetup_PoSER:
         single_setups: typing.List[SingleSetup],  # | None = None,
     ):
         """
-Initializes the MultiSetup_PoSER instance with reference indices and a list of SingleSetup instances.
+        Initializes the MultiSetup_PoSER instance with reference indices and a list of SingleSetup instances.
 
-Parameters
-----------
-ref_ind : list[list[int]]
-    Reference indices for merging results from different setups.
-single_setups : list[SingleSetup]
-    A list of SingleSetup instances to be merged using the PoSER approach.
+        Parameters
+        ----------
+        ref_ind : list[list[int]]
+            Reference indices for merging results from different setups.
+        single_setups : list[SingleSetup]
+            A list of SingleSetup instances to be merged using the PoSER approach.
 
-Raises
-------
-ValueError
-    If any of the provided setups are invalid or incompatible.
-"""
+        Raises
+        ------
+        ValueError
+            If any of the provided setups are invalid or incompatible."""
         self._setups = (
             [el for el in self._init_setups(single_setups)] if single_setups else []
         )
@@ -829,25 +833,25 @@ ValueError
 
     def merge_results(self) -> typing.Dict[str, MsPoserResult]:
         """
-Merges results from individual setups into a combined result using the PoSER approach.
+        Merges results from individual setups into a combined result using the PoSER approach.
 
-This method groups algorithms by type across all setups and merges their results. It calculates 
-the mean and covariance of natural frequencies and damping ratios, and merges mode shapes.
+        This method groups algorithms by type across all setups and merges their results. It calculates
+        the mean and covariance of natural frequencies and damping ratios, and merges mode shapes.
 
-Returns
--------
-dict[str, MsPoserResult]
-    A dictionary containing the merged results for each algorithm type.
+        Returns
+        -------
+        dict[str, MsPoserResult]
+            A dictionary containing the merged results for each algorithm type.
 
-Raises
-------
-ValueError
-    If the method is called before running algorithms on the setups.
+        Raises
+        ------
+        ValueError
+            If the method is called before running algorithms on the setups.
 
-Notes
------
-- This method assumes that all SingleSetup instances have been processed by their respective algorithms.
-"""
+        Notes
+        -----
+        - This method assumes that all SingleSetup instances have been processed by
+          their respective algorithms."""
         # group algorithms by type
         alg_groups: typing.Dict[type[BaseAlgorithm], BaseAlgorithm] = {}
         for setup in self.setups:
@@ -904,39 +908,38 @@ Notes
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
         """
-Defines the first geometry setup (Geo1) for the instance.
+        Defines the first geometry setup (Geo1) for the instance.
 
-This method sets up the geometry involving sensors' names, coordinates, directions, 
-and optional elements like sensor lines, background nodes, lines, and surfaces.
+        This method sets up the geometry involving sensors' names, coordinates, directions,
+        and optional elements like sensor lines, background nodes, lines, and surfaces.
 
-Parameters
-----------
-sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
-    An array or list containing the names of the sensors.
-sens_coord : pd.DataFrame
-    A pandas DataFrame containing the coordinates of the sensors.
-sens_dir : npt.NDArray[np.int64]
-    An array defining the directions of the sensors.
-sens_lines : npt.NDArray[np.int64], optional
-    An array defining lines connecting sensors. Default is None.
-bg_nodes : npt.NDArray[np.float64], optional
-    An array defining background nodes. Default is None.
-bg_lines : npt.NDArray[np.int64], optional
-    An array defining background lines. Default is None.
-bg_surf : npt.NDArray[np.float64], optional
-    An array defining background surfaces. Default is None.
+        Parameters
+        ----------
+        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+            An array or list containing the names of the sensors.
+        sens_coord : pd.DataFrame
+            A pandas DataFrame containing the coordinates of the sensors.
+        sens_dir : npt.NDArray[np.int64]
+            An array defining the directions of the sensors.
+        sens_lines : npt.NDArray[np.int64], optional
+            An array defining lines connecting sensors. Default is None.
+        bg_nodes : npt.NDArray[np.float64], optional
+            An array defining background nodes. Default is None.
+        bg_lines : npt.NDArray[np.int64], optional
+            An array defining background lines. Default is None.
+        bg_surf : npt.NDArray[np.float64], optional
+            An array defining background surfaces. Default is None.
 
-Raises
-------
-AssertionError
-    If the number of sensors does not match between data, coordinates, and directions.
+        Raises
+        ------
+        AssertionError
+            If the number of sensors does not match between data, coordinates, and directions.
 
-Notes
------
-- The method performs various checks to ensure the integrity and consistency of the input data.
-- Adapts to zero-indexing for background lines if provided.
-- Reorders sensor coordinates and directions to match the provided sensor names.
-"""
+        Notes
+        -----
+        - The method performs various checks to ensure the integrity and consistency of the input data.
+        - Adapts to zero-indexing for background lines if provided.
+        - Reorders sensor coordinates and directions to match the provided sensor names."""
 
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
@@ -988,34 +991,34 @@ Notes
         remove_axis: bool = True,
     ):
         """
-        
 
-    Plots the geometry of tested structure.
 
-    This method visualizes the geometry of a structure, including sensor placements and directions. 
-    It allows customization of the plot through various parameters such as scaling factor, 
-    view type, and options to remove fill, grid, and axis from the plot.
+        Plots the geometry of tested structure.
 
-    Parameters
-    ----------
-    scaleF : int, optional
-        The scaling factor for the sensor direction quivers. A higher value results in 
-        longer quivers. Default is 1.
-    view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
-        The type of view for plotting the geometry. Options include 3D and 2D projections 
-        on various planes. Default is "3D".
-    remove_fill : bool, optional
-        If True, removes the fill from the plot. Default is True.
-    remove_grid : bool, optional
-        If True, removes the grid from the plot. Default is True.
-    remove_axis : bool, optional
-        If True, removes the axis labels and ticks from the plot. Default is True.
+        This method visualizes the geometry of a structure, including sensor placements and directions.
+        It allows customization of the plot through various parameters such as scaling factor,
+        view type, and options to remove fill, grid, and axis from the plot.
 
-    Returns
-    -------
-    tuple
-        A tuple containing the figure and axis objects of the plot. This can be used for 
-        further customization or saving the plot externally.
+        Parameters
+        ----------
+        scaleF : int, optional
+            The scaling factor for the sensor direction quivers. A higher value results in
+            longer quivers. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
+            The type of view for plotting the geometry. Options include 3D and 2D projections
+            on various planes. Default is "3D".
+        remove_fill : bool, optional
+            If True, removes the fill from the plot. Default is True.
+        remove_grid : bool, optional
+            If True, removes the grid from the plot. Default is True.
+        remove_axis : bool, optional
+            If True, removes the axis labels and ticks from the plot. Default is True.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the figure and axis objects of the plot. This can be used for
+            further customization or saving the plot externally.
 
         """
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
@@ -1081,44 +1084,43 @@ Notes
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
         """
-Defines the second geometry setup (Geo2) for the instance.
+        Defines the second geometry setup (Geo2) for the instance.
 
-This method sets up an alternative geometry configuration, including sensors' names, 
-points' coordinates, mapping, sign data, and optional elements like order reduction, 
-sensor lines, background nodes, lines, and surfaces.
+        This method sets up an alternative geometry configuration, including sensors' names,
+        points' coordinates, mapping, sign data, and optional elements like order reduction,
+        sensor lines, background nodes, lines, and surfaces.
 
-Parameters
-----------
-sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
-    An array or list containing the names of the sensors.
-pts_coord : pd.DataFrame
-    A DataFrame containing the coordinates of the points.
-sens_map : pd.DataFrame
-    A DataFrame containing the mapping data for sensors.
-sens_sign : pd.DataFrame
-    A DataFrame containing sign data for the sensors.
-order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
-    Specifies the order reduction if any. Default is None.
-sens_lines : npt.NDArray[np.int64], optional
-    An array defining lines connecting sensors. Default is None.
-bg_nodes : npt.NDArray[np.float64], optional
-    An array defining background nodes. Default is None.
-bg_lines : npt.NDArray[np.float64], optional
-    An array defining background lines. Default is None.
-bg_surf : npt.NDArray[np.float64], optional
-    An array defining background surfaces. Default is None.
+        Parameters
+        ----------
+        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+            An array or list containing the names of the sensors.
+        pts_coord : pd.DataFrame
+            A DataFrame containing the coordinates of the points.
+        sens_map : pd.DataFrame
+            A DataFrame containing the mapping data for sensors.
+        sens_sign : pd.DataFrame
+            A DataFrame containing sign data for the sensors.
+        order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
+            Specifies the order reduction if any. Default is None.
+        sens_lines : npt.NDArray[np.int64], optional
+            An array defining lines connecting sensors. Default is None.
+        bg_nodes : npt.NDArray[np.float64], optional
+            An array defining background nodes. Default is None.
+        bg_lines : npt.NDArray[np.float64], optional
+            An array defining background lines. Default is None.
+        bg_surf : npt.NDArray[np.float64], optional
+            An array defining background surfaces. Default is None.
 
-Raises
-------
-AssertionError
-    If the number of columns in mapping and sign data does not match the expected 
-    dimensions based on the order reduction.
+        Raises
+        ------
+        AssertionError
+            If the number of columns in mapping and sign data does not match the expected
+            dimensions based on the order reduction.
 
-Notes
------
-- Performs checks to ensure consistency and correctness of input data based on the order reduction.
-- Adapts to zero-indexing for sensor and background lines if provided.
-"""
+        Notes
+        -----
+        - Performs checks to ensure consistency and correctness of input data based on the order reduction.
+        - Adapts to zero-indexing for sensor and background lines if provided."""
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
@@ -1178,100 +1180,100 @@ Notes
         remove_axis: bool = True,
     ):
         """
-    Plots the geometry (type 2) of tested structure.
+        Plots the geometry (type 2) of tested structure.
 
-    This method creates a 3D or 2D plot of a specific geometric configuration (Geo2) with 
-    customizable features such as scaling factor, view type, and visibility options for 
-    fill, grid, and axes. It involves plotting sensor points, directions, and additional 
-    geometric elements if available.
+        This method creates a 3D or 2D plot of a specific geometric configuration (Geo2) with
+        customizable features such as scaling factor, view type, and visibility options for
+        fill, grid, and axes. It involves plotting sensor points, directions, and additional
+        geometric elements if available.
 
-    Parameters
-    ----------
-    scaleF : int, optional
-        Scaling factor for the quiver plots representing sensors' directions. Default is 1.
-    view : {'3D', 'xy', 'xz', 'yz'}, optional
-        Specifies the type of view for the plot. Can be a 3D view or 2D projections on 
-        various planes. Default is "3D".
-    remove_fill : bool, optional
-        If True, the plot's fill is removed. Default is True.
-    remove_grid : bool, optional
-        If True, the plot's grid is removed. Default is True.
-    remove_axis : bool, optional
-        If True, the plot's axes are removed. Default is True.
+        Parameters
+        ----------
+        scaleF : int, optional
+            Scaling factor for the quiver plots representing sensors' directions. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            Specifies the type of view for the plot. Can be a 3D view or 2D projections on
+            various planes. Default is "3D".
+        remove_fill : bool, optional
+            If True, the plot's fill is removed. Default is True.
+        remove_grid : bool, optional
+            If True, the plot's grid is removed. Default is True.
+        remove_axis : bool, optional
+            If True, the plot's axes are removed. Default is True.
 
-    Returns
-    -------
-    tuple
-        Returns a tuple containing the figure and axis objects of the matplotlib plot. 
-        This allows for further customization or saving outside the method.
+        Returns
+        -------
+        tuple
+            Returns a tuple containing the figure and axis objects of the matplotlib plot.
+            This allows for further customization or saving outside the method.
 
-    """
+        """
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
-        # plot sensors' 
-        pts = self.Geo2.pts_coord.to_numpy()[:,1:]
+        # plot sensors'
+        pts = self.Geo2.pts_coord.to_numpy()[:, 1:]
         plt_nodes(ax, pts, color="red")
 
         # plot sensors' directions
-        ch_names=self.Geo2.sens_map.to_numpy()[:,1:]
-        s_sign = self.Geo2.sens_sign.to_numpy()[:,1:] # array of signs
+        ch_names = self.Geo2.sens_map.to_numpy()[:, 1:]
+        s_sign = self.Geo2.sens_sign.to_numpy()[:, 1:]  # array of signs
         # N.B. the size of s_sign will vary depending on the order_red
-        # parameter. order_red="None" size(npts,3); 
+        # parameter. order_red="None" size(npts,3);
         # order_red="xy/xz/yz" size(npts,2);
         # order_red="x/y/z" size(npts,1)
         # (same for ch_names)
         ord_red = self.Geo2.order_red
-        zero1=np.zeros(s_sign.shape[0]).reshape(-1,1)
-        zero2=np.zeros((s_sign.shape[0],2))
-        if ord_red == None:
+        zero1 = np.zeros(s_sign.shape[0]).reshape(-1, 1)
+        zero2 = np.zeros((s_sign.shape[0], 2))
+        if ord_red is None:
             pass
         elif ord_red == "xy":
             s_sign = np.hstack((s_sign, zero1))
             ch_names = np.hstack((ch_names, zero1))
         elif ord_red == "xz":
-            s_sign = np.insert(s_sign,1,0)
-            ch_names = np.insert(ch_names,1,0)
+            s_sign = np.insert(s_sign, 1, 0)
+            ch_names = np.insert(ch_names, 1, 0)
         elif ord_red == "yz":
-            s_sign = np.hstack((zero1,s_sign))
-            ch_names = np.hstack((zero1,ch_names))
+            s_sign = np.hstack((zero1, s_sign))
+            ch_names = np.hstack((zero1, ch_names))
         elif ord_red == "x":
-            s_sign = np.hstack((s_sign,zero2))
-            ch_names = np.hstack((ch_names,zero2))
+            s_sign = np.hstack((s_sign, zero2))
+            ch_names = np.hstack((ch_names, zero2))
         elif ord_red == "y":
-            s_sign = np.insert(zero2,1,s_sign)
-            ch_names = np.insert(zero2,1,ch_names)
+            s_sign = np.insert(zero2, 1, s_sign)
+            ch_names = np.insert(zero2, 1, ch_names)
         elif ord_red == "z":
-            s_sign = np.hstack((zero2,s_sign))
-            ch_names = np.hstack((zero2,ch_names))
-        
+            s_sign = np.hstack((zero2, s_sign))
+            ch_names = np.hstack((zero2, ch_names))
+
         s_sign[s_sign == 0] = np.nan
         ch_names[ch_names == 0] = np.nan
         for ii in range(3):
-            s_sign1 = np.hstack((s_sign[:,0].reshape(-1,1), zero2))
-            s_sign2 = np.insert(zero2, 1, s_sign[:,1], axis=1)
-            s_sign3 = np.hstack((zero2, s_sign[:,2].reshape(-1,1)))
+            s_sign1 = np.hstack((s_sign[:, 0].reshape(-1, 1), zero2))
+            s_sign2 = np.insert(zero2, 1, s_sign[:, 1], axis=1)
+            s_sign3 = np.hstack((zero2, s_sign[:, 2].reshape(-1, 1)))
 
             plt_quiver(
                 ax,
                 pts,
                 s_sign1,
                 scaleF=scaleF,
-                names=ch_names[:,0],
+                names=ch_names[:, 0],
             )
             plt_quiver(
                 ax,
                 pts,
                 s_sign2,
                 scaleF=scaleF,
-                names=ch_names[:,1],
+                names=ch_names[:, 1],
             )
             plt_quiver(
                 ax,
                 pts,
                 s_sign3,
                 scaleF=scaleF,
-                names=ch_names[:,2],
+                names=ch_names[:, 2],
             )
 
         # Check that BG nodes are defined
@@ -1345,7 +1347,7 @@ Notes
             sens_coord,
             Geo1.sens_dir * phi.reshape(-1, 1),
             scaleF=scaleF,
-#            names=Geo1.sens_names,
+            #            names=Geo1.sens_names,
         )
 
         # Check that BG nodes are defined
@@ -1486,15 +1488,15 @@ Notes
 
 # -----------------------------------------------------------------------------
 
-#FIXME add reference!
+# FIXME add reference!
 class MultiSetup_PreGER(BaseSetup):
     """
     A class to conduct OMA of multi-setup experiments, with the
     "Pre Global Estimation Re-scaling" (PreGER) approach. (add reference)
 
     This class is designed to handle multiple datasets and apply the
-    pre-global estimation re-scaling method. It allows plotting of data, 
-    channel information, and geometric configurations, and provides methods 
+    pre-global estimation re-scaling method. It allows plotting of data,
+    channel information, and geometric configurations, and provides methods
     for data decimation and detrending.
 
     Attributes
@@ -1517,7 +1519,8 @@ class MultiSetup_PreGER(BaseSetup):
     plot_data(...)
         Plots the time histories of the data channels for selected datasets.
     plot_ch_info(...)
-        Plots Time History (TH), Power Spectral Density (PSD), and Kernel Density Estimation (KDE) for each channel.
+        Plots Time History (TH), Power Spectral Density (PSD), and Kernel Density Estimation (KDE)
+        for each channel.
     decimate_data(...)
         Applies decimation to the data using a wrapper method for scipy.signal.decimate function.
     detrend_data(...)
@@ -1531,12 +1534,14 @@ class MultiSetup_PreGER(BaseSetup):
     -----
     - The class inherits from `BaseSetup`, which provide foundational attributes and methods.
     - The `ref_ind` attribute determines how datasets are merged and scaled.
-    - The `plot_data` and `plot_ch_info` methods allow visualization of the datasets' time history and channel information.
+    - The `plot_data` and `plot_ch_info` methods allow visualization of the datasets'
+      time history and channel information.
     - The `decimate_data` and `detrend_data` methods provide preprocessing capabilities.
-    - The `def_geo1` and `def_geo2` methods allow setting up geometric configurations for the tested 
+    - The `def_geo1` and `def_geo2` methods allow setting up geometric configurations for the tested
         structure.
 
     """
+
     def __init__(
         self,
         fs: float,  # ! list[float]
@@ -1544,18 +1549,18 @@ class MultiSetup_PreGER(BaseSetup):
         datasets: typing.List[npt.NDArray[np.float64]],
     ):
         """
-Initializes the MultiSetup_PreGER instance with specified sampling frequency, reference indices, and datasets.
+        Initializes the MultiSetup_PreGER instance with specified sampling frequency,
+        reference indices, and datasets.
 
-Parameters
-----------
-fs : float
-    The sampling frequency common to all datasets.
-ref_ind : typing.List[typing.List[int]]
-    Reference indices for each dataset, used in the PreGER method.
-datasets : typing.List[npt.NDArray[np.float64]]
-    A list of datasets, each as a NumPy array.
-
-"""
+        Parameters
+        ----------
+        fs : float
+            The sampling frequency common to all datasets.
+        ref_ind : typing.List[typing.List[int]]
+            Reference indices for each dataset, used in the PreGER method.
+        datasets : typing.List[npt.NDArray[np.float64]]
+            A list of datasets, each as a NumPy array.
+        """
         self.fs = fs
         self.dt = 1 / fs
         self.ref_ind = ref_ind
@@ -1577,8 +1582,8 @@ datasets : typing.List[npt.NDArray[np.float64]]
         """
         Plots the time histories of the data channels for selected datasets.
 
-        Allows for visualization of the time history of each data channel across multiple datasets. 
-        Users can specify which datasets to plot, configure subplot layout, and optionally display 
+        Allows for visualization of the time history of each data channel across multiple datasets.
+        Users can specify which datasets to plot, configure subplot layout, and optionally display
         RMS acceleration.
 
         Parameters
@@ -1589,7 +1594,7 @@ datasets : typing.List[npt.NDArray[np.float64]]
         nc : int, optional
             Number of columns for the subplot layout. Default is 1.
         names : typing.Optional[typing.List[str]], optional
-            Names for the channels in each dataset. If provided, these names are used as labels. 
+            Names for the channels in each dataset. If provided, these names are used as labels.
             Default is None.
         unit : str, optional
             Unit of measurement for the y-axis. Default is "unit".
@@ -1612,7 +1617,7 @@ datasets : typing.List[npt.NDArray[np.float64]]
             datasets = self.datasets
 
         dt = self.dt
-        figs, axs = [],[]
+        figs, axs = [], []
         for ii, data in enumerate(datasets):
             nc = nc  # number of columns for subplot
             if names is not None:
@@ -1628,21 +1633,22 @@ datasets : typing.List[npt.NDArray[np.float64]]
 
     # method to plot TH, PSD and KDE for each channel
     def plot_ch_info(
-            self,
-            data_idx: str | list[int] = "all",
-            ch_idx: str | list[int] = "all",
-            ch_names: typing.Optional[typing.List[str]] = None,
-            freqlim: float | None = None,
-            logscale: bool = True,
-            nxseg: float | None = None,
-            pov: float = 0.,
-            window: str = "boxcar"
+        self,
+        data_idx: str | list[int] = "all",
+        ch_idx: str | list[int] = "all",
+        ch_names: typing.Optional[typing.List[str]] = None,
+        freqlim: float | None = None,
+        logscale: bool = True,
+        nxseg: float | None = None,
+        pov: float = 0.0,
+        window: str = "boxcar",
     ):
         """
-        Plots Time History (TH), Power Spectral Density (PSD), and Kernel Density Estimation (KDE) for each channel.
+        Plots Time History (TH), Power Spectral Density (PSD), and
+        Kernel Density Estimation (KDE) for each channel.
 
-        This method generates plots for TH, PSD, and KDE for the specified channels across 
-        multiple datasets. Allows configuration of frequency limits, log scale, segments for 
+        This method generates plots for TH, PSD, and KDE for the specified channels across
+        multiple datasets. Allows configuration of frequency limits, log scale, segments for
         PSD calculation, overlap percentage, and windowing function.
 
         Parameters
@@ -1679,31 +1685,38 @@ datasets : typing.List[npt.NDArray[np.float64]]
         else:
             datasets = self.datasets
         fs = self.fs
-        figs, axs = [],[]
+        figs, axs = [], []
         for data in datasets:
-            fig, ax = plt_ch_info(data, fs, ch_idx, ch_names=ch_names,
-                                  freqlim=freqlim, logscale=logscale,
-                                  nxseg=nxseg, pov=pov, window=window)
+            fig, ax = plt_ch_info(
+                data,
+                fs,
+                ch_idx,
+                ch_names=ch_names,
+                freqlim=freqlim,
+                logscale=logscale,
+                nxseg=nxseg,
+                pov=pov,
+                window=window,
+            )
             figs.append(fig)
             axs.append(ax)
         return figs, axs
 
-
     # method to decimate data
     def decimate_data(
-            self,
-            q:int,
-            n: int|None=None,
-            ftype:typing.Literal["iir", "fir"]='iir',
-            axis:int = 0,
-            zero_phase: bool =True):
+        self,
+        q: int,
+        n: int | None = None,
+        ftype: typing.Literal["iir", "fir"] = "iir",
+        axis: int = 0,
+        zero_phase: bool = True,
+    ):
         """
-wrapper method for scipy.signal.decimate function
-"""
+        wrapper method for scipy.signal.decimate function"""
         datasets = self.datasets
-        newdatasets=[]
+        newdatasets = []
         for data in datasets:
-            newdata = decimate(data,q,n,ftype,axis,zero_phase)
+            newdata = decimate(data, q, n, ftype, axis, zero_phase)
             newdatasets.append(newdata)
 
         Y = PRE_MultiSetup(newdatasets, self.ref_ind)
@@ -1711,26 +1724,23 @@ wrapper method for scipy.signal.decimate function
         self.fs = self.fs / q
         self.dt = 1 / self.fs
 
-
     # method to detrend data
     def detrend_data(
-            self,
-            axis:int = 0,
-            type:typing.Literal["linear", "constant"]='linear',
-            bp:  int | npt.NDArray[np.int64] = 0,
-            ):
+        self,
+        axis: int = 0,
+        type: typing.Literal["linear", "constant"] = "linear",
+        bp: int | npt.NDArray[np.int64] = 0,
+    ):
         """
-wrapper method for scipy.signal.detrend function
-"""
+        wrapper method for scipy.signal.detrend function"""
         datasets = self.datasets
-        newdatasets=[]
+        newdatasets = []
         for data in datasets:
-            newdata = detrend(data,axis,type,bp)
+            newdata = detrend(data, axis, type, bp)
             newdatasets.append(newdata)
 
         Y = PRE_MultiSetup(newdatasets, self.ref_ind)
         self.data = Y
-
 
     # metodo per definire geometria 1
     def def_geo1(
@@ -1746,39 +1756,38 @@ wrapper method for scipy.signal.detrend function
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
         """
-Defines the first geometry setup (Geo1) for the instance.
+        Defines the first geometry setup (Geo1) for the instance.
 
-This method sets up the geometry involving sensors' names, coordinates, directions, 
-and optional elements like sensor lines, background nodes, lines, and surfaces.
+        This method sets up the geometry involving sensors' names, coordinates, directions,
+        and optional elements like sensor lines, background nodes, lines, and surfaces.
 
-Parameters
-----------
-sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
-    An array or list containing the names of the sensors.
-sens_coord : pd.DataFrame
-    A pandas DataFrame containing the coordinates of the sensors.
-sens_dir : npt.NDArray[np.int64]
-    An array defining the directions of the sensors.
-sens_lines : npt.NDArray[np.int64], optional
-    An array defining lines connecting sensors. Default is None.
-bg_nodes : npt.NDArray[np.float64], optional
-    An array defining background nodes. Default is None.
-bg_lines : npt.NDArray[np.int64], optional
-    An array defining background lines. Default is None.
-bg_surf : npt.NDArray[np.float64], optional
-    An array defining background surfaces. Default is None.
+        Parameters
+        ----------
+        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+            An array or list containing the names of the sensors.
+        sens_coord : pd.DataFrame
+            A pandas DataFrame containing the coordinates of the sensors.
+        sens_dir : npt.NDArray[np.int64]
+            An array defining the directions of the sensors.
+        sens_lines : npt.NDArray[np.int64], optional
+            An array defining lines connecting sensors. Default is None.
+        bg_nodes : npt.NDArray[np.float64], optional
+            An array defining background nodes. Default is None.
+        bg_lines : npt.NDArray[np.int64], optional
+            An array defining background lines. Default is None.
+        bg_surf : npt.NDArray[np.float64], optional
+            An array defining background surfaces. Default is None.
 
-Raises
-------
-AssertionError
-    If the number of sensors does not match between data, coordinates, and directions.
+        Raises
+        ------
+        AssertionError
+            If the number of sensors does not match between data, coordinates, and directions.
 
-Notes
------
-- The method performs various checks to ensure the integrity and consistency of the input data.
-- Adapts to zero-indexing for background lines if provided.
-- Reorders sensor coordinates and directions to match the provided sensor names.
-"""
+        Notes
+        -----
+        - The method performs various checks to ensure the integrity and consistency of the input data.
+        - Adapts to zero-indexing for background lines if provided.
+        - Reorders sensor coordinates and directions to match the provided sensor names."""
 
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
@@ -1835,44 +1844,43 @@ Notes
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
         """
-Defines the second geometry setup (Geo2) for the instance.
+        Defines the second geometry setup (Geo2) for the instance.
 
-This method sets up an alternative geometry configuration, including sensors' names, 
-points' coordinates, mapping, sign data, and optional elements like order reduction, 
-sensor lines, background nodes, lines, and surfaces.
+        This method sets up an alternative geometry configuration, including sensors' names,
+        points' coordinates, mapping, sign data, and optional elements like order reduction,
+        sensor lines, background nodes, lines, and surfaces.
 
-Parameters
-----------
-sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
-    An array or list containing the names of the sensors.
-pts_coord : pd.DataFrame
-    A DataFrame containing the coordinates of the points.
-sens_map : pd.DataFrame
-    A DataFrame containing the mapping data for sensors.
-sens_sign : pd.DataFrame
-    A DataFrame containing sign data for the sensors.
-order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
-    Specifies the order reduction if any. Default is None.
-sens_lines : npt.NDArray[np.int64], optional
-    An array defining lines connecting sensors. Default is None.
-bg_nodes : npt.NDArray[np.float64], optional
-    An array defining background nodes. Default is None.
-bg_lines : npt.NDArray[np.float64], optional
-    An array defining background lines. Default is None.
-bg_surf : npt.NDArray[np.float64], optional
-    An array defining background surfaces. Default is None.
+        Parameters
+        ----------
+        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+            An array or list containing the names of the sensors.
+        pts_coord : pd.DataFrame
+            A DataFrame containing the coordinates of the points.
+        sens_map : pd.DataFrame
+            A DataFrame containing the mapping data for sensors.
+        sens_sign : pd.DataFrame
+            A DataFrame containing sign data for the sensors.
+        order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
+            Specifies the order reduction if any. Default is None.
+        sens_lines : npt.NDArray[np.int64], optional
+            An array defining lines connecting sensors. Default is None.
+        bg_nodes : npt.NDArray[np.float64], optional
+            An array defining background nodes. Default is None.
+        bg_lines : npt.NDArray[np.float64], optional
+            An array defining background lines. Default is None.
+        bg_surf : npt.NDArray[np.float64], optional
+            An array defining background surfaces. Default is None.
 
-Raises
-------
-AssertionError
-    If the number of columns in mapping and sign data does not match the expected 
-    dimensions based on the order reduction.
+        Raises
+        ------
+        AssertionError
+            If the number of columns in mapping and sign data does not match the expected
+            dimensions based on the order reduction.
 
-Notes
------
-- Performs checks to ensure consistency and correctness of input data based on the order reduction.
-- Adapts to zero-indexing for sensor and background lines if provided.
-"""
+        Notes
+        -----
+        - Performs checks to ensure consistency and correctness of input data based on the order reduction.
+        - Adapts to zero-indexing for sensor and background lines if provided."""
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
