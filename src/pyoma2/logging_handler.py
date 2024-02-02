@@ -29,4 +29,8 @@ def configure_logging() -> logging.Logger:
     ch.setFormatter(formatter)
     # Add the handlers to the logger
     logger.addHandler(ch)
+
+    # disable logging from matplotlib
+    if os.getenv("PYOMA_DISABLE_MATPLOTLIB_LOGGING", "True") in ["True", "true", "1"]:
+        logging.getLogger("matplotlib").setLevel(logging.CRITICAL + 1)
     return logger
