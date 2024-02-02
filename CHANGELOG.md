@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2024-02-02
+
 ### Added
 - methods: `plot_data()`, `plot_ch_info()`, `detrend_data()`, `decimate_data()` to Multisetup preGER class
 - info.svg chart to README
@@ -21,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - name to single setup example notebook
 - minor reorganisation of `pLSCF_funct.py`
 - updated README.md with link to the example notebooks
+- add `PYOMA_DISABLE_MATPLOTLIB_LOGGING` env variable to disable matplotlib logging, default to True
 
 ### Fixed
 - error to `plot_geo2()` method for both SS and MS ***(WARNING posx,posy)***
