@@ -196,7 +196,7 @@ def Lab_stab_pLSCF(Fn, Sm, ordmax, err_fn, err_xi, max_xi):
 
 # -----------------------------------------------------------------------------
 
-#FIXME
+# FIXME
 # The returned mode shapes are wrong!
 # find the error!
 def pLSCF_MPE_New(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
@@ -228,13 +228,13 @@ def pLSCF_MPE_New(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
     GL = np.zeros((Nch * Nm, Nch), dtype=complex)  # inizializzo
     Sy = np.moveaxis(Sy, 2, 0)
     sel_lam_conj = np.conj(sel_lam)
-    sel_lam1 = np.empty((len(sel_lam)*2), dtype=complex)
+    sel_lam1 = np.empty((len(sel_lam) * 2), dtype=complex)
     sel_lam1[0::2] = sel_lam
     sel_lam1[1::2] = sel_lam_conj
 
     for kk in range(Nf):
         GL += np.array(
-            [Sy[kk, :, :] / (1j * freq_rad[kk] - sel_lam1[jj]) for jj in range(2*Nm)]
+            [Sy[kk, :, :] / (1j * freq_rad[kk] - sel_lam1[jj]) for jj in range(2 * Nm)]
         ).reshape(-1, Nch)
 
         LL += np.array(
@@ -246,14 +246,14 @@ def pLSCF_MPE_New(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
                             (1j * freq_rad[kk] - sel_lam1[jj1])
                             * (1j * freq_rad[kk] - sel_lam1[jj2])
                         )
-                        for jj2 in range(2*Nm)
+                        for jj2 in range(2 * Nm)
                     ]
                 )
                 .reshape((Nch * Nm, Nch), order="c")
                 .T
-                for jj1 in range(2*Nm)
+                for jj1 in range(2 * Nm)
             ]
-        ).reshape((Nch * 2*Nm, Nch * 2*Nm))
+        ).reshape((Nch * 2 * Nm, Nch * 2 * Nm))
 
     R = np.linalg.solve(LL, GL)  # matrice dei residui (fi@fi^T
 
@@ -272,4 +272,3 @@ def pLSCF_MPE_New(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
     Xi = np.array(sel_xi)
 
     return Fn, Xi, Phi
-

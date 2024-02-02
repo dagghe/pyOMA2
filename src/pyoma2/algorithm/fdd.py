@@ -151,7 +151,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
             sens_coord,
             Geo1.sens_dir * phi.reshape(-1, 1),
             scaleF=scaleF,
-#            names=Geo1.sens_names,
+            #            names=Geo1.sens_names,
         )
 
         # Check that BG nodes are defined
@@ -318,7 +318,7 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         self.run_params.MAClim = MAClim
         self.run_params.sppk = sppk
         self.run_params.npmax = npmax
-        
+
         # Extract modal results
         Fn_FDD, Xi_FDD, Phi_FDD, forPlot = FDD_funct.EFDD_MPE(
             self.result.Sy,
@@ -359,7 +359,7 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         self.run_params.MAClim = MAClim
         self.run_params.sppk = sppk
         self.run_params.npmax = npmax
-        
+
         # chiamare plot interattivo
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
         sel_freq = SFP.result[0]

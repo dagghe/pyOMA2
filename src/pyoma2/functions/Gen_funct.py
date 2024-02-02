@@ -7,7 +7,7 @@ import typing
 
 import numpy as np
 
-#FIXME =============================================================================
+# FIXME =============================================================================
 # FUNZIONI GENERALI
 # N.B. citare e ringraziare JANKO E PYEMA!!
 # (SDypy https://github.com/sdypy/sdypy)
@@ -18,30 +18,29 @@ def merge_mode_shapes(
     MSarr_list: typing.List[np.ndarray], reflist: typing.List[typing.List[int]]
 ) -> np.ndarray:
     """
-Merges multiple mode shape arrays from different setups into a single mode shape array.
+    Merges multiple mode shape arrays from different setups into a single mode shape array.
 
-This function combines mode shape arrays from different experimental setups into a single array. 
-It uses a list of reference sensor indices for each setup to align and scale the mode shapes. 
-The function ensures that all mode shape arrays have the same number of modes and merges them 
-by keeping the reference sensor data from the first setup and appropriately scaling and appending 
-the data from roving sensors of subsequent setups.
+    This function combines mode shape arrays from different experimental setups into a single array.
+    It uses a list of reference sensor indices for each setup to align and scale the mode shapes.
+    The function ensures that all mode shape arrays have the same number of modes and merges them
+    by keeping the reference sensor data from the first setup and appropriately scaling and appending
+    the data from roving sensors of subsequent setups.
 
-Parameters:
-- MSarr_list (List[np.ndarray]): A list of mode shape arrays. Each array in the list corresponds 
-  to a different experimental setup. Each array should have dimensions [N x M], where N is the number 
-  of sensors (including both reference and roving sensors) and M is the number of modes.
-- reflist (List[List[int]]): A list of lists containing the indices of reference sensors. Each sublist 
-  corresponds to the indices of the reference sensors used in the corresponding setup in `MSarr_list`. 
-  Each sublist should contain the same number of elements.
+    Parameters:
+    - MSarr_list (List[np.ndarray]): A list of mode shape arrays. Each array in the list corresponds
+      to a different experimental setup. Each array should have dimensions [N x M], where N is the number
+      of sensors (including both reference and roving sensors) and M is the number of modes.
+    - reflist (List[List[int]]): A list of lists containing the indices of reference sensors. Each sublist
+      corresponds to the indices of the reference sensors used in the corresponding setup in `MSarr_list`.
+      Each sublist should contain the same number of elements.
 
-Returns:
-- np.ndarray: A merged mode shape array. The number of rows in the array equals the sum of the number 
-  of unique sensors across all setups minus the number of reference sensors in each setup (except the first one). 
-  The number of columns equals the number of modes.
+    Returns:
+    - np.ndarray: A merged mode shape array. The number of rows in the array equals the sum of the number
+      of unique sensors across all setups minus the number of reference sensors in each setup
+      (except the first one). The number of columns equals the number of modes.
 
-Raises:
-- ValueError: If the mode shape arrays in `MSarr_list` do not have the same number of modes.
-"""
+    Raises:
+    - ValueError: If the mode shape arrays in `MSarr_list` do not have the same number of modes."""
     Nsetup = len(MSarr_list)  # number of setup
     Nmodes = MSarr_list[0].shape[1]  # number of modes
     Nref = len(reflist[0])  # number of reference sensors
@@ -268,12 +267,12 @@ def invperm(p):
     """
     Compute the inverse permutation of a given array.
 
-    Given a permutation array `p`, this function creates an array `q` such 
-    that `q[p[i]] = i` for each element `i` in `p`. This effectively computes 
+    Given a permutation array `p`, this function creates an array `q` such
+    that `q[p[i]] = i` for each element `i` in `p`. This effectively computes
     the inverse of the permutation represented by `p`.
 
     Parameters:
-    p (array-like): A permutation of integers from 0 to n-1, where n is the 
+    p (array-like): A permutation of integers from 0 to n-1, where n is the
                     length of the array.
 
     Returns:
@@ -295,18 +294,18 @@ def find_map(arr1, arr2):
     """
     Map the elements of one array to another based on sorting order.
 
-    This function finds a mapping from the elements of `arr1` to `arr2` such 
-    that the order of elements in `arr1` is preserved in `arr2`. It first 
-    sorts both arrays and then uses the inverse permutation of the sorting 
+    This function finds a mapping from the elements of `arr1` to `arr2` such
+    that the order of elements in `arr1` is preserved in `arr2`. It first
+    sorts both arrays and then uses the inverse permutation of the sorting
     order of `arr1` to map its elements to the corresponding elements in `arr2`.
 
     Parameters:
     arr1 (array-like): The first input array.
-    arr2 (array-like): The second input array, which should have the same 
+    arr2 (array-like): The second input array, which should have the same
                        length as `arr1`.
 
     Returns:
-    ndarray: An array of indices that maps the sorted version of `arr1` to 
+    ndarray: An array of indices that maps the sorted version of `arr1` to
              the sorted version of `arr2`.
 
     Example:

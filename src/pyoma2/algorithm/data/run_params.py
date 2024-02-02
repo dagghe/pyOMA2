@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict
 
 class FDDRunParams(BaseModel):
     """Class for storing FDD run parameters data."""
+
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # METODO 1: run
     nxseg: int = 1024
@@ -24,6 +25,7 @@ class FDDRunParams(BaseModel):
 
 class EFDDRunParams(BaseModel):
     """Class for storing EFDD/FSDD run parameters data."""
+
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # METODO 1: run
     nxseg: int = 1024
@@ -41,6 +43,7 @@ class EFDDRunParams(BaseModel):
 
 class SSIRunParams(BaseModel):
     """Class for storing SSIcov/dat run parameters data."""
+
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # METODO 1: run
     br: int

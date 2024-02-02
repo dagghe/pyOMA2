@@ -77,7 +77,8 @@ class AniMode:
         - Res (BaseResult or MsPoserResult): Result object containing modal analysis data.
         - mode_numb (int): Mode number to visualize.
         - scaleF (int, optional): Scale factor for mode shape animation. Default is 1.
-        - view (str, optional): View for the 3D plot. Can be '3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'. Default is '3D'.
+        - view (str, optional): View for the 3D plot. Can be '3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'.
+          Default is '3D'.
         - remove_fill (bool, optional): Whether to remove fill from the plot. Default is True.
         - remove_grid (bool, optional): Whether to remove the grid from the plot. Default is True.
         - remove_axis (bool, optional): Whether to remove the axis from the plot. Default is True.
