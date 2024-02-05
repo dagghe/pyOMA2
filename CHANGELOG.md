@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- some docstrings for fdd.py
+- option to save gif figure from animation of the mode shape
+
+### Changed
+- the `freqlim` argument in all the plot function has been changed to a tuple, so to set both an upper and a lower limit to the x (frequency) axis
+
+### Fixed
+- docstring fix for OMA.py
+- default ax value to 0 for `detrend_data()` and `decimate_data()` methods
+
 ## [0.3.0] - 2024-02-02
 
 ### Added

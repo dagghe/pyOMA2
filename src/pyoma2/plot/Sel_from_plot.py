@@ -81,7 +81,7 @@ class SelFromPlot:
         if freqlim is not None:
             self.freqlim = freqlim
         else:
-            self.freqlim = self.fs / 2  # Nyquist frequency
+            self.freqlim = (0.0, self.fs / 2)  # Nyquist frequency
 
         # inizializzo TK e check su shift
         self.shift_is_held = False
