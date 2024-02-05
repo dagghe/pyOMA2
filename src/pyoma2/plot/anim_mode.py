@@ -66,6 +66,7 @@ class AniMode:
         remove_fill: bool = True,
         remove_grid: bool = True,
         remove_axis: bool = True,
+        saveGIF: bool = False,
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -95,6 +96,7 @@ class AniMode:
         self.remove_axis = remove_axis
         self.remove_fill = remove_fill
         self.remove_grid = remove_grid
+        self.saveGIF = saveGIF
 
         self.nodes_coord = self.Geo.pts_coord
         self.sens_names = self.Geo.sens_names
@@ -234,6 +236,11 @@ class AniMode:
             )
 
         plt.show()
+        if self.saveGIF is True:
+            writer = animation.PillowWriter(
+                fps=15, metadata=dict(artist="Me"), bitrate=1800
+            )
+            self.ani.save(f"mode_numb_{self.mode_numb}.gif", writer=writer)
 
     def on_closing(self):
         self.root.quit()

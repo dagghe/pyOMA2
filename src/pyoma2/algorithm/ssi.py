@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 # SINGLE SETUP
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
+# FIXME ADD REFERENCES!!
 class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
     """
     Data-Driven Stochastic Subspace Identification (SSI) algorithm for single setup.
@@ -56,7 +57,30 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
       Default is 0.03
     - xi_max (float, optional): Threshold for max allowed damping. Default is  0.1
 
-    Methods:
+    Methods
+    -------
+    run()
+        Executes the SSIdat algorithm on data, returning results including state space
+        matrices and modal parameters.
+    mpe(...)
+        Extracts the modal parameters at selected frequencies.
+    mpe_fromPlot(...)
+        Allows user to interactively select frequencies from a plot for modal parameter extraction.
+    plot_STDiag(...)
+        Plots the Stability Diagram for the SSIdat algorithm.
+    plot_cluster(...)
+        Plots the cluster diagram for the identified modal parameters.
+    plot_mode_g1(...)
+        Plots the mode shapes for a given mode number using Geometry1.
+    plot_mode_g2(...)
+        Plots the mode shapes for a given mode number using Geometry2.
+    anim_mode_g2(...)
+        Creates an animation of the mode shapes for a given mode number using Geometry2.
+
+    Notes
+    -----
+    - This class is designed for single-setup scenarios, where data from one setup or condition
+      is analyzed.
     """
 
     RunParamCls = SSIRunParams
@@ -149,7 +173,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 
     def mpe_fromPlot(
         self,
-        freqlim: typing.Optional[float] = None,
+        freqlim: typing.Optional[tuple[float, float]] = None,
         deltaf: float = 0.05,
         rtol: float = 1e-2,
     ) -> typing.Any:
@@ -190,7 +214,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 
     def plot_STDiag(
         self,
-        freqlim: typing.Optional[float] = None,
+        freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
         """
@@ -219,11 +243,30 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 
     def plot_cluster(
         self,
-        freqlim: typing.Optional[float] = None,
+        freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
+        """
+        Plots the frequency-damping clustering of poles identified by the algorithm.
+
+        Parameters
+        ----------
+        freqlim : typing.Optional[float], optional
+            Specifies the frequency limit for the plot. If None, the limit is determined automatically.
+            Default is None.
+        hide_poles : typing.Optional[bool], optional
+            If True, hides the poles in the plot for clarity. Default is True.
+
+        Returns
+        -------
+        typing.Any
+            A tuple containing the figure and axis objects of the plot. This allows for further
+            customization or saving outside the method.
+
+        Notes
+        -----
+        - This method is part of the SSIdat algorithm suite and is intended for use with data
+          processed by this algorithm.
         """
         if not self.result:
             raise ValueError("Run algorithm first")
@@ -417,6 +460,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         remove_fill: bool = True,
         remove_grid: bool = True,
         remove_axis: bool = True,
+        saveGIF: bool = False,
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -451,12 +495,14 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
             remove_axis=remove_axis,
             remove_fill=remove_fill,
             remove_grid=remove_grid,
+            saveGIF=saveGIF,
         )
         logger.debug("...end AniMode SSI...")
 
 
 # ------------------------------------------------------------------------------
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
+# FIXME ADD REFERENCE
 class SSIcov_algo(SSIdat_algo):
     """
     Covariance-based Stochastic Subspace Identification (SSI) algorithm for single setup.
@@ -474,7 +520,30 @@ class SSIcov_algo(SSIdat_algo):
     - err_phi (float, optional):Threshold for mode shampes difference for stability checks. Default is 0.03
     - xi_max (float, optional): Threshold for max allowed damping. Default is  0.1
 
-    Methods:
+    Methods
+    -------
+    run()
+        Executes the SSIcov algorithm on data, returning results including state space
+        matrices and modal parameters.
+    mpe(...)
+        Extracts the modal parameters at selected frequencies.
+    mpe_fromPlot(...)
+        Allows user to interactively select frequencies from a plot for modal parameter extraction.
+    plot_STDiag(...)
+        Plots the Stability Diagram for the SSIdat algorithm.
+    plot_cluster(...)
+        Plots the cluster diagram for the identified modal parameters.
+    plot_mode_g1(...)
+        Plots the mode shapes for a given mode number using Geometry1.
+    plot_mode_g2(...)
+        Plots the mode shapes for a given mode number using Geometry2.
+    anim_mode_g2(...)
+        Creates an animation of the mode shapes for a given mode number using Geometry2.
+
+    Notes
+    -----
+    - This class is designed for single-setup scenarios, where data from one setup or condition
+      is analyzed.
     """
 
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
@@ -485,7 +554,34 @@ class SSIcov_algo(SSIdat_algo):
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]):
+    """
+    Data-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup experiments.
+
+    This class extends the SSIdat_algo class to handle multiple setups. It is used for identifying
+    system dynamics using multiple experimental setups.
+
+    Attributes
+    ----------
+    Same as SSIdat_algo.
+
+    Methods
+    -------
+    run() -> SSIResult
+        Executes the algorithm for multiple setups and returns the identification results.
+    """
+
     def run(self) -> SSIResult:
+        """
+        Executes the SSI algorithm for multiple setups and saves the results.
+
+        This method processes the provided multiple-setup data to extract the system matrices,
+        frequency poles, damping ratios, and mode shapes. It builds a Hankel matrix and uses the
+        SSI algorithm to compute the state and output matrices.
+
+        Returns
+        -------
+        SSIResult
+            An SSIResult object containing the system matrices, poles, damping ratios, and mode shapes."""
         super()._pre_run()
         Y = self.data
         br = self.run_params.br
@@ -524,4 +620,19 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
 # ------------------------------------------------------------------------------
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIcov_algo_MS(SSIdat_algo_MS):
+    """
+    Covariance-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup experiments.
+
+    This class extends the SSIdat_algo_MS class, focusing on the covariance-driven approach.
+    It's suitable for identifying system dynamics in multiple experimental setups.
+
+    Attributes
+    ----------
+    method : typing.Literal["cov_bias", "cov_mm", "cov_unb"]
+        The specific covariance method used. Options are "cov_bias", "cov_mm", "cov_unb".
+
+    Methods
+    -------
+    Inherits methods from SSIdat_algo_MS."""
+
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"

@@ -38,12 +38,38 @@ logger = logging.getLogger(__name__)
 
 class BaseSetup:
     """
-    This is the BaseSetup class. This class has methods used by both
+    BaseSetup class for operational modal analysis.
+
+    This class provides foundational methods and attributes used by both
     SingleSetup and MultiSetup_PreGER classes.
+    It is not intended to be instantiated directly by users but serves as a
+    superclass for specific setup types.
 
-    N.B.
-        This class is not instantiated by the users
+    Methods
+    -------
+    add_algorithms(*algorithms)
+        Adds algorithms to the setup and sets the data and sampling frequency for them.
+    run_all()
+        Runs all the algorithms added to the class.
+    run_by_name(name)
+        Executes a specific algorithm by its name.
+    MPE(name, *args, **kwargs)
+        Extracts modal parameters from selected poles/peaks.
+    MPE_fromPlot(name, *args, **kwargs)
+        Extracts modal parameters directly from plot selections.
+    plot_geo1(scaleF, view, remove_fill, remove_grid, remove_axis)
+        Plots the first type of geometry setup for the structure.
+    plot_geo2(scaleF, view, remove_fill, remove_grid, remove_axis)
+        Plots the second type of geometry setup for the structure.
 
+    Notes
+    -----
+    - The BaseSetup class is designed as a common interface for handling different
+     types of setup configurations.
+    - Algorithms must be instantiated and have unique names before being
+     added to the setup.
+    - The class provides methods for running algorithms and extracting modal properties,
+     as well as visualizing geometries.
     """
 
     algorithms: typing.Dict[str, BaseAlgorithm]
@@ -340,6 +366,73 @@ class BaseSetup:
 
 
 class SingleSetup(BaseSetup):
+    """
+    A class for managing and processing single setup data for operational modal analysis.
+
+    This class is designed for handling data from a single setup (e.g., a single test or measurement session),
+    including plotting, data processing, and interaction with various analysis algorithms.
+    It inherits several methods from the BaseSetup class.
+
+    Parameters
+    ----------
+    data : np.array(float)
+        The data to be processed, expected as an iterable of floats.
+    fs : float
+        The sampling frequency of the data.
+
+    Attributes
+    ----------
+    data : typing.Iterable[float]
+        Stores the input data.
+    fs : float
+        Stores the sampling frequency.
+    dt : float
+        The sampling interval, calculated as the inverse of the sampling frequency.
+    algorithms : typing.Dict[str, BaseAlgorithm]
+        A dictionary to store algorithms associated with the setup.
+
+    Methods, inherited from BaseSetup
+    -------
+    add_algorithms(*algorithms)
+        Adds algorithms to the setup and sets the data and sampling frequency for them.
+    run_all()
+        Runs all the algorithms added to the class.
+    run_by_name(name)
+        Executes a specific algorithm by its name.
+    MPE(name, *args, **kwargs)
+        Extracts modal parameters from selected poles/peaks.
+    MPE_fromPlot(name, *args, **kwargs)
+        Extracts modal parameters directly from plot selections.
+    plot_geo1(scaleF, view, remove_fill, remove_grid, remove_axis)
+        Plots the first type of geometry setup for the structure.
+    plot_geo2(scaleF, view, remove_fill, remove_grid, remove_axis)
+        Plots the second type of geometry setup for the structure.
+
+    Methods
+    -------
+    plot_data(nc, names, unit, show_rms)
+        Plots the time histories of the data channels in a subplot format.
+    plot_ch_info(ch_idx, ch_names, freqlim, logscale, nxseg, pov, window)
+        Plots Time History (TH), Power Spectral Density (PSD),
+        and Kernel Density Estimation (KDE) for each channel.
+    decimate_data(q, n, ftype, axis, zero_phase)
+        Decimates the data using a wrapper for the scipy.signal.decimate function.
+    detrend_data(axis, type, bp)
+        Detrends the data using a wrapper for the scipy.signal.detrend function.
+    def_geo1(sens_names, sens_coord, sens_dir, sens_lines, bg_nodes, bg_lines, bg_surf)
+        Defines the first geometry setup (Geo1) for the instance.
+    def_geo2(sens_names, pts_coord, sens_map, sens_sign, order_red, sens_lines, bg_nodes, bg_lines, bg_surf)
+        Defines the second geometry setup (Geo2) for the instance.
+    __getitem__(name)
+        Retrieve an algorithm from the set by its name.
+    get(name, default)
+        Retrieve an algorithm from the set by its name, returning a default value if it does not exist.
+
+    Notes
+    -----
+    - The sampling interval `dt` is calculated automatically from the provided sampling frequency.
+    - `algorithms` dictionary is initialized empty and is meant to store various algorithms as needed."""
+
     def __init__(self, data: typing.Iterable[float], fs: float):
         """
         Initialize a SingleSetup instance with data and sampling frequency.
@@ -423,7 +516,7 @@ class SingleSetup(BaseSetup):
         self,
         ch_idx: str | list[int] = "all",
         ch_names: typing.Optional[typing.List[str]] = None,
-        freqlim: float | None = None,
+        freqlim: tuple[float, float] | None = None,
         logscale: bool = True,
         nxseg: float | None = None,
         pov: float = 0.0,
@@ -499,7 +592,7 @@ class SingleSetup(BaseSetup):
     # method to detrend data
     def detrend_data(
         self,
-        axis: int = -1,
+        axis: int = 0,
         type: typing.Literal["linear", "constant"] = "linear",
         bp: int | npt.NDArray[np.int64] = 0,
     ):
@@ -705,8 +798,6 @@ class MultiSetup_PoSER:
     A class to conduct OMA of multi-setup experiments, with the
     "Post Separate Estimation Re-scaling" (PoSER) approach. (add reference)
 
-    bla bla bla
-
     Attributes
     ----------
     __result : typing.Optional[typing.Dict[str, MsPoserResult]]
@@ -724,6 +815,14 @@ class MultiSetup_PoSER:
         Plots the mode shapes for Geometry 2 setup using results from an algorithm.
     anim_mode_g2(...)
         Creates an animation for the mode shapes for Geometry 2 setup using results from an algorithm.
+    def_geo1(...)
+        Defines the first geometry setup (Geo1) for the instance.
+    def_geo2(...)
+        Defines the second geometry setup (Geo2) for the instance.
+    plot_geo1(...)
+        Plots the geometry (type 1) of tested structure.
+    plot_geo2(...)
+        Plots the geometry (type 2) of tested structure.
     """
 
     __result: typing.Optional[typing.Dict[str, MsPoserResult]] = None
@@ -991,8 +1090,6 @@ class MultiSetup_PoSER:
         remove_axis: bool = True,
     ):
         """
-
-
         Plots the geometry of tested structure.
 
         This method visualizes the geometry of a structure, including sensor placements and directions.
@@ -1019,7 +1116,6 @@ class MultiSetup_PoSER:
         tuple
             A tuple containing the figure and axis objects of the plot. This can be used for
             further customization or saving the plot externally.
-
         """
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
@@ -1320,10 +1416,42 @@ class MultiSetup_PoSER:
         remove_grid: bool = True,
         remove_axis: bool = True,
     ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
         """
+        Plots the mode shapes for the specified mode number from the results of an algorithm,
+        using Geometry 1 setup.
 
+        This method visualizes the mode shapes of a structure based on the results
+        obtained from a specific algorithm, using geometry type 1 configuration.
+        It allows customization of the plot through parameters such as scaling factor,
+        view type, and visibility options.
+
+        Parameters
+        ----------
+        Algo_Res : MsPoserResult
+            The results from an algorithm, containing mode shapes and other modal properties.
+        Geo1 : Geometry1
+            The first geometry setup of the structure.
+        mode_numb : int
+            The mode number to be visualized.
+        scaleF : int, optional
+            Scaling factor for the mode shape visualization. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
+            The type of view for plotting the mode shape. Default is "3D".
+        remove_fill : bool, optional
+            If True, removes the fill from the plot. Default is True.
+        remove_grid : bool, optional
+            If True, removes the grid from the plot. Default is True.
+        remove_axis : bool, optional
+            If True, removes the axis labels and ticks from the plot. Default is True.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the figure and axis objects of the plot.
+
+        Notes
+        -----
+        """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
 
@@ -1393,8 +1521,41 @@ class MultiSetup_PoSER:
         *args,
         **kwargs,
     ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
+        """
+        Plots the mode shapes for the specified mode number from the results of an algorithm,
+        using Geometry 2 setup.
+
+        This method visualizes the mode shapes of a structure based on the results
+        obtained from a specific algorithm, using geometry type 2 configuration.
+        It allows customization of the plot through parameters such as scaling factor,
+        view type, and visibility options.
+
+        Parameters
+        ----------
+        Algo_Res : MsPoserResult
+            The results from an algorithm, containing mode shapes and other modal properties.
+        Geo2 : Geometry2
+            The geometry  (type2) of the structure.
+        mode_numb : int
+            The mode number to be visualized..
+        scaleF : int, optional
+            Scaling factor for the mode shape visualization. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
+            The type of view for plotting the mode shape. Default is "3D".
+        remove_fill : bool, optional
+            If True, removes the fill from the plot. Default is True.
+        remove_grid : bool, optional
+            If True, removes the grid from the plot. Default is True.
+        remove_axis : bool, optional
+            If True, removes the axis labels and ticks from the plot. Default is True.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the figure and axis objects of the plot.
+
+        Notes
+        -----
         """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
@@ -1463,6 +1624,7 @@ class MultiSetup_PoSER:
         remove_fill: bool = True,
         remove_grid: bool = True,
         remove_axis: bool = True,
+        saveGIF: bool = False,
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -1482,6 +1644,7 @@ class MultiSetup_PoSER:
             remove_axis=remove_axis,
             remove_fill=remove_fill,
             remove_grid=remove_grid,
+            saveGIF=saveGIF,
         )
         logger.info("...end AniMode FDD...")
 
@@ -1513,6 +1676,23 @@ class MultiSetup_PreGER(BaseSetup):
         The processed data after applying the PreGER method.
     algorithms : typing.Dict[str, BaseAlgorithm]
         A dictionary to store algorithms associated with the setup.
+
+    Methods, inherited from BaseSetup
+    -------
+    add_algorithms(*algorithms)
+        Adds algorithms to the setup and sets the data and sampling frequency for them.
+    run_all()
+        Runs all the algorithms added to the class.
+    run_by_name(name)
+        Executes a specific algorithm by its name.
+    MPE(name, *args, **kwargs)
+        Extracts modal parameters from selected poles/peaks.
+    MPE_fromPlot(name, *args, **kwargs)
+        Extracts modal parameters directly from plot selections.
+    plot_geo1(scaleF, view, remove_fill, remove_grid, remove_axis)
+        Plots the first type of geometry setup for the structure.
+    plot_geo2(scaleF, view, remove_fill, remove_grid, remove_axis)
+        Plots the second type of geometry setup for the structure.
 
     Methods
     -------
@@ -1637,7 +1817,7 @@ class MultiSetup_PreGER(BaseSetup):
         data_idx: str | list[int] = "all",
         ch_idx: str | list[int] = "all",
         ch_names: typing.Optional[typing.List[str]] = None,
-        freqlim: float | None = None,
+        freqlim: tuple[float, float] | None = None,
         logscale: bool = True,
         nxseg: float | None = None,
         pov: float = 0.0,

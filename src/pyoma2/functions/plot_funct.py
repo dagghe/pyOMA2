@@ -82,7 +82,8 @@ def CMIF_plot(S_val, freq, freqlim=None, nSv="all", fig=None, ax=None):
     ax.set_title("Singular values of spectral matrix")
     ax.set_ylabel("dB rel. to unit")
     ax.set_xlabel("Frequency [Hz]")
-    ax.set_xlim(0, freqlim)
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
     ax.grid()
     # plt.show()
     return fig, ax
@@ -158,7 +159,8 @@ def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
         ax1.set_title("SDOF Bell function")
         ax1.set_xlabel("Frequency [Hz]")
         ax1.set_ylabel(r"dB $[V^2/Hz]$")
-        ax1.set_xlim(left=0, right=freqlim)
+        if freqlim is not None:
+            ax1.set_xlim(freqlim[0], freqlim[1])
 
         ax1.legend()
 
@@ -274,7 +276,8 @@ def Stab_pLSCF_plot(Fn, Lab, ordmax, freqlim=None, hide_poles=True, Sval=None, n
         ax1.set_ylim(0, ordmax + 1)
 
     ax1.grid()
-    ax1.set_xlim(left=0, right=freqlim)
+    if freqlim is not None:
+        ax1.set_xlim(freqlim[0], freqlim[1])
     plt.tight_layout()
     return fig, ax1
 
@@ -400,7 +403,8 @@ def Stab_SSI_plot(
         ax.set_ylim(ordmin, ordmax + 1)
 
     ax.grid()
-    ax.set_xlim(left=0, right=freqlim)
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
     plt.tight_layout()
     return fig, ax
 
@@ -528,7 +532,8 @@ def Cluster_SSI_plot(
         ax1.legend(loc="lower center", ncol=2)
 
     ax1.grid()
-    ax1.set_xlim(left=0, right=freqlim)
+    if freqlim is not None:
+        ax1.set_xlim(freqlim[0], freqlim[1])
     plt.tight_layout()
     return fig, ax1
 
@@ -617,7 +622,8 @@ def Cluster_pLSCF_plot(
         ax1.set_ylim(0, ordmax + 1)
 
     ax1.grid()
-    ax1.set_xlim(left=0, right=freqlim)
+    if freqlim is not None:
+        ax1.set_xlim(freqlim[0], freqlim[1])
     plt.tight_layout()
     return fig, ax1
 
@@ -1053,7 +1059,8 @@ def plt_ch_info(
             ax10.plot(freq, 10 * np.log10(psd / psd[np.argmax(psd)]))
         elif logscale is False:
             ax10.plot(freq, np.sqrt(psd))
-        ax10.set_xlim(0, freqlim)
+        if freqlim is not None:
+            ax10.set_xlim(freqlim[0], freqlim[1])
         ax10.set_xlabel("Frequency [Hz]")
         ax10.set_ylabel("dB rel. to unit")
         ax10.set_title("PSD")
