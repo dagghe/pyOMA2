@@ -44,8 +44,9 @@ line-length = 90
 
 [tool.pdm.dev-dependencies]
 docs = [
-    "mkdocs-material>=9.4.10",
-    "mkdocstrings-python>=1.7.5",
+    "sphinx>=7.1.2",
+    "sphinx-rtd-theme>=2.0.0",
+    "ghp-import>=2.1.0",
 ]
 qa = [
     "pre-commit>=3.5.0",
