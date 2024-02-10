@@ -24,30 +24,40 @@ def MAC(phi_X, phi_A):
 
 def BuildHank(Y, Yref, br, fs, method):
     """
-    Build a Hankel matrix based on input data matrices.
+    Construct a Hankel matrix using various methods based on input data for System Identification.
 
-    Parameters:
-    - Y (numpy array): Time series data array, typically representing the system's output.
-    - Yref (numpy array): Reference data array, used in certain methods for Hankel matrix construction.
-    - br (int): The number of block rows in the Hankel matrix.
-    - fs (float): Sampling frequency of the data.
-    - method (str): Specifies the method for Hankel matrix construction. Supported methods include
-      'cov_mm', 'cov_unb', 'cov_bias', 'dat', and 'YfYp'.
+    Parameters
+    ----------
+    Y : numpy.ndarray
+        Time series data array, typically representing system's output.
+    Yref : numpy.ndarray
+        Reference data array, used in certain methods for Hankel matrix construction.
+    br : int
+        Number of block rows in the Hankel matrix.
+    fs : float
+        Sampling frequency of the data.
+    method : str
+        Specifies the method for Hankel matrix construction.
+        One of: 'cov_mm', 'cov_unb', 'cov_bias', 'dat', and 'YfYp'.
 
-    Returns:
-    - numpy array or tuple of numpy arrays: Depending on the method, either a single Hankel matrix
-      or a tuple of matrices (Yf, Yp) representing future and past data blocks.
+    Returns
+    -------
+    numpy.ndarray
+        Either a single Hankel matrix or a tuple of matrices (Yf, Yp)
+        representing future and past data blocks, depending on the method.
 
-    Raises:
-    - ValueError: If an invalid method is specified.
+    Raises
+    ------
+    ValueError
+        If an invalid method is specified.
 
-    Notes:
-    Notes:
-    - "dat": Efficient method for assembling the Hankel matrix for data driven SSI.
-    - "cov_mm": Builds Hankel matrix using future and past output data with matrix multiplication.
-    - "cov_unb": Builds Hankel matrix using correlations with unbiased estimator.
-    - "cov_bias": Builds Hankel matrix using correlations with biased estimator.
-    - "YfYp": Returns the future and past output data matrices Yf and Yp.
+    Notes
+    -----
+      "dat": Efficient method for assembling the Hankel matrix for data driven SSI.
+      "cov_mm": Builds Hankel matrix using future and past output data with matrix multiplication.
+      "cov_unb": Builds Hankel matrix using correlations with unbiased estimator.
+      "cov_bias": Builds Hankel matrix using correlations with biased estimator.
+      "YfYp": Returns the future and past output data matrices Yf and Yp.
     """
     Ndat = Y.shape[1]
     p = int(br)  # number of block row (to use same notation as Dohler)
@@ -133,19 +143,27 @@ def BuildHank(Y, Yref, br, fs, method):
 
 def AC2MP(A, C, dt):
     """
-    Convert a state-space system representation to modal parameters
-    (natural frequencies, damping ratios, and mode shapes).
+    Convert state-space representation (A, C matrices) to modal parameters.
 
-    Parameters:
-    - A (numpy.ndarray): State matrix of the system.
-    - C (numpy.ndarray): Output matrix of the system.
-    - dt (float): Time step or sampling interval (1/fs, sampling_frequency).
+    Parameters
+    ----------
+    A : numpy.ndarray
+        State matrix of the system.
+    C : numpy.ndarray
+        Output matrix of the system.
+    dt : float
+        Time step or sampling interval (1/fs, where fs is the sampling frequency).
 
-    Returns:
-    - tuple: A tuple containing the following modal parameters:
-        - fn (numpy.ndarray): Natural frequencies in Hz.
-        - xi (numpy.ndarray): Damping ratios.
-        - phi (numpy.ndarray): Complex mode shapes."""
+    Returns
+    -------
+    tuple
+        - fn : numpy.ndarray
+            Natural frequencies in Hz.
+        - xi : numpy.ndarray
+            Damping ratios.
+        - phi : numpy.ndarray
+            Complex mode shapes.
+    """
     Nch = C.shape[0]
     AuVal, AuVett = np.linalg.eig(A)
     Lambda = (np.log(AuVal)) * (1 / dt)
@@ -165,28 +183,32 @@ def AC2MP(A, C, dt):
 
 def SSI(H, br, ordmax, step=1):
     """
-        Perform System Identification using the Stochastic Subspace Identification
-        (SSI) method.
+    Perform System Identification using Stochastic Subspace Identification (SSI) method.
 
-        Parameters:
-        - H (numpy.ndarray): Hankel matrix of the system.
-        - br (int): Number of block rows (also called time shift or time lag).
-        - ordmax (int): Maximum order to consider for system identification.
-        - step (int, optional): Step size for increasing system order.
-            Defaults to 1.
+    Parameters
+    ----------
+    H : numpy.ndarray
+        Hankel matrix of the system.
+    br : int
+        Number of block rows in the Hankel matrix.
+    ordmax : int
+        Maximum order to consider for system identification.
+    step : int, optional
+        Step size for increasing system order. Default is 1.
 
-        Returns:
-        - tuple: A tuple containing the estimated system matrices A and C for
-            various system orders.
+    Returns
+    -------
+    tuple
+        - A : list of numpy arrays
+            Estimated system matrices A for various system orders.
+        - C : list of numpy arrays
+            Estimated output influence matrices C for various system orders.
 
-        Notes:
-        - This is the classical implementation of the SSI algorithm that uses the
-            shift structure of the observability matrix. To use the more efficient
-            implementation use SSI_FAST function instead [1].
-
-    [1] Döhler, M., 2011. Subspace-based system identification and fault detection:
-        Algorithms for large systems and application to structural vibration
-        analysis (Doctoral dissertation, Université Rennes 1)."""
+    Notes
+    -----
+    Classical implementation of the SSI algorithm using the shift structure of the observability matrix.
+    For more efficient implementation, consider using SSI_FAST function.
+    """
     Nch = int(H.shape[0] / (br + 1))
     # SINGULAR VALUE DECOMPOSITION
     U1, S1, V1_t = np.linalg.svd(H)
@@ -215,23 +237,30 @@ def SSI(H, br, ordmax, step=1):
 
 def SSI_FAST(H, br, ordmax, step=1):
     """
-        Perform System Identification using the Stochastic Subspace Identification
-        (SSI) method.
+    Perform efficient System Identification using the Stochastic Subspace Identification (SSI) method.
 
-        Parameters:
-        - H (numpy.ndarray): Hankel matrix of the system.
-        - br (int): Number of block rows (also called time shift or time lag).
-        - ordmax (int): Maximum order to consider for system identification.
-        - step (int, optional): Step size for increasing system order.
-            Defaults to 1.
+    Parameters
+    ----------
+    H : numpy.ndarray
+        Hankel matrix of the system.
+    br : int
+        Number of block rows in the Hankel matrix.
+    ordmax : int
+        Maximum order to consider for system identification.
+    step : int, optional
+        Step size for increasing system order. Default is 1.
 
-        Returns:
-        - tuple: A tuple containing the estimated system matrices A and C for
-            various system orders.
+    Returns
+    -------
+    tuple
+        - A : list of numpy arrays
+            Estimated system matrices A for various system orders.
+        - C : list of numpy arrays
+            Estimated output influence matrices C for various system orders.
 
-        Notes:
-        - This is a more efficient implementation of the SSI algorithm (see [1],
-            algorithm 4).
+    Notes
+    -----
+     This is a more efficient implementation of the SSI algorithm (see [1], algorithm 4).
 
     [1] Döhler, M., 2011. Subspace-based system identification and fault detection:
         Algorithms for large systems and application to structural vibration
@@ -266,31 +295,35 @@ def SSI_FAST(H, br, ordmax, step=1):
 
 def SSI_Poles(AA, CC, ordmax, dt, step=1):
     """
-    Compute modal parameters (natural frequencies, damping ratios, and mode
-    shapes) for a set of state-space systems.
+    Compute modal parameters from state-space models identified by Stochastic Subspace Identification (SSI).
 
-    Parameters:
-    - AA (list of numpy.ndarray): List of system matrices A for the increasing
-        model order.
-    - CC (list of numpy.ndarray): List of output influence matrices C for the
-        increasing model order.
-    - ordmax (int): Maximum order considered in the system identification.
-    - dt (float): Time step or sampling interval.
-    - step (int, optional): Step size for increasing model order. Defaults to 1.
+    Parameters
+    ----------
+    AA : list of numpy.ndarray
+        List of system matrices A for increasing model order.
+    CC : list of numpy.ndarray
+        List of output influence matrices C for increasing model order.
+    ordmax : int
+        Maximum model order considered in the system identification process.
+    dt : float
+        Time step or sampling interval.
+    step : int, optional
+        Step size for increasing model order. Default is 1.
 
-    Returns:
-    - tuple: A tuple containing the modal parameters for each system:
-        - Fn (numpy.ndarray): Natural frequencies for each system and each
-            order.
-        - Sm (numpy.ndarray): Damping ratios for each system and each order.
-        - Ms (numpy.ndarray): Complex mode shapes for each system and each
-            order.
+    Returns
+    -------
+    tuple
+        - Fn : numpy.ndarray
+            Natural frequencies for each system and each order.
+        - Sm : numpy.ndarray
+            Damping ratios for each system and each order.
+        - Ms : numpy.ndarray
+            Complex mode shapes for each system and each order.
 
-    Notes:
-    - This function applies the AC2MP function to each system in AA and CC to
-        compute modal parameters.
-    - The computed modal parameters are stored for each system and each
-        specified order.
+    Notes
+    -----
+    Applies the AC2MP function to each system in AA and CC to compute modal parameters.
+    The modal parameters are stored for each system and each specified order.
     """
     NAC = len(AA)
     Nch = CC[0].shape[0]
@@ -315,32 +348,36 @@ def SSI_Poles(AA, CC, ordmax, dt, step=1):
 
 
 def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
-    # =============================================================================
-    #     OLD DOCSTRING
-    # =============================================================================
     """
-        Perform Subspace System Identification using Covariance-driven SSI to multi
-        setup measurements.
+    Perform Subspace System Identification SSI for multiple setup measurements.
 
-        Parameters:
-        - Y (list of dictionaries): List of dictionaries, each representing data from a different setup.
-          Each dictionary must have keys 'ref' (reference sensor data) and 'mov' (moving sensor data),
-          with corresponding numpy arrays.
-        - fs (float): Sampling frequency of the data.
-        - br (int): Number of block rows in the Hankel matrix.
-        - ordmax (int): Maximum order for the system identification process.
-        - methodHank (str): Method for Hankel matrix construction.
-          Can be 'cov_mm', 'cov_unb', 'cov_bias', 'dat'.
-        - step (int, optional): Step size for increasing the order in the identification process.
-          Default is 1.
-        - method (str, optional): Method for system matrix computation, either 'FAST' or 'SLOW'.
-          Default is 'FAST'.
+    Parameters
+    ----------
+    Y : list of dictionaries
+        List of dictionaries, each representing data from a different setup.
+        Each dictionary must have keys 'ref' (reference sensor data) and
+        'mov' (moving sensor data), with corresponding numpy arrays.
+    fs : float
+        Sampling frequency of the data.
+    br : int
+        Number of block rows in the Hankel matrix.
+    ordmax : int
+        Maximum order for the system identification process.
+    methodHank : str
+        Method for Hankel matrix construction. Can be 'cov_mm', 'cov_unb', 'cov_bias', 'dat'.
+    step : int, optional
+        Step size for increasing the order in the identification process. Default is 1.
+    method : str, optional
+        Method for system matrix computation, either 'FAST' or 'SLOW'. Default is 'FAST'.
 
-        Returns:
-        - tuple:
-            - A (list of numpy arrays): System matrices for each model order.
-            - C (list of numpy arrays): Output influence matrices for each model order.
-    ."""
+    Returns
+    -------
+    tuple
+        A : list of numpy arrays
+            System matrices for each model order.
+        C : list of numpy arrays
+            Output influence matrices for each model order.
+    """
     n_setup = len(Y)  # number of setup
     n_ref = Y[0]["ref"].shape[0]  # number of reference sensor
 
@@ -430,38 +467,39 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
 
 def Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_xi):
     """
-    Helping function for the construction of the Stability Chart when using
-    Subspace Identification (SSI) method.
+    Construct a Stability Chart for the Stochastic Subspace Identification (SSI) method.
 
-    This function performs stability analysis of identified poles.
-    It categorizes modes based on their stabilityin terms of frequency,
-    damping, and mode shape.
+    Parameters
+    ----------
+    Fn : numpy.ndarray
+        Frequency poles, shape: (ordmax, ordmax/step+1).
+    Sm : numpy.ndarray
+        Damping poles, shape: (ordmax, ordmax/step+1).
+    Ms : numpy.ndarray
+        Mode shape array, shape: (ordmax, ordmax/step+1, nch(n_DOF)).
+    ordmin : int
+        Minimum order of model.
+    ordmax : int
+        Maximum order of model.
+    step : int
+        Step when iterating through model orders.
+    err_fn : float
+        Threshold for relative frequency difference for stability checks.
+    err_xi : float
+        Threshold for relative damping ratio difference for stability checks.
+    err_ms : float
+        Threshold for Modal Assurance Criterion (MAC) for stability checks.
+    max_xi : float
+        Threshold for max allowed damping.
 
-    :param Fn: Frequency poles, shape: ``(ordmax, ordmax/step+1)``
-    :param Sm: Damping poles, shape: ``(ordmax, ordmax/step+1)``
-    :param Ms: Mode shape array, shape: ``(ordmax, ordmax/step+1, nch(n_DOF))``
-    :param ordmin: Minimum order of model
-    :param ordmax: Maximum order of model
-    :param step: step when iterating through model orders
-    :param err_fn: Threshold for relative frequency difference for stability checks
-    :param err_xi: Threshold for relative damping ratio difference for stability checks
-    :param err_ms: Threshold for Modal Assurance Criterion (MAC) for stability checks
-    :param max_xi: Threshold for max allowed damping
+    Returns
+    -------
+    numpy.ndarray
+        Stability label matrix (Lab), shape: (ordmax, ordmax/step+1).
 
-    :return: Stability label matrix (Lab), shape: ``(ordmax, ordmax/step+1)``
-        - 7: Stable (frequency, damping, mode shape)
-        - 6: Stable (frequency, mode shape)
-        - 5: Stable (frequency, damping)
-        - 4: Stable (damping, mode shape)
-        - 3: Stable (damping)
-        - 2: Stable (mode shape)
-        - 1: Stable (frequency)
-        - 0: New or unstable pole
-
-    Note:
-        nch = number of channesl for single setup (number of time series)
-        nDOF = number of DOF for multi setup (n_ref + np.sum(n_mov))
-        where: n_ref = n* of reference sensors, n_mov = n* of moving sensors
+    Notes
+    -----
+    This function categorizes modes based on their stability in terms of frequency, damping, and mode shape.
     """
     Lab = np.zeros(Fn.shape, dtype="int")
 
@@ -542,31 +580,46 @@ def Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_x
 
 def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2):
     """
-    Extracts modal parameters for Stochastic Subspace Identification (SSI) method for selected frequencies.
+    Extract modal parameters using Stochastic Subspace Identification (SSI) method for selected frequencies.
 
-    Parameters:
-    - sel_freq (list): List of selected frequencies for modal parameter extraction.
-    - Fn_pol (numpy array): Array of natural frequencies obtained from SSI for each model order.
-    - Sm_pol (numpy array): Array of damping ratios obtained from SSI for each model order.
-    - Ms_pol (numpy array): 3D array of mode shapes obtained from SSI for each model order.
-    - order (int, list of int, or 'find_min'): Specifies the model order(s) for which the modal parameters
-      are to be extracted. If 'find_min', the function attempts to find the minimum model order that provides
-      stable poles for each mode of interest.
-    - Lab (numpy array, optional): Array of labels identifying stable poles. Required if order='find_min'.
-    - deltaf (float, optional): Frequency bandwidth around each selected frequency for searching poles.
-      Default is 0.05.
-    - rtol (float, optional): Relative tolerance for comparing frequencies. Default is 1e-2.
+    Parameters
+    ----------
+    sel_freq : list
+        List of selected frequencies for modal parameter extraction.
+    Fn_pol : numpy.ndarray
+        Array of natural frequencies obtained from SSI for each model order.
+    Sm_pol : numpy.ndarray
+        Array of damping ratios obtained from SSI for each model order.
+    Ms_pol : numpy.ndarray
+        3D array of mode shapes obtained from SSI for each model order.
+    order : int, list of int, or 'find_min'
+        Specifies the model order(s) for which the modal parameters are to be extracted.
+        If 'find_min', the function attempts to find the minimum model order that provides
+        stable poles for each mode of interest.
+    Lab : numpy.ndarray, optional
+        Array of labels identifying stable poles. Required if order='find_min'.
+    deltaf : float, optional
+        Frequency bandwidth around each selected frequency for searching poles. Default is 0.05.
+    rtol : float, optional
+        Relative tolerance for comparing frequencies. Default is 1e-2.
 
-    Returns:
-    - tuple:
-        - Fn (numpy array): Extracted natural frequencies.
-        - Xi (numpy array): Extracted damping ratios.
-        - Phi (numpy array): Extracted mode shapes.
-        - order_out (numpy array or int): Output model order used for extraction for each frequency.
+    Returns
+    -------
+    tuple
+        Fn : numpy.ndarray
+            Extracted natural frequencies.
+        Xi : numpy.ndarray
+            Extracted damping ratios.
+        Phi : numpy.ndarray
+            Extracted mode shapes.
+        order_out : numpy.ndarray or int
+            Output model order used for extraction for each frequency.
 
-    Raises:
-    - ValueError: If 'order' is not an int, list of int, or 'find_min',
-      or if 'order' is 'find_min' but 'Lab' is not provided.
+    Raises
+    ------
+    ValueError
+        If 'order' is not an int, list of int, or 'find_min', or if 'order' is 'find_min'
+        but 'Lab' is not provided.
     """
 
     # if order != "find_min" and type(order) != int and type(order) != list[int]:
