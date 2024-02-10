@@ -367,46 +367,29 @@ class BaseSetup:
 
 class SingleSetup(BaseSetup):
     """
-    A class for managing and processing single setup data for operational modal analysis.
+    Class for managing and processing single setup data for operational modal analysis.
 
-    This class is designed for handling data from a single setup (e.g., a single test or measurement session),
-    including plotting, data processing, and interaction with various analysis algorithms.
-    It inherits several methods from the BaseSetup class.
+    This class handles data from a single setup, offering functionalities like plotting,
+    data processing, and interaction with various analysis algorithms. It inherits
+    attributes and methods from the BaseSetup class.
 
     Parameters
     ----------
-    data : np.array(float)
+    data : Iterable[float]
         The data to be processed, expected as an iterable of floats.
     fs : float
         The sampling frequency of the data.
 
     Attributes
     ----------
-    data : typing.Iterable[float]
+    data : Iterable[float]
         Stores the input data.
     fs : float
         Stores the sampling frequency.
     dt : float
         The sampling interval, calculated as the inverse of the sampling frequency.
-    algorithms : typing.Dict[str, BaseAlgorithm]
+    algorithms : Dict[str, BaseAlgorithm]
         A dictionary to store algorithms associated with the setup.
-
-    Methods, inherited from BaseSetup
-    -------
-    add_algorithms(*algorithms)
-        Adds algorithms to the setup and sets the data and sampling frequency for them.
-    run_all()
-        Runs all the algorithms added to the class.
-    run_by_name(name)
-        Executes a specific algorithm by its name.
-    MPE(name, *args, **kwargs)
-        Extracts modal parameters from selected poles/peaks.
-    MPE_fromPlot(name, *args, **kwargs)
-        Extracts modal parameters directly from plot selections.
-    plot_geo1(scaleF, view, remove_fill, remove_grid, remove_axis)
-        Plots the first type of geometry setup for the structure.
-    plot_geo2(scaleF, view, remove_fill, remove_grid, remove_axis)
-        Plots the second type of geometry setup for the structure.
 
     Methods
     -------
@@ -431,7 +414,8 @@ class SingleSetup(BaseSetup):
     Notes
     -----
     - The sampling interval `dt` is calculated automatically from the provided sampling frequency.
-    - `algorithms` dictionary is initialized empty and is meant to store various algorithms as needed."""
+    - `algorithms` dictionary is initialized empty and is meant to store various algorithms as needed.
+    """
 
     def __init__(self, data: typing.Iterable[float], fs: float):
         """
@@ -439,26 +423,11 @@ class SingleSetup(BaseSetup):
 
         Parameters
         ----------
-        data : np.array(float)
+        data : Iterable[float]
             The data to be processed, expected as an iterable of floats.
         fs : float
             The sampling frequency of the data.
-
-        Attributes
-        ----------
-        data : typing.Iterable[float]
-            Stores the input data.
-        fs : float
-            Stores the sampling frequency.
-        dt : float
-            The sampling interval, calculated as the inverse of the sampling frequency.
-        algorithms : typing.Dict[str, BaseAlgorithm]
-            A dictionary to store algorithms associated with the setup.
-
-        Notes
-        -----
-        - The sampling interval `dt` is calculated automatically from the provided sampling frequency.
-        - `algorithms` dictionary is initialized empty and is meant to store various algorithms as needed."""
+        """
         self.data = data  # data
         self.fs = fs  # sampling frequency
         self.dt = 1 / fs  # sampling interval
@@ -475,15 +444,11 @@ class SingleSetup(BaseSetup):
         """
         Plots the time histories of the data channels in a subplot format.
 
-        This method generates plots for each channel of the dataset. It can display these
-        in multiple subplots with customizable number of columns, names, units, and an
-        option to show RMS acceleration.
-
         Parameters
         ----------
         nc : int, optional
             Number of columns for the subplot. Default is 1.
-        names : list[str], optional
+        names : List[str], optional
             List of names for the channels. If provided, these names are used as labels.
             Default is None.
         unit : str, optional
@@ -496,12 +461,7 @@ class SingleSetup(BaseSetup):
         tuple
             A tuple containing the figure and axis objects of the plot for further customization
             or saving externally.
-
-        Notes
-        -----
-        - Utilizes the `plt_data` function for plotting.
-        - The method assumes that the data is structured in a way that each column represents
-          a channel."""
+        """
         data = self.data
         dt = self.dt
         nc = nc  # number of columns for subplot
@@ -526,18 +486,14 @@ class SingleSetup(BaseSetup):
         Plots Time History (TH), Power Spectral Density (PSD),
         and Kernel Density Estimation (KDE) for each channel.
 
-        This method generates plots for TH, PSD, and KDE based on the specified channel indices.
-        It allows customization of frequency limits, log scale, number of segments for PSD,
-        percentage of overlap, and windowing function.
-
         Parameters
         ----------
-        ch_idx : str | list[int], optional
+        ch_idx : str | List[int], optional
             Channel indices to be plotted. Can be a list of indices or 'all' for all channels.
             Default is 'all'.
-        ch_names : typing.Optional[typing.List[str]], optional
+        ch_names : List[str], optional
             List of channel names for labeling purposes. Default is None.
-        freqlim : float | None, optional
+        freqlim : Tuple[float, float] | None, optional
             Frequency limit for the plots. Default is None.
         logscale : bool, optional
             If True, the PSD plot is in logarithmic scale. Default is True.
@@ -555,7 +511,7 @@ class SingleSetup(BaseSetup):
 
         Notes
         -----
-        - Utilizes the `plt_ch_info` function for plotting.
+        Utilizes the `plt_ch_info` function for plotting.
         """
         data = self.data
         fs = self.fs
@@ -583,7 +539,35 @@ class SingleSetup(BaseSetup):
         zero_phase: bool = True,
     ):
         """
-        wrapper method for scipy.signal.decimate function"""
+        Applies decimation to the data using the scipy.signal.decimate function.
+
+        This method reduces the sampling rate of the data by a factor of 'q'.
+        Parameters
+        ----------
+        q : int
+            The decimation factor.
+        n : Optional[int], optional
+            The order of the filter (if 'ftype' is 'fir') or the number of times to apply
+            the filter (if 'ftype' is 'iir'). If None, a default value is used. Default is None.
+        ftype : {'iir', 'fir'}, optional
+            The type of filter to use for decimation: 'iir' for an IIR filter or 'fir'
+            for an FIR filter. Default is 'iir'.
+        axis : int, optional
+            The axis along which to decimate the data. Default is 0.
+        zero_phase : bool, optional
+            If True, applies a zero-phase filter, which has no phase distortion.
+            If False, uses a causal filter with some phase distortion. Default is True.
+
+        Raises
+        ------
+        ValueError
+            If the decimation factor 'q' is not greater than 1.
+
+        Notes
+        -----
+        The decimation process includes low-pass filtering to reduce aliasing.
+        This method updates the instance's data and sampling frequency attributes.
+        """
 
         self.data = decimate(self.data, q, n, ftype, axis, zero_phase)
         self.fs = self.fs / q
@@ -597,7 +581,31 @@ class SingleSetup(BaseSetup):
         bp: int | npt.NDArray[np.int64] = 0,
     ):
         """
-        wrapper method for scipy.signal.detrend function"""
+        Applies detrending to the data using the scipy.signal.detrend function.
+
+        This method removes a linear or constant trend from the data. It's commonly used
+        to remove drifts or offsets in time series data.
+
+        Parameters
+        ----------
+        axis : int, optional
+            The axis along which to detrend the data. Default is 0.
+        type : {'linear', 'constant'}, optional
+            The type of detrending: 'linear' for linear detrend, or 'constant' for just
+            subtracting the mean. Default is 'linear'.
+        bp : int or numpy.ndarray of int, optional
+            Breakpoints where the data is split for piecewise detrending. Default is 0.
+
+        Raises
+        ------
+        ValueError
+            If invalid parameters are provided.
+
+        Notes
+        -----
+        Detrending is a preprocessing step, often necessary for methods that assume
+        stationary data. This method updates the instance's data attribute.
+        """
         self.data = detrend(self.data, axis, type, bp)
 
     # metodo per definire geometria 1
@@ -623,31 +631,26 @@ class SingleSetup(BaseSetup):
 
         Parameters
         ----------
-        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+        sens_names : Union[numpy.ndarray of string, List of string]
             An array or list containing the names of the sensors.
-        sens_coord : pd.DataFrame
-            A pandas DataFrame containing the coordinates of the sensors.
-        sens_dir : npt.NDArray[np.int64]
+        sens_coord : pandas.DataFrame
+            A DataFrame containing the coordinates of the sensors.
+        sens_dir : numpy.ndarray of int64
             An array defining the directions of the sensors.
-        sens_lines : npt.NDArray[np.int64], optional
+        sens_lines : numpy.ndarray of int64, optional
             An array defining lines connecting sensors. Default is None.
-        bg_nodes : npt.NDArray[np.float64], optional
+        bg_nodes : numpy.ndarray of float64, optional
             An array defining background nodes. Default is None.
-        bg_lines : npt.NDArray[np.int64], optional
+        bg_lines : numpy.ndarray of int64, optional
             An array defining background lines. Default is None.
-        bg_surf : npt.NDArray[np.float64], optional
+        bg_surf : numpy.ndarray of float64, optional
             An array defining background surfaces. Default is None.
 
         Raises
         ------
         AssertionError
             If the number of sensors does not match between data, coordinates, and directions.
-
-        Notes
-        -----
-        - The method performs various checks to ensure the integrity and consistency of the input data.
-        - Adapts to zero-indexing for background lines if provided.
-        - Reorders sensor coordinates and directions to match the provided sensor names."""
+        """
         # ---------------------------------------------------------------------
         # Checks on input
         nr_s = len(sens_names)
@@ -706,23 +709,23 @@ class SingleSetup(BaseSetup):
 
         Parameters
         ----------
-        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+        sens_names : Union[numpy.ndarray of string, List of string]
             An array or list containing the names of the sensors.
-        pts_coord : pd.DataFrame
+        pts_coord : pandas.DataFrame
             A DataFrame containing the coordinates of the points.
-        sens_map : pd.DataFrame
+        sens_map : pandas.DataFrame
             A DataFrame containing the mapping data for sensors.
-        sens_sign : pd.DataFrame
+        sens_sign : pandas.DataFrame
             A DataFrame containing sign data for the sensors.
-        order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
+        order_red : {'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
             Specifies the order reduction if any. Default is None.
-        sens_lines : npt.NDArray[np.int64], optional
+        sens_lines : numpy.ndarray of int64, optional
             An array defining lines connecting sensors. Default is None.
-        bg_nodes : npt.NDArray[np.float64], optional
+        bg_nodes : numpy.ndarray of float64, optional
             An array defining background nodes. Default is None.
-        bg_lines : npt.NDArray[np.float64], optional
+        bg_lines : numpy.ndarray of float64, optional
             An array defining background lines. Default is None.
-        bg_surf : npt.NDArray[np.float64], optional
+        bg_surf : numpy.ndarray of float64, optional
             An array defining background surfaces. Default is None.
 
         Raises
@@ -730,11 +733,7 @@ class SingleSetup(BaseSetup):
         AssertionError
             If the number of columns in mapping and sign data does not match the expected
             dimensions based on the order reduction.
-
-        Notes
-        -----
-        - Performs checks to ensure consistency and correctness of input data based on the order reduction.
-        - Adapts to zero-indexing for sensor and background lines if provided."""
+        """
         # ---------------------------------------------------------------------
         # Checks on input
         if order_red == "xy" or order_red == "xz" or order_red == "yz":
@@ -795,34 +794,35 @@ class SingleSetup(BaseSetup):
 # FIXME add references!
 class MultiSetup_PoSER:
     """
-    A class to conduct OMA of multi-setup experiments, with the
-    "Post Separate Estimation Re-scaling" (PoSER) approach. (add reference)
+    A class for operational modal analysis (OMA) of multi-setup experiments using the
+    Post Separate Estimation Re-scaling (PoSER) approach. It allows for merging results from
+    multiple setups and analyzing the combined data to extract modal properties.
 
     Attributes
     ----------
-    __result : typing.Optional[typing.Dict[str, MsPoserResult]]
-        A private attribute storing the results after merging.
-    __alg_ref : typing.Optional[typing.Dict[type[BaseAlgorithm], str]]
-        A private attribute storing a reference to the algorithms used in the setups.
+    __result : Optional[Dict[str, MsPoserResult]]
+        Private attribute storing the merged results from multiple setups.
+    __alg_ref : Optional[Dict[type[BaseAlgorithm], str]]
+        Private attribute storing references to the algorithms used in the setups.
 
     Methods
     -------
     merge_results()
         Merges the results from individual setups into a combined result.
     plot_mode_g1(...)
-        Plots the mode shapes for Geometry 1 setup using results from an algorithm.
+        Plots mode shapes for a specified mode number using Geometry 1 setup.
     plot_mode_g2(...)
-        Plots the mode shapes for Geometry 2 setup using results from an algorithm.
+        Plots mode shapes for a specified mode number using Geometry 2 setup.
     anim_mode_g2(...)
-        Creates an animation for the mode shapes for Geometry 2 setup using results from an algorithm.
+        Creates an animation for mode shapes for a specified mode number using Geometry 2 setup.
     def_geo1(...)
         Defines the first geometry setup (Geo1) for the instance.
     def_geo2(...)
         Defines the second geometry setup (Geo2) for the instance.
     plot_geo1(...)
-        Plots the geometry (type 1) of tested structure.
+        Plots the geometry (type 1) of the tested structure.
     plot_geo2(...)
-        Plots the geometry (type 2) of tested structure.
+        Plots the geometry (type 2) of the tested structure.
     """
 
     __result: typing.Optional[typing.Dict[str, MsPoserResult]] = None
@@ -838,15 +838,16 @@ class MultiSetup_PoSER:
 
         Parameters
         ----------
-        ref_ind : list[list[int]]
+        ref_ind : List[List[int]]
             Reference indices for merging results from different setups.
-        single_setups : list[SingleSetup]
+        single_setups : List[SingleSetup]
             A list of SingleSetup instances to be merged using the PoSER approach.
 
         Raises
         ------
         ValueError
-            If any of the provided setups are invalid or incompatible."""
+            If any of the provided setups are invalid or incompatible.
+        """
         self._setups = (
             [el for el in self._init_setups(single_setups)] if single_setups else []
         )
@@ -855,10 +856,21 @@ class MultiSetup_PoSER:
 
     @property
     def setups(self):
+        """
+        Returns the list of SingleSetup instances representing individual measurement setups.
+        """
         return self._setups
 
     @setups.setter
     def setups(self, setups):
+        """
+        Sets the list of SingleSetup instances. Not allowed after initialization.
+
+        Raises
+        ------
+        AttributeError
+            If trying to set setups after initialization.
+        """
         # not allow to set setups after initialization
         if hasattr(self, "_setups"):
             raise AttributeError("Cannot set setups after initialization")
@@ -866,6 +878,14 @@ class MultiSetup_PoSER:
 
     @property
     def result(self) -> typing.Dict[str, MsPoserResult]:
+        """
+        Returns the merged results after applying the PoSER method.
+
+        Raises
+        ------
+        ValueError
+            If the merge_results() method has not been run yet.
+        """
         if self.__result is None:
             raise ValueError("You must run merge_results() first")
         return self.__result
@@ -873,22 +893,23 @@ class MultiSetup_PoSER:
     def _init_setups(
         self, setups: typing.List[SingleSetup]
     ) -> typing.Generator[SingleSetup, None, None]:
-        """Ensure that each setup has run its algorithms and that internally consistent algorithms.
+        """
+        Ensures each setup has run its algorithms and that algorithms are internally consistent.
 
         Parameters
         ----------
-        setups : list[SingleSetup]
+        setups : List[SingleSetup]
+            List of SingleSetup instances to initialize.
+
+        Yields
+        ------
+        Generator[SingleSetup, None, None]
+            Generator yielding initialized SingleSetup instances.
 
         Raises
         ------
         ValueError
-            if no setups are passed
-        ValueError
-            if any setup has no algorithms
-        ValueError
-            if any setup has multiple algorithms of same type
-        ValueError
-            if any setup has algorithms that have not been run
+            If there are issues with the provided setups or algorithms.
         """
         if len(setups) == 0:
             raise ValueError("You must pass at least one setup")
@@ -932,25 +953,22 @@ class MultiSetup_PoSER:
 
     def merge_results(self) -> typing.Dict[str, MsPoserResult]:
         """
-        Merges results from individual setups into a combined result using the PoSER approach.
+        Merges results from individual setups into a combined result using the PoSER method.
 
-        This method groups algorithms by type across all setups and merges their results. It calculates
-        the mean and covariance of natural frequencies and damping ratios, and merges mode shapes.
+        Groups algorithms by type across all setups and merges their results.
+        Calculates the mean and covariance of natural frequencies and damping ratios,
+        and merges mode shapes.
 
         Returns
         -------
-        dict[str, MsPoserResult]
+        Dict[str, MsPoserResult]
             A dictionary containing the merged results for each algorithm type.
 
         Raises
         ------
         ValueError
             If the method is called before running algorithms on the setups.
-
-        Notes
-        -----
-        - This method assumes that all SingleSetup instances have been processed by
-          their respective algorithms."""
+        """
         # group algorithms by type
         alg_groups: typing.Dict[type[BaseAlgorithm], BaseAlgorithm] = {}
         for setup in self.setups:
@@ -1007,27 +1025,26 @@ class MultiSetup_PoSER:
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
         """
-        Defines the first geometry setup (Geo1) for the instance.
-
-        This method sets up the geometry involving sensors' names, coordinates, directions,
-        and optional elements like sensor lines, background nodes, lines, and surfaces.
+        Defines the first geometry setup (Geo1) for the instance, integrating sensors' names,
+        coordinates, and directions, along with optional elements like sensor lines, background
+        nodes, lines, and surfaces.
 
         Parameters
         ----------
-        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
-            An array or list containing the names of the sensors.
+        sens_names : List[List[str]]
+            A nested list containing the names of the sensors for each setup.
         sens_coord : pd.DataFrame
-            A pandas DataFrame containing the coordinates of the sensors.
-        sens_dir : npt.NDArray[np.int64]
-            An array defining the directions of the sensors.
-        sens_lines : npt.NDArray[np.int64], optional
-            An array defining lines connecting sensors. Default is None.
-        bg_nodes : npt.NDArray[np.float64], optional
-            An array defining background nodes. Default is None.
-        bg_lines : npt.NDArray[np.int64], optional
-            An array defining background lines. Default is None.
-        bg_surf : npt.NDArray[np.float64], optional
-            An array defining background surfaces. Default is None.
+            A DataFrame containing the coordinates of the sensors. Columns should include 'x', 'y', and 'z'.
+        sens_dir : np.ndarray
+            A NumPy array defining the directions of the sensors. Shape: (number of sensors, 3).
+        sens_lines : Optional[np.ndarray], optional
+            An array defining lines connecting sensors, by default None.
+        bg_nodes : Optional[np.ndarray], optional
+            An array defining background nodes for additional context, by default None.
+        bg_lines : Optional[np.ndarray], optional
+            An array defining background lines to connect nodes, by default None.
+        bg_surf : Optional[np.ndarray], optional
+            An array defining background surfaces, useful for visual context, by default None.
 
         Raises
         ------
@@ -1036,9 +1053,10 @@ class MultiSetup_PoSER:
 
         Notes
         -----
-        - The method performs various checks to ensure the integrity and consistency of the input data.
-        - Adapts to zero-indexing for background lines if provided.
-        - Reorders sensor coordinates and directions to match the provided sensor names."""
+        The method performs various checks to ensure the integrity and consistency of the input data.
+        Adapts to zero-indexing for background lines if provided.
+        Reorders sensor coordinates and directions to match the provided sensor names.
+        """
 
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
@@ -1090,32 +1108,29 @@ class MultiSetup_PoSER:
         remove_axis: bool = True,
     ):
         """
-        Plots the geometry of tested structure.
+        Plots the geometry of the tested structure based on the first geometry setup (Geo1).
 
-        This method visualizes the geometry of a structure, including sensor placements and directions.
-        It allows customization of the plot through various parameters such as scaling factor,
-        view type, and options to remove fill, grid, and axis from the plot.
+        This method visualizes the geometry including sensor placements and directions, offering
+        customizable plot parameters such as scaling factor, view type, and options to remove
+        fill, grid, and axis from the plot.
 
         Parameters
         ----------
         scaleF : int, optional
-            The scaling factor for the sensor direction quivers. A higher value results in
-            longer quivers. Default is 1.
-        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
-            The type of view for plotting the geometry. Options include 3D and 2D projections
-            on various planes. Default is "3D".
+            The scaling factor for the sensor direction quivers, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            The type of view for plotting the geometry (3D or 2D projections), by default "3D".
         remove_fill : bool, optional
-            If True, removes the fill from the plot. Default is True.
+            If True, removes the fill from the plot, by default True.
         remove_grid : bool, optional
-            If True, removes the grid from the plot. Default is True.
+            If True, removes the grid from the plot, by default True.
         remove_axis : bool, optional
-            If True, removes the axis labels and ticks from the plot. Default is True.
+            If True, removes the axis labels and ticks from the plot, by default True.
 
         Returns
         -------
         tuple
-            A tuple containing the figure and axis objects of the plot. This can be used for
-            further customization or saving the plot externally.
+            A tuple containing the figure and axis objects of the plot for further customization.
         """
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
@@ -1180,32 +1195,30 @@ class MultiSetup_PoSER:
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
         """
-        Defines the second geometry setup (Geo2) for the instance.
-
-        This method sets up an alternative geometry configuration, including sensors' names,
+        Defines the second geometry setup (Geo2) for the instance, incorporating sensors' names,
         points' coordinates, mapping, sign data, and optional elements like order reduction,
         sensor lines, background nodes, lines, and surfaces.
 
         Parameters
         ----------
-        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+        sens_names : Union[np.ndarray, List[str]]
             An array or list containing the names of the sensors.
         pts_coord : pd.DataFrame
-            A DataFrame containing the coordinates of the points.
+            A DataFrame containing the coordinates of the points. Columns should include 'x', 'y', and 'z'.
         sens_map : pd.DataFrame
             A DataFrame containing the mapping data for sensors.
         sens_sign : pd.DataFrame
             A DataFrame containing sign data for the sensors.
-        order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
-            Specifies the order reduction if any. Default is None.
-        sens_lines : npt.NDArray[np.int64], optional
-            An array defining lines connecting sensors. Default is None.
-        bg_nodes : npt.NDArray[np.float64], optional
-            An array defining background nodes. Default is None.
-        bg_lines : npt.NDArray[np.float64], optional
-            An array defining background lines. Default is None.
-        bg_surf : npt.NDArray[np.float64], optional
-            An array defining background surfaces. Default is None.
+        order_red : Optional[Literal["xy", "xz", "yz", "x", "y", "z"]], optional
+            Specifies the order reduction if any, by default None.
+        sens_lines : Optional[np.ndarray], optional
+            An array defining lines connecting sensors, by default None.
+        bg_nodes : Optional[np.ndarray], optional
+            An array defining background nodes, by default None.
+        bg_lines : Optional[np.ndarray], optional
+            An array defining background lines, by default None.
+        bg_surf : Optional[np.ndarray], optional
+            An array defining background surfaces, by default None.
 
         Raises
         ------
@@ -1215,8 +1228,8 @@ class MultiSetup_PoSER:
 
         Notes
         -----
-        - Performs checks to ensure consistency and correctness of input data based on the order reduction.
-        - Adapts to zero-indexing for sensor and background lines if provided."""
+        Performs checks to ensure consistency and correctness of input data based on the order reduction.
+        Adapts to zero-indexing for sensor and background lines if provided."""
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
@@ -1276,33 +1289,28 @@ class MultiSetup_PoSER:
         remove_axis: bool = True,
     ):
         """
-        Plots the geometry (type 2) of tested structure.
+        Plots the geometry of the tested structure based on the second geometry setup (Geo2).
 
-        This method creates a 3D or 2D plot of a specific geometric configuration (Geo2) with
-        customizable features such as scaling factor, view type, and visibility options for
-        fill, grid, and axes. It involves plotting sensor points, directions, and additional
-        geometric elements if available.
+        This method allows for visualization of a more complex geometric configuration of the
+        structure, with customizable plot parameters.
 
         Parameters
         ----------
         scaleF : int, optional
-            Scaling factor for the quiver plots representing sensors' directions. Default is 1.
-        view : {'3D', 'xy', 'xz', 'yz'}, optional
-            Specifies the type of view for the plot. Can be a 3D view or 2D projections on
-            various planes. Default is "3D".
+            Scaling factor for quiver plots representing sensors' directions, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            Type of view for the plot (3D or 2D projections), by default "3D".
         remove_fill : bool, optional
-            If True, the plot's fill is removed. Default is True.
+            If True, removes the plot's fill, by default True.
         remove_grid : bool, optional
-            If True, the plot's grid is removed. Default is True.
+            If True, removes the plot's grid, by default True.
         remove_axis : bool, optional
-            If True, the plot's axes are removed. Default is True.
+            If True, removes the plot's axes, by default True.
 
         Returns
         -------
         tuple
-            Returns a tuple containing the figure and axis objects of the matplotlib plot.
-            This allows for further customization or saving outside the method.
-
+            A tuple containing the figure and axis objects of the matplotlib plot.
         """
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
@@ -1417,13 +1425,8 @@ class MultiSetup_PoSER:
         remove_axis: bool = True,
     ) -> typing.Any:
         """
-        Plots the mode shapes for the specified mode number from the results of an algorithm,
+        Plots the mode shapes for a specified mode number from the results of an algorithm,
         using Geometry 1 setup.
-
-        This method visualizes the mode shapes of a structure based on the results
-        obtained from a specific algorithm, using geometry type 1 configuration.
-        It allows customization of the plot through parameters such as scaling factor,
-        view type, and visibility options.
 
         Parameters
         ----------
@@ -1434,15 +1437,15 @@ class MultiSetup_PoSER:
         mode_numb : int
             The mode number to be visualized.
         scaleF : int, optional
-            Scaling factor for the mode shape visualization. Default is 1.
-        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
-            The type of view for plotting the mode shape. Default is "3D".
+            Scaling factor for the mode shape visualization, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            The type of view for plotting the mode shape, by default "3D".
         remove_fill : bool, optional
-            If True, removes the fill from the plot. Default is True.
+            If True, removes the fill from the plot, by default True.
         remove_grid : bool, optional
-            If True, removes the grid from the plot. Default is True.
+            If True, removes the grid from the plot, by default True.
         remove_axis : bool, optional
-            If True, removes the axis labels and ticks from the plot. Default is True.
+            If True, removes the axis labels and ticks from the plot, by default True.
 
         Returns
         -------
@@ -1451,6 +1454,7 @@ class MultiSetup_PoSER:
 
         Notes
         -----
+        This method visualizes the mode shapes based on the provided geometry and algorithm results.
         """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
@@ -1525,29 +1529,24 @@ class MultiSetup_PoSER:
         Plots the mode shapes for the specified mode number from the results of an algorithm,
         using Geometry 2 setup.
 
-        This method visualizes the mode shapes of a structure based on the results
-        obtained from a specific algorithm, using geometry type 2 configuration.
-        It allows customization of the plot through parameters such as scaling factor,
-        view type, and visibility options.
-
         Parameters
         ----------
         Algo_Res : MsPoserResult
             The results from an algorithm, containing mode shapes and other modal properties.
         Geo2 : Geometry2
-            The geometry  (type2) of the structure.
-        mode_numb : int
-            The mode number to be visualized..
+            The geometry (type2) of the structure.
+        mode_numb : Optional[int]
+            The mode number to be visualized.
         scaleF : int, optional
-            Scaling factor for the mode shape visualization. Default is 1.
-        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
-            The type of view for plotting the mode shape. Default is "3D".
+            Scaling factor for the mode shape visualization, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            The type of view for plotting the mode shape, by default "3D".
         remove_fill : bool, optional
-            If True, removes the fill from the plot. Default is True.
+            If True, removes the fill from the plot, by default True.
         remove_grid : bool, optional
-            If True, removes the grid from the plot. Default is True.
+            If True, removes the grid from the plot, by default True.
         remove_axis : bool, optional
-            If True, removes the axis labels and ticks from the plot. Default is True.
+            If True, removes the axis labels and ticks from the plot, by default True.
 
         Returns
         -------
@@ -1556,6 +1555,7 @@ class MultiSetup_PoSER:
 
         Notes
         -----
+        This method provides a visual representation of the mode shapes using geometry 2 setup.
         """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
@@ -1628,8 +1628,43 @@ class MultiSetup_PoSER:
         *args,
         **kwargs,
     ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
+        """
+        Creates an animation of the mode shapes for the specified mode number from the results
+        of an algorithm, using Geometry 2 setup.
+
+        This method visualizes the animated mode shapes of a structure based on the results obtained
+        from a specific algorithm, using geometry type 2 configuration.
+
+        Parameters
+        ----------
+        Algo_Res : MsPoserResult
+            The results from an algorithm, containing mode shapes and other modal properties.
+        Geo2 : Geometry2
+            The geometry (type2) of the structure.
+        mode_numb : Optional[int]
+            The mode number to be visualized.
+        scaleF : int, optional
+            Scaling factor for the mode shape visualization, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            The type of view for plotting the mode shape, by default "3D".
+        remove_fill : bool, optional
+            If True, removes the fill from the plot, by default True.
+        remove_grid : bool, optional
+            If True, removes the grid from the plot, by default True.
+        remove_axis : bool, optional
+            If True, removes the axis labels and ticks from the plot, by default True.
+        saveGIF : bool, optional
+            If True, saves the animation as a GIF file, by default False.
+
+        Returns
+        -------
+        Any
+            The generated animation object.
+
+        Notes
+        -----
+        The animation provides a dynamic representation of the mode shapes, enhancing the
+        understanding of structural behavior under different modes.
         """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
