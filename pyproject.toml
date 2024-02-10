@@ -48,6 +48,7 @@ docs = [
     "sphinx-rtd-theme>=2.0.0",
     "ghp-import>=2.1.0",
     "nbsphinx>=0.9.3",
+    "pandoc>=2.3",
 ]
 qa = [
     "pre-commit>=3.5.0",
