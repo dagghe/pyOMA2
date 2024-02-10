@@ -32,7 +32,7 @@ jobs:
           pdm install -G docs --no-default
       - name: Build HTML
         run: |
-          cd docs && pdm run make clean html && make html
+          pdm run sphinx-build -a -b html docs/ docs/_build
       - name: Run ghp-import (push docs on gh-pages branch to github pages)
         run: |
-          cd .. && pdm run ghp-import -n -p -f docs/_build
+          pdm run ghp-import -n -p -f docs/_build
