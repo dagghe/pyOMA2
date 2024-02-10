@@ -21,45 +21,25 @@ Schematic organisation of the module showing inheritance between classes
 .. image:: info.svg
 
 
-Quick start
-===========
+=============================================================
 
-Install the library::
+Content:
+========
 
-   pip install pyOMA-2
+.. toctree::
+    :maxdepth: 2
 
+    Home <self>
+    quick start
+    modules
+    examples
+    indices
 
-You'll probably need to install **tk** for the GUI on your system, here some instructions:
-
-* `Windows <https://www.pythonguis.com/installation/install-tkinter-windows/>`_
-
-* `Linux <https://www.pythonguis.com/installation/install-tkinter-linux/>`_
-
-* `Mac <https://www.pythonguis.com/installation/install-tkinter-mac/>`_
-
+=============================================================
 
 .. note::
 
    Please note that this is still an alpha release, this project is under active development.
-
-==================================
-
-Contents
---------
-
-.. toctree::
-    :maxdepth: 2
-    :caption: Contents
-
-   Home <self>
-   modules
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
 
 
 .. _source: https://github.com/dagghe/pyOMA2
