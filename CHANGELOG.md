@@ -8,11 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- some docstrings for fdd.py
+- docstring to all classes and functions
 - option to save gif figure from animation of the mode shape
+- documentation
+
+### Removed
+- old example files under main
+- util.py as it was not used
 
 ### Changed
 - the `freqlim` argument in all the plot function has been changed to a tuple, so to set both an upper and a lower limit to the x (frequency) axis
+- moved examples notebooks and info.svg under docs folder
 
 ### Fixed
 - docstring fix for OMA.py
