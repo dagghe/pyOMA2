@@ -352,7 +352,8 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         -----
         This method is automatically called when a subclass of `BaseAlgorithm` is defined. It checks that
         `RunParamCls` and `ResultCls` are correctly set in the subclass. This is essential for the proper
-        functioning of the algorithm's infrastructure.
+        functioning
+        of the algorithm's infrastructure.
         """
         super().__init_subclass__(**kwargs)
         if not hasattr(cls, "RunParamCls") or not issubclass(cls.RunParamCls, BaseModel):

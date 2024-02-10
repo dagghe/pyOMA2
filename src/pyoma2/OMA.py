@@ -38,38 +38,44 @@ logger = logging.getLogger(__name__)
 
 class BaseSetup:
     """
-    BaseSetup class for operational modal analysis.
+    Base class for operational modal analysis (OMA) setups.
 
     This class provides foundational methods and attributes used by both
-    SingleSetup and MultiSetup_PreGER classes.
-    It is not intended to be instantiated directly by users but serves as a
-    superclass for specific setup types.
+    SingleSetup and MultiSetup classes. It serves as a superclass for specific
+    setup types, offering common functionalities for handling data, running algorithms, and
+    extracting modal properties.
+
+    Attributes
+    ----------
+    algorithms : dict[str, BaseAlgorithm]
+        Dictionary storing algorithms added to the setup, keyed by their names.
+    data : np.ndarray, optional
+        Time series data array, typically representing the system's output.
+    fs : float, optional
+        Sampling frequency of the data.
 
     Methods
     -------
-    add_algorithms(*algorithms)
+    add_algorithms(...)
         Adds algorithms to the setup and sets the data and sampling frequency for them.
-    run_all()
+    run_all(...)
         Runs all the algorithms added to the class.
-    run_by_name(name)
+    run_by_name(...)
         Executes a specific algorithm by its name.
-    MPE(name, *args, **kwargs)
+    MPE(...)
         Extracts modal parameters from selected poles/peaks.
-    MPE_fromPlot(name, *args, **kwargs)
+    MPE_fromPlot(...)
         Extracts modal parameters directly from plot selections.
-    plot_geo1(scaleF, view, remove_fill, remove_grid, remove_axis)
+    plot_geo1(...)
         Plots the first type of geometry setup for the structure.
-    plot_geo2(scaleF, view, remove_fill, remove_grid, remove_axis)
+    plot_geo2(...)
         Plots the second type of geometry setup for the structure.
 
     Notes
     -----
-    - The BaseSetup class is designed as a common interface for handling different
-     types of setup configurations.
-    - Algorithms must be instantiated and have unique names before being
-     added to the setup.
-    - The class provides methods for running algorithms and extracting modal properties,
-     as well as visualizing geometries.
+    The BaseSetup class is not intended for direct instantiation by users.
+    It acts as a common interface for handling different types of setup configurations.
+    Specific functionalities are provided through its subclasses.
     """
 
     algorithms: typing.Dict[str, BaseAlgorithm]
@@ -79,10 +85,17 @@ class BaseSetup:
     # add algorithm (method) to the set.
     def add_algorithms(self, *algorithms: BaseAlgorithm):
         """
-        Add algorithms to the set and set the data and fs.
-        N.B:
-            the algorithms must be instantiated before adding them to the set.
-            algorithms names must be unique.
+        Adds algorithms to the setup and configures them with data and sampling frequency.
+
+        Parameters
+        ----------
+        algorithms : variable number of BaseAlgorithm
+            One or more algorithm instances to be added to the setup.
+
+        Notes
+        -----
+        The algorithms must be instantiated before adding them to the setup,
+        and their names must be unique.
         """
         self.algorithms = {
             **self.algorithms,
@@ -92,7 +105,15 @@ class BaseSetup:
     # run the whole set of algorithms (methods). METODO 1 di tutti
     def run_all(self):
         """
-        This method run all the algorithms added to the class.
+        Runs all the algorithms added to the setup.
+
+        Iterates through each algorithm stored in the setup and executes it. The results are saved within
+        each algorithm instance.
+
+        Notes
+        -----
+        This method assumes that all algorithms are properly initialized and can be executed without
+        additional parameters.
         """
         for alg_name in self.algorithms:
             self.run_by_name(name=alg_name)
@@ -100,7 +121,23 @@ class BaseSetup:
 
     # run algorithm (method) by name. QUESTO è IL METODO 1 di un singolo
     def run_by_name(self, name: str):
-        """Run an algorithm by its name and save the result in the algorithm itself."""
+        """
+        Runs a specific algorithm by its name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the algorithm to be executed.
+
+        Raises
+        ------
+        KeyError
+            If the specified algorithm name does not exist in the setup.
+
+        Notes
+        -----
+        The result of the algorithm execution is saved within the algorithm instance.
+        """
         logger.info("Running %s...", name)
         logger.debug("...with parameters: %s", self[name].run_params)
         result = self[name].run()
@@ -110,7 +147,21 @@ class BaseSetup:
     # get the modal properties (all results).
     def MPE(self, name: str, *args, **kwargs):
         """
-        This method extract the modal parameters from the selected pole(s)/peack(s).
+        Extracts modal parameters from selected poles/peaks of a specified algorithm.
+
+        Parameters
+        ----------
+        name : str
+            Name of the algorithm from which to extract modal parameters.
+        args : tuple
+            Positional arguments to be passed to the algorithm's MPE method.
+        kwargs : dict
+            Keyword arguments to be passed to the algorithm's MPE method.
+
+        Raises
+        ------
+        KeyError
+            If the specified algorithm name does not exist in the setup.
         """
         logger.info("Getting MPE modal parameters from %s", name)
         self[name].mpe(*args, **kwargs)
@@ -118,15 +169,43 @@ class BaseSetup:
     # get the modal properties (all results) from the plots.
     def MPE_fromPlot(self, name: str, *args, **kwargs):
         """
-        This method extract the modal parameters directly from the selection of the plots.
+        Extracts modal parameters directly from plot selections of a specified algorithm.
+
+        Parameters
+        ----------
+        name : str
+            Name of the algorithm from which to extract modal parameters.
+        args : tuple
+            Positional arguments to be passed to the algorithm's MPE method.
+        kwargs : dict
+            Keyword arguments to be passed to the algorithm's MPE method.
+
+        Raises
+        ------
+        KeyError
+            If the specified algorithm name does not exist in the setup.
         """
         logger.info("Getting MPE modal parameters from plot... %s", name)
         self[name].mpe_fromPlot(*args, **kwargs)
 
     def __getitem__(self, name: str) -> BaseAlgorithm:
         """
-        Retrieve an algorithm from the set by its name.
-        Raises a KeyError if the algorithm does not exist.
+        Retrieves an algorithm from the setup by its name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the algorithm to retrieve.
+
+        Returns
+        -------
+        BaseAlgorithm
+            The algorithm instance with the specified name.
+
+        Raises
+        ------
+        KeyError
+            If no algorithm with the given name exists in the setup.
         """
         if name in self.algorithms:
             return self.algorithms[name]
@@ -137,8 +216,19 @@ class BaseSetup:
         self, name: str, default: typing.Optional[BaseAlgorithm] = None
     ) -> typing.Optional[BaseAlgorithm]:
         """
-        Retrieve an algorithm from the set by its name.
-        Returns the default value if the algorithm does not exist.
+        Retrieves an algorithm from the setup by its name, returning a default value if not found.
+
+        Parameters
+        ----------
+        name : str
+            The name of the algorithm to retrieve.
+        default : BaseAlgorithm, optional
+            The default value to return if the specified algorithm is not found.
+
+        Returns
+        -------
+        BaseAlgorithm or None
+            The algorithm instance with the specified name or the default value if not found.
         """
         return self.algorithms.get(name, default)
 
@@ -393,22 +483,22 @@ class SingleSetup(BaseSetup):
 
     Methods
     -------
-    plot_data(nc, names, unit, show_rms)
+    plot_data(...)
         Plots the time histories of the data channels in a subplot format.
-    plot_ch_info(ch_idx, ch_names, freqlim, logscale, nxseg, pov, window)
+    plot_ch_info(...)
         Plots Time History (TH), Power Spectral Density (PSD),
         and Kernel Density Estimation (KDE) for each channel.
-    decimate_data(q, n, ftype, axis, zero_phase)
+    decimate_data(...)
         Decimates the data using a wrapper for the scipy.signal.decimate function.
-    detrend_data(axis, type, bp)
+    detrend_data(...)
         Detrends the data using a wrapper for the scipy.signal.detrend function.
-    def_geo1(sens_names, sens_coord, sens_dir, sens_lines, bg_nodes, bg_lines, bg_surf)
+    def_geo1(...)
         Defines the first geometry setup (Geo1) for the instance.
-    def_geo2(sens_names, pts_coord, sens_map, sens_sign, order_red, sens_lines, bg_nodes, bg_lines, bg_surf)
+    def_geo2(...)
         Defines the second geometry setup (Geo2) for the instance.
-    __getitem__(name)
+    __getitem__(...)
         Retrieve an algorithm from the set by its name.
-    get(name, default)
+    get(...)
         Retrieve an algorithm from the set by its name, returning a default value if it does not exist.
 
     Notes
@@ -2052,7 +2142,7 @@ class MultiSetup_PreGER(BaseSetup):
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
         # # OPTIONAL
-        order_red: typing.Union[typing.Literal["xy", "xz", "yz", "x", "y", "z"]] = None,
+        order_red: typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
