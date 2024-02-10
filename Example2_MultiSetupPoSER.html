@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Example2_MultiSetupPoSER &mdash; pyoma2 0.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=c02300dd"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example3_MultiSetupPreGER" href="Example3_MultiSetupPreGER.html" />
+    <link rel="prev" title="Example1_SingleSetup" href="Example1_SingleSetup.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pyoma2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyOMA2</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#examples">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Example1_SingleSetup.html">Example1_SingleSetup</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Example2_MultiSetupPoSER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Example3_MultiSetupPreGER.html">Example3_MultiSetupPreGER</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyoma2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">pyOMA2</a></li>
+      <li class="breadcrumb-item active">Example2_MultiSetupPoSER</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Example2_MultiSetupPoSER.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Example2_MultiSetupPoSER">
+<h1>Example2_MultiSetupPoSER<a class="headerlink" href="#Example2_MultiSetupPoSER" title="Permalink to this heading"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import os
+import sys
+# Add the directory we executed the script from to path:
+sys.path.insert(0, os.path.realpath(&#39;__file__&#39;))
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from pyoma2.algorithm import FDD_algo,FSDD_algo,SSIcov_algo
+from pyoma2.OMA import MultiSetup_PoSER, SingleSetup
+</pre></div>
+</div>
+</div>
+<p>For the poSER approach, after importing the necessary modules and data, we need to create as many single setup class instances as there are datasets available.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># import data files
+set1 = np.load(&quot;./src/pyoma2/test_data/3SL/set1.npy&quot;, allow_pickle=True)
+set2 = np.load(&quot;./src/pyoma2/test_data/3SL/set2.npy&quot;, allow_pickle=True)
+set3 = np.load(&quot;./src/pyoma2/test_data/3SL/set3.npy&quot;, allow_pickle=True)
+</pre></div>
+</div>
+</div>
+<p>The process for obtaining the modal properties from each setup remains the same as described in the example for the single setup.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># create single setup
+ss1 = SingleSetup(set1, fs=100)
+ss2 = SingleSetup(set2, fs=100)
+ss3 = SingleSetup(set3, fs=100)
+
+# Detrend and decimate
+ss1.decimate_data(q=2)
+ss2.decimate_data(q=2)
+ss3.decimate_data(q=2)
+print(ss1.fs, ss2.fs, ss3.fs)
+
+# Initialise the algorithms for setup 1
+ssicov1 = SSIcov_algo(name=&quot;SSIcov1&quot;, method=&quot;cov_mm&quot;, br=50, ordmax=80)
+# Add algorithms to the class
+ss1.add_algorithms(ssicov1)
+ss1.run_all()
+
+# Initialise the algorithms for setup 2
+ssicov2 = SSIcov_algo(name=&quot;SSIcov2&quot;, method=&quot;cov_mm&quot;, br=50, ordmax=80)
+ss2.add_algorithms(ssicov2)
+ss2.run_all()
+
+# Initialise the algorithms for setup 2
+ssicov3 = SSIcov_algo(name=&quot;SSIcov3&quot;, method=&quot;cov_mm&quot;, br=50, ordmax=80)
+ss3.add_algorithms(ssicov3)
+ss3.run_all()
+
+# Plot stabilisation chart
+ssicov1.plot_STDiag(freqlim=20)
+ssicov2.plot_STDiag(freqlim=20)
+ssicov3.plot_STDiag(freqlim=20)
+
+ss1.MPE(
+    &quot;SSIcov1&quot;,
+    sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
+    order=50)
+ss2.MPE(
+    &quot;SSIcov2&quot;,
+    sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
+    order=40)
+ss3.MPE(
+    &quot;SSIcov3&quot;,
+    sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
+    order=40)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2024-02-01 16:46:20,454 - pyoma2.OMA - INFO - Running SSIcov1... (OMA:66)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+50.0 50.0 50.0
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2024-02-01 16:46:21,007 - pyoma2.functions.SSI_funct - INFO - SSI for increasing model order... (SSI_funct:256)
+100%|███████████████████████████████████████████████████████████████████████████████| 81/81 [00:00&lt;00:00, 10837.99it/s]
+2024-02-01 16:46:21,254 - pyoma2.OMA - INFO - all done (OMA:61)
+2024-02-01 16:46:21,255 - pyoma2.OMA - INFO - Running SSIcov2... (OMA:66)
+2024-02-01 16:46:21,826 - pyoma2.functions.SSI_funct - INFO - SSI for increasing model order... (SSI_funct:256)
+100%|███████████████████████████████████████████████████████████████████████████████| 81/81 [00:00&lt;00:00, 12215.10it/s]
+2024-02-01 16:46:22,054 - pyoma2.OMA - INFO - all done (OMA:61)
+2024-02-01 16:46:22,055 - pyoma2.OMA - INFO - Running SSIcov3... (OMA:66)
+2024-02-01 16:46:22,640 - pyoma2.functions.SSI_funct - INFO - SSI for increasing model order... (SSI_funct:256)
+100%|███████████████████████████████████████████████████████████████████████████████| 81/81 [00:00&lt;00:00, 11755.66it/s]
+2024-02-01 16:46:22,924 - pyoma2.OMA - INFO - all done (OMA:61)
+2024-02-01 16:46:23,158 - pyoma2.OMA - INFO - Getting MPE modal parameters from SSIcov1 (OMA:74)
+2024-02-01 16:46:23,159 - pyoma2.functions.SSI_funct - INFO - Extracting SSI modal parameters (SSI_funct:580)
+100%|██████████████████████████████████████████████████████████████████████████████████| 9/9 [00:00&lt;00:00, 8962.19it/s]
+2024-02-01 16:46:23,163 - pyoma2.OMA - INFO - Getting MPE modal parameters from SSIcov2 (OMA:74)
+2024-02-01 16:46:23,164 - pyoma2.functions.SSI_funct - INFO - Extracting SSI modal parameters (SSI_funct:580)
+100%|██████████████████████████████████████████████████████████████████████████████████| 9/9 [00:00&lt;00:00, 9007.10it/s]
+2024-02-01 16:46:23,168 - pyoma2.OMA - INFO - Getting MPE modal parameters from SSIcov3 (OMA:74)
+2024-02-01 16:46:23,168 - pyoma2.functions.SSI_funct - INFO - Extracting SSI modal parameters (SSI_funct:580)
+100%|██████████████████████████████████████████████████████████████████████████████████| 9/9 [00:00&lt;00:00, 8992.08it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example2_MultiSetupPoSER_5_3.png" src="_images/Example2_MultiSetupPoSER_5_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example2_MultiSetupPoSER_5_4.png" src="_images/Example2_MultiSetupPoSER_5_4.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example2_MultiSetupPoSER_5_5.png" src="_images/Example2_MultiSetupPoSER_5_5.png" />
+</div>
+</div>
+<p>After analyzing all datasets, the <strong>MultiSetup_PoSER</strong> class can be instantiated by passing the processed single setup and the lists of reference indices. Subsequently, the <strong>merge_results()</strong> method is used to combine the results.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># reference indices
+ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
+# Creating Multi setup
+msp = MultiSetup_PoSER(ref_ind=ref_ind, single_setups=[ss1, ss2, ss3])
+
+# Merging results from single setups
+result = msp.merge_results()
+
+# dictionary of merged results
+res_ssicov = dict(result[SSIcov_algo.__name__])
+result[&quot;SSIcov_algo&quot;].Fn
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2024-02-01 16:46:23,648 - pyoma2.OMA - INFO - Merging SSIcov_algo results (OMA:552)
+2024-02-01 16:46:23,650 - pyoma2.OMA - INFO - Merging SSIcov1 results (OMA:558)
+2024-02-01 16:46:23,650 - pyoma2.OMA - INFO - Merging SSIcov2 results (OMA:558)
+2024-02-01 16:46:23,651 - pyoma2.OMA - INFO - Merging SSIcov3 results (OMA:558)
+C:\Users\dpa\OneDrive - Norsk Treteknisk Institutt\Dokumenter\Dev\pyOMA2\src\pyoma2\functions\Gen_funct.py:77: ComplexWarning: Casting complex values to real discards the imaginary part
+  merged_mode_shapes[:, k] = merged_mode_k
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([ 2.63245926,  2.69030811,  3.4256547 ,  8.29328508,  8.42526299,
+       10.60096486, 13.99307818, 14.09286017, 17.46931459])
+</pre></div></div>
+</div>
+<p>Once the class has been instantiated we can define the “global” geometry on it and then plot or animate the mode shapes</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># import geometry files
+# Names of the channels
+Names = [
+    [&quot;ch1_1&quot;,&quot;ch2_1&quot;,&quot;ch3_1&quot;,&quot;ch4_1&quot;,&quot;ch5_1&quot;,&quot;ch6_1&quot;,&quot;ch7_1&quot;,&quot;ch8_1&quot;,&quot;ch9_1&quot;,&quot;ch10_1&quot;],
+    [&quot;ch1_2&quot;,&quot;ch2_2&quot;,&quot;ch3_2&quot;,&quot;ch4_2&quot;,&quot;ch5_2&quot;,&quot;ch6_2&quot;,&quot;ch7_2&quot;,&quot;ch8_2&quot;,&quot;ch9_2&quot;,&quot;ch10_2&quot;],
+    [&quot;ch1_3&quot;,&quot;ch2_3&quot;,&quot;ch3_3&quot;,&quot;ch4_3&quot;,&quot;ch5_3&quot;,&quot;ch6_3&quot;,&quot;ch7_3&quot;,&quot;ch8_3&quot;,&quot;ch9_3&quot;,&quot;ch10_3&quot;]]
+# Background
+BG_nodes = np.loadtxt(&quot;./src/pyoma2/test_data/3SL/BG_nodes.txt&quot;)
+BG_lines = np.loadtxt(&quot;./src/pyoma2/test_data/3SL/BG_lines.txt&quot;).astype(int)
+# Geometry 1
+sens_coord = pd.read_csv(&quot;./src/pyoma2/test_data/3SL/sens_coord.txt&quot;, sep=&quot;\t&quot;)
+sens_dir = np.loadtxt(&quot;./src/pyoma2/test_data/3SL/sens_dir.txt&quot;)
+# Geometry 2
+sens_lines = np.loadtxt(&quot;./src/pyoma2/test_data/3SL/sens_lines.txt&quot;).astype(int)
+pts_coord = pd.read_csv(&quot;./src/pyoma2/test_data/3SL/pts_coord.txt&quot;, sep=&quot;\t&quot;)
+sens_map = pd.read_csv(&quot;./src/pyoma2/test_data/3SL/sens_map.txt&quot;, sep=&quot;\t&quot;)
+sens_sign = pd.read_csv(&quot;./src/pyoma2/test_data/3SL/sens_sign.txt&quot;, sep=&quot;\t&quot;)
+
+# Define geometry1
+msp.def_geo1(
+    Names,  # Names of the channels
+    sens_coord,  # coordinates of the sensors
+    sens_dir,  # sensors&#39; direction
+    bg_nodes=BG_nodes,  # BG nodes
+    bg_lines=BG_lines,) # BG lines
+
+# Define geometry 2
+msp.def_geo2(
+    Names,  # Names of the channels
+    pts_coord,
+    sens_map,
+    order_red=&quot;xy&quot;,
+    sens_sign=sens_sign,
+    sens_lines=sens_lines,
+    bg_nodes=BG_nodes,
+    bg_lines=BG_lines)
+
+
+# Plot the geometry
+#msp.plot_geo2(scaleF=2)
+
+# define results variable
+algoRes = result[SSIcov_algo.__name__]
+
+# Plot mode 2 (geometry 1)
+msp.plot_mode_g1(
+    Algo_Res=algoRes, Geo1=msp.Geo1, mode_numb=2, view=&quot;3D&quot;, scaleF=2)
+# Animate mode 3 (geometry 2)
+msp.plot_mode_g2(
+    Algo_Res=algoRes, Geo2=msp.Geo2, mode_numb=4, view=&quot;xz&quot;, scaleF=3)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 800x800 with 1 Axes&gt;,
+ &lt;Axes3D: title={&#39;center&#39;: &#39;Mode nr. 4, $f_n$=8.293Hz&#39;}&gt;)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example2_MultiSetupPoSER_9_1.png" src="_images/Example2_MultiSetupPoSER_9_1.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example2_MultiSetupPoSER_9_2.png" src="_images/Example2_MultiSetupPoSER_9_2.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>algoRes.Fn
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([ 2.63245926,  2.69030811,  3.4256547 ,  8.29328508,  8.42526299,
+       10.60096486, 13.99307818, 14.09286017, 17.46931459])
+</pre></div></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Example1_SingleSetup.html" class="btn btn-neutral float-left" title="Example1_SingleSetup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Example3_MultiSetupPreGER.html" class="btn btn-neutral float-right" title="Example3_MultiSetupPreGER" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Dag Pasca.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

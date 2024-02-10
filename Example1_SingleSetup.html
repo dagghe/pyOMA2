@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Example1_SingleSetup &mdash; pyoma2 0.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=c02300dd"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example2_MultiSetupPoSER" href="Example2_MultiSetupPoSER.html" />
+    <link rel="prev" title="User instantiated classes" href="pyoma2.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pyoma2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyOMA2</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#examples">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Example1_SingleSetup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Example2_MultiSetupPoSER.html">Example2_MultiSetupPoSER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Example3_MultiSetupPreGER.html">Example3_MultiSetupPreGER</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyoma2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">pyOMA2</a></li>
+      <li class="breadcrumb-item active">Example1_SingleSetup</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Example1_SingleSetup.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Example1_SingleSetup">
+<h1>Example1_SingleSetup<a class="headerlink" href="#Example1_SingleSetup" title="Permalink to this heading"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import os
+import sys
+# Add the directory we executed the script from to path:
+sys.path.insert(0, os.path.realpath(&#39;__file__&#39;))
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from pyoma2.algorithm import FDD_algo,FSDD_algo,SSIcov_algo
+from pyoma2.OMA import SingleSetup
+</pre></div>
+</div>
+</div>
+<p>Then we import the dataset we want to analyse and assign it to a variable</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># load example dataset for single setup
+data = np.load(&quot;./src/pyoma2/test_data/palisaden/Palisaden_dataset.npy&quot;, allow_pickle=True)
+</pre></div>
+</div>
+</div>
+<p>Now we can proceed to instantiate the SingleSetup class, passing the dataset and the sampling frequency as parameters</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># create single setup
+Pali_ss = SingleSetup(data, fs=100)
+</pre></div>
+</div>
+</div>
+<p>If we want to be able to plot the mode shapes, once we have the results, we need to define the geometry of the structure. We have two different method available that offers unique plotting capabilities: * The first method <strong>def_geo1()</strong> enables users to visualise mode shapes with arrows that represent the placement, direction, and magnitude of displacement for each sensor. * The second method <strong>def_geo2()</strong> allows for the plotting and animation of mode shapes, with sensors mapped to user
+defined points.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># import geometry files
+# Names of the channels
+Names = [&quot;ch1&quot;, &quot;ch2&quot;, &quot;ch3&quot;, &quot;ch4&quot;, &quot;ch5&quot;, &quot;ch6&quot;]
+# Common Backgroung nodes and lines
+BG_nodes = np.loadtxt(&quot;./src/pyoma2/test_data/palisaden/BG_nodes.txt&quot;)
+BG_lines = np.loadtxt(&quot;./src/pyoma2/test_data/palisaden/BG_lines.txt&quot;).astype(int)
+# Geometry 1
+sens_coord = pd.read_csv(&quot;./src/pyoma2/test_data/palisaden/sens_coord.txt&quot;, sep=&quot;\t&quot;)
+sens_dir = np.loadtxt(&quot;./src/pyoma2/test_data/palisaden/sens_dir.txt&quot;)
+# Geometry 2
+sens_lines = np.loadtxt(&quot;./src/pyoma2/test_data/palisaden/sens_lines.txt&quot;).astype(int)
+pts_coord = pd.read_csv(&quot;./src/pyoma2/test_data/palisaden/pts_coord.txt&quot;, sep=&quot;\t&quot;)
+sens_map = pd.read_csv(&quot;./src/pyoma2/test_data/palisaden/sens_map.txt&quot;, sep=&quot;\t&quot;)
+sens_sign = pd.read_csv(&quot;./src/pyoma2/test_data/palisaden/sens_sign.txt&quot;, sep=&quot;\t&quot;)
+
+# Define geometry1
+Pali_ss.def_geo1(
+    Names,  # Names of the channels
+    sens_coord,  # coordinates of the sensors
+    sens_dir,  # sensors&#39; direction
+    bg_nodes=BG_nodes,  # BG nodes
+    bg_lines=BG_lines,  # BG lines
+)
+
+# Define geometry 2
+Pali_ss.def_geo2(
+    Names,  # Names of the channels
+    pts_coord,  # name and coordinates of the points
+    sens_map,  # mapping between points and sensors
+    order_red=&quot;xy&quot;,  # argument to reduce the number of DOF per points
+    sens_sign=sens_sign,  # sign of the sensor (respect to reference axis)
+    sens_lines=sens_lines,  # lines connecting points
+    bg_nodes=BG_nodes, # background nodes
+    bg_lines=BG_lines, # background lines
+)
+</pre></div>
+</div>
+</div>
+<p>Once we have defined the geometry we can show it calling the <strong>plot_geo1()</strong> or <strong>plot_geo2()</strong> methods.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Plot the geometry
+Pali_ss.plot_geo1(scaleF=2)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 800x800 with 1 Axes&gt;,
+ &lt;Axes3D: title={&#39;center&#39;: &#34;Plot of the geometry and sensors&#39; placement and direction&#34;}&gt;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example1_SingleSetup_9_1.png" src="_images/Example1_SingleSetup_9_1.png" />
+</div>
+</div>
+<p>If we need to detrend and/or decimate the signals we can do this using the <strong>detrend_data()</strong> and <strong>decimate_data()</strong> methods</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Detrend and decimate
+#Pali_ss.detrend_data()
+Pali_ss.decimate_data(q=4) # q=decimation factor
+print(Pali_ss.fs)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+25.0
+</pre></div></div>
+</div>
+<p>We can plot all the time histories of the channels calling the <strong>plot_data()</strong> method</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Plot the Time Histories
+fig, ax = Pali_ss.plot_data()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example1_SingleSetup_13_0.png" src="_images/Example1_SingleSetup_13_0.png" />
+</div>
+</div>
+<p>We can also get more info regarding the quality of the data for each channel calling the <strong>plot_ch_info()</strong> method</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Plot TH, PSD and KDE of the (selected) channels
+fig, ax = Pali_ss.plot_ch_info(ch_idx=[-1])
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example1_SingleSetup_15_0.png" src="_images/Example1_SingleSetup_15_0.png" />
+</div>
+</div>
+<p>We need now to instantiate the algorithms that we want to run, e.g. <strong>EFDD_algo</strong> and <strong>SSIcov_algo</strong>. The algorithms must then be added to the setup class using the <strong>add_algorithms()</strong> method. Thereafter, the algorithms can be executed either individually using the <strong>run_by_name()</strong> method or collectively with <strong>run_all()</strong>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Initialise the algorithms
+fdd = FDD_algo(name=&quot;FDD&quot;)
+fsdd = FSDD_algo(name=&quot;FSDD&quot;, nxseg=2048, method_SD=&quot;per&quot;, pov=0.5)
+ssicov = SSIcov_algo(name=&quot;SSIcov&quot;, method=&quot;cov_mm&quot;, br=50, ordmax=80)
+
+# Overwrite/update run parameters for an algorithm
+fdd.run_params = FDD_algo.RunParamCls(nxseg=512, method_SD=&quot;cor&quot;)
+
+# Add algorithms to the single setup class
+Pali_ss.add_algorithms(ssicov, fsdd, fdd)
+
+# Run all or run by name
+Pali_ss.run_by_name(&quot;SSIcov&quot;)
+Pali_ss.run_by_name(&quot;FSDD&quot;)
+# Pali_ss.run_all()
+
+# save dict of results
+ssi_res = ssicov.result.model_dump()
+fsdd_res = dict(fsdd.result)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2024-02-01 16:51:34,910 - pyoma2.OMA - INFO - Running SSIcov... (OMA:66)
+2024-02-01 16:51:36,405 - pyoma2.functions.SSI_funct - INFO - SSI for increasing model order... (SSI_funct:256)
+100%|███████████████████████████████████████████████████████████████████████████████| 81/81 [00:00&lt;00:00, 11536.90it/s]
+2024-02-01 16:51:36,684 - pyoma2.OMA - INFO - Running FSDD... (OMA:66)
+</pre></div></div>
+</div>
+<p>We can now plot some of the results:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># plot Singular values of PSD
+fsdd.plot_CMIF(freqlim=5)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 640x480 with 1 Axes&gt;,
+ &lt;Axes: title={&#39;center&#39;: &#39;Singular values of spectral matrix&#39;}, xlabel=&#39;Frequency [Hz]&#39;, ylabel=&#39;dB rel. to unit&#39;&gt;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example1_SingleSetup_19_1.png" src="_images/Example1_SingleSetup_19_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># plot Stabilisation chart for SSI
+ssicov.plot_STDiag(freqlim=5, hide_poles=False)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 640x480 with 1 Axes&gt;,
+ &lt;Axes: title={&#39;center&#39;: &#39;Stabilisation Chart&#39;}, xlabel=&#39;Frequency [Hz]&#39;, ylabel=&#39;Model Order&#39;&gt;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example1_SingleSetup_20_1.png" src="_images/Example1_SingleSetup_20_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># plot frequecy-damping clusters for SSI
+ssicov.plot_cluster(freqlim=5)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 640x480 with 1 Axes&gt;,
+ &lt;Axes: title={&#39;center&#39;: &#39;Stabilisation Chart&#39;}, xlabel=&#39;Frequency [Hz]&#39;, ylabel=&#39;Damping&#39;&gt;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example1_SingleSetup_21_1.png" src="_images/Example1_SingleSetup_21_1.png" />
+</div>
+</div>
+<p>We are now ready to extract the modal properties of interest either from the interactive plots using the <strong>MPE_fromPlot()</strong> method or using the <strong>MPE()</strong> method.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Select modes to extract from plots
+# Pali_ss.MPE_fromPlot(&quot;SSIcov&quot;, freqlim=5)
+
+# or directly
+Pali_ss.MPE(&quot;SSIcov&quot;, sel_freq=[1.88, 2.42, 2.68], order=40)
+
+# update dict of results
+ssi_res = dict(ssicov.result)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2024-02-01 16:51:37,791 - pyoma2.OMA - INFO - Getting MPE modal parameters from SSIcov (OMA:74)
+2024-02-01 16:51:37,792 - pyoma2.functions.SSI_funct - INFO - Extracting SSI modal parameters (SSI_funct:580)
+100%|██████████████████████████████████████████████████████████████████████████████████| 3/3 [00:00&lt;00:00, 5974.79it/s]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Select modes to extract from plots
+# Pali_ss.MPE_fromPlot(&quot;FSDD&quot;, freqlim=5, MAClim=0.95)
+
+# or directly
+Pali_ss.MPE(&quot;FSDD&quot;, sel_freq=[1.88, 2.42, 2.68], MAClim=0.95)
+
+# update dict of results
+fsdd_res = dict(fsdd.result)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2024-02-01 16:51:37,805 - pyoma2.OMA - INFO - Getting MPE modal parameters from FSDD (OMA:74)
+2024-02-01 16:51:37,840 - pyoma2.functions.FDD_funct - INFO - Extracting FDD modal parameters (FDD_funct:261)
+100%|██████████████████████████████████████████████████████████████████████████████████| 3/3 [00:00&lt;00:00, 3000.22it/s]
+2024-02-01 16:51:37,845 - pyoma2.functions.FDD_funct - INFO - Extracting EFDD modal parameters (FDD_funct:447)
+100%|████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:00&lt;00:00, 17.86it/s]
+</pre></div></div>
+</div>
+<p>We can compare the results from the two methods</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ssicov.result.Fn
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([1.88205042, 2.4211625 , 2.68851009])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fsdd.result.Fn
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([1.8787832 , 2.42254302, 2.67381079])
+</pre></div></div>
+</div>
+<p>We can also plot some additional info regarding the estimates for the EFDD and FSDD algorithms</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># plot additional info (goodness of fit) for EFDD or FSDD
+Pali_ss[fsdd.name].plot_FIT(freqlim=5)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+C:\Users\dpa\Miniconda3\envs\pyOMA2\Lib\site-packages\matplotlib\cbook.py:1699: ComplexWarning: Casting complex values to real discards the imaginary part
+  return math.isfinite(val)
+C:\Users\dpa\Miniconda3\envs\pyOMA2\Lib\site-packages\matplotlib\cbook.py:1345: ComplexWarning: Casting complex values to real discards the imaginary part
+  return np.asarray(x, float)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+([&lt;Figure size 640x480 with 4 Axes&gt;,
+  &lt;Figure size 640x480 with 4 Axes&gt;,
+  &lt;Figure size 640x480 with 4 Axes&gt;],
+ [[&lt;Axes: title={&#39;center&#39;: &#39;SDOF Bell function&#39;}, xlabel=&#39;Frequency [Hz]&#39;, ylabel=&#39;dB $[V^2/Hz]$&#39;&gt;,
+   &lt;Axes: title={&#39;center&#39;: &#39;Auto-correlation Function&#39;}, xlabel=&#39;Time lag[s]&#39;, ylabel=&#39;Normalized correlation&#39;&gt;,
+   &lt;Axes: title={&#39;center&#39;: &#39;Portion for fit&#39;}, xlabel=&#39;Time lag[s]&#39;, ylabel=&#39;Normalized correlation&#39;&gt;,
+   &lt;Axes: title={&#39;center&#39;: &#39;Fit - Frequency and Damping&#39;}, xlabel=&#39;counter $k^{th}$ extreme&#39;, ylabel=&#39;$2ln\\left(r_0/|r_k|\\right)$&#39;&gt;],
+  [&lt;Axes: title={&#39;center&#39;: &#39;SDOF Bell function&#39;}, xlabel=&#39;Frequency [Hz]&#39;, ylabel=&#39;dB $[V^2/Hz]$&#39;&gt;,
+   &lt;Axes: title={&#39;center&#39;: &#39;Auto-correlation Function&#39;}, xlabel=&#39;Time lag[s]&#39;, ylabel=&#39;Normalized correlation&#39;&gt;,
+   &lt;Axes: title={&#39;center&#39;: &#39;Portion for fit&#39;}, xlabel=&#39;Time lag[s]&#39;, ylabel=&#39;Normalized correlation&#39;&gt;,
+   &lt;Axes: title={&#39;center&#39;: &#39;Fit - Frequency and Damping&#39;}, xlabel=&#39;counter $k^{th}$ extreme&#39;, ylabel=&#39;$2ln\\left(r_0/|r_k|\\right)$&#39;&gt;],
+  [&lt;Axes: title={&#39;center&#39;: &#39;SDOF Bell function&#39;}, xlabel=&#39;Frequency [Hz]&#39;, ylabel=&#39;dB $[V^2/Hz]$&#39;&gt;,
+   &lt;Axes: title={&#39;center&#39;: &#39;Auto-correlation Function&#39;}, xlabel=&#39;Time lag[s]&#39;, ylabel=&#39;Normalized correlation&#39;&gt;,
+   &lt;Axes: title={&#39;center&#39;: &#39;Portion for fit&#39;}, xlabel=&#39;Time lag[s]&#39;, ylabel=&#39;Normalized correlation&#39;&gt;,
+   &lt;Axes: title={&#39;center&#39;: &#39;Fit - Frequency and Damping&#39;}, xlabel=&#39;counter $k^{th}$ extreme&#39;, ylabel=&#39;$2ln\\left(r_0/|r_k|\\right)$&#39;&gt;]])
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example1_SingleSetup_29_2.png" src="_images/Example1_SingleSetup_29_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example1_SingleSetup_29_3.png" src="_images/Example1_SingleSetup_29_3.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example1_SingleSetup_29_4.png" src="_images/Example1_SingleSetup_29_4.png" />
+</div>
+</div>
+<p>And finally we can plot and/or animate the mode shapes extracted from the analysis</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># MODE SHAPES PLOT
+# Plot mode 2 (geometry 1)
+Pali_ss[fsdd.name].plot_mode_g1(
+    Geo1=Pali_ss.Geo1, mode_numb=2, view=&quot;3D&quot;, scaleF=2)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 800x800 with 1 Axes&gt;,
+ &lt;Axes3D: title={&#39;center&#39;: &#39;Mode nr. 2, $f_n$=2.423Hz&#39;}&gt;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example1_SingleSetup_31_1.png" src="_images/Example1_SingleSetup_31_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Animate mode 1 (geometry 2)
+Pali_ss[ssicov.name].anim_mode_g2(
+    Geo2=Pali_ss.Geo2, mode_numb=1, view=&quot;xy&quot;, scaleF=3)
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyoma2.html" class="btn btn-neutral float-left" title="User instantiated classes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Example2_MultiSetupPoSER.html" class="btn btn-neutral float-right" title="Example2_MultiSetupPoSER" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Dag Pasca.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

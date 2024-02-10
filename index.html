@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyOMA2’s documentation! &mdash; pyoma2 0.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=c02300dd"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pyOMA2" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            pyoma2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyOMA2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#examples">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">pyoma2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">pyOMA2’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pyoma2-s-documentation">
+<h1>pyOMA2’s documentation!<a class="headerlink" href="#pyoma2-s-documentation" title="Permalink to this heading"></a></h1>
+<p><a class="reference external" href="https://img.shields.io/badge/Python-3.8-3776AB.svg?style=flat&amp;logo=python&amp;logoColor=white"><img alt="Python 3.8" src="https://img.shields.io/badge/Python-3.8-3776AB.svg?style=flat&amp;logo=python&amp;logoColor=white" /></a> <a class="reference external" href="https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&amp;logo=python&amp;logoColor=white"><img alt="Python 3.9" src="https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&amp;logo=python&amp;logoColor=white" /></a> <a class="reference external" href="https://img.shields.io/badge/Python-3.10-3776AB.svg?style=flat&amp;logo=python&amp;logoColor=white"><img alt="Python 3.10" src="https://img.shields.io/badge/Python-3.10-3776AB.svg?style=flat&amp;logo=python&amp;logoColor=white" /></a> <a class="reference external" href="https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&amp;logo=python&amp;logoColor=white"><img alt="Python 3.11" src="https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&amp;logo=python&amp;logoColor=white" /></a> <a class="reference external" href="https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&amp;logoColor=white"><img alt="pre-commit" src="https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&amp;logoColor=white" /></a> <a class="reference external" href="https://img.shields.io/badge/code%20style-black-000000.svg"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg" /></a></p>
+<p>This is the new and updated version of <strong>pyOMA</strong> module, a Python module designed for conducting operational modal analysis. With this update, we’ve transformed <strong>pyOMA</strong> from a basic collection of functions into a more sophisticated module that fully leverages the capabilities of Python classes.</p>
+<p>The module now supports analysis of both single and multi-setup data measurements, which includes handling multiple acquisitions with a mix of reference and roving sensors. We’ve also introduced interactive plots, allowing users to select desired modes for extraction directly from the plots generated by the algorithms. Additionally, a new feature enables users to define the geometry of the structures being tested, facilitating the visualization of mode shapes after modal results are obtained. The underlying functions of these classes have been rigorously revised, resulting in significant enhancements and optimizations.</p>
+<p>Check out the project <a class="reference external" href="https://github.com/dagghe/pyOMA2">source</a>.</p>
+</section>
+<section id="schematic-organisation-of-the-module-showing-inheritance-between-classes">
+<h1>Schematic organisation of the module showing inheritance between classes<a class="headerlink" href="#schematic-organisation-of-the-module-showing-inheritance-between-classes" title="Permalink to this heading"></a></h1>
+<img alt="_images/info.svg" src="_images/info.svg" /></section>
+<section id="quick-start">
+<h1>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this heading"></a></h1>
+<p>Install the library:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pyOMA</span><span class="o">-</span><span class="mi">2</span>
+</pre></div>
+</div>
+<p>You’ll probably need to install <strong>tk</strong> for the GUI on your system, here some instructions:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.pythonguis.com/installation/install-tkinter-windows/">Windows</a></p></li>
+<li><p><a class="reference external" href="https://www.pythonguis.com/installation/install-tkinter-linux/">Linux</a></p></li>
+<li><p><a class="reference external" href="https://www.pythonguis.com/installation/install-tkinter-mac/">Mac</a></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please note that this is still an alpha release, this project is under active development.</p>
+</div>
+<hr class="docutils" />
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyOMA2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyoma2.html">User instantiated classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#setup-classes">Setup classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-singlesetup-class">The <code class="docutils literal notranslate"><span class="pre">SingleSetup</span></code> class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-multisetup-poser-class">The <code class="docutils literal notranslate"><span class="pre">MultiSetup_PoSER</span></code> class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-multisetup-preger-class">The <code class="docutils literal notranslate"><span class="pre">MultiSetup_PreGER</span></code> class</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#algorithm-classes">Algorithm classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-fdd-algo-class">The <code class="docutils literal notranslate"><span class="pre">FDD_algo</span></code> class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-fdd-algo-ms-class">The <code class="docutils literal notranslate"><span class="pre">FDD_algo_MS</span></code> class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-efdd-algo-class">The <code class="docutils literal notranslate"><span class="pre">EFDD_algo</span></code> class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-efdd-algo-ms-class">The <code class="docutils literal notranslate"><span class="pre">EFDD_algo_MS</span></code> class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-fsdd-algo-class">The <code class="docutils literal notranslate"><span class="pre">FSDD_algo</span></code> class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-ssidat-algo-class">The <code class="docutils literal notranslate"><span class="pre">SSIdat_algo</span></code> class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-ssidat-algo-ms-class">The <code class="docutils literal notranslate"><span class="pre">SSIdat_algo_MS</span></code> class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-ssicov-algo-class">The <code class="docutils literal notranslate"><span class="pre">SSIcov_algo</span></code> class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyoma2.html#the-ssicov-algo-ms-class">The <code class="docutils literal notranslate"><span class="pre">SSIcov_algo_MS</span></code> class</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyoma2.html#support-classes-and-modules">Support classes and modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-basesetup-class">The <code class="docutils literal notranslate"><span class="pre">BaseSetup</span></code> class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-basealgorithm-class">The <code class="docutils literal notranslate"><span class="pre">BaseAlgorithm</span></code> class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-geometry-module">The <code class="docutils literal notranslate"><span class="pre">geometry</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-result-module">The <code class="docutils literal notranslate"><span class="pre">result</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-run-params-module">The <code class="docutils literal notranslate"><span class="pre">run_params</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-selfromplot-class">The <code class="docutils literal notranslate"><span class="pre">SelFromPlot</span></code> class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-anim-mode-module">The <code class="docutils literal notranslate"><span class="pre">anim_mode</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-utils-module">The <code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyoma2.html#functions-module">Functions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-fdd-funct-module">The <code class="docutils literal notranslate"><span class="pre">FDD_funct</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-gen-funct-module">The <code class="docutils literal notranslate"><span class="pre">Gen_funct</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-ssi-funct-module">The <code class="docutils literal notranslate"><span class="pre">SSI_funct</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyoma2.html#the-plot-funct-module">The <code class="docutils literal notranslate"><span class="pre">plot_funct</span></code> module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Example1_SingleSetup.html">Example1_SingleSetup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Example2_MultiSetupPoSER.html">Example2_MultiSetupPoSER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Example3_MultiSetupPreGER.html">Example3_MultiSetupPreGER</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-right" title="pyOMA2" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Dag Pasca.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
