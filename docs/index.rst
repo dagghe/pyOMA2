@@ -4,6 +4,7 @@
    contain the root `toctree` directive.
 
 .. include:: ../README.md
+   :parser: myst_parser.sphinx_
 
 Welcome to pyoma2's documentation!
 
@@ -11,31 +12,11 @@ Welcome to pyoma2's documentation!
 **pyOMA2** is a Python library for...
 
 Check out the :doc:`usage` section for further information, including
-how to :ref:`installation` the project.
+how to :doc:`install` the project.
 
 .. note::
 
    This project is under active development.
-
-Contents
---------
-
-.. automodule:: src.pyoma2.OMA
-    :members:
-
-.. automodule:: src.pyoma2.algorithm.fdd
-    :members:
-
-.. automodule:: src.pyoma2.algorithm.ssi
-    :members:
-
-.. toctree::
-
-   Home <self>
-   api
-
-.. _source: https://github.com/dagghe/pyOMA2
-
 
 ==================================
 
@@ -44,6 +25,9 @@ Contents
    :caption: Contents:
 
    modules
+   api
+   install
+   usage
 
 Indices and tables
 ==================
