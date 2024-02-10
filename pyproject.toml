@@ -22,7 +22,7 @@ license = {text = "MIT"}
 
 [project.urls]
 Homepage = "https://github.com/dagghe/pyOMA2"
-Documentation = "https://github.com/dagghe/pyOMA2/blob/main/README.md"
+Documentation = "https://dagghe.github.io/pyOMA2/index.html"
 Repository = "https://github.com/dagghe/pyOMA2"
 Changelog = "https://github.com/dagghe/pyOMA2/blob/main/CHANGELOG.md"
 Contributing = "https://github.com/dagghe/pyOMA2/blob/main/CONTRIBUTING.md"
@@ -47,15 +47,10 @@ docs = [
     "sphinx>=7.1.2",
     "sphinx-rtd-theme>=2.0.0",
     "ghp-import>=2.1.0",
+    "myst-parser>=2.0.0",
 ]
 qa = [
     "pre-commit>=3.5.0",
     "ipdb>=0.13.13",
     "pytest>=7.4.4",
 ]
-
-
-[project.entry-points."console_scripts"]
-pyoma2_example_SS = "pyoma2.Example_SS:main"
-pyoma2_example_MSposER = "pyoma2.Example_MSposER:main"
-pyoma2_example_MSpreGER = "pyoma2.Example_MSpreGER:main"

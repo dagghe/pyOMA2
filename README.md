@@ -18,6 +18,12 @@ The module now supports analysis of both single and multi-setup data measurement
 
 Please note that this is still an alpha release, and we are continuously refining the docstrings, documentation, and other aspects of the module. However, we have provided three working examples that demonstrate the module's capabilities: [Example1_SingleSetup.ipynb](Example1_SingleSetup.ipynb) (for single setup), [Example2_MultiSetupPoSER.ipynb](Example2_MultiSetupPoSER.ipynb) (for multi setups using the Post-Single Estimation Rescaling method), and [Example3_MultiSetupPreGER.ipynb](Example3_MultiSetupPreGER.ipynb) (for multi setups using the Pre-Global Estimation Rescaling method).
 
+## Documentation
+
+You can check the documentation at the following link:
+
+https://dagghe.github.io/pyOMA2/index.html
+
 ## Quick start
 
 Install the library
