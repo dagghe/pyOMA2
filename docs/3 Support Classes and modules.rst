@@ -6,20 +6,12 @@ Support classes and modules
 
 These classes (and functions) are not instantiated or called directly by the users, but internally by the "main" classes.
 
-
-The ``BaseSetup`` class
------------------------
-
-.. autoclass:: pyoma2.OMA.BaseSetup
-    :members:
-
-
 The ``BaseAlgorithm`` class
 ---------------------------
 
 .. autoclass:: pyoma2.algorithm.base.BaseAlgorithm
-    :members:
-
+   :members:
+   :noindex:
 
 The ``geometry`` module
 -----------------------
@@ -28,7 +20,7 @@ The ``geometry`` module
    :members:
    :undoc-members:
    :show-inheritance:
-
+   :noindex:
 
 The ``result`` module
 ---------------------
@@ -37,6 +29,7 @@ The ``result`` module
    :members:
    :undoc-members:
    :show-inheritance:
+   :noindex:
 
 The ``run_params`` module
 -------------------------
@@ -45,13 +38,15 @@ The ``run_params`` module
    :members:
    :undoc-members:
    :show-inheritance:
+   :noindex:
 
+The ``Sel_from_plot`` module
+----------------------------
 
-The ``SelFromPlot`` class
--------------------------
-
-.. autoclass:: pyoma2.plot.Sel_from_plot.SelFromPlot
-    :members:
+.. autoclass:: pyoma2.plot.Sel_from_plot
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 
 The ``anim_mode`` module

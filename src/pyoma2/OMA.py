@@ -36,18 +36,6 @@ Notes
   across various setups.
 - It includes methods for data visualization, geometric setup definition, and algorithm execution,
   making it versatile for different OMA applications.
-
-Attributes and Methods
-----------------------
-- The classes define attributes such as `data`, `fs` (sampling frequency), `algorithms`, and `datasets`.
-- Methods include `add_algorithms`, `run_all`, `run_by_name`, `MPE`, `plot_geo1`, `plot_geo2`,
-  `plot_data`, `plot_ch_info`, `decimate_data`, `detrend_data`, `def_geo1`, and `def_geo2`.
-- These attributes and methods facilitate comprehensive data handling, algorithm management, result
-  visualization, and geometric setup customization for OMA tasks.
-
-This module integrates advanced OMA techniques and provides a structured approach to modal analysis,
-suitable for both academic research and practical applications in structural dynamics and system
-identification.
 """
 from __future__ import annotations
 
@@ -1830,61 +1818,58 @@ class MultiSetup_PoSER:
 # FIXME add reference!
 class MultiSetup_PreGER(BaseSetup):
     """
-    A class to conduct OMA of multi-setup experiments, with the
-    "Pre Global Estimation Re-scaling" (PreGER) approach. (add reference)
-
-    This class is designed to handle multiple datasets and apply the
-    pre-global estimation re-scaling method. It allows plotting of data,
-    channel information, and geometric configurations, and provides methods
-    for data decimation and detrending.
+    A class for conducting Operational Modal Analysis (OMA) on multi-setup experiments using the
+    Pre-Global Estimation Re-scaling (PreGER) approach. This class is tailored for handling and
+    processing multiple datasets to apply the PreGER method efficiently. It offers functionalities
+    for data visualization, preprocessing, and geometric configuration for the structure under analysis.
 
     Attributes
     ----------
     fs : float
-        The sampling frequency, assumed to be the same for all datasets.
+        Sampling frequency, assumed to be uniform across all datasets.
     dt : float
-        The sampling interval, calculated as the inverse of the sampling frequency.
+        Sampling interval, calculated as the inverse of the sampling frequency.
     ref_ind : list[list[int]]
-        A list of lists indicating reference indices for each dataset.
+        Indices of reference sensors for each dataset, as a list of lists.
     datasets : list[npt.NDArray[np.float64]]
-        A list of NumPy arrays, each representing a dataset.
+        List of datasets, each represented as a NumPy array.
     data : npt.NDArray[np.float64]
-        The processed data after applying the PreGER method.
+        Processed data after applying the PreGER method.
     algorithms : typing.Dict[str, BaseAlgorithm]
-        A dictionary to store algorithms associated with the setup.
+        Dictionary storing algorithms associated with the setup, keyed by their names.
 
-    Methods, inherited from BaseSetup
-    -------
-    add_algorithms(*algorithms)
-        Adds algorithms to the setup and sets the data and sampling frequency for them.
-    run_all()
-        Runs all the algorithms added to the class.
-    run_by_name(name)
-        Executes a specific algorithm by its name.
-    MPE(name, *args, **kwargs)
-        Extracts modal parameters from selected poles/peaks.
-    MPE_fromPlot(name, *args, **kwargs)
-        Extracts modal parameters directly from plot selections.
-    plot_geo1(scaleF, view, remove_fill, remove_grid, remove_axis)
-        Plots the first type of geometry setup for the structure.
-    plot_geo2(scaleF, view, remove_fill, remove_grid, remove_axis)
-        Plots the second type of geometry setup for the structure.
+    Inherited Methods
+    -----------------
+    add_algorithms(...)
+        Adds algorithms to the setup and initializes them with data and sampling frequency.
+    run_all(...)
+        Executes all algorithms added to the setup.
+    run_by_name(...)
+        Runs a specific algorithm identified by its name.
+    MPE(...)
+        Extracts modal parameters based on selected poles/peaks.
+    MPE_fromPlot(...)
+        Allows modal parameter extraction directly from interactive plot selections.
+    plot_geo1(...)
+        Plots the first type of geometric configuration for the structure.
+    plot_geo2(...)
+        Plots the second type of geometric configuration for the structure.
 
-    Methods
-    -------
+    Additional Methods
+    ------------------
     plot_data(...)
-        Plots the time histories of the data channels for selected datasets.
+        Visualizes time history data of channels for selected datasets.
     plot_ch_info(...)
-        Plots Time History (TH), Power Spectral Density (PSD), and Kernel Density Estimation (KDE)
+        Displays Time History (TH), Power Spectral Density (PSD), and Kernel Density Estimation (KDE)
         for each channel.
     decimate_data(...)
-        Applies decimation to the data using a wrapper method for scipy.signal.decimate function.
+        Applies data decimation using scipy.signal.decimate.
     detrend_data(...)
-        Applies detrending to the data using a wrapper method for scipy.signal.detrend function.
+        Detrends data using scipy.signal.detrend.
     def_geo1(...)
-        Defines the first geometry setup (Geo1) for the instance.
+        Defines the first type of geometric setup (Geo1) for the instance.
     def_geo2(...)
-        Defines the second geometry setup (Geo2) for the instance.
+        Defines the second type of geometric setup (Geo2) for the instance.
 
     Notes
     -----
