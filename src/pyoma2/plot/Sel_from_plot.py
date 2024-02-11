@@ -1,7 +1,41 @@
 """
-Created on Wed Jan  3 11:56:19 2024
+SEL_FROM_PLOT MODULE
 
-@author: dpa
+This module, part of the pyOMA2 package, provides interactive plotting functionalities
+for selecting and analyzing poles in Operational Modal Analysis (OMA). It is designed to
+work with Frequency Domain Decomposition (FDD) and Stochastic Subspace Identification (SSI)
+algorithms, enabling users to visually inspect and interact with the stabilization charts
+and singular value decomposition plots. The module integrates matplotlib plots into a Tkinter
+GUI, allowing for intuitive interaction such as pole selection through mouse clicks and keyboard
+shortcuts.
+
+Classes:
+    SelFromPlot: A class for creating interactive plots where users can select or
+                 deselect poles for further analysis in OMA. It supports various types
+                 of plots (FDD, SSI, pLSCF) and provides utilities for saving figures,
+                 toggling legends, and handling user inputs through a graphical interface.
+
+Key Features:
+    - Interactive selection of poles directly from stabilization charts and PSD plots.
+    - Compatibility with FDD, SSI, and pLSCF algorithm outputs.
+    - Integration of matplotlib plots within a Tkinter window for enhanced user interaction.
+    - Support for exporting plots and managing display settings like legends and pole visibility.
+
+References:
+    - This module is inspired by and expands upon functionalities found in the sdypy pyEMA
+      package [1]_, offering specialized features tailored for the pyOMA2 package's requirements.
+    .. [1] Janko Slavič, Python module for Experimental Modal Analysis (PyEMA), GitHub repository,
+        https://github.com/sdypy/sdypy
+
+Dependencies:
+    - matplotlib for plotting
+    - Tkinter for GUI components
+    - numpy for numerical operations
+    - pyOMA2's algorithm module for accessing algorithm-specific data
+
+Note:
+    The module is designed to be used as part of the pyOMA2 package and relies on its
+    internal data structures and algorithms.
 """
 from __future__ import annotations
 
@@ -34,6 +68,78 @@ logger = logging.getLogger(__name__)
 
 
 class SelFromPlot:
+    """
+    A class for interactive selection of poles.
+
+    This class integrates matplotlib plots into a Tkinter window, enabling users to interactively
+    select or deselect poles using mouse clicks and keyboard shortcuts. It supports FDD, SSI, and
+    pLSCF methods for operational modal analysis. The design and functionality of this class is
+    strongly inspired by the pyEMA module [1]_.
+
+    Attributes
+    ----------
+    algo : BaseAlgorithm
+        An instance of a base algorithm class that provides necessary data for plotting.
+    freqlim : tuple, optional
+        Upper frequency limit for the plot, defaults to half the Nyquist frequency if not provided.
+    plot : str
+        Type of plot to be displayed. Supported values are "FDD", "SSI", and "pLSCF".
+    root : tkinter.Tk
+        Root widget of the Tkinter application.
+    sel_freq : list
+        List of selected frequencies.
+    shift_is_held : bool
+        Flag to track if the SHIFT key is held down during mouse interactions.
+    fig : matplotlib.figure.Figure
+        Matplotlib Figure object for plotting.
+    ax2 : matplotlib.axes.Axes
+        Axes object for the figure.
+    MARKER : matplotlib.lines.Line2D
+        Line2D object for displaying selected points on the plot.
+    show_legend : int
+        Flag to control the visibility of the legend in the plot.
+    hide_poles : int
+        Flag to control the visibility of unstable poles in the plot.
+
+    Methods
+    -------
+    __init__(algo: BaseAlgorithm, freqlim=None, plot: typing.Literal["FDD", "SSI"] = "FDD"):
+        Initializes the SelFromPlot class with the specified algorithm, frequency limit, and plot type.
+    plot_svPSD(update_ticks=False):
+        Plots the Singular Values of the Power Spectral Density matrix for FDD analysis.
+    get_closest_freq():
+        Selects the frequency closest to the mouse click location for FDD plots.
+    plot_stab(plot, update_ticks=False):
+        Plots the stabilization chart for SSI or pLSCF methods.
+    get_closest_pole(plot):
+        Selects the pole closest to the mouse click location for SSI or pLSCF plots.
+    on_click_FDD(event):
+        Handles mouse click events for FDD plots.
+    on_click_SSI(event, plot):
+        Handles mouse click events for SSI or pLSCF plots.
+    on_key_press(event):
+        Handles key press events (SHIFT key for selecting poles).
+    on_key_release(event):
+        Handles key release events.
+    on_closing():
+        Handles the closing event of the Tkinter window.
+    toggle_legend(x):
+        Toggles the visibility of the legend in the plot.
+    toggle_hide_poles(x):
+        Toggles the visibility of unstable poles in the plot.
+    sort_selected_poles():
+        Sorts the selected poles based on their frequencies.
+    show_help():
+        Displays a help dialog with instructions for selecting poles.
+    save_this_figure():
+        Saves the current plot to a file.
+
+    References
+    ----------
+    .. [1] Janko Slavič, Python module for Experimental Modal Analysis (PyEMA), GitHub repository,
+        https://github.com/sdypy/sdypy
+    """
+
     def __init__(
         self,
         algo: BaseAlgorithm,
@@ -41,36 +147,31 @@ class SelFromPlot:
         plot: typing.Literal["FDD", "SSI"] = "FDD",
     ):
         """
-        The `SelFromPlot` class is a tool for interactive selection of poles from charts
-        created by the algorithms.
-        It integrates matplotlib plots into a Tkinter window and allows users to select or
-        deselect poles using mouse clicks and keyboard shortcuts.
-        The class supports both Frequency Domain Decomposition (FDD) and
-        Stochastic Subspace Identification (SSI) algorithms.
+        Initializes the SelFromPlot class with specified algorithm, frequency limit, and plot type.
 
-        Attributes:
-            algo (BaseAlgorithm): An instance of a base algorithm class that provides the necessary
-                                  data for plotting, such as frequencies, damping ratios, and labels.
-            freqlim (float, optional): The upper frequency limit for the plot. Defaults to half the Nyquist
-                                       frequency if not provided.
-            plot (str): Type of plot to be displayed. Supported values are "FDD", "SSI", and "pLSCF".
+        Parameters
+        ----------
+        algo : BaseAlgorithm
+            An instance of a base algorithm class providing necessary data for plotting.
+        freqlim : tuple, optional
+            Upper frequency limit for the plot, defaults to half the Nyquist frequency if not provided.
+        plot : str, optional
+            Type of plot to be displayed. Supported values are "FDD", "SSI", and "pLSCF". Default is "FDD".
 
-        Methods:
-            __init__: Initializes the GUI, setting up the plot type, Tkinter window, and event bindings.
-            plot_svPSD: Plots the Singular Values of the Power Spectral Density matrix for FDD.
-            get_closest_freq: Selects the frequency closest to the mouse click location for FDD.
-            plot_stab: Plots the stabilization chart for SSI or pLSCF methods.
-            get_closest_pole: Selects the pole closest to the mouse click location for SSI or pLSCF.
-            on_click_FDD: Handles mouse click events for FDD plots.
-            on_click_SSI: Handles mouse click events for SSI or pLSCF plots.
-            on_key_press: Handles key press events (SHIFT key for selecting poles).
-            on_key_release: Handles key release events.
-            on_closing: Handles the closing event of the Tkinter window.
-            toggle_legend: Toggles the visibility of the legend in the plot.
-            toggle_hide_poles: Toggles the visibility of unstable poles in the plot.
-            sort_selected_poles: Sorts the selected poles based on their frequencies.
-            show_help: Displays a help dialog with instructions for selecting poles.
-            save_this_figure: Saves the current plot to a file.
+        Attributes
+        ----------
+        sel_freq : list
+            List to store selected frequencies.
+        pole_ind : list
+            List to store indices of selected poles.
+        shift_is_held : bool
+            Flag indicating if the SHIFT key is held.
+        root : tkinter.Tk
+            Root of the Tkinter application.
+        fig : matplotlib.figure.Figure
+            Matplotlib figure for plotting.
+        ax2 : matplotlib.axes.Axes
+            Matplotlib axes for plotting.
         """
         self.algo = algo
         self.plot = plot
@@ -172,7 +273,14 @@ class SelFromPlot:
     # =============================================================================
 
     def plot_svPSD(self, update_ticks=False):
+        """
+        Plots the Singular Values of the Power Spectral Density matrix for FDD analysis.
 
+        Parameters
+        ----------
+        update_ticks : bool, optional
+            Flag indicating whether to update tick marks for selected frequencies. Default is False.
+        """
         freq = self.algo.result.freq
         S_val = self.algo.result.S_val
 
@@ -226,7 +334,7 @@ class SelFromPlot:
 
     def get_closest_freq(self):
         """
-        On-the-fly selection of the closest poles.
+        Selects the frequency closest to the mouse click location for FDD plots.
         """
 
         freq = self.algo.result.freq
@@ -240,8 +348,16 @@ class SelFromPlot:
     # ------------------------------------------------------------------------------
 
     def plot_stab(self, plot, update_ticks=False):
+        """
+        Plots the stabilization chart for SSI or pLSCF methods.
 
-        # S_val = self.AlgoName.Results[f"FDD_{simnum}"]["S_val"]
+        Parameters
+        ----------
+        plot : str
+            Type of plot to be displayed ("SSI" or "pLSCF").
+        update_ticks : bool, optional
+            Flag indicating whether to update tick marks for selected poles. Default is False.
+        """
 
         freqlim = self.freqlim
         hide_poles = self.hide_poles
@@ -327,7 +443,12 @@ class SelFromPlot:
 
     def get_closest_pole(self, plot):
         """
-        On-the-fly selection of the closest poles.
+        Selects the pole closest to the mouse click location for SSI or pLSCF plots.
+
+        Parameters
+        ----------
+        plot : str
+            Type of plot ("SSI" or "pLSCF") for which the pole is being selected.
         """
 
         if plot == "SSI":
@@ -352,6 +473,14 @@ class SelFromPlot:
     # ------------------------------------------------------------------------------
 
     def on_click_FDD(self, event):
+        """
+        Handles mouse click events for FDD plots.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event triggered on the plot.
+        """
         # on button 1 press (left mouse button) + SHIFT is held
         if event.button == 1 and self.shift_is_held:
             self.y_data_pole = [event.ydata]
@@ -387,6 +516,16 @@ class SelFromPlot:
     # ------------------------------------------------------------------------------
 
     def on_click_SSI(self, event, plot):
+        """
+        Handles mouse click events for SSI or pLSCF plots.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event triggered on the plot.
+        plot : str
+            Type of plot ("SSI" or "pLSCF") where the event occurred.
+        """
         # on button 1 press (left mouse button) + SHIFT is held
         if event.button == 1 and self.shift_is_held:
             self.y_data_pole = [event.ydata]
@@ -422,20 +561,45 @@ class SelFromPlot:
     # ------------------------------------------------------------------------------
 
     def on_key_press(self, event):
-        """Function triggered on key press (SHIFT)."""
+        """
+        Handles key press events for interactive pole selection.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.KeyEvent
+            The key event triggered on the plot.
+        """
         if event.key == "shift":
             self.shift_is_held = True
 
     def on_key_release(self, event):
-        """Function triggered on key release (SHIFT)."""
+        """
+        Handles key release events.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.KeyEvent
+            The key event triggered on the plot.
+        """
         if event.key == "shift":
             self.shift_is_held = False
 
     def on_closing(self):
+        """
+        Handles the closing event of the Tkinter window.
+        """
         self.root.quit()
         self.root.destroy()
 
     def toggle_legend(self, x):
+        """
+        Toggles the visibility of the legend in the plot.
+
+        Parameters
+        ----------
+        x : int
+            Flag indicating whether to show (1) or hide (0) the legend.
+        """
         if x:
             self.show_legend = 1
         else:
@@ -444,6 +608,14 @@ class SelFromPlot:
         self.plot_stab(self.plot)
 
     def toggle_hide_poles(self, x):
+        """
+        Toggles the visibility of unstable poles in the plot.
+
+        Parameters
+        ----------
+        x : int
+            Flag indicating whether to hide (1) or show (0) unstable poles.
+        """
         if x:
             self.hide_poles = 1
         else:
@@ -452,10 +624,16 @@ class SelFromPlot:
         self.plot_stab(self.plot)
 
     def sort_selected_poles(self):
+        """
+        Sorts the selected poles based on their frequencies.
+        """
         _ = np.argsort(self.sel_freq)
         self.sel_freq = list(np.array(self.sel_freq)[_])
 
     def show_help(self):
+        """
+        Displays a help dialog with instructions for selecting poles.
+        """
         lines = [
             "Pole selection help",
             " ",
@@ -466,6 +644,9 @@ class SelFromPlot:
         tk.messagebox.showinfo("Picking poles", "\n".join(lines))
 
     def save_this_figure(self):
+        """
+        Saves the current plot to a file.
+        """
         filename = "pole_chart_"
         directory = "pole_figures"
 
