@@ -1,8 +1,26 @@
 """
-Created on Sat Oct 21 18:39:20 2023
+GENERAL UTILITY FUNCTIONS
 
-@author: dagpa
+Part of the pyOMA2 package, this module provides general utility functions crucial for
+implementational aspects of Operational Modal Analysis (OMA). These functions support
+data preprocessing, mode shape merging, and key calculations such as the Modal Assurance
+Criterion (MAC), Modal Scale Factor (MSF), and Modal Complexity Factor (MCF).
+
+Main Functions:
+    - merge_mode_shapes: Merges mode shapes from different setups into a unified mode shape array.
+    - MSF: Computes the Modal Scale Factor between two mode shape sets.
+    - MCF: Determines the complexity of mode shapes.
+    - MAC: Calculates the correlation between two sets of mode shapes.
+    - PRE_MultiSetup: Preprocesses data from multiple setups, distinguishing between reference and
+    moving sensors.
+    - invperm: Computes the inverse permutation of an array.
+    - find_map: Establishes a mapping between two arrays based on sorting order.
+
+References:
+.. [1] Janko Slavič, Python module for Experimental Modal Analysis (PyEMA), GitHub repository,
+       https://github.com/sdypy/sdypy
 """
+
 import typing
 
 import numpy as np
