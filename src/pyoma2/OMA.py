@@ -1,3 +1,54 @@
+"""
+Operational Modal Analysis Module for Single and Multi-Setup Configurations.
+
+This module contains classes for operational modal analysis (OMA) with functionalities tailored
+to single and multi-setup scenarios. It includes classes for handling and processing data, running
+algorithms, visualizing results, and defining geometric configurations of structures. The module
+focuses on two approaches: Post Separate Estimation Re-scaling (PoSER) and Pre Global Estimation
+Re-scaling (PreGER) for analyzing data from multiple experimental setups.
+
+Classes
+-------
+BaseSetup
+    A foundational class offering common functionalities for handling data, executing algorithms,
+    and extracting modal properties for both single and multi-setup configurations.
+SingleSetup
+    Manages and processes single-setup data for OMA, inheriting from BaseSetup and extending
+    its functionalities with data plotting, preprocessing, and geometry definition.
+MultiSetup_PoSER
+    Conducts OMA for multi-setup experiments using the PoSER approach, integrating results from
+    multiple setups to extract comprehensive modal properties.
+MultiSetup_PreGER
+    Facilitates OMA of multi-setup experiments with the PreGER approach, handling multiple datasets
+    and applying pre-global estimation re-scaling for modal analysis.
+
+See Also
+--------
+numpy.ndarray, pandas.DataFrame, scipy.signal
+
+Notes
+-----
+- The classes in this module are designed to provide a cohesive workflow for OMA, supporting
+  different experimental setups and analysis methods.
+- BaseSetup serves as a superclass with foundational methods, while SingleSetup and MultiSetup classes
+  extend these methods for specific use cases.
+- The module emphasizes data integrity and consistency, ensuring accurate modal analysis results
+  across various setups.
+- It includes methods for data visualization, geometric setup definition, and algorithm execution,
+  making it versatile for different OMA applications.
+
+Attributes and Methods
+----------------------
+- The classes define attributes such as `data`, `fs` (sampling frequency), `algorithms`, and `datasets`.
+- Methods include `add_algorithms`, `run_all`, `run_by_name`, `MPE`, `plot_geo1`, `plot_geo2`,
+  `plot_data`, `plot_ch_info`, `decimate_data`, `detrend_data`, `def_geo1`, and `def_geo2`.
+- These attributes and methods facilitate comprehensive data handling, algorithm management, result
+  visualization, and geometric setup customization for OMA tasks.
+
+This module integrates advanced OMA techniques and provides a structured approach to modal analysis,
+suitable for both academic research and practical applications in structural dynamics and system
+identification.
+"""
 from __future__ import annotations
 
 import copy

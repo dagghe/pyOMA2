@@ -1,7 +1,37 @@
 """
-Created on Sat Oct 21 18:48:38 2023
+STOCHASTIC SUBSPACE IDENTIFICATION (SSI) UTILITY FUNCTIONS
 
-@author: dagpa
+This module provides a collection of utility functions to support the implementation
+of Stochastic Subspace Identification (SSI) algorithms. It includes functions for building
+Hankel matrices with various methods, converting state-space representations to modal parameters,
+performing system identification using SSI, and extracting modal parameters from identified systems.
+These functions are integral to performing advanced modal analysis and system identification
+in structural engineering and other fields.
+
+The module primarily offers low-level functions that are called by higher-level SSI classes
+and algorithms, making it a foundational component of a larger system identification toolkit.
+
+Functions:
+    - MAC(phi_X, phi_A) : Computes the Modal Assurance Criterion (MAC) between two sets of mode shapes.
+    - BuildHank(Y, Yref, br, fs, method) : Constructs a Hankel matrix from time series data.
+    - AC2MP(A, C, dt) : Converts state-space matrices (A, C) to modal parameters.
+    - SSI(H, br, ordmax, step) : Performs system identification using the SSI method.
+    - SSI_FAST(H, br, ordmax, step) : Efficient implementation of the SSI system identification.
+    - SSI_Poles(AA, CC, ordmax, dt, step) : Computes modal parameters from identified state-space models.
+    - SSI_MulSet(Y, fs, br, ordmax, methodHank, step, method) : SSI for multiple setup measurements.
+    - Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_xi) : Constructs a
+    Stability Chart for SSI.
+    - SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab, deltaf, rtol) : Extracts modal parameters for
+    selected frequencies.
+
+References
+----------
+.. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
+       identification for output-only modal analysis. Mechanical Systems and
+       Signal Processing, 13(6), 855-878.
+.. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
+       Algorithms for large systems and application to structural vibration analysis.
+       Diss. Université Rennes 1.
 """
 import logging
 
@@ -183,7 +213,7 @@ def AC2MP(A, C, dt):
 
 def SSI(H, br, ordmax, step=1):
     """
-    Perform System Identification using Stochastic Subspace Identification (SSI) method.
+    Perform System Identification using Stochastic Subspace Identification (SSI) method [1]_.
 
     Parameters
     ----------
@@ -208,6 +238,12 @@ def SSI(H, br, ordmax, step=1):
     -----
     Classical implementation of the SSI algorithm using the shift structure of the observability matrix.
     For more efficient implementation, consider using SSI_FAST function.
+
+    References
+    ----------
+    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
+           identification for output-only modal analysis. Mechanical Systems and
+           Signal Processing, 13(6), 855-878.
     """
     Nch = int(H.shape[0] / (br + 1))
     # SINGULAR VALUE DECOMPOSITION
@@ -260,11 +296,14 @@ def SSI_FAST(H, br, ordmax, step=1):
 
     Notes
     -----
-     This is a more efficient implementation of the SSI algorithm (see [1], algorithm 4).
+    This is a more efficient implementation of the SSI algorithm (see [2]_, algorithm 4).
 
-    [1] Döhler, M., 2011. Subspace-based system identification and fault detection:
+    References
+    ----------
+    .. [2] Döhler, M., 2011. Subspace-based system identification and fault detection:
         Algorithms for large systems and application to structural vibration
-        analysis (Doctoral dissertation, Université Rennes 1)."""
+        analysis (Doctoral dissertation, Université Rennes 1).
+    """
     Nch = int(H.shape[0] / (br + 1))
     # SINGULAR VALUE DECOMPOSITION
     U1, S1, V1_t = np.linalg.svd(H)
