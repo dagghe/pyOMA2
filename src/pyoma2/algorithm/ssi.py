@@ -1,4 +1,35 @@
-"""STOCHASTIC SUBSPACE IDENTIFICATION (SSI) ALGORITHM"""
+"""
+STOCHASTIC SUBSPACE IDENTIFICATION (SSI) ALGORITHM MODULE
+
+This module implements the Stochastic Subspace Identification (SSI) [1]_, [2]_ algorithm in various forms,
+tailored for both single and multiple experimental setup scenarios. It includes classes and methods
+for conducting data-driven and covariance-driven SSI analyses. The primary focus of this module is
+on structural analysis and system identification, providing tools to process measurement data, extract
+modal parameters, and perform comprehensive system dynamics analysis.
+
+Classes:
+    SSIdat_algo : Implements the Data-Driven SSI algorithm for single setup.
+    SSIcov_algo : Implements the Covariance-Driven SSI algorithm for single setup.
+    SSIdat_algo_MS : Extends SSIdat_algo for multi-setup experiments.
+    SSIcov_algo_MS : Extends SSIdat_algo_MS for covariance-based analysis in multi-setup experiments.
+
+Each class contains methods for executing the SSI algorithm, extracting modal parameters,
+plotting results, and additional utilities relevant to the specific SSI approach.
+
+Notes:
+    - This module is part of the pyoma2 package, designed for advanced modal analysis and system
+    identification.
+    - Users should be familiar with the concepts of modal analysis and system identification to effectively
+    use this module.
+
+References:
+    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
+           identification for output-only modal analysis. Mechanical Systems and
+           Signal Processing, 13(6), 855-878.
+    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
+           Algorithms for large systems and application to structural vibration analysis.
+           Diss. Université Rennes 1.
+"""
 from __future__ import annotations
 
 import logging
@@ -38,49 +69,54 @@ logger = logging.getLogger(__name__)
 # SINGLE SETUP
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-# FIXME ADD REFERENCES!!
 class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
     """
-    Data-Driven Stochastic Subspace Identification (SSI) algorithm for single setup.
+    Data-Driven Stochastic Subspace Identification (SSI) algorithm for single setup
+    analysis.
 
-    Attributes:
-    - br (int): Number of block row
-    - ref_ind(list[int], optional): List of index of reference sensors. Default is None
-    - ordmin (int, optional): Minimum model order. Default is 0.
-    - ordmax (int, optional): Maximum model order. Default is None.
-    - step (int, optional): Step size for increasing system order.
-    - err_fn (float, optional): Threshold for relative frequency difference for stability checks.
-      Default is 0.01
-    - err_xi (float, optional): Threshold for relative damping ratio difference for stability checks.
-      Default is 0.05
-    - err_phi (float, optional):Threshold for mode shampes difference for stability checks.
-      Default is 0.03
-    - xi_max (float, optional): Threshold for max allowed damping. Default is  0.1
+    This class processes measurement data from a single setup experiment to identify
+    and extract modal parameters using the SSIdat-ref method [1]_, [2]_.
+
+    Attributes
+    ----------
+    RunParamCls : Type[SSIRunParams]
+        The class of parameters specific to this algorithm's run.
+    ResultCls : Type[SSIResult]
+        The class of results produced by this algorithm.
+    method : str
+        The method used in this SSI algorithm, set to 'dat' by default.
 
     Methods
     -------
-    run()
-        Executes the SSIdat algorithm on data, returning results including state space
-        matrices and modal parameters.
+    run() -> SSIResult
+        Executes the SSIdat algorithm on provided data, returning a SSIResult object with analysis results.
     mpe(...)
-        Extracts the modal parameters at selected frequencies.
+        Extracts modal parameters at selected frequencies.
     mpe_fromPlot(...)
-        Allows user to interactively select frequencies from a plot for modal parameter extraction.
+        Interactive modal parameter extraction from a plot.
     plot_STDiag(...)
-        Plots the Stability Diagram for the SSIdat algorithm.
+        Plots the Stability Diagram.
     plot_cluster(...)
-        Plots the cluster diagram for the identified modal parameters.
+        Plots the cluster diagram of identified modal parameters.
     plot_mode_g1(...)
-        Plots the mode shapes for a given mode number using Geometry1.
+        Plots the mode shapes using Geometry1.
     plot_mode_g2(...)
-        Plots the mode shapes for a given mode number using Geometry2.
+        Plots the mode shapes using Geometry2.
     anim_mode_g2(...)
-        Creates an animation of the mode shapes for a given mode number using Geometry2.
+        Creates an animation of mode shapes using Geometry2.
 
     Notes
     -----
-    - This class is designed for single-setup scenarios, where data from one setup or condition
-      is analyzed.
+    For detailed usage, refer to each method's docstring.
+
+    References
+    ----------
+    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
+           identification for output-only modal analysis. Mechanical Systems and
+           Signal Processing, 13(6), 855-878.
+    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
+           Algorithms for large systems and application to structural vibration analysis.
+           Diss. Université Rennes 1.
     """
 
     RunParamCls = SSIRunParams
@@ -89,7 +125,16 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 
     def run(self) -> SSIResult:
         """
-        Executes the algorithm and save the results."""
+        Executes the SSIdat algorithm and returns the results.
+
+        Processes the input data using the Data-Driven Stochastic Subspace Identification method.
+        Computes state space matrices, modal parameters, and other relevant results.
+
+        Returns
+        -------
+        SSIResult
+            An object containing the computed matrices and modal parameters.
+        """
         super()._pre_run()
         Y = self.data.T
         br = self.run_params.br
@@ -138,13 +183,24 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         rtol: float = 1e-2,
     ) -> typing.Any:
         """
-        Extract the modal parameters at the selected frequencies and saves the results.
+        Extracts the modal parameters at the selected frequencies.
 
-        Parameters:
-        - sel_freq (list[float]): Selected frequencies for modal parameter extraction.
-        - order (int, optional]): Model order for extraction, or 'find_min' to find the minimum stable order.
-        - deltaf (float, optional): Frequency bandwidth for searching poles. Default is 0.05.
-        - rtol (float, optional): Relative tolerance for comparing frequencies. Default is 1e-2.
+        Parameters
+        ----------
+        sel_freq : list of float
+            Selected frequencies for modal parameter extraction.
+        order : int or str, optional
+            Model order for extraction, or 'find_min' to auto-determine the minimum stable order.
+            Default is 'find_min'.
+        deltaf : float, optional
+            Frequency bandwidth for searching poles. Default is 0.05.
+        rtol : float, optional
+            Relative tolerance for comparing frequencies. Default is 1e-2.
+
+        Returns
+        -------
+        typing.Any
+            The extracted modal parameters. The format and content depend on the algorithm's implementation.
         """
         super().mpe(sel_freq=sel_freq, order=order, deltaf=deltaf, rtol=rtol)
 
@@ -178,12 +234,22 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         rtol: float = 1e-2,
     ) -> typing.Any:
         """
-        Allows user to extract modal parameters from plot.
+        Interactive method for extracting modal parameters by selecting frequencies from a plot.
 
-        Parameters:
-        - freqlim (float, optional): Frequency limit for the plot. Default is None.
-        - deltaf (float, optional): Frequency bandwidth for searching poles. Default is 0.05.
-        - rtol (float, optional): Relative tolerance for comparing frequencies. Default is 1e-2.
+        Parameters
+        ----------
+        freqlim : tuple of float, optional
+            Frequency limits for the plot. If None, limits are determined automatically. Default is None.
+        deltaf : float, optional
+            Frequency bandwidth for searching poles. Default is 0.05.
+        rtol : float, optional
+            Relative tolerance for comparing frequencies. Default is 1e-2.
+
+        Returns
+        -------
+        typing.Any
+            The extracted modal parameters after interactive selection. Format depends on algorithm's
+            implementation.
         """
         super().mpe_fromPlot(freqlim=freqlim, deltaf=deltaf, rtol=rtol)
 
@@ -218,16 +284,20 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
         """
-        Plots the Stability Diagram for SSIdat, SSIcov.
+        Plots the Stability Diagram for the SSIdat algorithm.
 
-        Parameters:
-        - freqlim (typing.Optional[float]): Frequency limit for the plot.
-        - hide_poles (typing.Optional[bool]): Option to hide poles. Default is True.
+        Parameters
+        ----------
+        freqlim : tuple of float, optional
+            Frequency limits for the plot. If None, limits are determined automatically. Default is None.
+        hide_poles : bool, optional
+            Option to hide poles in the plot for clarity. Default is True.
 
-        Returns:
-        - matplotlib.figure.Figure, matplotlib.axes.Axes: The figure and axes of the plot.
+        Returns
+        -------
+        typing.Any
+            A tuple containing the matplotlib figure and axes of the Stability Diagram plot.
         """
-
         fig, ax = plot_funct.Stab_SSI_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,
@@ -247,26 +317,19 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
         """
-        Plots the frequency-damping clustering of poles identified by the algorithm.
+        Plots the frequency-damping cluster diagram for the identified modal parameters.
 
         Parameters
         ----------
-        freqlim : typing.Optional[float], optional
-            Specifies the frequency limit for the plot. If None, the limit is determined automatically.
-            Default is None.
-        hide_poles : typing.Optional[bool], optional
-            If True, hides the poles in the plot for clarity. Default is True.
+        freqlim : tuple of float, optional
+            Frequency limits for the plot. If None, limits are determined automatically. Default is None.
+        hide_poles : bool, optional
+            Option to hide poles in the plot for clarity. Default is True.
 
         Returns
         -------
         typing.Any
-            A tuple containing the figure and axis objects of the plot. This allows for further
-            customization or saving outside the method.
-
-        Notes
-        -----
-        - This method is part of the SSIdat algorithm suite and is intended for use with data
-          processed by this algorithm.
+            A tuple containing the matplotlib figure and axes of the cluster diagram plot.
         """
         if not self.result:
             raise ValueError("Run algorithm first")
@@ -292,22 +355,30 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         remove_axis: bool = True,
     ) -> typing.Any:
         """
-        Plots a 3D mode shape for a given mode number using Geometry1.
+        Plots a 3D mode shape for a specified mode number using the Geometry1 object.
 
-        Parameters:
-        - Geo1 (Geometry1): Geometry object containing sensor coordinates and other information.
-        - mode_numb (int): Mode number to visualize.
-        - scaleF (int, optional): Scale factor for mode shape visualization. Default is 1.
-        - view (str, optional): View for the 3D plot, can be '3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'.
-          Default is '3D'.
-        - remove_fill (bool, optional): Whether to remove fill from the plot. Default is True.
-        - remove_grid (bool, optional): Whether to remove grid from the plot. Default is True.
-        - remove_axis (bool, optional): Whether to remove axis from the plot. Default is True.
+        Parameters
+        ----------
+        Geo1 : Geometry1
+            Geometry object containing sensor coordinates and other information.
+        mode_numb : int
+            Mode number to visualize.
+        scaleF : int, optional
+            Scale factor for mode shape visualization. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
+            View for the 3D plot. Default is '3D'.
+        remove_fill : bool, optional
+            Whether to remove fill from the plot. Default is True.
+        remove_grid : bool, optional
+            Whether to remove grid from the plot. Default is True.
+        remove_axis : bool, optional
+            Whether to remove axis from the plot. Default is True.
 
-        Returns:
-        - matplotlib.figure.Figure, matplotlib.axes.Axes: The figure and axes of the plot.
+        Returns
+        -------
+        typing.Any
+            A tuple containing the matplotlib figure and axes of the mode shape plot.
         """
-
         if self.result.Fn is None:
             raise ValueError("Run algorithm first")
 
@@ -377,21 +448,31 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         **kwargs,
     ) -> typing.Any:
         """
-        Plots a 3D mode shape for a given mode number using Geometry2.
+        Plots a 3D mode shape for a specified mode number using the Geometry2 object.
 
-        Parameters:
-        - Geo2 (Geometry2): Geometry object containing nodes, sensor information,
-          and additional geometrical data.
-        - mode_numb (int): Mode number to visualize.
-        - scaleF (int): Scale factor for mode shape visualization. Default is 1.
-        - view (str): View for the 3D plot, can be '3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'. Default is '3D'.
-        - remove_fill (bool): Whether to remove fill from the plot. Default is True.
-        - remove_grid (bool): Whether to remove grid from the plot. Default is True.
-        - remove_axis (bool): Whether to remove axis from the plot. Default is True.
-        - args, kwargs: Additional arguments for customizations.
+        Parameters
+        ----------
+        Geo2 : Geometry2
+            Geometry object containing nodes, sensor information, and additional geometrical data.
+        mode_numb : int
+            Mode number to visualize.
+        scaleF : int, optional
+            Scale factor for mode shape visualization. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
+            View for the 3D plot. Default is '3D'.
+        remove_fill : bool, optional
+            Whether to remove fill from the plot. Default is True.
+        remove_grid : bool, optional
+            Whether to remove grid from the plot. Default is True.
+        remove_axis : bool, optional
+            Whether to remove axis from the plot. Default is True.
+        *args, **kwargs
+            Additional arguments for customizations.
 
-        Returns:
-        - matplotlib.figure.Figure, matplotlib.axes.Axes: The figure and axes of the plot.
+        Returns
+        -------
+        typing.Any
+            A tuple containing the matplotlib figure and axes of the mode shape plot.
         """
         if self.result.Fn is None:
             raise ValueError("Run algorithm first")
@@ -465,21 +546,34 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         **kwargs,
     ) -> typing.Any:
         """
-        Creates an animated 3D mode shape visualization for a given mode number using Geometry2.
+        Creates an animated visualization of a 3D mode shape for a specified mode number using Geometry2.
 
-        Parameters:
-        - Geo2 (Geometry2): Geometry object containing nodes, sensor information,
-          and additional geometrical data.
-        - mode_numb (int): Mode number to visualize.
-        - scaleF (int): Scale factor for mode shape animation. Default is 1.
-        - view (str): View for the 3D animation, can be '3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'.
-          Default is '3D'.
-        - remove_fill (bool): Whether to remove fill from the animation. Default is True.
-        - remove_grid (bool): Whether to remove grid from the animation. Default is True.
-        - remove_axis (bool): Whether to remove axis from the animation. Default is True.
-        - args, kwargs: Additional arguments for customization.
+        Parameters
+        ----------
+        Geo2 : Geometry2
+            Geometry object containing nodes, sensor information, and additional geometrical data.
+        mode_numb : int, optional
+            Mode number to visualize. If None, no mode is selected.
+        scaleF : int, optional
+            Scale factor for mode shape animation. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
+            View for the 3D animation. Default is '3D'.
+        remove_fill : bool, optional
+            Whether to remove fill from the animation. Default is True.
+        remove_grid : bool, optional
+            Whether to remove grid from the animation. Default is True.
+        remove_axis : bool, optional
+            Whether to remove axis from the animation. Default is True.
+        saveGIF : bool, optional
+            Whether to save the animation as a GIF file. Default is False.
+        *args, **kwargs
+            Additional arguments for customization.
 
-        Initiates an animation of the mode shape using Tkinter and Matplotlib.
+        Returns
+        -------
+        typing.Any
+            The animation object or any relevant output, depending on the implementation and provided
+            parameters.
         """
         if self.result.Fn is None:
             raise ValueError("Run algorithm first")
@@ -505,45 +599,33 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 # FIXME ADD REFERENCE
 class SSIcov_algo(SSIdat_algo):
     """
-    Covariance-based Stochastic Subspace Identification (SSI) algorithm for single setup.
+    Implements the Covariance-driven Stochastic Subspace Identification (SSI) algorithm
+    for single setup experiments [1]_, [2]_.
 
-    Attributes:
-    - br (int): Number of block row
-    - ref_ind(list[int], optional): List of index of reference sensors. Default is None
-    - ordmin (int, optional): Minimum model order. Default is 0.
-    - ordmax (int, optional): Maximum model order. Default is None.
-    - step (int, optional): Step size for increasing system order.
-    - err_fn (float, optional): Threshold for relative frequency difference for stability checks.
-    Default is 0.01
-    - err_xi (float, optional): Threshold for relative damping ratio difference for stability checks.
-    Default is 0.05
-    - err_phi (float, optional):Threshold for mode shampes difference for stability checks. Default is 0.03
-    - xi_max (float, optional): Threshold for max allowed damping. Default is  0.1
+    This class is an extension of the SSIdat_algo class, adapted for covariance-driven analysis.
+    It processes measurement data from a single setup to identify system dynamics and extract
+    modal parameters using the SSIcov-ref method.
+
+    Inherits all attributes and methods from SSIdat_algo.
+
+    Attributes
+    ----------
+    method : str
+        The method used in this SSI algorithm, overridden to 'cov_bias', 'cov_mm', or 'cov_unb' for
+        covariance-based analysis.
 
     Methods
     -------
-    run()
-        Executes the SSIcov algorithm on data, returning results including state space
-        matrices and modal parameters.
-    mpe(...)
-        Extracts the modal parameters at selected frequencies.
-    mpe_fromPlot(...)
-        Allows user to interactively select frequencies from a plot for modal parameter extraction.
-    plot_STDiag(...)
-        Plots the Stability Diagram for the SSIdat algorithm.
-    plot_cluster(...)
-        Plots the cluster diagram for the identified modal parameters.
-    plot_mode_g1(...)
-        Plots the mode shapes for a given mode number using Geometry1.
-    plot_mode_g2(...)
-        Plots the mode shapes for a given mode number using Geometry2.
-    anim_mode_g2(...)
-        Creates an animation of the mode shapes for a given mode number using Geometry2.
+    Inherits all methods from SSIdat_algo with covariance-specific implementations.
 
-    Notes
-    -----
-    - This class is designed for single-setup scenarios, where data from one setup or condition
-      is analyzed.
+    References
+    ----------
+    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
+           identification for output-only modal analysis. Mechanical Systems and
+           Signal Processing, 13(6), 855-878.
+    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
+           Algorithms for large systems and application to structural vibration analysis.
+           Diss. Université Rennes 1.
     """
 
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
@@ -555,33 +637,48 @@ class SSIcov_algo(SSIdat_algo):
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]):
     """
-    Data-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup experiments.
+    Implements the Data-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup
+    experiments [1]_, [2]_.
 
-    This class extends the SSIdat_algo class to handle multiple setups. It is used for identifying
-    system dynamics using multiple experimental setups.
+    This class extends the SSIdat_algo class to handle data from multiple experimental setups, with
+    moving and reference sensors.
+
+    Inherits all attributes and methods from SSIdat_algo, with focus on multi-setup data handling.
 
     Attributes
     ----------
-    Same as SSIdat_algo.
+    Inherits all attributes from SSIdat_algo.
 
     Methods
     -------
     run() -> SSIResult
         Executes the algorithm for multiple setups and returns the identification results.
+    Inherits other methods from SSIdat_algo, applicable to multi-setup scenarios.
+
+    References
+    ----------
+    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
+           identification for output-only modal analysis. Mechanical Systems and
+           Signal Processing, 13(6), 855-878.
+    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
+           Algorithms for large systems and application to structural vibration analysis.
+           Diss. Université Rennes 1.
     """
 
     def run(self) -> SSIResult:
         """
-        Executes the SSI algorithm for multiple setups and saves the results.
+        Executes the SSI algorithm for multiple setups and returns the results.
 
-        This method processes the provided multiple-setup data to extract the system matrices,
-        frequency poles, damping ratios, and mode shapes. It builds a Hankel matrix and uses the
-        SSI algorithm to compute the state and output matrices.
+        Processes the input data from multiple setups using the Data-Driven Stochastic Subspace
+        Identification method. It builds Hankel matrices for each setup and computes the state and
+        output matrices, along with frequency poles.
 
         Returns
         -------
         SSIResult
-            An SSIResult object containing the system matrices, poles, damping ratios, and mode shapes."""
+            An object containing the system matrices, poles, damping ratios, and mode shapes across
+            multiple setups.
+        """
         super()._pre_run()
         Y = self.data
         br = self.run_params.br
@@ -621,18 +718,31 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIcov_algo_MS(SSIdat_algo_MS):
     """
-    Covariance-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup experiments.
+    Implements the Covariance-Driven Stochastic Subspace Identification (SSI) algorithm
+    for multi-setup experiments [1]_, [2]_.
 
-    This class extends the SSIdat_algo_MS class, focusing on the covariance-driven approach.
-    It's suitable for identifying system dynamics in multiple experimental setups.
+    This class extends SSIdat_algo_MS, focusing on the covariance-driven approach to SSI
+    for multiple experimental setups.
+
+    Inherits all attributes and methods from SSIdat_algo_MS, adapted for covariance-driven
+    analysis methods.
 
     Attributes
     ----------
-    method : typing.Literal["cov_bias", "cov_mm", "cov_unb"]
-        The specific covariance method used. Options are "cov_bias", "cov_mm", "cov_unb".
+    Inherits all attributes from SSIdat_algo_MS.
 
     Methods
     -------
-    Inherits methods from SSIdat_algo_MS."""
+    Inherits all methods from SSIdat_algo_MS, adapted for covariance-based analysis.
+
+    References
+    ----------
+    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
+           identification for output-only modal analysis. Mechanical Systems and
+           Signal Processing, 13(6), 855-878.
+    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
+           Algorithms for large systems and application to structural vibration analysis.
+           Diss. Université Rennes 1.
+    """
 
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
