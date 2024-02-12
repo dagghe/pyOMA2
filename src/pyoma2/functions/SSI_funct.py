@@ -20,18 +20,19 @@ Functions:
     - SSI_Poles(AA, CC, ordmax, dt, step) : Computes modal parameters from identified state-space models.
     - SSI_MulSet(Y, fs, br, ordmax, methodHank, step, method) : SSI for multiple setup measurements.
     - Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_xi) : Constructs a
-    Stability Chart for SSI.
+        Stability Chart for SSI.
     - SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab, deltaf, rtol) : Extracts modal parameters for
     selected frequencies.
 
 References
 ----------
-.. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
-       identification for output-only modal analysis. Mechanical Systems and
-       Signal Processing, 13(6), 855-878.
-.. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
-       Algorithms for large systems and application to structural vibration analysis.
-       Diss. Université Rennes 1.
+    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
+        identification for output-only modal analysis. Mechanical Systems and
+        Signal Processing, 13(6), 855-878.
+    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
+        Algorithms for large systems and application to structural vibration analysis.
+        Diss. Université Rennes 1.
+
 """
 import logging
 
@@ -238,12 +239,6 @@ def SSI(H, br, ordmax, step=1):
     -----
     Classical implementation of the SSI algorithm using the shift structure of the observability matrix.
     For more efficient implementation, consider using SSI_FAST function.
-
-    References
-    ----------
-    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
-           identification for output-only modal analysis. Mechanical Systems and
-           Signal Processing, 13(6), 855-878.
     """
     Nch = int(H.shape[0] / (br + 1))
     # SINGULAR VALUE DECOMPOSITION
@@ -297,12 +292,6 @@ def SSI_FAST(H, br, ordmax, step=1):
     Notes
     -----
     This is a more efficient implementation of the SSI algorithm (see [2]_, algorithm 4).
-
-    References
-    ----------
-    .. [2] Döhler, M., 2011. Subspace-based system identification and fault detection:
-        Algorithms for large systems and application to structural vibration
-        analysis (Doctoral dissertation, Université Rennes 1).
     """
     Nch = int(H.shape[0] / (br + 1))
     # SINGULAR VALUE DECOMPOSITION

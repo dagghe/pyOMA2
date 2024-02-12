@@ -496,7 +496,7 @@ class BaseSetup:
 
 class SingleSetup(BaseSetup):
     """
-    Class for managing and processing single setup data for operational modal analysis.
+    Class for managing and processing single setup data for Operational Modal Analysis.
 
     This class handles data from a single setup, offering functionalities like plotting,
     data processing, and interaction with various analysis algorithms. It inherits
@@ -923,9 +923,11 @@ class SingleSetup(BaseSetup):
 # FIXME add references!
 class MultiSetup_PoSER:
     """
-    A class for operational modal analysis (OMA) of multi-setup experiments using the
-    Post Separate Estimation Re-scaling (PoSER) approach. It allows for merging results from
-    multiple setups and analyzing the combined data to extract modal properties.
+    Class for Operational Modal Analysis of multi-setup experiments using the
+    Post Separate Estimation Re-scaling (PoSER) approach.
+
+    It allows for merging results from multiple setups and analyzing the combined data
+    to extract modal properties.
 
     Attributes
     ----------
@@ -1818,10 +1820,11 @@ class MultiSetup_PoSER:
 # FIXME add reference!
 class MultiSetup_PreGER(BaseSetup):
     """
-    A class for conducting Operational Modal Analysis (OMA) on multi-setup experiments using the
-    Pre-Global Estimation Re-scaling (PreGER) approach. This class is tailored for handling and
-    processing multiple datasets to apply the PreGER method efficiently. It offers functionalities
-    for data visualization, preprocessing, and geometric configuration for the structure under analysis.
+    Class for conducting Operational Modal Analysis on multi-setup experiments using the
+    Pre-Global Estimation Re-scaling (PreGER) approach.
+    This class is tailored for handling and processing multiple datasets, applying the PreGER method
+    efficiently. It offers functionalities for data visualization, preprocessing, and geometric
+    configuration for the structure under analysis.
 
     Attributes
     ----------
@@ -1838,8 +1841,8 @@ class MultiSetup_PreGER(BaseSetup):
     algorithms : typing.Dict[str, BaseAlgorithm]
         Dictionary storing algorithms associated with the setup, keyed by their names.
 
-    Inherited Methods
-    -----------------
+    Methods
+    -------
     add_algorithms(...)
         Adds algorithms to the setup and initializes them with data and sampling frequency.
     run_all(...)

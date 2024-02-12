@@ -19,67 +19,75 @@ T_Data = typing.TypeVar("T_Data", bound=typing.Iterable)
 
 
 class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
+
     """
-    This module provides the abstract base class for the algorithms. It defines
-    the fundamental attributes and methods used by the other algorithms.
+    Abstract base class that defines the foundational structure and common functionalities
+    for various OMA algorithms in the pyOMA2 module.
+    This class sets a standard interface and workflow for implementing different operational
+    modal analysis algorithms.
 
-    Classes
-    -------
-    BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC)
-        An abstract base class that defines the structure and functionalities common to all
-        modal analysis algorithms.
-
-    See Also
-    --------
-    pydantic.BaseModel, pyoma2.algorithm.data.result.BaseResult
-
-    Notes
-    -----
-    This module requires subclasses of `BaseAlgorithm` to specify their own implementations
-    of run parameters and results. These implementations must be derived from `pydantic.BaseModel`
-    and `pyoma2.algorithm.data.result.BaseResult`, respectively. The `BaseAlgorithm` class provides
-    methods to set run parameters, results, and data necessary for the execution of the algorithm.
+    Type Parameters
+    ----------------
+    T_RunParams : BaseModel
+        The type of run parameters specific to each OMA algorithm, derived from BaseModel.
+    T_Result : BaseResult
+        The type of results produced by the algorithm, derived from BaseResult.
+    T_Data : Iterable
+        The type of input data the algorithm operates on, typically an iterable structure.
 
     Attributes
     ----------
-    result : typing.Optional[T_Result]
-        The result of the algorithm after execution, storing relevant modal analysis outputs.
-    run_params : typing.Optional[T_RunParams]
-        The parameters required to run the algorithm.
-    name : typing.Optional[str]
-        The name of the algorithm.
-    RunParamCls : typing.Type[T_RunParams]
-        The class reference for run parameters, derived from `pydantic.BaseModel`.
-    ResultCls : typing.Type[T_Result]
-        The class reference for result, derived from `pyoma2.algorithm.data.result.BaseResult`.
-    fs : typing.Optional[float]
+    result : Optional[T_Result]
+        Stores the results produced by the algorithm after its execution.
+    run_params : Optional[T_RunParams]
+        Holds the parameters necessary to run the algorithm.
+    name : Optional[str]
+        The name of the algorithm, used for identification and logging purposes.
+    RunParamCls : Type[T_RunParams]
+        The class used to instantiate run parameters for the algorithm.
+    ResultCls : Type[T_Result]
+        The class used to encapsulate and represent the results of the algorithm.
+    fs : Optional[float]
         The sampling frequency of the input data.
-    dt : typing.Optional[float]
-        The sampling interval, calculated from the sampling frequency.
-    data : typing.Optional[T_Data]
-        The input data for the algorithm.
+    dt : Optional[float]
+        The sampling interval, derived from the sampling frequency.
+    data : Optional[T_Data]
+        The data on which the algorithm operates.
 
     Methods
     -------
     __init__(...)
-        Initializes the algorithm with the given run parameters and name.
-    run(...)
-        Abstract method to execute the algorithm. Subclasses must provide an implementation.
-    set_run_params(...)
+        Initializes the algorithm with optional run parameters and a name.
+    _pre_run(...)
+        Internal method for pre-run checks and validations.
+    run(...) -> T_Result
+        Abstract method that executes the algorithm and returns the results.
+    set_run_params(...) -> BaseAlgorithm
         Sets the run parameters for the algorithm.
-    set_result(...)
-        Sets the result for the algorithm.
-    mpe(...)
-        Abstract method to return modes. Subclasses must provide an implementation.
-    mpe_fromPlot(...)
-        Abstract method to select peaks from plots. Subclasses must provide an implementation.
-    set_data(...)
+    set_result(...) -> BaseAlgorithm
+        Assigns the result to the algorithm after execution.
+    mpe(...) -> Any
+        Abstract method for extracting modal parameters from the algorithm results.
+    mpe_fromPlot(...) -> Any
+        Abstract method for selecting modal parameters from plots.
+    set_data(...) -> BaseAlgorithm
         Sets the input data and sampling frequency for the algorithm.
-    __class_getitem__(...)
-        A method to evaluate the type of `RunParamCls` and `ResultCls` at runtime.
-    __init_subclass__(...)
+
+    Class Methods
+    --------------
+    __class_getitem__(cls, item)
+        Evaluates the types of `RunParamCls` and `ResultCls` at runtime.
+    __init_subclass__(cls, **kwargs)
         Ensures that subclasses define `RunParamCls` and `ResultCls`.
 
+    Notes
+    -----
+    - `BaseAlgorithm` is an abstract class and cannot be instantiated directly.
+    - Subclasses must implement the `run`, `mpe`, and `mpe_fromPlot` methods.
+    - The class is designed to be generic and flexible, accommodating various types of algorithms
+      within the pyOMA2 framework.
+    - The `result` attribute is only populated after the `run` method is executed.
+    - Type parameters allow for strong typing and consistency in the implementation of different algorithms.
     """
 
     result: typing.Optional[T_Result] = None

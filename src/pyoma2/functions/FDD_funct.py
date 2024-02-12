@@ -14,13 +14,14 @@ Functions:
     - EFDD_MPE: Extracts modal parameters using EFDD and FSDD methods.
 
 References:
-.. [1] Brincker, R., Zhang, L., & Andersen, P. (2001). Modal identification of output-only
-       systems using frequency domain decomposition. Smart Materials and Structures, 10(3), 441.
-.. [2] Brincker, R., Ventura, C. E., & Andersen, P. (2001). Damping estimation by frequency
-       domain decomposition. In Proceedings of IMAC 19: A Conference on Structural Dynamics.
-.. [3] Zhang, L., Wang, T., & Tamura, Y. (2010). A frequency–spatial domain decomposition
-       (FSDD) method for operational modal analysis. Mechanical Systems and Signal Processing,
-       24(5), 1227-1239.
+    .. [1] Brincker, R., Zhang, L., & Andersen, P. (2001). Modal identification of output-only
+        systems using frequency domain decomposition. Smart Materials and Structures, 10(3), 441.
+    .. [2] Brincker, R., Ventura, C. E., & Andersen, P. (2001). Damping estimation by frequency
+        domain decomposition. In Proceedings of IMAC 19: A Conference on Structural Dynamics.
+    .. [3] Zhang, L., Wang, T., & Tamura, Y. (2010). A frequency–spatial domain decomposition
+        (FSDD) method for operational modal analysis. Mechanical Systems and Signal Processing,
+        24(5), 1227-1239.
+
 """
 import logging
 

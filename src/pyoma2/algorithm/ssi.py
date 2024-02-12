@@ -1,34 +1,37 @@
 """
-STOCHASTIC SUBSPACE IDENTIFICATION (SSI) ALGORITHM MODULE
+Stochastic Subspace Identification (SSI) Algorithm Module
+=========================================================
 
-This module implements the Stochastic Subspace Identification (SSI) [1]_, [2]_ algorithm in various forms,
+This module implements the Stochastic Subspace Identification (SSI) algorithm in various forms,
 tailored for both single and multiple experimental setup scenarios. It includes classes and methods
 for conducting data-driven and covariance-driven SSI analyses. The primary focus of this module is
 on structural analysis and system identification, providing tools to process measurement data, extract
 modal parameters, and perform comprehensive system dynamics analysis.
 
-Classes:
-    SSIdat_algo : Implements the Data-Driven SSI algorithm for single setup.
-    SSIcov_algo : Implements the Covariance-Driven SSI algorithm for single setup.
-    SSIdat_algo_MS : Extends SSIdat_algo for multi-setup experiments.
-    SSIcov_algo_MS : Extends SSIdat_algo_MS for covariance-based analysis in multi-setup experiments.
+Classes
+-------
+- ``SSIdat_algo`` : Implements the Data-Driven SSI algorithm for single setup.
+- ``SSIcov_algo`` : Implements the Covariance-Driven SSI algorithm for single setup.
+- ``SSIdat_algo_MS`` : Extends ``SSIdat_algo`` for multi-setup experiments.
+- ``SSIcov_algo_MS`` : Extends ``SSIdat_algo_MS`` for covariance-based analysis in multi-setup experiments.
 
 Each class contains methods for executing the SSI algorithm, extracting modal parameters,
 plotting results, and additional utilities relevant to the specific SSI approach.
 
-Notes:
-    - This module is part of the pyoma2 package, designed for advanced modal analysis and system
-    identification.
-    - Users should be familiar with the concepts of modal analysis and system identification to effectively
-    use this module.
+Note:
+    The module is designed for use within the pyOMA2 package. It requires OMA results and
+    geometry data specific to the structures being analyzed. Users should be familiar with the concepts of
+    modal analysis and system identification to effectively use this module.
 
-References:
-    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
-           identification for output-only modal analysis. Mechanical Systems and
-           Signal Processing, 13(6), 855-878.
-    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
-           Algorithms for large systems and application to structural vibration analysis.
-           Diss. Université Rennes 1.
+References
+----------
+.. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
+       identification for output-only modal analysis. Mechanical Systems and
+       Signal Processing, 13(6), 855-878.
+.. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
+       Algorithms for large systems and application to structural vibration analysis.
+       Diss. Université Rennes 1.
+
 """
 from __future__ import annotations
 
@@ -75,7 +78,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
     analysis.
 
     This class processes measurement data from a single setup experiment to identify
-    and extract modal parameters using the SSIdat-ref method [1]_, [2]_.
+    and extract modal parameters using the SSIdat-ref method.
 
     Attributes
     ----------
@@ -104,19 +107,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         Plots the mode shapes using Geometry2.
     anim_mode_g2(...)
         Creates an animation of mode shapes using Geometry2.
-
-    Notes
-    -----
-    For detailed usage, refer to each method's docstring.
-
-    References
-    ----------
-    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
-           identification for output-only modal analysis. Mechanical Systems and
-           Signal Processing, 13(6), 855-878.
-    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
-           Algorithms for large systems and application to structural vibration analysis.
-           Diss. Université Rennes 1.
     """
 
     RunParamCls = SSIRunParams
@@ -600,7 +590,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 class SSIcov_algo(SSIdat_algo):
     """
     Implements the Covariance-driven Stochastic Subspace Identification (SSI) algorithm
-    for single setup experiments [1]_, [2]_.
+    for single setup experiments.
 
     This class is an extension of the SSIdat_algo class, adapted for covariance-driven analysis.
     It processes measurement data from a single setup to identify system dynamics and extract
@@ -617,15 +607,6 @@ class SSIcov_algo(SSIdat_algo):
     Methods
     -------
     Inherits all methods from SSIdat_algo with covariance-specific implementations.
-
-    References
-    ----------
-    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
-           identification for output-only modal analysis. Mechanical Systems and
-           Signal Processing, 13(6), 855-878.
-    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
-           Algorithms for large systems and application to structural vibration analysis.
-           Diss. Université Rennes 1.
     """
 
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
@@ -638,7 +619,7 @@ class SSIcov_algo(SSIdat_algo):
 class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]):
     """
     Implements the Data-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup
-    experiments [1]_, [2]_.
+    experiments.
 
     This class extends the SSIdat_algo class to handle data from multiple experimental setups, with
     moving and reference sensors.
@@ -654,15 +635,6 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
     run() -> SSIResult
         Executes the algorithm for multiple setups and returns the identification results.
     Inherits other methods from SSIdat_algo, applicable to multi-setup scenarios.
-
-    References
-    ----------
-    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
-           identification for output-only modal analysis. Mechanical Systems and
-           Signal Processing, 13(6), 855-878.
-    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
-           Algorithms for large systems and application to structural vibration analysis.
-           Diss. Université Rennes 1.
     """
 
     def run(self) -> SSIResult:
@@ -719,7 +691,7 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
 class SSIcov_algo_MS(SSIdat_algo_MS):
     """
     Implements the Covariance-Driven Stochastic Subspace Identification (SSI) algorithm
-    for multi-setup experiments [1]_, [2]_.
+    for multi-setup experiments.
 
     This class extends SSIdat_algo_MS, focusing on the covariance-driven approach to SSI
     for multiple experimental setups.
@@ -734,15 +706,6 @@ class SSIcov_algo_MS(SSIdat_algo_MS):
     Methods
     -------
     Inherits all methods from SSIdat_algo_MS, adapted for covariance-based analysis.
-
-    References
-    ----------
-    .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
-           identification for output-only modal analysis. Mechanical Systems and
-           Signal Processing, 13(6), 855-878.
-    .. [2] Döhler, M. (2011). Subspace-based system identification and fault detection:
-           Algorithms for large systems and application to structural vibration analysis.
-           Diss. Université Rennes 1.
     """
 
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
