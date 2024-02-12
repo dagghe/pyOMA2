@@ -1,40 +1,40 @@
 """
-FREQUENCY DOMAIN DECOMPOSITION (FDD) ALGORITHM MODULE
+Frequency Domain Decomposition (FDD) Algorithm Module
 
 This module provides implementation of the Frequency Domain Decomposition (FDD) and Enhanced
 Frequency Domain Decomposition (EFDD) algorithms, along with their adaptations for multi-setup
-experimental data. These algorithms are essential for operational modal analysis in structural
-dynamics, where they are used to identify modal parameters such as natural frequencies, damping
-ratios, and mode shapes from ambient vibration measurements.
+experimental data. These algorithms are used in structural dynamics to identify modal parameters
+such as natural frequencies, damping ratios, and mode shapes from ambient vibration measurements.
 
-Classes:
-    FDD_algo : Implements the basic FDD algorithm for single setup modal analysis.
-    EFDD_algo : Extends FDD_algo to provide Enhanced FDD analysis.
-    FSDD_algo : Implements the Frequency-Spatial Domain Decomposition, a variant of EFDD.
-    FDD_algo_MS : Adapts FDD_algo for multi-setup modal analysis.
-    EFDD_algo_MS : Extends EFDD_algo for multi-setup scenarios.
+Classes
+-------
+- ``FDD_algo`` : Implements the basic FDD algorithm for single setup modal analysis.
+- ``EFDD_algo`` : Extends ``FDD_algo`` to provide Enhanced FDD analysis.
+- ``FSDD_algo`` : Implements the Frequency-Spatial Domain Decomposition, a variant of EFDD.
+- ``FDD_algo_MS`` : Adapts ``FDD_algo`` for multi-setup modal analysis.
+- ``EFDD_algo_MS`` : Extends ``EFDD_algo`` for multi-setup scenarios.
 
 Each class contains methods for executing the respective algorithms, extracting modal parameters,
 and plotting results. The module also includes utility functions and classes for visualization
 and interactive analysis.
 
-Notes:
-    - This module is part of the pyoma2 package, designed for advanced modal analysis and
-    system identification.
-    - Users should be familiar with the concepts of modal analysis and system identification to
-    effectively use this module.
+Note:
+    The module is designed for use within the pyOMA2 package. It requires OMA results and
+    geometry data specific to the structures being analyzed. Users should be familiar with the concepts of
+    modal analysis and system identification to effectively use this module.
 
-References:
-    .. [1] Brincker, R., Zhang, L., & Andersen, P. (2001). Modal identification of output-only
-        systems using frequency domain decomposition. Smart Materials and Structures, 10(3), 441.
+References
+----------
+.. [1] Brincker, R., Zhang, L., & Andersen, P. (2001). Modal identification of output-only
+       systems using frequency domain decomposition. Smart Materials and Structures, 10(3), 441.
 
-    .. [2] Brincker, R., Ventura, C. E., & Andersen, P. (2001). Damping estimation by frequency
-        domain decomposition. In Proceedings of IMAC 19: A Conference on Structural Dynamics,
-        February 5-8, 2001, Hyatt Orlando, Kissimmee, Florida. Society for Experimental Mechanics.
+.. [2] Brincker, R., Ventura, C. E., & Andersen, P. (2001). Damping estimation by frequency
+       domain decomposition. In Proceedings of IMAC 19: A Conference on Structural Dynamics,
+       February 5-8, 2001, Hyatt Orlando, Kissimmee, Florida. Society for Experimental Mechanics.
 
-    .. [3] Zhang, L., Wang, T., & Tamura, Y. (2010). A frequency–spatial domain decomposition
-        (FSDD) method for operational modal analysis. Mechanical Systems and Signal Processing,
-        24(5), 1227-1239.
+.. [3] Zhang, L., Wang, T., & Tamura, Y. (2010). A frequency–spatial domain decomposition
+       (FSDD) method for operatio
+
 """
 from __future__ import annotations
 
@@ -79,7 +79,7 @@ logger = logging.getLogger(__name__)
 # FIXME ADD REFERENCES
 class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
     """
-    Frequency Domain Decomposition (FDD) algorithm for operational modal analysis [1]_.
+    Frequency Domain Decomposition (FDD) algorithm for operational modal analysis.
 
     This class implements the FDD algorithm, used to identify modal parameters such as
     natural frequencies, damping ratios, and mode shapes from ambient vibrations. The algorithm
@@ -110,11 +110,6 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         Plots mode shapes for a given mode number using Geometry2.
     anim_mode_g2(...)
         Animates mode shapes for a given mode number using Geometry2.
-
-    References
-    ----------
-    .. [1] Brincker, R., Zhang, L., & Andersen, P. (2001). Modal identification of output-only
-        systems using frequency domain decomposition. Smart Materials and Structures, 10(3), 441.
     """
 
     RunParamCls = FDDRunParams
@@ -497,7 +492,7 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
 # FIXME ADD REFERENCE
 class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
     """
-    Enhanced Frequency Domain Decomposition (EFDD) Algorithm Class [2]_.
+    Enhanced Frequency Domain Decomposition (EFDD) Algorithm Class.
 
     This class implements the EFDD algorithm, an enhanced version of the basic FDD method.
     It provides more accurate modal parameters from ambient vibration data.
@@ -519,12 +514,6 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         Interactive MPE using plots for selecting frequencies in EFDD analysis.
     plot_FIT(...)
         Generates a Frequency domain Identification (FIT) plot for visualizing EFDD results.
-
-    References
-    ----------
-    .. [2] Brincker, R., Ventura, C. E., & Andersen, P. (2001). Damping estimation by frequency
-        domain decomposition. In Proceedings of IMAC 19: A Conference on Structural Dynamics,
-        February 5-8, 2001, Hyatt Orlando, Kissimmee, Florida. Society for Experimental Mechanics.
 
     Notes
     -----
@@ -717,7 +706,7 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
 # FIXME ADD REFERENCE
 class FSDD_algo(EFDD_algo):
     """
-    Frequency-Spatial Domain Decomposition (FSDD) Algorithm Class [3]_.
+    Frequency-Spatial Domain Decomposition (FSDD) Algorithm Class.
 
     This class provides the implementation of the Frequency-Spatial Domain Decomposition (FSDD)
     algorithm, a variant of the Enhanced Frequency Domain Decomposition (EFDD) method.
@@ -736,12 +725,6 @@ class FSDD_algo(EFDD_algo):
     Methods
     -------
     Inherits all methods from the EFDD_algo class, with modifications for the FSDD approach.
-
-    References
-    ----------
-    .. [3] Zhang, L., Wang, T., & Tamura, Y. (2010). A frequency–spatial domain decomposition
-        (FSDD) method for operational modal analysis. Mechanical Systems and Signal Processing,
-        24(5), 1227-1239.
 
     Notes
     -----

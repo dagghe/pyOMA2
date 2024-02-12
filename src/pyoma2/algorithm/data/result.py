@@ -1,3 +1,8 @@
+"""
+This module provides classes for handling and storing various types of results data
+related to the pyOMA2 module.
+"""
+
 from __future__ import annotations
 
 import typing

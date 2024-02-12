@@ -6,46 +6,64 @@ Support classes and modules
 
 These classes (and functions) are not instantiated or called directly by the users, but internally by the "main" classes.
 
+
+**Summary:**
+
+.. autosummary::
+
+    pyoma2.OMA.BaseSetup
+    pyoma2.algorithm.base.BaseAlgorithm
+    pyoma2.algorithm.data.geometry
+    pyoma2.algorithm.data.result
+    pyoma2.algorithm.data.run_params
+    pyoma2.plot.Sel_from_plot
+    pyoma2.plot.anim_mode
+    pyoma2.utils.logging_handler
+
+
+The ``BaseSetup`` class
+-----------------------
+
+.. autoclass:: pyoma2.OMA.BaseSetup
+   :members:
+   :show-inheritance:
+
+
 The ``BaseAlgorithm`` class
 ---------------------------
 
 .. autoclass:: pyoma2.algorithm.base.BaseAlgorithm
    :members:
-   :noindex:
+   :show-inheritance:
+
 
 The ``geometry`` module
 -----------------------
 
 .. automodule:: pyoma2.algorithm.data.geometry
    :members:
-   :undoc-members:
    :show-inheritance:
-   :noindex:
 
 The ``result`` module
 ---------------------
 
 .. automodule:: pyoma2.algorithm.data.result
    :members:
-   :undoc-members:
    :show-inheritance:
-   :noindex:
 
 The ``run_params`` module
 -------------------------
 
 .. automodule:: pyoma2.algorithm.data.run_params
    :members:
-   :undoc-members:
    :show-inheritance:
-   :noindex:
+
 
 The ``Sel_from_plot`` module
 ----------------------------
 
-.. autoclass:: pyoma2.plot.Sel_from_plot
+.. automodule:: pyoma2.plot.Sel_from_plot
    :members:
-   :undoc-members:
    :show-inheritance:
 
 
@@ -54,14 +72,12 @@ The ``anim_mode`` module
 
 .. automodule:: pyoma2.plot.anim_mode
    :members:
-   :undoc-members:
    :show-inheritance:
 
 
-The ``utils`` module
---------------------
+The ``logging_handler`` module
+------------------------------
 
-.. automodule:: pyoma2.utils
+.. automodule:: pyoma2.utils.logging_handler
    :members:
-   :undoc-members:
    :show-inheritance:

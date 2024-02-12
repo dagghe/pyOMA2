@@ -1,7 +1,9 @@
-Quick start
-===========
+Installation
+============
 
-Install the library::
+Install the library:
+
+.. code:: console
 
    pip install pyOMA-2
 

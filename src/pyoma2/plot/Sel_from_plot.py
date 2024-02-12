@@ -1,13 +1,12 @@
 """
-SEL_FROM_PLOT MODULE
+Module for interactive plots in the pyOMA2 package.
 
-This module, part of the pyOMA2 package, provides interactive plotting functionalities
-for selecting and analyzing poles in Operational Modal Analysis (OMA). It is designed to
-work with Frequency Domain Decomposition (FDD) and Stochastic Subspace Identification (SSI)
-algorithms, enabling users to visually inspect and interact with the stabilization charts
-and singular value decomposition plots. The module integrates matplotlib plots into a Tkinter
-GUI, allowing for intuitive interaction such as pole selection through mouse clicks and keyboard
-shortcuts.
+This module provides interactive plotting functionalities for selecting and analyzing poles
+in Operational Modal Analysis (OMA). It is designed to work with Frequency Domain Decomposition
+(FDD) and Stochastic Subspace Identification (SSI) algorithms, enabling users to visually
+inspect and interact with the stabilization charts and singular value decomposition plots.
+The module integrates matplotlib plots into a Tkinter GUI, allowing for intuitive interaction
+such as pole selection through mouse clicks and keyboard shortcuts.
 
 Classes:
     SelFromPlot: A class for creating interactive plots where users can select or
@@ -133,11 +132,6 @@ class SelFromPlot:
         Displays a help dialog with instructions for selecting poles.
     save_this_figure():
         Saves the current plot to a file.
-
-    References
-    ----------
-    .. [1] Janko Slavič, Python module for Experimental Modal Analysis (PyEMA), GitHub repository,
-        https://github.com/sdypy/sdypy
     """
 
     def __init__(

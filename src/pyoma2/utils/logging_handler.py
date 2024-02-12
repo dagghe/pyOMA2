@@ -1,3 +1,6 @@
+"""
+Logging handler for the pyOMA2 module.
+"""
 import logging
 import os
 
