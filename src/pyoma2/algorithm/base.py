@@ -1,9 +1,11 @@
 """
-Abstract Base Class Module used by pyOMA2 module.
-
-This module defines the abstract base class `BaseAlgorithm`, which sets the foundational structure
-and common functionalities for the various OMA algorithms.
+Abstract Base Class Module used by various OMA algorithms.
+Part of the pyOMA2 package
+Authors:
+Dag Pasca
+Diego Margoni
 """
+
 from __future__ import annotations
 
 import abc

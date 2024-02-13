@@ -1,3 +1,6 @@
+.. autosummary::
+   :toctree: generated
+
 The ``fdd`` module
 ------------------
 
@@ -45,7 +48,8 @@ and interactive analysis.
        February 5-8, 2001, Hyatt Orlando, Kissimmee, Florida. Society for Experimental Mechanics.
 
 .. [3] Zhang, L., Wang, T., & Tamura, Y. (2010). A frequency–spatial domain decomposition
-       (FSDD) method for operatio
+       (FSDD) method for operational modal analysis. Mechanical Systems and Signal Processing,
+       24(5), 1227-1239.
 
 
 The ``FDD_algo`` class
