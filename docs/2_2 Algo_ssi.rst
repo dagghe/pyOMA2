@@ -1,3 +1,6 @@
+.. autosummary::
+   :toctree: generated
+
 The ``ssi`` module
 ------------------
 

@@ -1,5 +1,9 @@
 """
-Logging handler for the pyOMA2 module.
+Logging handler.
+Part of the pyOMA2 package
+Authors:
+Dag Pasca
+Diego Margoni
 """
 import logging
 import os

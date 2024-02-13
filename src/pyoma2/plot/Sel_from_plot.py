@@ -1,40 +1,9 @@
 """
-Module for interactive plots in the pyOMA2 package.
-
-This module provides interactive plotting functionalities for selecting and analyzing poles
-in Operational Modal Analysis (OMA). It is designed to work with Frequency Domain Decomposition
-(FDD) and Stochastic Subspace Identification (SSI) algorithms, enabling users to visually
-inspect and interact with the stabilization charts and singular value decomposition plots.
-The module integrates matplotlib plots into a Tkinter GUI, allowing for intuitive interaction
-such as pole selection through mouse clicks and keyboard shortcuts.
-
-Classes:
-    SelFromPlot: A class for creating interactive plots where users can select or
-                 deselect poles for further analysis in OMA. It supports various types
-                 of plots (FDD, SSI, pLSCF) and provides utilities for saving figures,
-                 toggling legends, and handling user inputs through a graphical interface.
-
-Key Features:
-    - Interactive selection of poles directly from stabilization charts and PSD plots.
-    - Compatibility with FDD, SSI, and pLSCF algorithm outputs.
-    - Integration of matplotlib plots within a Tkinter window for enhanced user interaction.
-    - Support for exporting plots and managing display settings like legends and pole visibility.
-
-References:
-    - This module is inspired by and expands upon functionalities found in the sdypy pyEMA
-      package [1]_, offering specialized features tailored for the pyOMA2 package's requirements.
-    .. [1] Janko Slavič, Python module for Experimental Modal Analysis (PyEMA), GitHub repository,
-        https://github.com/sdypy/sdypy
-
-Dependencies:
-    - matplotlib for plotting
-    - Tkinter for GUI components
-    - numpy for numerical operations
-    - pyOMA2's algorithm module for accessing algorithm-specific data
-
-Note:
-    The module is designed to be used as part of the pyOMA2 package and relies on its
-    internal data structures and algorithms.
+Module for interactive plots.
+Part of the pyOMA2 package
+Authors:
+Dag Pasca
+Diego Margoni
 """
 from __future__ import annotations
 
