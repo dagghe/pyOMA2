@@ -1,4 +1,5 @@
 # pyOMA2
+![pyoma2_logo_v2_COMPACT](https://github.com/dagghe/pyOMA2/assets/64746269/aa19bc05-d452-4749-a404-b702e6fe685d)
 
 [![python](https://img.shields.io/badge/Python-3.8-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![python](https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
