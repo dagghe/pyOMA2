@@ -1,6 +1,3 @@
-.. autosummary::
-   :toctree: generated
-
 Setup Classes
 =============
 
@@ -28,6 +25,7 @@ The ``SingleSetup`` class
 
 .. autoclass:: pyoma2.OMA.SingleSetup
    :members:
+   :inherited-members:
    :show-inheritance:
 
 The ``MultiSetup_PoSER`` class
@@ -42,4 +40,5 @@ The ``MultiSetup_PreGER`` class
 
 .. autoclass:: pyoma2.OMA.MultiSetup_PreGER
    :members:
+   :inherited-members:
    :show-inheritance:

@@ -29,6 +29,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
     "nbsphinx",
+    "sphinx_rtd_theme",
 ]
 
 intersphinx_mapping = {

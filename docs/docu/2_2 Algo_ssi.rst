@@ -1,6 +1,3 @@
-.. autosummary::
-   :toctree: generated
-
 The ``ssi`` module
 ------------------
 
@@ -23,15 +20,6 @@ Classes:
 Each class contains methods for executing the SSI algorithm, extracting modal parameters,
 plotting results, and additional utilities relevant to the specific SSI approach.
 
-**Summary:**
-
-.. autosummary::
-
-    pyoma2.algorithm.ssi.SSIdat_algo
-    pyoma2.algorithm.ssi.SSIcov_algo
-    pyoma2.algorithm.ssi.SSIdat_algo_MS
-    pyoma2.algorithm.ssi.SSIcov_algo_MS
-
 .. Note::
    - The classes are designed to be used as part of the ``pyOMA2`` package and rely on its internal data structures and algorithms.
    - Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
@@ -50,6 +38,7 @@ The ``SSIdat_algo`` class
 
 .. autoclass:: pyoma2.algorithm.ssi.SSIdat_algo
    :members:
+   :inherited-members:
    :show-inheritance:
 
 The ``SSIcov_algo`` class
@@ -57,6 +46,7 @@ The ``SSIcov_algo`` class
 
 .. autoclass:: pyoma2.algorithm.ssi.SSIcov_algo
    :members:
+   :inherited-members:
    :show-inheritance:
 
 The ``SSIdat_algo_MS`` class
@@ -64,6 +54,7 @@ The ``SSIdat_algo_MS`` class
 
 .. autoclass:: pyoma2.algorithm.ssi.SSIdat_algo_MS
    :members:
+   :inherited-members:
    :show-inheritance:
 
 
@@ -72,4 +63,5 @@ The ``SSIcov_algo_MS`` class
 
 .. autoclass:: pyoma2.algorithm.ssi.SSIcov_algo_MS
    :members:
+   :inherited-members:
    :show-inheritance:

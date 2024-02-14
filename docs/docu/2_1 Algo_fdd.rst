@@ -1,6 +1,3 @@
-.. autosummary::
-   :toctree: generated
-
 The ``fdd`` module
 ------------------
 
@@ -10,30 +7,20 @@ experimental data. These algorithms are used in structural dynamics to identify 
 such as natural frequencies, damping ratios, and mode shapes from ambient vibration measurements.
 
 Classes:
-   ``FDD_algo``
+   :class:`.FDD_algo`
       Implements the basic FDD algorithm for single setup modal analysis.
-   ``EFDD_algo``
+   :class:`.EFDD_algo`
       Extends ``FDD_algo`` to provide Enhanced FDD analysis.
-   ``FSDD_algo``
+   :class:`.FSDD_algo`
       Implements the Frequency-Spatial Domain Decomposition, a variant of EFDD.
-   ``FDD_algo_MS``
+   :class:`.FDD_algo_MS`
       Adapts ``FDD_algo`` for multi-setup modal analysis.
-   ``EFDD_algo_MS``
+   :class:`.EFDD_algo_MS`
       Extends ``EFDD_algo`` for multi-setup scenarios.
 
 Each class contains methods for executing the respective algorithms, extracting modal parameters,
 and plotting results. The module also includes utility functions and classes for visualization
 and interactive analysis.
-
-**Summary:**
-
-.. autosummary::
-
-    pyoma2.algorithm.fdd.FDD_algo
-    pyoma2.algorithm.fdd.EFDD_algo
-    pyoma2.algorithm.fdd.FSDD_algo
-    pyoma2.algorithm.fdd.FDD_algo_MS
-    pyoma2.algorithm.fdd.EFDD_algo_MS
 
 .. Note::
    - The classes are designed to be used as part of the ``pyOMA2`` package and rely on its internal data structures and algorithms.
@@ -57,6 +44,7 @@ The ``FDD_algo`` class
 
 .. autoclass:: pyoma2.algorithm.fdd.FDD_algo
    :members:
+   :inherited-members:
    :show-inheritance:
 
 The ``EFDD_algo`` class
@@ -64,6 +52,7 @@ The ``EFDD_algo`` class
 
 .. autoclass:: pyoma2.algorithm.fdd.EFDD_algo
    :members:
+   :inherited-members:
    :show-inheritance:
 
 The ``FSDD_algo`` class
@@ -71,6 +60,7 @@ The ``FSDD_algo`` class
 
 .. autoclass:: pyoma2.algorithm.fdd.FSDD_algo
    :members:
+   :inherited-members:
    :show-inheritance:
 
 The ``FDD_algo_MS`` class
@@ -78,6 +68,7 @@ The ``FDD_algo_MS`` class
 
 .. autoclass:: pyoma2.algorithm.fdd.FDD_algo_MS
    :members:
+   :inherited-members:
    :show-inheritance:
 
 The ``EFDD_algo_MS`` class
@@ -85,4 +76,5 @@ The ``EFDD_algo_MS`` class
 
 .. autoclass:: pyoma2.algorithm.fdd.EFDD_algo_MS
    :members:
+   :inherited-members:
    :show-inheritance:
