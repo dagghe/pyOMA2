@@ -1,11 +1,11 @@
 """
 Abstract Base Class Module used by various OMA algorithms.
-Part of the pyOMA2 package
+Part of the pyOMA2 package.
 Authors:
 Dag Pasca
 Diego Margoni
 """
-
+# FIXME DIEGO (set_result, set_data)
 from __future__ import annotations
 
 import abc

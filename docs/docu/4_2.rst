@@ -1,0 +1,5 @@
+The ``Gen_funct`` module
+------------------------
+
+.. automodule:: pyoma2.functions.Gen_funct
+   :members:

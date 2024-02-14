@@ -1,0 +1,5 @@
+The ``SSI_funct`` module
+------------------------
+
+.. automodule:: pyoma2.functions.SSI_funct
+   :members:

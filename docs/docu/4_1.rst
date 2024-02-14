@@ -1,0 +1,5 @@
+The ``FDD_funct`` module
+------------------------
+
+.. automodule:: pyoma2.functions.FDD_funct
+   :members:

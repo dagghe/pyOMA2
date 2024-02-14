@@ -40,7 +40,7 @@ Schematic organisation of the module showing inheritance between classes
    :maxdepth: 2
    :hidden:
 
-   modules
+   Index <modules>
 
 
 .. toctree::

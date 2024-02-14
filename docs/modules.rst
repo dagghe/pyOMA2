@@ -1,18 +1,23 @@
-pyOMA2 - User instantiated classes
-==================================
+.. autosummary::
+   :toctree: generated
+
+==========================
+ User instantiated classes
+==========================
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
-   1 Setup Classes
-   2 Algo
+   docu/1 Setup Classes
+   docu/2_1 Algo_fdd
+   docu/2_2 Algo_ssi
 
-
-pyOMA2 - Support classes and functions
-======================================
+===============
+Support modules
+===============
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
-   3 Support Classes and modules
-   4 Functions module
+   docu/3 Support Classes
+   docu/4 Functions modules
