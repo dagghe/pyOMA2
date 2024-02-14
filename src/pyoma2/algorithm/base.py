@@ -74,9 +74,6 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         Abstract method for selecting modal parameters from plots.
     set_data(...) -> BaseAlgorithm
         Sets the input data and sampling frequency for the algorithm.
-
-    Class Methods
-    --------------
     __class_getitem__(cls, item)
         Evaluates the types of `RunParamCls` and `ResultCls` at runtime.
     __init_subclass__(cls, **kwargs)
@@ -89,7 +86,6 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     - The class is designed to be generic and flexible, accommodating various types of algorithms
       within the pyOMA2 framework.
     - The `result` attribute is only populated after the `run` method is executed.
-    - Type parameters allow for strong typing and consistency in the implementation of different algorithms.
     """
 
     result: typing.Optional[T_Result] = None

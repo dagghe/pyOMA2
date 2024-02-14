@@ -1,6 +1,6 @@
 """
 Operational Modal Analysis Module for Single and Multi-Setup Configurations.
-Part of the pyOMA2 package
+Part of the pyOMA2 package.
 Authors:
 Dag Pasca
 Diego Margoni

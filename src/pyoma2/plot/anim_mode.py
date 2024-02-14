@@ -1,6 +1,6 @@
 """
-ANIMATION OF MODE SHAPES MODULE
-Part of the pyOMA2 package
+Animation Of Mode Shapes module.
+Part of the pyOMA2 package.
 Authors:
 Dag Pasca
 Diego Margoni

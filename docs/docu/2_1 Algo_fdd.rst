@@ -23,8 +23,7 @@ and plotting results. The module also includes utility functions and classes for
 and interactive analysis.
 
 .. Note::
-   - The classes are designed to be used as part of the ``pyOMA2`` package and rely on its internal data structures and algorithms.
-   - Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
+   Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
 
 
 .. [1] Brincker, R., Zhang, L., & Andersen, P. (2001). Modal identification of output-only

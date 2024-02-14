@@ -21,11 +21,11 @@ Support classes
 .. toctree::
    :maxdepth: 2
 
-    docu/3_1
-    docu/3_2
-    docu/3_3
-    docu/3_4
-    docu/3_5
-    docu/3_6
-    docu/3_7
-    docu/3_8
+    3_1
+    3_2
+    3_3
+    3_4
+    3_5
+    3_6
+    3_7
+    3_8

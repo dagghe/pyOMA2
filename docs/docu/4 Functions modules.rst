@@ -18,7 +18,7 @@ The following functions are the "foundamental bricks" to perform the analyses.
 .. toctree::
    :maxdepth: 2
 
-   docu/4_1
-   docu/4_2
-   docu/4_3
-   docu/4_4
+   4_1
+   4_2
+   4_3
+   4_4

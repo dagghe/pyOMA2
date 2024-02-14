@@ -1,27 +1,8 @@
 """
-FREQUENCY DOMAIN DECOMPOSITION (FDD) UTILITY FUNCTIONS
-
-This module is a part of the pyOMA2 package and provides utility functions for conducting
-Operational Modal Analysis (OMA) using Frequency Domain Decomposition (FDD) and Enhanced
-Frequency Domain Decomposition (EFDD) methods.
-
-Functions:
-    - SD_PreGER: Estimates Power Spectral Density matrices for multi-setup experiments.
-    - SD_Est: Computes Cross-Spectral Density using correlogram or periodogram methods.
-    - SD_svalsvec: Calculates singular values and vectors for Cross-Spectral Density matrices.
-    - FDD_MPE: Extracts modal parameters using the FDD method.
-    - SDOF_bellandMS: Utility function for EFDD and FSDD methods.
-    - EFDD_MPE: Extracts modal parameters using EFDD and FSDD methods.
-
-References:
-    .. [1] Brincker, R., Zhang, L., & Andersen, P. (2001). Modal identification of output-only
-        systems using frequency domain decomposition. Smart Materials and Structures, 10(3), 441.
-    .. [2] Brincker, R., Ventura, C. E., & Andersen, P. (2001). Damping estimation by frequency
-        domain decomposition. In Proceedings of IMAC 19: A Conference on Structural Dynamics.
-    .. [3] Zhang, L., Wang, T., & Tamura, Y. (2010). A frequency–spatial domain decomposition
-        (FSDD) method for operational modal analysis. Mechanical Systems and Signal Processing,
-        24(5), 1227-1239.
-
+Frequency Domain Decomposition (FDD) Utility Functions module.
+Part of the pyOMA2 package.
+Author:
+Dag Pasca
 """
 import logging
 

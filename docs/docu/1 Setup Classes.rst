@@ -17,7 +17,7 @@ Classes:
       Conducts OMA for multi-setup experiments with the PreGER approach.
 
 .. Note::
-   The classes are designed to be used as part of the ``pyOMA2`` package and rely on its internal data structures and algorithms.
+   Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
 
 
 The ``SingleSetup`` class
