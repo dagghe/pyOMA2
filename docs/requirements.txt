@@ -1,9 +1,4 @@
 sphinx==7.1.2
 sphinx-rtd-theme==1.3.0rc1
 nbsphinx==0.9.3
-numpy>=1.24.4
-pandas>=2.0.3
-scipy>=1.9.3
-pydantic>=2.5.1
-tqdm>=4.66.1
-matplotlib>=3.7.4
+pyOMA-2==0.3.0
