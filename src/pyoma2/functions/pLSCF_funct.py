@@ -1,7 +1,9 @@
 """
-Created on Sat Oct 21 19:12:47 2023
-
-@author: dagpa
+poly-reference Least Square Complex Frequency (pLSCF) Utility Functions module.
+Part of the pyOMA2 package.
+Authors:
+Dag Pasca
+Angelo Aloisio
 """
 import logging
 

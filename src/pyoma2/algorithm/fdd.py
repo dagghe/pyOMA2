@@ -1,6 +1,6 @@
 """
-Frequency Domain Decomposition (FDD) Algorithm Module
-Part of the pyOMA2 package
+Frequency Domain Decomposition (FDD) Algorithm Module.
+Part of the pyOMA2 package.
 Authors:
 Dag Pasca
 Diego Margoni

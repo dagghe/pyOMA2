@@ -8,21 +8,20 @@ on structural analysis and system identification, providing tools to process mea
 modal parameters, and perform comprehensive system dynamics analysis.
 
 Classes:
-   ``SSIdat_algo``
+   :class:`.SSIdat_algo`
       Implements the Data-Driven SSI algorithm for single setup.
-   ``SSIcov_algo``
+   :class:`.SSIcov_algo`
       Implements the Covariance-Driven SSI algorithm for single setup.
-   ``SSIdat_algo_MS``
+   :class:`.SSIdat_algo_MS`
       Extends ``SSIdat_algo`` for multi-setup experiments.
-   ``SSIcov_algo_MS``
+   :class:`.SSIcov_algo_MS`
       Extends ``SSIdat_algo_MS`` for covariance-based analysis in multi-setup experiments.
 
 Each class contains methods for executing the SSI algorithm, extracting modal parameters,
 plotting results, and additional utilities relevant to the specific SSI approach.
 
 .. Note::
-   - The classes are designed to be used as part of the ``pyOMA2`` package and rely on its internal data structures and algorithms.
-   - Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
+   Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
 
 
 .. [1] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace

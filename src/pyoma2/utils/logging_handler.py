@@ -1,8 +1,7 @@
 """
 Logging handler.
-Part of the pyOMA2 package
+Part of the pyOMA2 package.
 Authors:
-Dag Pasca
 Diego Margoni
 """
 import logging

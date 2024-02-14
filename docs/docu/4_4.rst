@@ -1,5 +1,24 @@
 The ``plot_funct`` module
 -------------------------
 
+This module, part of the pyOMA2 package, offers a suite of plotting functions
+designed specifically for use within the pyOMA2 module. These functions aid in
+visualizing modal analysis data, such as time histories, frequency responses,
+and stabilization charts. They facilitate the intuitive interpretation of Operational
+Modal Analysis (OMA) results.
+
+Main Functions:
+    - CMIF_plot: Visualizes the Complex Mode Indicator Function (CMIF) for singular values over frequencies.
+    - EFDD_FIT_plot: Presents detailed plots for EFDD and FSDD algorithms, showing mode-specific analyses.
+    - Stab_pLSCF_plot: Creates stabilization charts for the pLSCF method.
+    - Stab_SSI_plot: Generates stabilization charts specific to the Stochastic Subspace Identification (SSI) method.
+    - Cluster_SSI_plot: Displays frequency-damping clusters for identified poles using SSI.
+    - Cluster_pLSCF_plot: Visualizes frequency-damping clusters for the pLSCF method.
+    - plt_nodes, plt_lines, plt_surf, plt_quiver: Functions for plotting 3D geometrical representations.
+    - set_ax_options, set_view: Utilities for customizing the appearance of 3D plots.
+    - plt_data: Plots multi-channel time series data with RMS value inclusion.
+    - plt_ch_info: Generates comprehensive channel information plots including PSD and KDE.
+
+
 .. automodule:: pyoma2.functions.plot_funct
    :members:
