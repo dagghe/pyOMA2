@@ -6,6 +6,8 @@
 pyOMA2's documentation!
 =======================
 
+.. image:: https://github.com/dagghe/pyOMA2/assets/64746269/aa19bc05-d452-4749-a404-b702e6fe685d
+
 |Python 3.8| |Python 3.9| |Python 3.10| |Python 3.11| |pre-commit| |Code style: black|
 
 This is the new and updated version of **pyOMA** module, a Python module designed for conducting operational modal analysis. With this update, we've transformed **pyOMA** from a basic collection of functions into a more sophisticated module that fully leverages the capabilities of Python classes.
