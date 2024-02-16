@@ -120,7 +120,7 @@ def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
         axs : list of lists of matplotlib.axes.Axes
             A list of lists containing axes objects for each figure.
 
-    Notes
+    Note
     -----
     The function plots several aspects of the EFDD method for each mode, including the SDOF Bell function,
     auto-correlation function, and the selected portion for fit and the actual fit. Each mode's plot
@@ -663,7 +663,7 @@ def plt_nodes(ax, nodes_coord, alpha=1, color="k"):
     matplotlib.axes.Axes
         The modified axes object with the nodes plotted.
 
-    Notes
+    Note
     -----
     This function is designed to work with 3D plots and adds node representations to an existing 3D plot.
     """
@@ -702,7 +702,7 @@ def plt_lines(ax, nodes_coord, lines, alpha=1, color="k"):
     matplotlib.axes.Axes
         The modified axes object with the lines plotted.
 
-    Notes
+    Note
     -----
     This function is designed to work with 3D plots and adds line representations between
     nodes in an existing 3D plot.
@@ -741,7 +741,7 @@ def plt_surf(ax, nodes_coord, surf, alpha=0.5, color="cyan"):
     matplotlib.axes.Axes
         The modified axes object with the 3D surface plotted.
 
-    Notes
+    Note
     -----
     This function is designed for plotting 3D surfaces in a 3D plot. It uses `matplotlib.tri.Triangulation`
     for creating a triangulated surface. Ideal for visualizing complex surfaces or meshes in a 3D space.
@@ -793,7 +793,7 @@ def plt_quiver(
     matplotlib.axes.Axes
         The modified axes object with the vectors plotted.
 
-    Notes
+    Note
     -----
     Designed to work with 3D plots, allowing for the visualization of vector fields or directional data.
     `directions` array determines the direction and magnitude of the arrows, while `nodes_coord` specifies
@@ -842,7 +842,7 @@ def set_ax_options(
     matplotlib.axes.Axes
         The modified axes object with the applied configurations.
 
-    Notes
+    Note
     -----
     Customizes the appearance of 3D plots. Controls background color, fill, grid, and axis visibility.
     """
@@ -890,7 +890,7 @@ def set_view(ax, view):
     ValueError
         If the 'view' parameter is not one of the specified options.
 
-    Notes
+    Note
     -----
     Useful for quickly setting the axes to a standard viewing angle, especially in 3D visualizations.
     View options: "3D" (azimuth -60, elevation 30), "xy" (top-down), "xz" (side, along y-axis),
@@ -951,7 +951,7 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
         axs : array of matplotlib.axes.Axes
             An array of axes objects for the generated subplots.
 
-    Notes
+    Note
     -----
     Plots each channel in its own subplot for comparison. Supports multiple columns and adjusts the number of
     rows based on channels and columns.
@@ -1074,7 +1074,7 @@ def plt_ch_info(
         axs : list of matplotlib.axes.Axes
             A list of axis objects for the generated subplots.
 
-    Notes
+    Note
     -----
     Each figure includes three subplots: time history, PSD, and KDE for the respective channel.
     Allows for comprehensive analysis of each channel's signal characteristics.

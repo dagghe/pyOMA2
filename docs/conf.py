@@ -50,3 +50,7 @@ html_static_path = ["_static"]
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
+
+# Napoleon settings
+napoleon_use_admonition_for_notes = True
+napoleon_use_admonition_for_references = True

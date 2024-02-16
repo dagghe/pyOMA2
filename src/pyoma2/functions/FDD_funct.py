@@ -52,7 +52,7 @@ def SD_PreGER(Y, fs, nxseg=1024, pov=0.5, method="per"):
             where N is the total number of sensors (reference + moving) and K is the number
             of frequency points.
 
-    Notes
+    Note
     -----
     The function uses an internal function 'SD_Est' to estimate the spectral densities.
     The logger is used for debugging purposes to track the progress of analysis.
@@ -274,7 +274,7 @@ def FDD_MPE(
         Phi : ndarray
             Corresponding normalized mode shapes (each column corresponds to a mode shape).
 
-    Notes
+    Note
     -----
     The function assumes that the first singular value and vector correspond to the dominant
     mode at each frequency point.
