@@ -81,14 +81,6 @@ def pLSCF(Sy, dt, ordmax):
 # -----------------------------------------------------------------------------
 
 
-# def pLSCF_NEW(Sy, dt, ordmax):
-#     pass
-#     return
-
-
-# -----------------------------------------------------------------------------
-
-
 def pLSCF_Poles(A, ordmax, dt, methodSy, nxseg, Nref=None):
     Nch = int(A[1].shape[0])
     if Nref is None:
@@ -226,8 +218,8 @@ def pLSCF_MPE_New(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
     Phi = np.zeros((Nch, Nm), dtype=complex)
     freq = np.arange(0, Nf) * (1 / dt / (2 * Nf))
     freq_rad = 2 * np.pi * freq
-    LL = np.zeros((Nch * Nm, Nch * Nm), dtype=complex)  # inizializzo
-    GL = np.zeros((Nch * Nm, Nch), dtype=complex)  # inizializzo
+    LL = np.zeros((Nch * 2 * Nm, Nch * 2 * Nm), dtype=complex)  # inizializzo
+    GL = np.zeros((Nch * 2 * Nm, Nch), dtype=complex)  # inizializzo
     Sy = np.moveaxis(Sy, 2, 0)
     sel_lam_conj = np.conj(sel_lam)
     sel_lam1 = np.empty((len(sel_lam) * 2), dtype=complex)
@@ -251,7 +243,7 @@ def pLSCF_MPE_New(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
                         for jj2 in range(2 * Nm)
                     ]
                 )
-                .reshape((Nch * Nm, Nch), order="c")
+                .reshape((Nch * 2 * Nm, Nch), order="c")
                 .T
                 for jj1 in range(2 * Nm)
             ]

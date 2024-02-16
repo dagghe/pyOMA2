@@ -53,7 +53,7 @@ def BuildHank(Y, Yref, br, fs, method):
     ValueError
         If an invalid method is specified.
 
-    Notes
+    Note
     -----
       "dat": Efficient method for assembling the Hankel matrix for data driven SSI.
       "cov_mm": Builds Hankel matrix using future and past output data with matrix multiplication.
@@ -206,7 +206,7 @@ def SSI(H, br, ordmax, step=1):
         - C : list of numpy arrays
             Estimated output influence matrices C for various system orders.
 
-    Notes
+    Note
     -----
     Classical implementation of the SSI algorithm using the shift structure of the observability matrix.
     For more efficient implementation, consider using SSI_FAST function.
@@ -260,7 +260,7 @@ def SSI_FAST(H, br, ordmax, step=1):
         - C : list of numpy arrays
             Estimated output influence matrices C for various system orders.
 
-    Notes
+    Note
     -----
     This is a more efficient implementation of the SSI algorithm (see [2]_, algorithm 4).
     """
@@ -319,7 +319,7 @@ def SSI_Poles(AA, CC, ordmax, dt, step=1):
         - Ms : numpy.ndarray
             Complex mode shapes for each system and each order.
 
-    Notes
+    Note
     -----
     Applies the AC2MP function to each system in AA and CC to compute modal parameters.
     The modal parameters are stored for each system and each specified order.
@@ -496,7 +496,7 @@ def Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_x
     numpy.ndarray
         Stability label matrix (Lab), shape: (ordmax, ordmax/step+1).
 
-    Notes
+    Note
     -----
     This function categorizes modes based on their stability in terms of frequency, damping, and mode shape.
     """

@@ -78,7 +78,7 @@ class BaseSetup:
     plot_geo2(...)
         Plots the second type of geometry setup for the structure.
 
-    Notes
+    Note
     -----
     The BaseSetup class is not intended for direct instantiation by users.
     It acts as a common interface for handling different types of setup configurations.
@@ -99,7 +99,7 @@ class BaseSetup:
         algorithms : variable number of BaseAlgorithm
             One or more algorithm instances to be added to the setup.
 
-        Notes
+        Note
         -----
         The algorithms must be instantiated before adding them to the setup,
         and their names must be unique.
@@ -117,7 +117,7 @@ class BaseSetup:
         Iterates through each algorithm stored in the setup and executes it. The results are saved within
         each algorithm instance.
 
-        Notes
+        Note
         -----
         This method assumes that all algorithms are properly initialized and can be executed without
         additional parameters.
@@ -141,7 +141,7 @@ class BaseSetup:
         KeyError
             If the specified algorithm name does not exist in the setup.
 
-        Notes
+        Note
         -----
         The result of the algorithm execution is saved within the algorithm instance.
         """
@@ -508,7 +508,7 @@ class SingleSetup(BaseSetup):
     get(...)
         Retrieve an algorithm from the set by its name, returning a default value if it does not exist.
 
-    Notes
+    Note
     -----
     - The sampling interval `dt` is calculated automatically from the provided sampling frequency.
     - `algorithms` dictionary is initialized empty and is meant to store various algorithms as needed.
@@ -605,10 +605,6 @@ class SingleSetup(BaseSetup):
         -------
         tuple
             A tuple containing the figure and axis objects of the plots.
-
-        Notes
-        -----
-        Utilizes the `plt_ch_info` function for plotting.
         """
         data = self.data
         fs = self.fs
@@ -627,83 +623,80 @@ class SingleSetup(BaseSetup):
         return fig, ax
 
     # method to decimate data
-    def decimate_data(
-        self,
-        q: int,
-        n: int | None = None,
-        ftype: typing.Literal["iir", "fir"] = "iir",
-        axis: int = 0,
-        zero_phase: bool = True,
-    ):
+    def decimate_data(self, q: int, axis: int = 0, **kwargs):
         """
         Applies decimation to the data using the scipy.signal.decimate function.
 
         This method reduces the sampling rate of the data by a factor of 'q'.
+        The decimation process includes low-pass filtering to reduce aliasing.
+        The method updates the instance's data and sampling frequency attributes.
+
         Parameters
         ----------
         q : int
-            The decimation factor.
-        n : Optional[int], optional
-            The order of the filter (if 'ftype' is 'fir') or the number of times to apply
-            the filter (if 'ftype' is 'iir'). If None, a default value is used. Default is None.
-        ftype : {'iir', 'fir'}, optional
-            The type of filter to use for decimation: 'iir' for an IIR filter or 'fir'
-            for an FIR filter. Default is 'iir'.
+            The decimation factor. Must be greater than 1.
         axis : int, optional
             The axis along which to decimate the data. Default is 0.
-        zero_phase : bool, optional
-            If True, applies a zero-phase filter, which has no phase distortion.
-            If False, uses a causal filter with some phase distortion. Default is True.
+        **kwargs : dict, optional
+            Additional keyword arguments for the scipy.signal.decimate function:
+            n : int, optional
+                The order of the filter (if 'ftype' is 'fir') or the number of times
+                to apply the filter (if 'ftype' is 'iir'). If None, a default value is used.
+            ftype : {'iir', 'fir'}, optional
+                The type of filter to use for decimation: 'iir' for an IIR filter
+                or 'fir' for an FIR filter. Default is 'iir'.
+
+            zero_phase : bool, optional
+                If True, applies a zero-phase filter, which has no phase distortion.
+                If False, uses a causal filter with some phase distortion. Default is True.
 
         Raises
         ------
         ValueError
             If the decimation factor 'q' is not greater than 1.
 
-        Notes
-        -----
-        The decimation process includes low-pass filtering to reduce aliasing.
-        This method updates the instance's data and sampling frequency attributes.
+        See Also
+        --------
+        scipy.signal.decimate : For more details on the decimation process.
+        [scipy.signal.decimate](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html)
         """
 
-        self.data = decimate(self.data, q, n, ftype, axis, zero_phase)
+        self.data = decimate(self.data, q, axis, **kwargs)
         self.fs = self.fs / q
         self.dt = 1 / self.fs
 
     # method to detrend data
-    def detrend_data(
-        self,
-        axis: int = 0,
-        type: typing.Literal["linear", "constant"] = "linear",
-        bp: int | npt.NDArray[np.int64] = 0,
-    ):
+    def detrend_data(self, axis: int = 0, **kwargs):
         """
         Applies detrending to the data using the scipy.signal.detrend function.
 
-        This method removes a linear or constant trend from the data. It's commonly used
-        to remove drifts or offsets in time series data.
+        This method removes a linear or constant trend from the data, commonly used to remove drifts
+        or offsets in time series data. It's a preprocessing step, often necessary for methods that
+        assume stationary data. The method updates the instance's data attribute.
 
         Parameters
         ----------
         axis : int, optional
             The axis along which to detrend the data. Default is 0.
-        type : {'linear', 'constant'}, optional
-            The type of detrending: 'linear' for linear detrend, or 'constant' for just
-            subtracting the mean. Default is 'linear'.
-        bp : int or numpy.ndarray of int, optional
-            Breakpoints where the data is split for piecewise detrending. Default is 0.
+        **kwargs : dict, optional
+            Additional keyword arguments for the scipy.signal.detrend function:
+            type : {'linear', 'constant'}, optional
+                The type of detrending: 'linear' for linear detrend, or 'constant' for just
+                subtracting the mean. Default is 'linear'.
+            bp : int or numpy.ndarray of int, optional
+                Breakpoints where the data is split for piecewise detrending. Default is 0.
 
         Raises
         ------
         ValueError
             If invalid parameters are provided.
 
-        Notes
-        -----
-        Detrending is a preprocessing step, often necessary for methods that assume
-        stationary data. This method updates the instance's data attribute.
+        See Also
+        --------
+        scipy.signal.detrend : For more details on the detrending process.
+        [scipy.signal.detrend](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html)
         """
-        self.data = detrend(self.data, axis, type, bp)
+        self.data = detrend(self.data, axis, **kwargs)
 
     # metodo per definire geometria 1
     def def_geo1(
@@ -891,37 +884,51 @@ class SingleSetup(BaseSetup):
 # FIXME add references!
 class MultiSetup_PoSER:
     """
-    Class for Operational Modal Analysis of multi-setup experiments using the
-    Post Separate Estimation Re-scaling (PoSER) approach.
+    Class for conducting Operational Modal Analysis (OMA) on multi-setup experiments using
+    the Post Separate Estimation Re-scaling (PoSER) approach. This approach is designed to
+    merge and analyze data from multiple experimental setups for comprehensive modal analysis.
 
-    It allows for merging results from multiple setups and analyzing the combined data
-    to extract modal properties.
+    The PoSER method is particularly useful in situations where data from different setups
+    need to be combined to enhance the understanding of the system's modal properties.
 
     Attributes
     ----------
     __result : Optional[Dict[str, MsPoserResult]]
-        Private attribute storing the merged results from multiple setups.
+        Private attribute to store the merged results from multiple setups. Each entry in the
+        dictionary corresponds to a specific algorithm used across setups, with its results.
     __alg_ref : Optional[Dict[type[BaseAlgorithm], str]]
-        Private attribute storing references to the algorithms used in the setups.
+        Private attribute to store references to the algorithms used in the setups. It maps
+        each algorithm type to its corresponding name.
 
     Methods
     -------
     merge_results()
-        Merges the results from individual setups into a combined result.
-    plot_mode_g1(...)
-        Plots mode shapes for a specified mode number using Geometry 1 setup.
-    plot_mode_g2(...)
-        Plots mode shapes for a specified mode number using Geometry 2 setup.
-    anim_mode_g2(...)
-        Creates an animation for mode shapes for a specified mode number using Geometry 2 setup.
+        Merges the results from individual setups into a combined result for holistic analysis.
+    plot_mode_g1(mode_number: int, scale_factor: int, view_type: str)
+        Plots mode shapes for a specified mode number using the first type of geometric setup (Geo1).
+    plot_mode_g2(mode_number: int, scale_factor: int, view_type: str)
+        Plots mode shapes for a specified mode number using the second type of geometric setup (Geo2).
+    anim_mode_g2(mode_number: int, scale_factor: int, view_type: str, save_as_gif: bool)
+        Creates an animation of the mode shapes for a specified mode number using the second type
+        of geometric setup (Geo2). Option to save the animation as a GIF file.
     def_geo1(...)
-        Defines the first geometry setup (Geo1) for the instance.
+        Defines the first type of geometric setup (Geo1) for the instance, based on sensor placements
+        and structural characteristics.
     def_geo2(...)
-        Defines the second geometry setup (Geo2) for the instance.
+        Defines the second type of geometric setup (Geo2) for the instance, typically involving more
+        complex geometries or additional data.
+
     plot_geo1(...)
-        Plots the geometry (type 1) of the tested structure.
+        Plots the geometric configuration of the structure based on the Geo1 setup, including sensor
+        placements and structural details.
     plot_geo2(...)
-        Plots the geometry (type 2) of the tested structure.
+        Plots the geometric configuration of the structure based on the Geo2 setup, highlighting
+        more intricate details or alternative layouts.
+
+    Note
+    -----
+    The PoSER approach assumes that the setups used are compatible in terms of their experimental
+    setup and data characteristics.
     """
 
     __result: typing.Optional[typing.Dict[str, MsPoserResult]] = None
@@ -1150,7 +1157,7 @@ class MultiSetup_PoSER:
         AssertionError
             If the number of sensors does not match between data, coordinates, and directions.
 
-        Notes
+        Note
         -----
         The method performs various checks to ensure the integrity and consistency of the input data.
         Adapts to zero-indexing for background lines if provided.
@@ -1325,7 +1332,7 @@ class MultiSetup_PoSER:
             If the number of columns in mapping and sign data does not match the expected
             dimensions based on the order reduction.
 
-        Notes
+        Note
         -----
         Performs checks to ensure consistency and correctness of input data based on the order reduction.
         Adapts to zero-indexing for sensor and background lines if provided."""
@@ -1550,10 +1557,6 @@ class MultiSetup_PoSER:
         -------
         tuple
             A tuple containing the figure and axis objects of the plot.
-
-        Notes
-        -----
-        This method visualizes the mode shapes based on the provided geometry and algorithm results.
         """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
@@ -1651,10 +1654,6 @@ class MultiSetup_PoSER:
         -------
         tuple
             A tuple containing the figure and axis objects of the plot.
-
-        Notes
-        -----
-        This method provides a visual representation of the mode shapes using geometry 2 setup.
         """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
@@ -1760,7 +1759,7 @@ class MultiSetup_PoSER:
         Any
             The generated animation object.
 
-        Notes
+        Note
         -----
         The animation provides a dynamic representation of the mode shapes, enhancing the
         understanding of structural behavior under different modes.
@@ -1825,9 +1824,6 @@ class MultiSetup_PreGER(BaseSetup):
         Plots the first type of geometric configuration for the structure.
     plot_geo2(...)
         Plots the second type of geometric configuration for the structure.
-
-    Additional Methods
-    ------------------
     plot_data(...)
         Visualizes time history data of channels for selected datasets.
     plot_ch_info(...)
@@ -1842,16 +1838,10 @@ class MultiSetup_PreGER(BaseSetup):
     def_geo2(...)
         Defines the second type of geometric setup (Geo2) for the instance.
 
-    Notes
+    Note
     -----
-    - The class inherits from `BaseSetup`, which provide foundational attributes and methods.
-    - The `ref_ind` attribute determines how datasets are merged and scaled.
-    - The `plot_data` and `plot_ch_info` methods allow visualization of the datasets'
-      time history and channel information.
-    - The `decimate_data` and `detrend_data` methods provide preprocessing capabilities.
-    - The `def_geo1` and `def_geo2` methods allow setting up geometric configurations for the tested
-        structure.
-
+    The PreGER approach assumes that the setups used are compatible in terms of their experimental
+    setup and data characteristics.
     """
 
     def __init__(
@@ -1917,11 +1907,6 @@ class MultiSetup_PreGER(BaseSetup):
         -------
         list
             A list of tuples, each containing the figure and axes objects for the plots of each dataset.
-
-        Notes
-        -----
-        - The method uses `plt_data` function for plotting.
-        - The method can handle multiple datasets and plot them separately.
         """
         if data_idx != "all":
             datasets = [self.datasets[i] for i in data_idx]
@@ -1986,11 +1971,6 @@ class MultiSetup_PreGER(BaseSetup):
         -------
         list
             A list of tuples, each containing the figure and axes objects for the plots of each dataset.
-
-        Notes
-        -----
-        - Utilizes `plt_ch_info` function for plotting.
-        - Capable of handling and visualizing multiple datasets separately.
         """
         if data_idx != "all":
             datasets = [self.datasets[i] for i in data_idx]
@@ -2095,11 +2075,12 @@ class MultiSetup_PreGER(BaseSetup):
         AssertionError
             If the number of sensors does not match between data, coordinates, and directions.
 
-        Notes
+        Note
         -----
         - The method performs various checks to ensure the integrity and consistency of the input data.
         - Adapts to zero-indexing for background lines if provided.
-        - Reorders sensor coordinates and directions to match the provided sensor names."""
+        - Reorders sensor coordinates and directions to match the provided sensor names.
+        """
 
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
@@ -2189,10 +2170,11 @@ class MultiSetup_PreGER(BaseSetup):
             If the number of columns in mapping and sign data does not match the expected
             dimensions based on the order reduction.
 
-        Notes
+        Note
         -----
         - Performs checks to ensure consistency and correctness of input data based on the order reduction.
-        - Adapts to zero-indexing for sensor and background lines if provided."""
+        - Adapts to zero-indexing for sensor and background lines if provided.
+        """
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind

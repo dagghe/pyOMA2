@@ -468,8 +468,8 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
 
     Attributes
     ----------
-    method : typing.Literal["EFDD", "FSDD"]
-        Specifies the method type used in the analysis. Set to "EFDD" for this class.
+    method : str
+        The method used in the analysis. Set to "EFDD" for this class.
     RunParamCls : EFDDRunParams
         Class for the run parameters specific to the EFDD algorithm.
     ResultCls : EFDDResult
@@ -477,14 +477,14 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
 
     Methods
     -------
-    mpe(...)
-        Executes Modal Parameter Estimation (MPE) for selected frequencies.
-    mpe_fromPlot(...)
-        Interactive MPE using plots for selecting frequencies in EFDD analysis.
-    plot_FIT(...)
-        Generates a Frequency domain Identification (FIT) plot for visualizing EFDD results.
+    mpe(sel_freq: List[float], DF1: float = 0.1, ...)
+        Performs MPE for selected frequencies in EFDD.
+    mpe_fromPlot(DF1: float = 0.1, DF2: float = 1.0, ...)
+        Interactive MPE in EFDD analysis.
+    plot_FIT(freqlim: Optional[tuple[float, float]] = None, *args, **kwargs)
+        Plots FIT results for EFDD analysis.
 
-    Notes
+    Note
     -----
     - Inherits from `FDD_algo` and provides specialized methods and functionalities
     for EFDD-specific analyses.
@@ -684,8 +684,8 @@ class FSDD_algo(EFDD_algo):
 
     Attributes
     ----------
-    method : "FSDD"
-        The method type used in the analysis, set to "FSDD" for this class.
+    method : str
+        The method used in the analysis. Set to "FSDD" for this class.
     RunParamCls : Type[EFDDRunParams]
         Class for specifying run parameters unique to the FSDD algorithm.
     ResultCls : Type[EFDDResult]
@@ -695,7 +695,7 @@ class FSDD_algo(EFDD_algo):
     -------
     Inherits all methods from the EFDD_algo class, with modifications for the FSDD approach.
 
-    Notes
+    Note
     -----
     Inherits functionalities from the EFDD_algo class while focusing on the unique
     aspects of the FSDD approach for more refined modal analysis.
@@ -731,7 +731,7 @@ class FDD_algo_MS(FDD_algo[FDDRunParams, FDDResult, typing.Iterable[dict]]):
         Conducts the FDD analysis on multi-setup data, producing spectral density matrices,
         singular values, and vectors as results.
 
-    Notes
+    Note
     -----
     Inherits the functionality from the standard FDD algorithm class, modifying and extending it
     for application to datasets derived from multiple experimental setups.
@@ -786,7 +786,7 @@ class EFDD_algo_MS(EFDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
     Attributes
     ----------
     method : str
-        The EFDD method employed for multi-setup analysis.
+        The method employed for multi-setup analysis ("EFDD").
     RunParamCls : EFDDRunParams
         Class for specifying run parameters unique to the EFDD algorithm for multi-setups.
     ResultCls : EFDDResult
@@ -800,7 +800,7 @@ class EFDD_algo_MS(EFDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
         Conducts the EFDD algorithm on multi-setup data, yielding the modal parameters
         such as natural frequencies, damping ratios, and mode shapes.
 
-    Notes
+    Note
     -----
     This class adapts and enhances the standard EFDD algorithm's functionality for datasets
     derived from multiple experimental setups.

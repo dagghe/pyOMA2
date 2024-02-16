@@ -21,71 +21,56 @@ T_Data = typing.TypeVar("T_Data", bound=typing.Iterable)
 
 
 class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
-
     """
-    Abstract base class that defines the foundational structure and common functionalities
-    for various OMA algorithms in the pyOMA2 module.
-    This class sets a standard interface and workflow for implementing different operational
-    modal analysis algorithms.
+    Abstract base class for OMA algorithms.
 
-    Type Parameters
-    ----------------
-    T_RunParams : BaseModel
-        The type of run parameters specific to each OMA algorithm, derived from BaseModel.
-    T_Result : BaseResult
-        The type of results produced by the algorithm, derived from BaseResult.
-    T_Data : Iterable
-        The type of input data the algorithm operates on, typically an iterable structure.
+    This class serves as a foundational structure for implementing various OMA algorithms,
+    setting a standard interface and workflow.
 
     Attributes
     ----------
     result : Optional[T_Result]
-        Stores the results produced by the algorithm after its execution.
+        Stores the results produced by the algorithm. The type of result depends on T_Result.
     run_params : Optional[T_RunParams]
-        Holds the parameters necessary to run the algorithm.
+        Holds the parameters necessary to run the algorithm. The type of run parameters
+        depends on T_RunParams.
     name : Optional[str]
-        The name of the algorithm, used for identification and logging purposes.
+        The name of the algorithm, used for identification and logging.
     RunParamCls : Type[T_RunParams]
-        The class used to instantiate run parameters for the algorithm.
+        The class used for instantiating run parameters. Must be a subclass of BaseModel.
     ResultCls : Type[T_Result]
-        The class used to encapsulate and represent the results of the algorithm.
+        The class used for encapsulating the algorithm's results. Must be a subclass
+        of BaseResult.
     fs : Optional[float]
         The sampling frequency of the input data.
     dt : Optional[float]
         The sampling interval, derived from the sampling frequency.
     data : Optional[T_Data]
-        The data on which the algorithm operates.
+        The input data for the algorithm. The type of data depends on T_Data.
 
     Methods
     -------
-    __init__(...)
+    __init__(self, run_params=None, name=None, *args, **kwargs)
         Initializes the algorithm with optional run parameters and a name.
-    _pre_run(...)
-        Internal method for pre-run checks and validations.
-    run(...) -> T_Result
-        Abstract method that executes the algorithm and returns the results.
-    set_run_params(...) -> BaseAlgorithm
+    set_run_params(self, run_params)
         Sets the run parameters for the algorithm.
-    set_result(...) -> BaseAlgorithm
+    set_result(self, result)
         Assigns the result to the algorithm after execution.
-    mpe(...) -> Any
-        Abstract method for extracting modal parameters from the algorithm results.
-    mpe_fromPlot(...) -> Any
-        Abstract method for selecting modal parameters from plots.
-    set_data(...) -> BaseAlgorithm
+    set_data(self, data, fs)
         Sets the input data and sampling frequency for the algorithm.
-    __class_getitem__(cls, item)
-        Evaluates the types of `RunParamCls` and `ResultCls` at runtime.
-    __init_subclass__(cls, **kwargs)
-        Ensures that subclasses define `RunParamCls` and `ResultCls`.
+    run(self)
+        Executes the algorithm. Must be implemented by subclasses.
+    mpe(self, *args, **kwargs)
+        Extracts modal parameters from the results. Must be implemented by subclasses.
+    mpe_fromPlot(self, *args, **kwargs)
+        Selects modal parameters from plots. Must be implemented by subclasses.
 
-    Notes
+    Note
     -----
-    - `BaseAlgorithm` is an abstract class and cannot be instantiated directly.
+    - BaseAlgorithm is an abstract class and should not be instantiated directly.
     - Subclasses must implement the `run`, `mpe`, and `mpe_fromPlot` methods.
-    - The class is designed to be generic and flexible, accommodating various types of algorithms
-      within the pyOMA2 framework.
-    - The `result` attribute is only populated after the `run` method is executed.
+    - The class is designed to be generic, accommodating various types of algorithms within
+        the pyOMA2 framework.
     """
 
     result: typing.Optional[T_Result] = None
@@ -111,20 +96,14 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
 
         Parameters
         ----------
-        run_params : typing.Optional[T_RunParams], optional
+        run_params : Optional[T_RunParams], optional
             The parameters required to run the algorithm. If not provided, can be set later.
-        name : typing.Optional[str], optional
+        name : Optional[str], optional
             The name of the algorithm. If not provided, defaults to the class name.
         *args : tuple
             Additional positional arguments.
         **kwargs : dict
             Additional keyword arguments used to instantiate run parameters if `run_params` is not provided.
-
-        Notes
-        -----
-        This constructor allows flexible initialization of the algorithm. If `run_params` are not provided
-        during initialization, they can be set later using the `set_run_params` method. Similarly, if a `name`
-        is not provided, the class name is used as the default name of the algorithm.
         """
         if run_params:
             self.run_params = run_params
@@ -143,7 +122,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
             If the sampling frequency (`fs`) or the input data (`data`) is not set.
             If the run parameters (`run_params`) are not set.
 
-        Notes
+        Note
         -----
         This method is called internally by the `run` method to ensure that the necessary prerequisites
         for running the algorithm are satisfied.
@@ -177,7 +156,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         NotImplementedError
             If the method is not implemented in the subclass.
 
-        Notes
+        Note
         -----
         Implementing classes should handle the algorithm logic within this method and ensure that the
         output is an instance of the `ResultCls`.
@@ -198,7 +177,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         BaseAlgorithm
             Returns the instance with updated run parameters.
 
-        Notes
+        Note
         -----
         This method allows dynamically setting or updating the run parameters for the algorithm
         after its initialization.
@@ -220,7 +199,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         BaseAlgorithm
             Returns the instance with the set result.
 
-        Notes
+        Note
         -----
         This method is used to assign the result after the algorithm execution. The result should be
         an instance of the `ResultCls`.
@@ -252,7 +231,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         ValueError
             If the algorithm has not been run or the result is not set.
 
-        Notes
+        Note
         -----
         Implementing classes should override this method to provide functionality for extracting
         and returning modal parameters based on the algorithm's results.
@@ -285,7 +264,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         ValueError
             If the algorithm has not been run or the result is not set.
 
-        Notes
+        Note
         -----
         Implementing classes should provide mechanisms for selecting and returning peaks or modal parameters
         from graphical plots or visual representations of the data.
@@ -310,7 +289,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         BaseAlgorithm
             Returns the instance with the set data and sampling frequency.
 
-        Notes
+        Note
         -----
         This method is typically used by the Setup class to provide the necessary data and sampling
         frequency to the algorithm before its execution.
@@ -337,7 +316,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         cls : BaseAlgorithm
             The class with evaluated `RunParamCls` and `ResultCls`.
 
-        Notes
+        Note
         -----
         This class method is a workaround to dynamically determine the types of `RunParamCls` and `ResultCls`
         at runtime. It is particularly useful for type checking and ensuring consistency across different
@@ -360,7 +339,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
             If `RunParamCls` or `ResultCls` are not defined or not subclasses of `BaseModel` and `BaseResult`,
             respectively.
 
-        Notes
+        Note
         -----
         This method is automatically called when a subclass of `BaseAlgorithm` is defined. It checks that
         `RunParamCls` and `ResultCls` are correctly set in the subclass. This is essential for the proper
