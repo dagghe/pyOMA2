@@ -1,7 +1,8 @@
 """
-Created on Sat Oct 21 18:39:20 2023
-
-@author: dagpa
+General Utility Functions module.
+Part of the pyOMA2 package.
+Author:
+Dag Pasca
 """
 import typing
 
@@ -20,27 +21,29 @@ def merge_mode_shapes(
     """
     Merges multiple mode shape arrays from different setups into a single mode shape array.
 
-    This function combines mode shape arrays from different experimental setups into a single array.
-    It uses a list of reference sensor indices for each setup to align and scale the mode shapes.
-    The function ensures that all mode shape arrays have the same number of modes and merges them
-    by keeping the reference sensor data from the first setup and appropriately scaling and appending
-    the data from roving sensors of subsequent setups.
+    Parameters
+    ----------
+    MSarr_list : List[np.ndarray]
+        A list of mode shape arrays. Each array in the list corresponds
+        to a different experimental setup. Each array should have dimensions [N x M], where N is the number
+        of sensors (including both reference and roving sensors) and M is the number of modes.
+    reflist : List[List[int]]
+        A list of lists containing the indices of reference sensors. Each sublist
+        corresponds to the indices of the reference sensors used in the corresponding setup in `MSarr_list`.
+        Each sublist should contain the same number of elements.
 
-    Parameters:
-    - MSarr_list (List[np.ndarray]): A list of mode shape arrays. Each array in the list corresponds
-      to a different experimental setup. Each array should have dimensions [N x M], where N is the number
-      of sensors (including both reference and roving sensors) and M is the number of modes.
-    - reflist (List[List[int]]): A list of lists containing the indices of reference sensors. Each sublist
-      corresponds to the indices of the reference sensors used in the corresponding setup in `MSarr_list`.
-      Each sublist should contain the same number of elements.
+    Returns
+    -------
+    np.ndarray
+        A merged mode shape array. The number of rows in the array equals the sum of the number
+        of unique sensors across all setups minus the number of reference sensors in each setup
+        (except the first one). The number of columns equals the number of modes.
 
-    Returns:
-    - np.ndarray: A merged mode shape array. The number of rows in the array equals the sum of the number
-      of unique sensors across all setups minus the number of reference sensors in each setup
-      (except the first one). The number of columns equals the number of modes.
-
-    Raises:
-    - ValueError: If the mode shape arrays in `MSarr_list` do not have the same number of modes."""
+    Raises
+    ------
+    ValueError
+        If the mode shape arrays in `MSarr_list` do not have the same number of modes.
+    """
     Nsetup = len(MSarr_list)  # number of setup
     Nmodes = MSarr_list[0].shape[1]  # number of modes
     Nref = len(reflist[0])  # number of reference sensors
@@ -82,18 +85,25 @@ def merge_mode_shapes(
 
 
 def MSF(phi_1, phi_2):
-    """Modal Scale Factor.
+    """
+    Calculates the Modal Scale Factor (MSF) between two sets of mode shapes.
 
-    If ``phi_1`` and ``phi_2`` are matrices, multiple msf are returned.
+    Parameters
+    ----------
+    phi_1 : ndarray
+        Mode shape matrix X, shape: (n_locations, n_modes) or n_locations.
+    phi_2 : ndarray
+        Mode shape matrix A, shape: (n_locations, n_modes) or n_locations.
 
-    The MAF scales ``phi_1`` to ``phi_2`` when multiplying: ``msf*phi_1``.
-    Also takes care of 180 deg phase difference.
+    Returns
+    -------
+    ndarray
+        The MSF values, real numbers that scale `phi_1` to `phi_2`.
 
-    :param phi_1: Mode shape matrix X, shape: ``(n_locations, n_modes)``
-        or ``n_locations``.
-    :param phi_2: Mode shape matrix A, shape: ``(n_locations, n_modes)``
-        or ``n_locations``.
-    :return: np.ndarray, MSF values
+    Raises
+    ------
+    Exception
+        If `phi_1` and `phi_2` do not have the same shape.
     """
     if phi_1.ndim == 1:
         phi_1 = phi_1[:, None]
@@ -120,18 +130,18 @@ def MSF(phi_1, phi_2):
 
 
 def MCF(phi):
-    """Modal complexity factor.
+    """
+    Calculates the Modal Complexity Factor (MCF) for mode shapes.
 
-    The MCF ranges from 0 to 1. It returns 0 for real modes and 1 for complex modes.
-    When ``dtype`` of ``phi`` is ``complex``, the modes can still be real, if the angles
-    of all components are the same.
+    Parameters
+    ----------
+    phi : ndarray
+        Complex mode shape matrix, shape: (n_locations, n_modes) or n_locations.
 
-    Additional information on MCF:
-    http://www.svibs.com/resources/ARTeMIS_Modal_Help/Generic%20Complexity%20Plot.html
-
-    :param phi: Complex mode shape matrix, shape: ``(n_locations, n_modes)``
-        or ``n_locations``.
-    :return: MCF (a value between 0 and 1)
+    Returns
+    -------
+    ndarray
+        MCF values, ranging from 0 (for real modes) to 1 (for complex modes).
     """
     if phi.ndim == 1:
         phi = phi[:, None]
@@ -152,24 +162,26 @@ def MCF(phi):
 
 
 def MAC(phi_X, phi_A):
-    """Modal Assurance Criterion.
+    """
+    Calculates the Modal Assurance Criterion (MAC) between two sets of mode shapes.
 
-    The number of locations (axis 0) must be the same for ``phi_X`` and
-    ``phi_A``. The nubmer of modes (axis 1) is arbitrary.
+    Parameters
+    ----------
+    phi_X : ndarray
+        Mode shape matrix X, shape: (n_locations, n_modes) or n_locations.
+    phi_A : ndarray
+        Mode shape matrix A, shape: (n_locations, n_modes) or n_locations.
 
-    Literature:
-        [1] Maia, N. M. M., and J. M. M. Silva.
-            "Modal analysis identification techniques." Philosophical
-            Transactions of the Royal Society of London. Series A:
-            Mathematical, Physical and Engineering Sciences 359.1778
-            (2001): 29-40.
-
-    :param phi_X: Mode shape matrix X, shape: ``(n_locations, n_modes)``
-        or ``n_locations``.
-    :param phi_A: Mode shape matrix A, shape: ``(n_locations, n_modes)``
-        or ``n_locations``.
-    :return: MAC matrix. Returns MAC value if both ``phi_X`` and ``phi_A`` are
+    Returns
+    -------
+    ndarray
+        MAC matrix. Returns a single MAC value if both `phi_X` and `phi_A` are
         one-dimensional arrays.
+
+    Raises
+    ------
+    Exception
+        If mode shape matrices have more than 2 dimensions or if their first dimensions do not match.
     """
     if phi_X.ndim == 1:
         phi_X = phi_X[:, np.newaxis]
@@ -213,23 +225,20 @@ def PRE_MultiSetup(
     DataList: typing.List[np.ndarray], reflist: typing.List[typing.List[int]]
 ) -> typing.List[typing.Dict[str, np.ndarray]]:
     """
-    Preprocesses multiple setups of data by separating reference and moving
-    sensor information.
+    Preprocesses data from multiple setups by separating reference and moving sensor data.
 
-    Parameters:
-    - DataList (list of numpy arrays): List of input data arrays for each
-        setup, where each array represents sensor data for a setup.
-    - reflist (list of lists): List of lists containing indices of sensors to
-        be used as references for each setup.
+    Parameters
+    ----------
+    DataList : list of numpy arrays
+        List of input data arrays for each setup, where each array represents sensor data.
+    reflist : list of lists
+        List of lists containing indices of sensors used as references for each setup.
 
-    Returns:
-    - list of dictionaries: A list of dictionaries, each containing the
-        data for a setup.
-        Each dictionary has the following keys:
-            - 'ref': Numpy array of reference sensor data reshaped to
-                (number_of_references, number_of_data_points).
-            - 'mov': Numpy array of moving sensor data reshaped to
-                (number_of_moving_sensors, number_of_data_points).
+    Returns
+    -------
+    list of dicts
+        A list of dictionaries, each containing the data for a setup.
+        Each dictionary has keys 'ref' and 'mov' corresponding to reference and moving sensor data.
     """
     n_setup = len(DataList)  # number of setup
     Y = []
@@ -267,18 +276,18 @@ def invperm(p):
     """
     Compute the inverse permutation of a given array.
 
-    Given a permutation array `p`, this function creates an array `q` such
-    that `q[p[i]] = i` for each element `i` in `p`. This effectively computes
-    the inverse of the permutation represented by `p`.
+    Parameters
+    ----------
+    p : array-like
+        A permutation of integers from 0 to n-1, where n is the length of the array.
 
-    Parameters:
-    p (array-like): A permutation of integers from 0 to n-1, where n is the
-                    length of the array.
+    Returns
+    -------
+    ndarray
+        An array representing the inverse permutation of `p`.
 
-    Returns:
-    ndarray: An array representing the inverse permutation of `p`.
-
-    Example:
+    Example
+    -------
     >>> invperm(np.array([3, 0, 2, 1]))
     array([1, 3, 2, 0])
     """
@@ -292,23 +301,22 @@ def invperm(p):
 
 def find_map(arr1, arr2):
     """
-    Map the elements of one array to another based on sorting order.
+    Maps the elements of one array to another based on sorting order.
 
-    This function finds a mapping from the elements of `arr1` to `arr2` such
-    that the order of elements in `arr1` is preserved in `arr2`. It first
-    sorts both arrays and then uses the inverse permutation of the sorting
-    order of `arr1` to map its elements to the corresponding elements in `arr2`.
+    Parameters
+    ----------
+    arr1 : array-like
+        The first input array.
+    arr2 : array-like
+        The second input array, which should have the same length as `arr1`.
 
-    Parameters:
-    arr1 (array-like): The first input array.
-    arr2 (array-like): The second input array, which should have the same
-                       length as `arr1`.
+    Returns
+    -------
+    ndarray
+        An array of indices that maps the sorted version of `arr1` to the sorted version of `arr2`.
 
-    Returns:
-    ndarray: An array of indices that maps the sorted version of `arr1` to
-             the sorted version of `arr2`.
-
-    Example:
+    Example
+    -------
     >>> find_map(np.array([10, 30, 20]), np.array([3, 2, 1]))
     array([2, 0, 1])
     """

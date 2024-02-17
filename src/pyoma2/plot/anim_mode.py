@@ -1,7 +1,9 @@
 """
-Created on Mon Jan  8 11:33:32 2024
-
-@author: dpa
+Animation Of Mode Shapes module.
+Part of the pyOMA2 package.
+Authors:
+Dag Pasca
+Diego Margoni
 """
 from __future__ import annotations
 
@@ -56,6 +58,51 @@ def animate_scatters(iteration, Data, scatters, lines=None, sens_lines=None):
 
 
 class AniMode:
+    """
+    A class for animating 3D mode shapes in Operational Modal Analysis (OMA).
+
+    Parameters
+    ----------
+    Geo : Geometry2
+        Geometry object containing nodes and sensor information.
+    Res : Union[BaseResult, MsPoserResult]
+        Result object containing modal analysis data.
+    mode_numb : int
+        Mode number to visualize.
+    scaleF : int, optional
+        Scale factor for mode shape animation. Default is 1.
+    view : str, optional
+        View for the 3D plot. Can be '3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'. Default is '3D'.
+    remove_fill : bool, optional
+        If True, removes the fill from the plot. Default is True.
+    remove_grid : bool, optional
+        If True, removes the grid from the plot. Default is True.
+    remove_axis : bool, optional
+        If True, turns off the axis lines, labels, and ticks. Default is True.
+    saveGIF : bool, optional
+        If True, saves the animation as a GIF file. Default is False.
+    args, kwargs : additional arguments
+        Additional arguments passed to the underlying plotting function.
+
+    Attributes
+    ----------
+    root : tkinter.Tk
+        The Tkinter root window for the animation.
+    fig : matplotlib.figure.Figure
+        The matplotlib figure object for the animation.
+    ax : matplotlib.axes.Axes
+        The axes object for the 3D plot.
+    ani : matplotlib.animation.FuncAnimation
+        The animation object.
+
+    Methods
+    -------
+    plot3D() :
+        Sets up and starts the 3D animation of the mode shape.
+    on_closing() :
+        Handles the closing event of the Tkinter window.
+    """
+
     def __init__(
         self,
         Geo: Geometry2,
@@ -70,23 +117,7 @@ class AniMode:
         *args,
         **kwargs,
     ) -> typing.Any:
-        """
-        Initializes an animated 3D mode shape visualization.
 
-        Parameters:
-        - Geo (Geometry2): Geometry object containing nodes and sensor information.
-        - Res (BaseResult or MsPoserResult): Result object containing modal analysis data.
-        - mode_numb (int): Mode number to visualize.
-        - scaleF (int, optional): Scale factor for mode shape animation. Default is 1.
-        - view (str, optional): View for the 3D plot. Can be '3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'.
-          Default is '3D'.
-        - remove_fill (bool, optional): Whether to remove fill from the plot. Default is True.
-        - remove_grid (bool, optional): Whether to remove the grid from the plot. Default is True.
-        - remove_axis (bool, optional): Whether to remove the axis from the plot. Default is True.
-        - args, kwargs: Additional arguments passed to the underlying plotting function.
-
-        Creates a Tkinter window with an embedded matplotlib figure showing the animated mode shape.
-        """
         self.Geo = Geo
         self.Res = Res
 
@@ -131,6 +162,13 @@ class AniMode:
         self.root.mainloop()
 
     def plot3D(self):
+        """
+        Sets up and starts the 3D animation of the mode shape.
+
+        This method creates a 3D animated plot of the selected mode shape, scaled and oriented
+        according to the specified parameters. It uses the geometry and mode shape data to
+        animate the mode shape over time.
+        """
         nr_iter = 200
 
         # create mode shape dataframe
@@ -243,5 +281,10 @@ class AniMode:
             self.ani.save(f"mode_numb_{self.mode_numb}.gif", writer=writer)
 
     def on_closing(self):
+        """
+        Handles the closing event of the Tkinter window.
+
+        This method ensures proper termination of the animation and Tkinter window upon closing.
+        """
         self.root.quit()
         self.root.destroy()

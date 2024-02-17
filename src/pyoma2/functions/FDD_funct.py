@@ -1,7 +1,8 @@
 """
-Created on Sat Oct 21 18:51:51 2023
-
-@author: dagpa
+Frequency Domain Decomposition (FDD) Utility Functions module.
+Part of the pyOMA2 package.
+Author:
+Dag Pasca
 """
 import logging
 
@@ -21,32 +22,41 @@ logger = logging.getLogger(__name__)
 
 def SD_PreGER(Y, fs, nxseg=1024, pov=0.5, method="per"):
     """
-    Estimate the PSD matrix for multi setup experiment using
-    either the correlogram method or the periodogram method.
+    Estimate the PSD matrix for a multi-setup experiment using either the correlogram
+    method or the periodogram method.
 
-    Parameters:
-    - Y (list of dictionaries): A list where each element corresponds to a different setup.
-      Each element is a dictionary with keys 'ref' and 'mov' for reference and moving sensor
-      data, respectively. Each should be a numpy array with dimensions [N x M], where N is the
-      number of sensors and M is the number of data points.
-    - fs (float): Sampling frequency of the data.
-    - nxseg (int, optional): Number of data points in each segment for spectral analysis.
-      Default is 1024.
-    - pov (float, optional): Proportion of overlap between segments in spectral analysis.
-      Default is 0.5.
-    - method (str, optional): Method for spectral density estimation. 'per' for periodogram
-      and 'cor' for correlagram method. Default is 'per'.
+    Parameters
+    ----------
+    Y : list of dicts
+        A list where each element corresponds to a different setup. Each element is a
+        dictionary with keys 'ref' and 'mov' for reference and moving sensor data,
+        respectively. Each should be a numpy array with dimensions [N x M], where N is the
+        number of sensors and M is the number of data points.
+    fs : float
+        Sampling frequency of the data.
+    nxseg : int, optional
+        Number of data points in each segment for spectral analysis. Default is 1024.
+    pov : float, optional
+        Proportion of overlap between segments in spectral analysis. Default is 0.5.
+    method : str, optional
+        Method for spectral density estimation. 'per' for periodogram and 'cor' for
+        correlogram method. Default is 'per'.
 
-    Returns:
-    - tuple:
-        - freq (numpy array): Array of frequency values at which the spectral densities are evaluated.
-        - Gy (numpy array): The scaled spectral density matrices. The shape of the
-          array is [N x N x K], where N is the total number of sensors (reference + moving) and K is
-          the number of frequency points.
+    Returns
+    -------
+    tuple
+        freq : ndarray
+            Array of frequency values at which the spectral densities are evaluated.
+        Sy : ndarray
+            The scaled spectral density matrices. The shape of the array is [N x N x K],
+            where N is the total number of sensors (reference + moving) and K is the number
+            of frequency points.
 
-    Notes:
-    - The function uses an internal function 'SD_Est' to estimate the spectral densities.
-    - The logger is used for debugging purposes to track the progress of analysis."""
+    Note
+    -----
+    The function uses an internal function 'SD_Est' to estimate the spectral densities.
+    The logger is used for debugging purposes to track the progress of analysis.
+    """
     dt = 1 / fs
     n_setup = len(Y)  # number of setup
     n_ref = Y[0]["ref"].shape[0]  # number of reference sensor
@@ -95,9 +105,9 @@ def SD_PreGER(Y, fs, nxseg=1024, pov=0.5, method="per"):
         G3 = np.vstack([Gy_refref[:, :, ff], G2])
         Gg.append(G3)
 
-    Gy = np.array(Gg)
-    Gy = np.moveaxis(Gy, 0, 2)
-    return freq, Gy
+    Sy = np.array(Gg)
+    Sy = np.moveaxis(Sy, 0, 2)
+    return freq, Sy
 
 
 # -----------------------------------------------------------------------------
@@ -112,25 +122,33 @@ def SD_Est(
     pov=0.5,
 ):
     """
-    Estimate the Cross-Spectral Density (CSD) using either the correlogram
-        method or the periodogram method.
+    Estimate the Cross-Spectral Density (CSD) using either the correlogram method or the
+    periodogram method.
 
-    Parameters:
-        Yall (ndarray): Input signal data.
-        Yref (ndarray): Reference signal data.
-        dt (float): Sampling interval.
-        nxseg (int): Length of each segment for CSD estimation.
-        method (str, optional): Method for CSD estimation, either "cor" for
-            correlogram method or "per" for periodogram. Default is "cor".
-        pov (float, optional): Proportion of overlap for the periodogram
-            method. Default is 0.5.
+    Parameters
+    ----------
+    Yall : ndarray
+        Input signal data.
+    Yref : ndarray
+        Reference signal data.
+    dt : float
+        Sampling interval.
+    nxseg : int, optional
+        Length of each segment for CSD estimation. Default is 1024.
+    method : str, optional
+        Method for CSD estimation, either "cor" for correlogram method or "per" for
+        periodogram. Default is "cor".
+    pov : float, optional
+        Proportion of overlap for the periodogram method. Default is 0.5.
 
-    Returns:
-        tuple: A tuple containing the frequency values and the estimated
-            Cross-Spectral Density (CSD).
-            freq (ndarray): Array of frequencies.
-            Sy (ndarray): Cross-Spectral Density (CSD) estimation."""
-
+    Returns
+    -------
+    tuple
+        freq : ndarray
+            Array of frequencies.
+        Sy : ndarray
+            Cross-Spectral Density (CSD) estimation.
+    """
     if method == "cor":
         Ndat = Yref.shape[1]  # number of data points
         # n_ref =  Yref.shape[0] # number of data points
@@ -187,17 +205,23 @@ def SD_Est(
 
 def SD_svalsvec(SD):
     """
-    Compute the singular values and singular vectors for a given set of
-        Cross-Spectral Density (CSD) matrices.
+    Compute the singular values and singular vectors for a given set of Cross-Spectral
+    Density (CSD) matrices.
 
-    Parameters:
-    SD (ndarray): Array of Cross-Spectral Density (CSD) matrices, with
-        shape (number_of_rows, number_of_columns, number_of_frequencies).
+    Parameters
+    ----------
+    SD : ndarray
+        Array of Cross-Spectral Density (CSD) matrices, with shape
+        (number_of_rows, number_of_columns, number_of_frequencies).
 
-    Returns:
-    tuple: A tuple containing the singular values and the singular vectors.
-        S_val (ndarray): Singular values.
-        S_vec (ndarray): Singular vectors."""
+    Returns
+    -------
+    tuple
+        S_val : ndarray
+            Singular values.
+        S_vec : ndarray
+            Singular vectors.
+    """
     nr, nc, nf = SD.shape
     Sval = np.zeros((nf, nc))
     S_val = np.empty((nf, nc, nc))
@@ -224,31 +248,37 @@ def FDD_MPE(
     DF=0.1,
 ):
     """
-    Extracts modal parameters for the Frequency Domain Decomposition (FDD) method.
+    Extracts modal parameters using the Frequency Domain Decomposition (FDD) method.
 
-    Parameters:
-    - Sval (numpy array): A 3D array of singular values. The dimensions are [Nch, Nref, Nf],
-      where Nch is the number of channels, Nref is the number of reference channels, and Nf is
-      the number of frequency points.
-    - Svec (numpy array): A 3D array of singular vectors corresponding to Sval. Dimensions are
-      the same as Sval.
-    - freq (numpy array): 1D array of frequency values corresponding to the singular values and
-      vectors.
-    - sel_freq (list or array): Selected frequencies around which modal parameters are to be
-      extracted.
-    - DF (float, optional): Frequency bandwidth around each selected frequency within which the
-      function searches for a peak. Default is 0.1.
+    Parameters
+    ----------
+    Sval : ndarray
+        A 3D array of singular values. Dimensions are [Nch, Nref, Nf], where Nch is the
+        number of channels, Nref is the number of reference channels, and Nf is the
+        number of frequency points.
+    Svec : ndarray
+        A 3D array of singular vectors corresponding to Sval. Dimensions are the same as Sval.
+    freq : ndarray
+        1D array of frequency values corresponding to the singular values and vectors.
+    sel_freq : list or ndarray
+        Selected frequencies around which modal parameters are to be extracted.
+    DF : float, optional
+        Frequency bandwidth around each selected frequency within which the function
+        searches for a peak. Default is 0.1.
 
-    Returns:
-    - tuple:
-        - Fn (numpy array): Extracted modal frequencies.
-        - Phi (numpy array): Corresponding normalized mode shapes (each column corresponds to a
-          mode shape).
+    Returns
+    -------
+    tuple
+        Fn : ndarray
+            Extracted modal frequencies.
+        Phi : ndarray
+            Corresponding normalized mode shapes (each column corresponds to a mode shape).
 
-    Notes:
-    - The function assumes that the first singular value and vector correspond to the dominant
-      mode at each frequency point.
-    - The logger is used to provide information and debug messages during the extraction process."""
+    Note
+    -----
+    The function assumes that the first singular value and vector correspond to the dominant
+    mode at each frequency point.
+    """
     # Sval, Svec = SD_svalsvec(Sy)
     Nch, Nref, Nf = Sval.shape
 
@@ -293,30 +323,39 @@ def FDD_MPE(
 # Utility function (Hidden for users?)
 def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF=1.0):
     """
-    Computes the SDOF bell and mode shapes for a specified frequency range using FSDD or EFDD methods.
+    Computes the SDOF bell and mode shapes for a specified frequency range using FSDD or
+    EFDD methods.
 
-    Parameters:
-    - Sy (numpy array): Spectral matrix of the system. The dimensions are expected to be [Nch, Nch, Nf],
-      where Nch is the number of channels and Nf is the number of frequency points.
-    - dt (float): Time interval of the data sampling.
-    - sel_fn (float): Selected modal frequency around which the SDOF analysis is to be performed.
-    - phi_FDD (numpy array): Mode shape corresponding to the selected modal frequency.
-    - method (str, optional): Method for SDOF analysis. Supports 'FSDD' for Frequency Spatial Domain
-      Decomposition and 'EFDD' for Enhanced Frequency Domain Decomposition. Default is 'FSDD'.
-    - cm (int, optional): Number of close modes to consider in the analysis. Default is 1.
-    - MAClim (float, optional): Threshold for the Modal Assurance Criterion (MAC) to filter modes.
-      Default is 0.85.
-    - DF (float, optional): Frequency bandwidth around the selected frequency for analysis. Default is 1.0.
+    Parameters
+    ----------
+    Sy : ndarray
+        Spectral matrix of the system. Expected dimensions are [Nch, Nch, Nf], where Nch is
+        the number of channels and Nf is the number of frequency points.
+    dt : float
+        Time interval of the data sampling.
+    sel_fn : float
+        Selected modal frequency around which the SDOF analysis is to be performed.
+    phi_FDD : ndarray
+        Mode shape corresponding to the selected modal frequency.
+    method : str, optional
+        Method for SDOF analysis. Supports 'FSDD' for Frequency Spatial Domain Decomposition
+        and 'EFDD' for Enhanced Frequency Domain Decomposition. Default is 'FSDD'.
+    cm : int, optional
+        Number of close modes to consider in the analysis. Default is 1.
+    MAClim : float, optional
+        Threshold for the Modal Assurance Criterion (MAC) to filter modes. Default is 0.85.
+    DF : float, optional
+        Frequency bandwidth around the selected frequency for analysis. Default is 1.0.
 
-    Returns:
-    - tuple:
-        - SDOFbell1 (numpy array): The SDOF bell (power spectral density) of the selected mode.
-        - SDOFms1 (numpy array): The mode shapes corresponding to the SDOF bell.
-
-    Notes:
-    - The function assumes that the input spectral matrix (Sy) and mode shape (phi_FDD) are pre-computed.
-    - The MAC criterion is used to ensure the reliability of the extracted mode shapes.
+    Returns
+    -------
+    tuple
+        SDOFbell1 : ndarray
+            The SDOF bell (power spectral density) of the selected mode.
+        SDOFms1 : ndarray
+            The mode shapes corresponding to the SDOF bell.
     """
+
     Sval, Svec = SD_svalsvec(Sy)
     Nch = phi_FDD.shape[0]
     nxseg = Sval.shape[2]
@@ -397,40 +436,53 @@ def EFDD_MPE(
     npmax=20,
 ):
     """
-    Extracts modal parameters for the Enhanced Frequency Domain Decomposition (EFDD) and the
-    Frequency Spatial Domain Decomposition (FSDD) algorithms.
+    Extracts modal parameters using the Enhanced Frequency Domain Decomposition (EFDD) and
+    the Frequency Spatial Domain Decomposition (FSDD) algorithms.
 
-    Parameters:
-    - Sy (numpy array): Spectral matrix, with dimensions [Nch, Nch, Nf] where Nch is the number of channels
-      and Nf is the number of frequency points.
-    - freq (numpy array): Array of frequency values corresponding to the spectral matrix.
-    - dt (float): Sampling interval of the data.
-    - sel_freq (list or array): Selected modal frequencies around which parameters are to be estimated.
-    - methodSy (str): Method used for spectral density estimation
-      ('cor' for correlation or 'per' for periodogram).
-    - method (str, optional): Specifies the method for SDOF analysis ('FSDD' or 'EFDD'). Default is 'FSDD'.
-    - DF1 (float, optional): Frequency bandwidth for initial FDD modal parameter extraction. Default is 0.1.
-    - DF2 (float, optional): Frequency bandwidth for SDOF analysis. Default is 1.0.
-    - cm (int, optional): Number of close modes to consider. Default is 1.
-    - MAClim (float, optional): Threshold for the Modal Assurance Criterion (MAC) to filter modes.
-      Default is 0.85.
-    - sppk (int, optional): Number of initial peaks to skip in autocorrelation analysis. Default is 3.
-    - npmax (int, optional): Maximum number of peaks to consider in the curve fitting for
-      damping ratio estimation.
-      Default is 20.
+    Parameters
+    ----------
+    Sy : ndarray
+        Spectral matrix with dimensions [Nch, Nch, Nf] where Nch is the number of channels
+        and Nf is the number of frequency points.
+    freq : ndarray
+        Array of frequency values corresponding to the spectral matrix.
+    dt : float
+        Sampling interval of the data.
+    sel_freq : list or ndarray
+        Selected modal frequencies around which parameters are to be estimated.
+    methodSy : str
+        Method used for spectral density estimation ('cor' for correlation or 'per'
+        for periodogram).
+    method : str, optional
+        Specifies the method for SDOF analysis ('FSDD' or 'EFDD'). Default is 'FSDD'.
+    DF1 : float, optional
+        Frequency bandwidth for initial FDD modal parameter extraction. Default is 0.1.
+    DF2 : float, optional
+        Frequency bandwidth for SDOF analysis. Default is 1.0.
+    cm : int, optional
+        Number of close modes to consider. Default is 1.
+    MAClim : float, optional
+        Threshold for the Modal Assurance Criterion (MAC) to filter modes. Default is 0.85.
+    sppk : int, optional
+        Number of initial peaks to skip in autocorrelation analysis. Default is 3.
+    npmax : int, optional
+        Maximum number of peaks to consider in the curve fitting for damping ratio
+        estimation. Default is 20.
 
-    Returns:
-    - tuple:
-        - Fn (numpy array): Estimated natural frequencies.
-        - Xi (numpy array): Estimated damping ratios.
-        - Phi (numpy array): Corresponding mode shapes.
-        - PerPlot (list): Additional data for plotting and analysis, including frequency response, time,
-          SDOF bell, singular values, indices of singular values, normalized autocorrelation, indices of
-          peaks, damping ratio fit parameters, and delta values.
-
-    Notes:
-    - The function starts by extracting initial modal parameters using FDD. It then refines these estimates
-    - The logger is used to provide informational and debug messages during the extraction process."""
+    Returns
+    -------
+    tuple
+        Fn : ndarray
+            Estimated natural frequencies.
+        Xi : ndarray
+            Estimated damping ratios.
+        Phi : ndarray
+            Corresponding mode shapes.
+        PerPlot : list
+            Additional data for plotting and analysis, including frequency response, time,
+            SDOF bell, singular values, indices of singular values, normalized
+            autocorrelation, indices of peaks, damping ratio fit parameters, and delta values.
+    """
     Sval, Svec = SD_svalsvec(Sy)
 
     Nch, Nref, nxseg = Sval.shape
