@@ -658,7 +658,7 @@ class SingleSetup(BaseSetup):
         See Also
         --------
         For further information, see `scipy.signal.decimate
-        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>_.
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
 
         self.data = decimate(self.data, q, axis, **kwargs)
@@ -2030,7 +2030,7 @@ class MultiSetup_PreGER(BaseSetup):
         See Also
         --------
         For further information, see `scipy.signal.decimate
-        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>_.
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
         datasets = self.datasets
         newdatasets = []
