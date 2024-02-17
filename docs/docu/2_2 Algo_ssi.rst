@@ -1,5 +1,5 @@
 The ``ssi`` module
-------------------
+==================
 
 This module implements the Stochastic Subspace Identification (SSI) algorithm in various forms,
 tailored for both single and multiple experimental setup scenarios. It includes classes and methods
@@ -33,7 +33,7 @@ plotting results, and additional utilities relevant to the specific SSI approach
 
 
 The ``SSIdat_algo`` class
-#########################
+-------------------------
 
 .. autoclass:: pyoma2.algorithm.ssi.SSIdat_algo
    :members:
@@ -41,7 +41,7 @@ The ``SSIdat_algo`` class
    :show-inheritance:
 
 The ``SSIcov_algo`` class
-#########################
+-------------------------
 
 .. autoclass:: pyoma2.algorithm.ssi.SSIcov_algo
    :members:
@@ -49,7 +49,7 @@ The ``SSIcov_algo`` class
    :show-inheritance:
 
 The ``SSIdat_algo_MS`` class
-############################
+----------------------------
 
 .. autoclass:: pyoma2.algorithm.ssi.SSIdat_algo_MS
    :members:
@@ -58,7 +58,7 @@ The ``SSIdat_algo_MS`` class
 
 
 The ``SSIcov_algo_MS`` class
-############################
+----------------------------
 
 .. autoclass:: pyoma2.algorithm.ssi.SSIcov_algo_MS
    :members:

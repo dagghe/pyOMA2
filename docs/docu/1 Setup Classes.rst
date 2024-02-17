@@ -16,7 +16,7 @@ Classes:
    :class:`.MultiSetup_PreGER`
       Conducts OMA for multi-setup experiments with the PreGER approach.
 
-.. Note::
+.. Warning::
    Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
 
 

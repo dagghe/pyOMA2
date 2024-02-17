@@ -78,8 +78,8 @@ class BaseSetup:
     plot_geo2(...)
         Plots the second type of geometry setup for the structure.
 
-    Note
-    -----
+    Warning
+    -------
     The BaseSetup class is not intended for direct instantiation by users.
     It acts as a common interface for handling different types of setup configurations.
     Specific functionalities are provided through its subclasses.
@@ -99,7 +99,7 @@ class BaseSetup:
         algorithms : variable number of BaseAlgorithm
             One or more algorithm instances to be added to the setup.
 
-        Note
+        Notes
         -----
         The algorithms must be instantiated before adding them to the setup,
         and their names must be unique.
@@ -117,7 +117,7 @@ class BaseSetup:
         Iterates through each algorithm stored in the setup and executes it. The results are saved within
         each algorithm instance.
 
-        Note
+        Notes
         -----
         This method assumes that all algorithms are properly initialized and can be executed without
         additional parameters.
@@ -141,7 +141,7 @@ class BaseSetup:
         KeyError
             If the specified algorithm name does not exist in the setup.
 
-        Note
+        Notes
         -----
         The result of the algorithm execution is saved within the algorithm instance.
         """
@@ -508,10 +508,10 @@ class SingleSetup(BaseSetup):
     get(...)
         Retrieve an algorithm from the set by its name, returning a default value if it does not exist.
 
-    Note
+    Notes
     -----
-    - The sampling interval `dt` is calculated automatically from the provided sampling frequency.
-    - `algorithms` dictionary is initialized empty and is meant to store various algorithms as needed.
+    - The sampling interval ``dt`` is calculated automatically from the provided sampling frequency.
+    - The ``algorithms`` dictionary is initialized empty and is meant to store various algorithms as needed.
     """
 
     def __init__(self, data: typing.Iterable[float], fs: float):
@@ -925,8 +925,8 @@ class MultiSetup_PoSER:
         Plots the geometric configuration of the structure based on the Geo2 setup, highlighting
         more intricate details or alternative layouts.
 
-    Note
-    -----
+    Warning
+    -------
     The PoSER approach assumes that the setups used are compatible in terms of their experimental
     setup and data characteristics.
     """
@@ -1157,11 +1157,9 @@ class MultiSetup_PoSER:
         AssertionError
             If the number of sensors does not match between data, coordinates, and directions.
 
-        Note
+        Notes
         -----
-        The method performs various checks to ensure the integrity and consistency of the input data.
         Adapts to zero-indexing for background lines if provided.
-        Reorders sensor coordinates and directions to match the provided sensor names.
         """
 
         # ---------------------------------------------------------------------
@@ -1332,10 +1330,10 @@ class MultiSetup_PoSER:
             If the number of columns in mapping and sign data does not match the expected
             dimensions based on the order reduction.
 
-        Note
+        Notes
         -----
-        Performs checks to ensure consistency and correctness of input data based on the order reduction.
-        Adapts to zero-indexing for sensor and background lines if provided."""
+        Adapts to zero-indexing for sensor and background lines if provided.
+        """
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
@@ -1758,11 +1756,6 @@ class MultiSetup_PoSER:
         -------
         Any
             The generated animation object.
-
-        Note
-        -----
-        The animation provides a dynamic representation of the mode shapes, enhancing the
-        understanding of structural behavior under different modes.
         """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
@@ -1838,8 +1831,8 @@ class MultiSetup_PreGER(BaseSetup):
     def_geo2(...)
         Defines the second type of geometric setup (Geo2) for the instance.
 
-    Note
-    -----
+    Warning
+    -------
     The PreGER approach assumes that the setups used are compatible in terms of their experimental
     setup and data characteristics.
     """
@@ -2075,11 +2068,9 @@ class MultiSetup_PreGER(BaseSetup):
         AssertionError
             If the number of sensors does not match between data, coordinates, and directions.
 
-        Note
+        Notes
         -----
-        - The method performs various checks to ensure the integrity and consistency of the input data.
-        - Adapts to zero-indexing for background lines if provided.
-        - Reorders sensor coordinates and directions to match the provided sensor names.
+        Adapts to zero-indexing for background lines if provided.
         """
 
         # ---------------------------------------------------------------------
@@ -2170,10 +2161,9 @@ class MultiSetup_PreGER(BaseSetup):
             If the number of columns in mapping and sign data does not match the expected
             dimensions based on the order reduction.
 
-        Note
+        Notes
         -----
-        - Performs checks to ensure consistency and correctness of input data based on the order reduction.
-        - Adapts to zero-indexing for sensor and background lines if provided.
+        Adapts to zero-indexing for sensor and background lines if provided.
         """
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)

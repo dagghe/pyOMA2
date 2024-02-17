@@ -58,19 +58,18 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         Assigns the result to the algorithm after execution.
     set_data(self, data, fs)
         Sets the input data and sampling frequency for the algorithm.
-    run(self)
-        Executes the algorithm. Must be implemented by subclasses.
-    mpe(self, *args, **kwargs)
-        Extracts modal parameters from the results. Must be implemented by subclasses.
-    mpe_fromPlot(self, *args, **kwargs)
-        Selects modal parameters from plots. Must be implemented by subclasses.
+    __class_getitem__(cls, item)
+        Evaluates the types of `RunParamCls` and `ResultCls` at runtime.
+    __init_subclass__(cls, **kwargs)
+        Ensures that subclasses define `RunParamCls` and `ResultCls`.
 
     Note
     -----
     - BaseAlgorithm is an abstract class and should not be instantiated directly.
     - Subclasses must implement the `run`, `mpe`, and `mpe_fromPlot` methods.
-    - The class is designed to be generic, accommodating various types of algorithms within
-        the pyOMA2 framework.
+    - The class is designed to be generic and flexible, accommodating various types of algorithms
+      within the pyOMA2 framework.
+    - The `result` attribute is only populated after the `run` method is executed.
     """
 
     result: typing.Optional[T_Result] = None
