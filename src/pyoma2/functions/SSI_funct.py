@@ -8,8 +8,9 @@ Angelo Aloisio
 import logging
 
 import numpy as np
-from Gen_funct import MAC
 from tqdm import tqdm, trange
+
+from . import Gen_funct as GF
 
 logger = logging.getLogger(__name__)
 
@@ -536,8 +537,8 @@ def Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_x
 
                         cond1 = np.abs(f_n[i] - f_n1[idx]) / f_n[i]
                         cond2 = np.abs(xi_n[i] - xi_n1[idx]) / xi_n[i]
-                        # cond3 = 1 - GF.MAC(phi_n[i, :], phi_n1[idx, :])
-                        cond3 = 1 - MAC(phi_n[i, :], phi_n1[idx, :])
+                        cond3 = 1 - GF.MAC(phi_n[i, :], phi_n1[idx, :])
+                        # cond3 = 1 - MAC(phi_n[i, :], phi_n1[idx, :])
                         if cond1 < err_fn and cond2 < err_xi and cond3 < err_ms:
                             Lab[i, ii] = 7  # Stable
 
