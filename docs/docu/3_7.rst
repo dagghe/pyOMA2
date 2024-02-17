@@ -8,9 +8,9 @@ from OMA analysis. The module leverages matplotlib's animation capabilities to c
 visualizations that can be interactively viewed or saved as GIFs.
 
 Classes:
-    AniMode: A class to animate mode shapes in 3D. It takes geometry and result objects as inputs
-             and provides functionalities to visualize mode shapes with various customizable
-             options such as scale factor, view type, and others.
+    :class:`.AniMode`: A class to animate mode shapes in 3D. It takes geometry and result objects as inputs
+        and provides functionalities to visualize mode shapes with various customizable
+        options such as scale factor, view type, and others.
 
 Key Features:
     - Animated 3D visualization of mode shapes based on OMA results.
@@ -18,13 +18,7 @@ Key Features:
     - Supports saving the animation as a GIF file.
     - Interactive Tkinter window with embedded matplotlib figure for visualization.
 
-Dependencies:
-    - matplotlib for plotting and animations.
-    - Tkinter for GUI components.
-    - numpy and pandas for data manipulation.
-    - pyOMA2's Geometry2, BaseResult, and MsPoserResult classes for accessing geometry and OMA results.
-
-.. Note::
+.. Warning::
     The module is designed for use within the pyOMA2 package. It requires OMA results and
     geometry data specific to the structures being analyzed.
 

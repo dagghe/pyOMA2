@@ -20,7 +20,7 @@ Check out the project source_.
 Schematic organisation of the module showing inheritance between classes
 ========================================================================
 
-.. image:: info.svg
+.. image:: /img/info.svg
 
 
 
@@ -63,6 +63,32 @@ Index
 .. note::
 
    Please note that this is still an alpha release, this project is under active development.
+
+
+References
+==========
+
+.. [CRGF14] Rainieri, C., & Fabbrocino, G. (2014). Operational modal analysis of civil
+   engineering structures. Springer, New York, 142, 143.
+.. [RBCV15] Brincker, R., & Ventura, C. (2015). Introduction to operational modal analysis.
+    John Wiley & Sons.
+.. [BZA01] Brincker, R., Zhang, L., & Andersen, P. (2001). Modal identification of output-only
+   systems using frequency domain decomposition. Smart Materials and Structures, 10(3), 441.
+.. [BVA01] Brincker, R., Ventura, C. E., & Andersen, P. (2001). Damping estimation by frequency
+   domain decomposition. In Proceedings of IMAC 19: A Conference on Structural Dynamics.
+.. [ZWT10] Zhang, L., Wang, T., & Tamura, Y. (2010). A frequency–spatial domain decomposition
+   (FSDD) method for operational modal analysis. Mechanical Systems and Signal Processing,
+   24(5), 1227-1239.
+.. [ZBGS20] Zaletelj, K., Bregar, T., Gorjup, D., Slavič, J. (2020) sdypy-pyEMA,
+   10.5281/zenodo.4016670, https://github.com/sdypy/sdypy
+.. [BPDG99] Peeters, B., & De Roeck, G. (1999). Reference-based stochastic subspace
+   identification for output-only modal analysis. Mechanical Systems and
+   Signal Processing, 13(6), 855-878.
+.. [MiDo11] Döhler, M. (2011). Subspace-based system identification and fault detection:
+   Algorithms for large systems and application to structural vibration analysis.
+   Diss. Université Rennes 1.
+.. [SARB21] Amador, S. D., & Brincker, R. (2021). Robust multi-dataset identification with
+   frequency domain decomposition. Journal of Sound and Vibration, 508, 116207.
 
 
 .. _source: https://github.com/dagghe/pyOMA2

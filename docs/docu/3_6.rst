@@ -21,13 +21,10 @@ Key Features:
     - Support for exporting plots and managing display settings like legends and pole visibility.
 
 References:
-    This module is inspired by and expands upon functionalities found in the pyEMA package,
+    This module is inspired by and expands upon functionalities found in the pyEMA package [ZBGS20]_,
     offering specialized features tailored for the pyOMA2 package's requirements.
 
-    .. [1] Janko Slavič et al. sdypy-EMA, GitHub repository,
-        https://github.com/sdypy/sdypy-EMA
-
-.. Note::
+.. Warning::
     The module is designed to be used as part of the pyOMA2 package and relies on its
     internal data structures and algorithms.
 
