@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docstring to all classes and functions
 - option to save gif figure from animation of the mode shape
 - documentation
+- logo
 
 ### Removed
 - old example files under main
@@ -18,11 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - the `freqlim` argument in all the plot function has been changed to a tuple, so to set both an upper and a lower limit to the x (frequency) axis
-- moved examples notebooks and info.svg under docs folder
+- moved info.svg under docs/img folder
+- moved examples notebooks in Examples folder
 
 ### Fixed
 - docstring fix for OMA.py
 - default ax value to 0 for `detrend_data()` and `decimate_data()` methods
+- links to moved items
 
 ## [0.3.0] - 2024-02-02
 

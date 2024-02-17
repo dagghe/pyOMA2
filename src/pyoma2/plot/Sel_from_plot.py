@@ -42,7 +42,7 @@ class SelFromPlot:
     This class integrates matplotlib plots into a Tkinter window, enabling users to interactively
     select or deselect poles using mouse clicks and keyboard shortcuts. It supports FDD, SSI, and
     pLSCF methods for operational modal analysis. The design and functionality of this class is
-    strongly inspired by the pyEMA module [1]_.
+    strongly inspired by the pyEMA module [ZBGS20]_.
 
     Attributes
     ----------

@@ -61,4 +61,4 @@ ____
 
 # Schematic organisation of the module showing inheritance between classes.
 
-![](docs/info.svg "")
+![](docs/img/info.svg "")
