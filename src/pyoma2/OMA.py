@@ -657,8 +657,8 @@ class SingleSetup(BaseSetup):
 
         See Also
         --------
-        scipy.signal.decimate : For more details on the decimation process.
-        [scipy.signal.decimate](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html)
+        For further information, see
+        `scipy.signal.decimate <https://docs.scipy.org/doc/scipy/reference/generated/sc
         """
 
         self.data = decimate(self.data, q, axis, **kwargs)
@@ -693,8 +693,8 @@ class SingleSetup(BaseSetup):
 
         See Also
         --------
-        scipy.signal.detrend : For more details on the detrending process.
-        [scipy.signal.detrend](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html)
+        For further information, see `scipy.signal.detrend
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
         """
         self.data = detrend(self.data, axis, **kwargs)
 
@@ -1997,7 +1997,41 @@ class MultiSetup_PreGER(BaseSetup):
         zero_phase: bool = True,
     ):
         """
-        wrapper method for scipy.signal.decimate function"""
+        Applies decimation to the data using the scipy.signal.decimate function.
+
+        This method reduces the sampling rate of the data by a factor of 'q'.
+        The decimation process includes low-pass filtering to reduce aliasing.
+        The method updates the instance's data and sampling frequency attributes.
+
+        Parameters
+        ----------
+        q : int
+            The decimation factor. Must be greater than 1.
+        axis : int, optional
+            The axis along which to decimate the data. Default is 0.
+        **kwargs : dict, optional
+            Additional keyword arguments for the scipy.signal.decimate function:
+            n : int, optional
+                The order of the filter (if 'ftype' is 'fir') or the number of times
+                to apply the filter (if 'ftype' is 'iir'). If None, a default value is used.
+            ftype : {'iir', 'fir'}, optional
+                The type of filter to use for decimation: 'iir' for an IIR filter
+                or 'fir' for an FIR filter. Default is 'iir'.
+
+            zero_phase : bool, optional
+                If True, applies a zero-phase filter, which has no phase distortion.
+                If False, uses a causal filter with some phase distortion. Default is True.
+
+        Raises
+        ------
+        ValueError
+            If the decimation factor 'q' is not greater than 1.
+
+        See Also
+        --------
+        For further information, see
+        `scipy.signal.decimate <https://docs.scipy.org/doc/scipy/reference/generated/sc
+        """
         datasets = self.datasets
         newdatasets = []
         for data in datasets:
@@ -2017,7 +2051,34 @@ class MultiSetup_PreGER(BaseSetup):
         bp: int | npt.NDArray[np.int64] = 0,
     ):
         """
-        wrapper method for scipy.signal.detrend function"""
+        Applies detrending to the data using the scipy.signal.detrend function.
+
+        This method removes a linear or constant trend from the data, commonly used to remove drifts
+        or offsets in time series data. It's a preprocessing step, often necessary for methods that
+        assume stationary data. The method updates the instance's data attribute.
+
+        Parameters
+        ----------
+        axis : int, optional
+            The axis along which to detrend the data. Default is 0.
+        **kwargs : dict, optional
+            Additional keyword arguments for the scipy.signal.detrend function:
+            type : {'linear', 'constant'}, optional
+                The type of detrending: 'linear' for linear detrend, or 'constant' for just
+                subtracting the mean. Default is 'linear'.
+            bp : int or numpy.ndarray of int, optional
+                Breakpoints where the data is split for piecewise detrending. Default is 0.
+
+        Raises
+        ------
+        ValueError
+            If invalid parameters are provided.
+
+        See Also
+        --------
+        For further information, see `scipy.signal.detrend
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
+        """
         datasets = self.datasets
         newdatasets = []
         for data in datasets:
