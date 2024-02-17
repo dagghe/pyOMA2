@@ -19,6 +19,12 @@ We provide three :doc:`examples` to show the modules capabilities:
 
 Check out the project source_.
 
+.. note::
+
+   Please note that this is still an alpha release, this project is under active development.
+
+
+
 Schematic organisation of the module showing inheritance between classes
 ========================================================================
 
@@ -60,11 +66,6 @@ Index
 
 * :ref:`genindex`
 * :ref:`modindex`
-
-
-.. note::
-
-   Please note that this is still an alpha release, this project is under active development.
 
 
 References

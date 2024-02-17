@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2024-02-17
+
+### Fixed
+- link to documentation in toml file
+- pyOMA version in the requirements for docu build
+- small fixes in documentation
+
+### Removed
+- MAC function from SSI_funct module (restored import from Gen_funct)
+
 ## [0.3.1] - 2024-02-17
 
 ### Added
