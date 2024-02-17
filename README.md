@@ -53,9 +53,9 @@ ____
 # Examples
 To see how the module works please take a look at the jupyter notebook provided:
 
-- [Example 1: single setup](docs/Example1_SingleSetup.ipynb)
-- [Example 2: multi setup Post-Single Estimation Rescaling](docs/Example2_MultiSetupPoSER.ipynb)
-- [Example 3: multi setup Pre-Global Estimation Rescaling](docs/Example3_MultiSetupPreGER.ipynb)
+- [Example 1: single setup](Examples/Example1_SingleSetup.ipynb)
+- [Example 2: multi setup Post-Single Estimation Rescaling](Examples/Example2_MultiSetupPoSER.ipynb)
+- [Example 3: multi setup Pre-Global Estimation Rescaling](Examples/Example3_MultiSetupPreGER.ipynb)
 
 ____
 
