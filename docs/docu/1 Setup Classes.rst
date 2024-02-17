@@ -5,8 +5,8 @@ This module offers classes specifically designed for Operational Modal Analysis 
 suitable for both single and multiple setup scenarios. The classes includes methods for
 data management and processing, executing algorithms, visualizing outcomes, and setting
 up the geometry of structures. The module utilises two methods when dealing with data
-from multiple experimental setups: Post Separate Estimation Re-scaling (PoSER) and Pre
-Global Estimation Re-scaling (PreGER).
+from multiple experimental setups: Post Separate Estimation Re-scaling (PoSER) [CRGF14]_, [RBCV15]_,
+and Pre Global Estimation Re-scaling (PreGER) [MiDo11]_, [SARB21]_.
 
 Classes:
    :class:`.SingleSetup`
@@ -16,9 +16,8 @@ Classes:
    :class:`.MultiSetup_PreGER`
       Conducts OMA for multi-setup experiments with the PreGER approach.
 
-.. Warning::
+.. Note::
    Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
-
 
 The ``SingleSetup`` class
 -------------------------

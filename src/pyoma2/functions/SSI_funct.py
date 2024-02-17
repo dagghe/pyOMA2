@@ -185,7 +185,7 @@ def AC2MP(A, C, dt):
 
 def SSI(H, br, ordmax, step=1):
     """
-    Perform System Identification using Stochastic Subspace Identification (SSI) method [1]_.
+    Perform System Identification using Stochastic Subspace Identification (SSI) method.
 
     Parameters
     ----------
@@ -262,7 +262,7 @@ def SSI_FAST(H, br, ordmax, step=1):
 
     Note
     -----
-    This is a more efficient implementation of the SSI algorithm (see [2]_, algorithm 4).
+    This is a more efficient implementation of the SSI algorithm.
     """
     Nch = int(H.shape[0] / (br + 1))
     # SINGULAR VALUE DECOMPOSITION
