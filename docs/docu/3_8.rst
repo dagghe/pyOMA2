@@ -1,0 +1,4 @@
+The ``logging_handler`` module
+------------------------------
+
+.. autofunction:: pyoma2.utils.logging_handler.configure_logging

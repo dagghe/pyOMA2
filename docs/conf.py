@@ -6,6 +6,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("../"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -29,6 +30,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
     "nbsphinx",
+    "sphinx_rtd_theme",
 ]
 
 intersphinx_mapping = {
@@ -48,3 +50,7 @@ html_static_path = ["_static"]
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
+
+# Napoleon settings
+napoleon_use_admonition_for_notes = True
+napoleon_use_admonition_for_references = True

@@ -1,8 +1,10 @@
 """
-Created on Sat Oct 21 19:16:25 2023
-
-@author: dagpa
+Plotting Utility Functions module.
+Part of the pyOMA2 package.
+Author:
+Dag Pasca
 """
+
 import logging
 
 import matplotlib.pyplot as plt
@@ -21,35 +23,36 @@ def CMIF_plot(S_val, freq, freqlim=None, nSv="all", fig=None, ax=None):
     """
     Plots the Complex Mode Indicator Function (CMIF) based on given singular values and frequencies.
 
-    Parameters:
-    - S_val (ndarray): A 3D array representing the singular values.
-      The array should have shape [nChannel, nChannel, nFrequencies].
-    - freq (ndarray): An array representing the frequency values corresponding to the singular values.
-    - freqlim (float, optional): The upper frequency limit for the plot.
-      If None, the plot will include all frequencies provided. Default is None.
-    - nSv (int or str, optional): The number of singular values to plot.
-      If "all", plots all singular values. Otherwise, should be an integer specifying the number of
-      singular values.
-      Default is "all".
-    - fig (matplotlib.figure.Figure, optional): An existing matplotlib figure object to plot on.
-      If None, a new figure is created. Default is None.
-    - ax (matplotlib.axes.Axes, optional): An existing axes object to plot on.
-      If None, new axes are created on the provided or newly created figure. Default is None.
+    Parameters
+    ----------
+    S_val : ndarray
+        A 3D array representing the singular values, with shape [nChannel, nChannel, nFrequencies].
+    freq : ndarray
+        An array representing the frequency values corresponding to the singular values.
+    freqlim : tuple of float, optional
+        The frequency range (lower, upper) for the plot. If None, includes all frequencies. Default is None.
+    nSv : int or str, optional
+        The number of singular values to plot. If "all", plots all singular values.
+        Otherwise, should be an integer specifying the number of singular values. Default is "all".
+    fig : matplotlib.figure.Figure, optional
+        An existing matplotlib figure object to plot on. If None, a new figure is created. Default is None.
+    ax : matplotlib.axes.Axes, optional
+        An existing axes object to plot on. If None, new axes are created on the provided or new figure.
+        Default is None.
 
-    Returns:
-    tuple: A tuple (fig, ax) where `fig` is the matplotlib figure object and `ax` is
-           the axes object with the CMIF plot.
+    Returns
+    -------
+    tuple
+        fig : matplotlib.figure.Figure
+            The matplotlib figure object.
+        ax : matplotlib.axes.Axes
+            The axes object with the CMIF plot.
 
-    Raises:
-    - ValueError: If `nSv` is not "all" and is not less than the number of singular values in `S_val`.
-
-    Notes:
-    - This function requires `matplotlib.pyplot` and `numpy`.
-    - The function plots the logarithmic (dB) of the singular values of the spectral matrix,
-      which is useful in modal analysis and vibration testing.
-    - The singular values are plotted relative to the maximum value in the first singular
-      value array for normalization.
-    - The function can be used to add the CMIF plot to an existing figure and axes or create a new plot."""
+    Raises
+    ------
+    ValueError
+        If `nSv` is not "all" and is not less than the number of singular values in `S_val`.
+    """
     # COMPLEX MODE INDICATOR FUNCTION
     if fig is None and ax is None:
         fig, ax = plt.subplots()
@@ -94,31 +97,36 @@ def CMIF_plot(S_val, freq, freqlim=None, nSv="all", fig=None, ax=None):
 
 def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
     """
-    Plot detailed results for the Enhanced Frequency Domain Decomposition (EFDD)
-    and the Frequency Spatial Domain Decomposition (FSDD) algorithms.
+    Plot detailed results for the Enhanced Frequency Domain Decomposition (EFDD) and
+    the Frequency Spatial Domain Decomposition (FSDD) algorithms.
 
-    Parameters:
-    - Fn (ndarray): An array containing the natural frequencies identified for each mode.
-    - Xi (ndarray): An array containing the damping ratios identified for each mode.
-    - PerPlot (list of tuples): A list where each tuple contains data for one mode. Each tuple should have
-      the structure (freq, time, SDOFbell, Sval, idSV, normSDOFcorr, minmax_fit_idx, lam, delta).
-    - freqlim (float, optional): The upper frequency limit for the plots. If None, the plots will include
-      all frequencies provided. Default is None.
+    Parameters
+    ----------
+    Fn : ndarray
+        An array containing the natural frequencies identified for each mode.
+    Xi : ndarray
+        An array containing the damping ratios identified for each mode.
+    PerPlot : list of tuples
+        A list where each tuple contains data for one mode. Each tuple should have
+        the structure (freq, time, SDOFbell, Sval, idSV, normSDOFcorr, minmax_fit_idx, lam, delta).
+    freqlim : tuple of float, optional
+        The frequency range (lower, upper) for the plots. If None, includes all frequencies. Default is None.
 
-    Returns:
-    tuple: A tuple (figs, axs) where `figs` is a list of matplotlib figure objects and `axs` is a list of
-           lists containing axes objects for each figure.
+    Returns
+    -------
+    tuple
+        figs : list of matplotlib.figure.Figure
+            A list of matplotlib figure objects.
+        axs : list of lists of matplotlib.axes.Axes
+            A list of lists containing axes objects for each figure.
 
-    Notes:
-    - This function requires `matplotlib.pyplot` and `numpy`.
-    - The function plots several aspects of the EFDD method for each mode:
-        - SDOF Bell function.
-        - Auto-correlation function.
-        - Selected portion for fit and the actual fit.
-    - Each mode's plot includes four subplots, showing the details of the EFDD fit process,
-      including identified frequency and damping ratio.
-    - The function is designed for use in modal analysis and vibration testing, helping in the
-      visualization and validation of modal parameters."""
+    Note
+    -----
+    The function plots several aspects of the EFDD method for each mode, including the SDOF Bell function,
+    auto-correlation function, and the selected portion for fit and the actual fit. Each mode's plot
+    includes four subplots, showing the details of the EFDD fit process, including identified frequency
+    and damping ratio.
+    """
     figs = []
     axs = []
     for numb_mode in range(len(PerPlot)):
@@ -209,32 +217,31 @@ def Stab_pLSCF_plot(Fn, Lab, ordmax, freqlim=None, hide_poles=True, Sval=None, n
     """
     Plots a stabilization chart for the pLSCF (polyreference Least Squares Complex Frequency domain) method.
 
-    Parameters:
-    - Fn (ndarray): An array containing the frequencies of poles for each model order and identification run.
-    - Lab (ndarray): An array of labels indicating the stability of each pole (e.g., stable pole,
-      stable damping, stable frequency, unstable pole).
-    - ordmax (int): The maximum model order to be displayed on the plot.
-    - freqlim (float, optional): The upper frequency limit for the plot. If None, the plot will include
-      all frequencies provided. Default is None.
-    - hide_poles (bool, optional): If True, only stable poles are plotted. If False, all types of poles are
-      plotted. Default is True.
-    - Sval (ndarray, optional): Singular values to be plotted on a twin axis. Not implemented yet.
-      Default is None.
-    - nSv (int, optional): Number of singular values to be plotted. Not implemented yet. Default is None.
+    Parameters
+    ----------
+    Fn : ndarray
+        An array containing the frequencies of poles for each model order and identification run.
+    Lab : ndarray
+        An array of labels indicating the stability of each pole (e.g., stable pole,
+        stable damping, stable frequency, unstable pole).
+    ordmax : int
+        The maximum model order to be displayed on the plot.
+    freqlim : tuple of float, optional
+        The upper frequency limit for the plot. If None, includes all frequencies. Default is None.
+    hide_poles : bool, optional
+        If True, only stable poles are plotted. If False, all types of poles are plotted. Default is True.
+    Sval : ndarray, optional
+        Singular values to be plotted on a twin axis. Not implemented yet. Default is None.
+    nSv : int, optional
+        Number of singular values to be plotted. Not implemented yet. Default is None.
 
-    Returns:
-    tuple: A tuple (fig, ax1) where `fig` is the matplotlib figure object and `ax1` is the axes
-           object with the stabilization chart.
-
-    Notes:
-    - This function requires `matplotlib.pyplot` and `numpy`.
-    - The stabilization chart is a tool used in modal analysis to determine the number of
-      physical modes in a system.
-    - Different types of poles are marked with different colors and symbols,
-      indicating their stability status.
-    - The `Lab` array should correspond to the `Fn` array, with labels indicating the type of each pole.
-    - Future implementation may include plotting singular values on a twin axis for additional analysis.
-    - The function plots either all poles or only stable poles based on the `hide_poles` parameter.
+    Returns
+    -------
+    tuple
+        fig : matplotlib.figure.Figure
+            The matplotlib figure object.
+        ax1 : matplotlib.axes.Axes
+            The axes object with the stabilization chart.
     """
     # TO DO: Add sval plot on twin ax
 
@@ -297,38 +304,38 @@ def Stab_SSI_plot(
     ax=None,
 ):
     """
-    Plots a stabilization chart for the Stochastic Subspace Identification (SSI) method to
-    evaluate the stability of identified poles.
+    Plots a stabilization chart for the Stochastic Subspace Identification (SSI) method.
 
-    Parameters:
-    - Fn (ndarray): An array containing the frequencies of poles for each model order and identification step.
-    - Lab (ndarray): An array of labels indicating the stability status of each pole,
-      where different numbers represent different stability statuses
-      (e.g., stable pole, stable frequency, stable mode shape).
-    - step (int): The step size between model orders in the identification process.
-    - ordmax (int): The maximum model order to be displayed on the plot.
-    - ordmin (int, optional): The minimum model order to be displayed on the plot. Default is 0.
-    - freqlim (float, optional): The upper frequency limit for the plot.
-      If None, the plot will include all frequencies provided. Default is None.
-    - hide_poles (bool, optional): If True, only stable poles are plotted.
-      If False, all types of poles are plotted. Default is True.
-    - fig (matplotlib.figure.Figure, optional): An existing matplotlib figure object to plot on.
-      If None, a new figure is created. Default is None.
-    - ax (matplotlib.axes.Axes, optional): An existing axes object to plot on.
-      If None, new axes are created on the provided or newly created figure. Default is None.
+    Parameters
+    ----------
+    Fn : ndarray
+        An array containing the frequencies of poles for each model order and identification step.
+    Lab : ndarray
+        An array of labels indicating the stability status of each pole, where different numbers represent
+        different stability statuses (e.g., stable pole, stable frequency, stable mode shape).
+    step : int
+        The step size between model orders in the identification process.
+    ordmax : int
+        The maximum model order to be displayed on the plot.
+    ordmin : int, optional
+        The minimum model order to be displayed on the plot. Default is 0.
+    freqlim : tuple of float, optional
+        The upper frequency limit for the plot. If None, includes all frequencies. Default is None.
+    hide_poles : bool, optional
+        If True, only stable poles are plotted. If False, all types of poles are plotted. Default is True.
+    fig : matplotlib.figure.Figure, optional
+        An existing matplotlib figure object to plot on. If None, a new figure is created. Default is None.
+    ax : matplotlib.axes.Axes, optional
+        An existing axes object to plot on. If None, new axes are created on the provided or new figure.
+        Default is None.
 
-    Returns:
-    tuple: A tuple (fig, ax) where `fig` is the matplotlib figure object and `ax` is
-           the axes object with the stabilization chart.
-
-    Notes:
-    - This function requires `matplotlib.pyplot` and `numpy`.
-    - The stabilization chart is a tool used in modal analysis to determine the stability and
-      consistency of identified poles as the model order increases.
-    - Different types of poles are marked with different colors and symbols, reflecting their
-      stability status as indicated by the `Lab` array.
-    - The function provides flexibility in visualizing the results, allowing the user to choose whether
-      to display all poles or only stable poles, and to set frequency limits and model order ranges.
+    Returns
+    -------
+    tuple
+        fig : matplotlib.figure.Figure
+            The matplotlib figure object.
+        ax : matplotlib.axes.Axes
+            The axes object with the stabilization chart.
     """
     if fig is None and ax is None:
         fig, ax = plt.subplots()
@@ -421,32 +428,33 @@ def Cluster_SSI_plot(
     hide_poles=True,
 ):
     """
-    Plots the frequency-damping clusters of the identified poles.
+    Plots the frequency-damping clusters of the identified poles using the Stochastic Subspace Identification
+    (SSI) method.
 
-    Parameters:
-    - Fn (ndarray): An array containing the frequencies of poles for each model order and identification step.
-    - Sm (ndarray): An array containing the damping ratios associated with the poles in `Fn`.
-    - Lab (ndarray): An array of labels indicating the stability status of each pole,
-      where different numbers represent different stability statuses.
-    - ordmin (int, optional): The minimum model order to be displayed on the plot. Default is 0.
-    - freqlim (float, optional): The upper frequency limit for the plot.
-      If None, the plot will include all frequencies provided. Default is None.
-    - hide_poles (bool, optional): If True, only stable poles are plotted.
-      If False, all types of poles are plotted. Default is True.
+    Parameters
+    ----------
+    Fn : ndarray
+        An array containing the frequencies of poles for each model order and identification step.
+    Sm : ndarray
+        An array containing the damping ratios associated with the poles in `Fn`.
+    Lab : ndarray
+        An array of labels indicating the stability status of each pole, where different numbers represent
+        different stability statuses.
+    ordmin : int, optional
+        The minimum model order to be displayed on the plot. Default is 0.
+    freqlim : tuple of float, optional
+        The upper frequency limit for the plot. If None, includes all frequencies. Default is None.
+    hide_poles : bool, optional
+        If True, only stable poles are plotted. If False, all types of poles are plotted. Default is True.
 
-    Returns:
-    tuple: A tuple (fig, ax1) where `fig` is the matplotlib figure object and `ax1` is
-           the axes object with the stabilization chart.
-
-    Notes:
-    - This function requires `matplotlib.pyplot` and `numpy`.
-    - The stabilization chart is a tool used in modal analysis to determine the stability and
-      consistency of identified poles as the model order increases.
-    - Different types of poles are marked with different colors and symbols, reflecting their
-      stability status as indicated by the `Lab` array.
-    - The chart plots frequency versus damping, providing a comprehensive view of the poles' characteristics.
-    - The function provides flexibility in visualizing the results, allowing the user to choose whether to
-      display all poles or only stable poles, and to set frequency limits."""
+    Returns
+    -------
+    tuple
+        fig : matplotlib.figure.Figure
+            The matplotlib figure object.
+        ax1 : matplotlib.axes.Axes
+            The axes object with the stabilization chart.
+    """
     # Stable pole
     a = np.where(Lab == 7, Fn, np.nan)
     aa = np.where(Lab == 7, Sm, np.nan)
@@ -474,7 +482,7 @@ def Cluster_SSI_plot(
     hh = np.where(Lab == 0, Sm, np.nan)
 
     fig, ax1 = plt.subplots()
-    ax1.set_title("Stabilisation Chart")
+    ax1.set_title("Frequency-damping clustering")
     ax1.set_ylabel("Damping")
     ax1.set_xlabel("Frequency [Hz]")
     if hide_poles:
@@ -551,33 +559,35 @@ def Cluster_pLSCF_plot(
     hide_poles=True,
 ):
     """
-    Plots the frequency-damping clusters of the identified poles.
+    Plots the frequency-damping clusters of the identified poles using the polyreference
+    Least Squares Complex Frequency (pLSCF) method.
 
-    Parameters:
-    - Fn (ndarray): An array containing the frequencies of poles for each model order.
-    - Sm (ndarray): An array containing the damping ratios associated with the poles in `Fn`.
-    - Lab (ndarray): An array of labels indicating the stability status of each pole,
-      where different numbers represent different stability statuses.
-    - ordmax (int): The maximum model order to be displayed on the plot.
-    - ordmin (int, optional): The minimum model order to be displayed on the plot. Default is 0.
-    - freqlim (float, optional): The upper frequency limit for the plot.
-      None, the plot will include all frequencies provided. Default is None.
-    - hide_poles (bool, optional): If True, only stable poles are plotted.
-      If False, all types of poles are plotted. Default is True.
+    Parameters
+    ----------
+    Fn : ndarray
+        An array containing the frequencies of poles for each model order.
+    Sm : ndarray
+        An array containing the damping ratios associated with the poles in `Fn`.
+    Lab : ndarray
+        An array of labels indicating the stability status of each pole, where different numbers
+        represent different stability statuses.
+    ordmax : int
+        The maximum model order to be displayed on the plot.
+    ordmin : int, optional
+        The minimum model order to be displayed on the plot. Default is 0.
+    freqlim : tuple of float, optional
+        The upper frequency limit for the plot. If None, includes all frequencies. Default is None.
+    hide_poles : bool, optional
+        If True, only stable poles are plotted. If False, all types of poles are plotted. Default is True.
 
-    Returns:
-    tuple: A tuple (fig, ax1) where `fig` is the matplotlib figure object and `ax1` is the axes object with
-           the stabilization chart.
-
-    Notes:
-    - This function requires `matplotlib.pyplot` and `numpy`.
-    - The stabilization chart is a tool used in modal analysis to determine the stability and consistency
-      of identified poles as the model order increases.
-    - Different types of poles are marked with different colors and symbols, reflecting their stability
-      status as indicated by the `Lab` array.
-    - The chart plots frequency versus damping, providing a comprehensive view of the poles' characteristics.
-    - The function provides flexibility in visualizing the results, allowing the user to choose whether to
-      display all poles or only stable poles, and to set frequency limits and model order ranges."""
+    Returns
+    -------
+    tuple
+        fig : matplotlib.figure.Figure
+            The matplotlib figure object.
+        ax1 : matplotlib.axes.Axes
+            The axes object with the stabilization chart.
+    """
     # Stable pole
     a = np.where(Lab == 3, Fn, np.nan)
     aa = np.where(Lab == 3, Sm, np.nan)
@@ -637,23 +647,26 @@ def plt_nodes(ax, nodes_coord, alpha=1, color="k"):
     """
     Plots nodes coordinates in a 3D scatter plot on the provided axes.
 
-    Parameters:
-    - ax (matplotlib.axes.Axes): The axes object where the nodes will be plotted. This should be a 3D axes.
-    - nodes_coord (ndarray): A 2D array with dimensions [number of nodes, 3]
-      the coordinates (x, y, z) of each node.
-    - alpha (float, optional): The alpha blending value, between 0 (transparent) and 1 (opaque). Default is 1.
-    - color (str or list of str, optional): Color or list of colors for the nodes. Default is "k" (black).
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes object where the nodes will be plotted. This should be a 3D axes.
+    nodes_coord : ndarray
+        A 2D array with dimensions [number of nodes, 3], representing the coordinates (x, y, z) of each node.
+    alpha : float, optional
+        The alpha blending value, between 0 (transparent) and 1 (opaque). Default is 1.
+    color : str or list of str, optional
+        Color or list of colors for the nodes. Default is "k" (black).
 
-    Returns:
-    matplotlib.axes.Axes: The modified axes object with the nodes plotted.
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The modified axes object with the nodes plotted.
 
-    Notes:
-    - This function requires `matplotlib.pyplot`.
-    - It is designed to work with 3D plots, and the input axes should be set up accordingly
-      before calling this function.
-    - The function can be used to add node representations to an existing 3D plot, allowing for
-      visual representation of spatial data.
-    - The function does not create a plot by itself; rather, it adds to an existing axes object."""
+    Note
+    -----
+    This function is designed to work with 3D plots and adds node representations to an existing 3D plot.
+    """
     ax.scatter(
         nodes_coord[:, 0], nodes_coord[:, 1], nodes_coord[:, 2], alpha=alpha, color=color
     )
@@ -667,26 +680,33 @@ def plt_lines(ax, nodes_coord, lines, alpha=1, color="k"):
     """
     Plots lines between specified nodes in a 3D plot on the provided axes.
 
-    Parameters:
-    - ax (matplotlib.axes.Axes): The axes object where the lines will be plotted. This should be a 3D axes.
-    - nodes_coord (ndarray): A 2D array with dimensions [number of nodes, 3]
-      representing the coordinates (x, y, z) of each node.
-    - lines (ndarray): A 2D array with dimensions [number of lines, 2]. Each row represents a line,
-      with the two elements being indices into `nodes_coord` indicating the start and end nodes of the line.
-    - alpha (float, optional): The alpha blending value, between 0 (transparent) and 1 (opaque),
-      for the lines. Default is 1.
-    - color (str or list of str, optional): Color or list of colors for the lines. Default is "k" (black).
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes object where the lines will be plotted. This should be a 3D axes.
+    nodes_coord : ndarray
+        A 2D array with dimensions [number of nodes, 3], representing the coordinates
+        (x, y, z) of each node.
+    lines : ndarray
+        A 2D array with dimensions [number of lines, 2]. Each row represents a line,
+        with the two elements being indices into `nodes_coord` indicating the start
+        and end nodes of the line.
+    alpha : float, optional
+        The alpha blending value for the lines, between 0 (transparent) and 1 (opaque).
+        Default is 1.
+    color : str or list of str, optional
+        Color or list of colors for the lines. Default is "k" (black).
 
-    Returns:
-    matplotlib.axes.Axes: The modified axes object with the lines plotted.
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The modified axes object with the lines plotted.
 
-    Notes:
-    - This function requires `matplotlib.pyplot`.
-    - It is designed to work with 3D plots, and the input axes should be set up accordingly
-      before calling this function.
-    - The function can be used to add line representations between nodes in an existing 3D plot,
-      which is useful for visualizing connections or networks in spatial data.
-    - The function does not create a plot by itself; rather, it adds to an existing axes object."""
+    Note
+    -----
+    This function is designed to work with 3D plots and adds line representations between
+    nodes in an existing 3D plot.
+    """
     for ii in range(lines.shape[0]):
         StartX, EndX = nodes_coord[lines[ii, 0]][0], nodes_coord[lines[ii, 1]][0]
         StartY, EndY = nodes_coord[lines[ii, 0]][1], nodes_coord[lines[ii, 1]][1]
@@ -702,27 +722,30 @@ def plt_surf(ax, nodes_coord, surf, alpha=0.5, color="cyan"):
     """
     Plots a 3D surface defined by nodes and surface triangulation on the provided axes.
 
-    Parameters:
-    - ax (matplotlib.axes.Axes): The axes object where the surface will be plotted. This should be a 3D axes.
-    - nodes_coord (ndarray): A 2D array with dimensions [number of nodes, 3] representing
-      the coordinates (x, y, z) of each node.
-    - surf (ndarray): A 2D array specifying the triangles that make up the surface.
-      Each row represents a triangle, with the three elements being indices into `nodes_coord`
-      indicating the vertices of the triangle.
-    - alpha (float, optional): The alpha blending value for the surface, between 0 (transparent) and
-      1 (opaque). Default is 0.5.
-    - color (str, optional): Color for the surface. Default is "cyan".
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes object where the surface will be plotted. This should be a 3D axes.
+    nodes_coord : ndarray
+        A 2D array with dimensions [number of nodes, 3], representing the coordinates (x, y, z) of each node.
+    surf : ndarray
+        A 2D array specifying the triangles that make up the surface. Each row represents a triangle,
+        with the three elements being indices into `nodes_coord` indicating the vertices of the triangle.
+    alpha : float, optional
+        The alpha blending value for the surface, between 0 (transparent) and 1 (opaque). Default is 0.5.
+    color : str, optional
+        Color for the surface. Default is "cyan".
 
-    Returns:
-    matplotlib.axes.Axes: The modified axes object with the 3D surface plotted.
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The modified axes object with the 3D surface plotted.
 
-    Notes:
-    - This function requires `matplotlib.pyplot` and `matplotlib.tri`.
-    - The function is designed for plotting 3D surfaces in a 3D plot. It uses
-      `matplotlib.tri.Triangulation` for creating a triangulated surface.
-    - It is ideal for visualizing complex surfaces or meshes in a 3D space.
-    - The function modifies an existing axes object, adding the surface plot to it.
-      It does not create a new plot itself."""
+    Note
+    -----
+    This function is designed for plotting 3D surfaces in a 3D plot. It uses `matplotlib.tri.Triangulation`
+    for creating a triangulated surface. Ideal for visualizing complex surfaces or meshes in a 3D space.
+    """
     xy = nodes_coord[:, :2]
     z = nodes_coord[:, 2]
     triang = mtri.Triangulation(xy[:, 0], xy[:, 1], triangles=surf)
@@ -745,31 +768,37 @@ def plt_quiver(
     """
     Plots vectors (arrows) on a 3D plot to represent directions and magnitudes at given node coordinates.
 
-    Parameters:
-    - ax (matplotlib.axes.Axes): The axes object where the vectors will be plotted. This should be a 3D axes.
-    - nodes_coord (ndarray): A 2D array with dimensions [number of nodes, 3]
-      representing the coordinates (x, y, z) of each node.
-    - directions (ndarray): A 2D array with the same shape as `nodes_coord`, representing the direction
-      and magnitude vectors originating from the node coordinates.
-    - scaleF (float, optional): Scaling factor for the magnitude of the vectors. Default is 2.
-    - color (str, optional): Color of the vectors. Default is "red".
-    - names (list of str, optional): Names or labels for each vector. If provided, labels are placed
-      at the end of each vector. Default is None.
-    - color_text (str, optional): Color of the text labels. Default is "red".
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes object where the vectors will be plotted. This should be a 3D axes.
+    nodes_coord : ndarray
+        A 2D array with dimensions [number of nodes, 3], representing the coordinates (x, y, z)
+        of each node.
+    directions : ndarray
+        A 2D array with the same shape as `nodes_coord`, representing the direction and magnitude vectors
+        originating from the node coordinates.
+    scaleF : float, optional
+        Scaling factor for the magnitude of the vectors. Default is 2.
+    color : str, optional
+        Color of the vectors. Default is "red".
+    names : list of str, optional
+        Names or labels for each vector. If provided, labels are placed at the end of each vector.
+        Default is None.
+    color_text : str, optional
+        Color of the text labels. Default is "red".
 
-    Returns:
-    matplotlib.axes.Axes: The modified axes object with the vectors plotted.
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The modified axes object with the vectors plotted.
 
-    Notes:
-    - This function requires `matplotlib.pyplot`.
-    - It is designed to work with 3D plots, allowing for the visualization of vector fields
-      or directional data.
-    - The `directions` array determines the direction and magnitude of the arrows, while `nodes_coord`
-      specifies their starting points.
-    - If `names` is provided, each vector is labeled, which can be useful for identifying specific
-      vectors in the plot.
-    - The function modifies an existing axes object, adding the quiver plot to it, and does not create
-      a new plot by itself."""
+    Note
+    -----
+    Designed to work with 3D plots, allowing for the visualization of vector fields or directional data.
+    `directions` array determines the direction and magnitude of the arrows, while `nodes_coord` specifies
+    their starting points.
+    """
     Points_f = nodes_coord + directions * scaleF
     xs0, ys0, zs0 = nodes_coord[:, 0], nodes_coord[:, 1], nodes_coord[:, 2]
     xs1, ys1, zs1 = Points_f[:, 0], Points_f[:, 1], Points_f[:, 2]
@@ -795,23 +824,28 @@ def set_ax_options(
     """
     Configures various display options for a given matplotlib axes object.
 
-    Parameters:
-    - ax (matplotlib.axes.Axes): The axes object to be configured.
-    - bg_color (str, optional): Background color for the axes panes. Default is "w" (white).
-    - remove_fill (bool, optional): If True, removes the fill from the axes panes. Default is True.
-    - remove_grid (bool, optional): If True, removes the grid from the axes. Default is True.
-    - remove_axis (bool, optional): If True, turns off the axis lines, labels, and ticks. Default is True.
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes object to be configured.
+    bg_color : str, optional
+        Background color for the axes panes. Default is "w" (white).
+    remove_fill : bool, optional
+        If True, removes the fill from the axes panes. Default is True.
+    remove_grid : bool, optional
+        If True, removes the grid from the axes. Default is True.
+    remove_axis : bool, optional
+        If True, turns off the axis lines, labels, and ticks. Default is True.
 
-    Returns:
-    matplotlib.axes.Axes: The modified axes object with the applied configurations.
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The modified axes object with the applied configurations.
 
-    Notes:
-    - This function requires `matplotlib.pyplot`.
-    - It is designed to customize the appearance of 3D plots, although it can be used with 2D plots as well.
-    - The function allows for control over the background color, fill, grid, and visibility of
-      axis lines and labels.
-    - The function modifies the provided axes object in place and returns it, allowing for additional
-      modifications or immediate use in plotting."""
+    Note
+    -----
+    Customizes the appearance of 3D plots. Controls background color, fill, grid, and axis visibility.
+    """
     # avoid auto scaling of axis
     ax.set_aspect("equal")
     # Set backgroung color to white
@@ -839,28 +873,29 @@ def set_view(ax, view):
     """
     Sets the viewing angle of a 3D matplotlib axes object based on a predefined view option.
 
-    Parameters:
-    - ax (matplotlib.axes.Axes): The 3D axes object whose view angle is to be set.
-    - view (str): A string specifying the desired view. Options include "3D", "xy", "xz", and "yz".
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The 3D axes object whose view angle is to be set.
+    view : str
+        A string specifying the desired view. Options include "3D", "xy", "xz", and "yz".
 
-    Returns:
-    matplotlib.axes.Axes: The modified axes object with the new view angle set.
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The modified axes object with the new view angle set.
 
-    Raises:
-    - ValueError: If the 'view' parameter is not one of the specified options.
+    Raises
+    ------
+    ValueError
+        If the 'view' parameter is not one of the specified options.
 
-    Notes:
-    - This function requires `matplotlib.pyplot` and a 3D axes object.
-    - The view options are:
-        - "3D": Sets an azimuth of -60 degrees and an elevation of 30 degrees.
-        - "xy": Sets a top-down view looking along the z-axis
-          (azimuth of 0 degrees and elevation of 90 degrees).
-        - "xz": Sets a side view looking along the y-axis
-          (azimuth of 90 degrees and elevation of 0 degrees).
-        - "yz": Sets a side view looking along the x-axis
-          (azimuth of 0 degrees and elevation of 0 degrees).
-    - This function is useful for quickly setting the axes to a standard viewing angle,
-      especially in 3D visualizations."""
+    Note
+    -----
+    Useful for quickly setting the axes to a standard viewing angle, especially in 3D visualizations.
+    View options: "3D" (azimuth -60, elevation 30), "xy" (top-down), "xz" (side, along y-axis),
+    "yz" (side, along x-axis).
+    """
     if view == "3D":
         azim = -60
         elev = 30
@@ -889,30 +924,39 @@ def set_view(ax, view):
 
 def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
     """
-    Plots the time series data for multiple channels, optionally including the
-    Root Mean Square (RMS) of each signal.
+    Plots time series data for multiple channels, with an option to include the Root Mean Square (RMS)
+      of each signal.
 
-    Parameters:
-    - data (ndarray): A 2D array with dimensions [number of data points, number of channels].
-      Represents the signal data for multiple channels.
-    - dt (float): Time interval between data points.
-    - nc (int): Number of columns for subplots. Represents how many subplots per row to display. Default is 1.
-    - names (list of str, optional): A list containing the names of the channels.
-      Used for titling each subplot if provided. Default is None.
-    - unit (str): The unit to display on the y-axis label. Default is "unit".
-    - show_rms (bool): If True, plots the RMS of each signal on the corresponding subplot. Default is False.
+    Parameters
+    ----------
+    data : ndarray
+        A 2D array with dimensions [number of data points, number of channels], representing signal data
+        for multiple channels.
+    dt : float
+        Time interval between data points.
+    nc : int, optional
+        Number of columns for subplots, indicating how many subplots per row to display. Default is 1.
+    names : list of str, optional
+        Names of the channels, used for titling each subplot if provided. Default is None.
+    unit : str, optional
+        The unit to display on the y-axis label. Default is "unit".
+    show_rms : bool, optional
+        If True, includes the RMS of each signal on the corresponding subplot. Default is False.
 
-    Returns:
-    tuple: A tuple (fig, axs), where `fig` is the matplotlib figure object and `axs` is an array of
-           axes objects for the generated subplots.
+    Returns
+    -------
+    tuple
+        fig : matplotlib.figure.Figure
+            The matplotlib figure object.
+        axs : array of matplotlib.axes.Axes
+            An array of axes objects for the generated subplots.
 
-    Notes:
-    - This function requires `matplotlib.pyplot` and `numpy`.
-    - The function plots each channel in its own subplot, allowing for comparison across channels.
-    - The function supports plotting with multiple columns and automatically adjusts the number of rows
-      based on the number of channels and columns specified.
-    - The RMS value of each signal is plotted as a constant line if `show_rms` is True.
-    - The function assumes that the input data is properly formatted and does not perform error checking."""
+    Note
+    -----
+    Plots each channel in its own subplot for comparison. Supports multiple columns and adjusts the number of
+    rows based on channels and columns.
+    If `show_rms` is True, the RMS value of each signal is plotted as a constant line.
+    """
     # show RMS of signal
     if show_rms is True:
         a_rmss = np.array(
@@ -995,37 +1039,46 @@ def plt_ch_info(
     window="boxcar",
 ):
     """
-    Generates plots for time history, power spectral density (PSD), and kernel density estimation (KDE)
-    for each channel in a multi-channel dataset.
+    Generates plots for time history, power spectral density (PSD), and kernel density estimation
+    (KDE) for each channel in a multi-channel dataset.
 
-    Parameters:
-    - data (ndarray): A 2D array with dimensions [number of data points, number of channels].
-      Represents the signal data for multiple channels.
-    - fs (float): The sampling frequency of the data.
-    - ch_names (list of str, optional): A list containing the names of the channels.
-      Used for titling plots if provided. Default is None.
-    - freqlim (float, optional): The upper limit for the frequency range in the PSD plot.
-      If None, no limit is applied. Default is None.
-    - logscale (bool, optional): If True, the PSD plot uses a logarithmic scale.
-      If False, a linear scale is used. Default is True.
-    - nxseg (int, optional): The number of data points per segment for the Welch method in PSD calculation.
-      If None, uses the full length of the channel data. Default is None.
-    - pov (float, optional): Proportion of overlap between segments in the Welch method.
-      Should be between 0 (no overlap) and 1 (full overlap). Default is 0.
-    - window (str, optional): The type of window function used in the Welch method. Default is "boxcar".
+    Parameters
+    ----------
+    data : ndarray
+        A 2D array with dimensions [number of data points, number of channels], representing signal data for
+        multiple channels.
+    fs : float
+        The sampling frequency of the data.
+    ch_idx : list of int or str, optional
+        Indices of channels to plot. If "all", plots all channels. Default is "all".
+    ch_names : list of str, optional
+        Names of the channels, used for titling plots if provided. Default is None.
+    freqlim : tuple of float, optional
+        The frequency range (lower, upper) for the PSD plot. If None, includes all frequencies.
+        Default is None.
+    logscale : bool, optional
+        If True, uses a logarithmic scale for the PSD plot. If False, uses a linear scale. Default is True.
+    nxseg : int, optional
+        Number of data points per segment for PSD calculation using the Welch method. If None, uses full
+        length of the channel data. Default is None.
+    pov : float, optional
+        Proportion of overlap between segments in PSD calculation. Default is 0.0.
+    window : str, optional
+        Type of window function used in PSD calculation. Default is "boxcar".
 
-    Returns:
-    tuple: A tuple (fig, axs), where `fig` is the matplotlib figure object and `axs` is a list of
-           axis objects for the generated subplots.
+    Returns
+    -------
+    tuple
+        figs : list of matplotlib.figure.Figure
+            A list of matplotlib figure objects for each channel.
+        axs : list of matplotlib.axes.Axes
+            A list of axis objects for the generated subplots.
 
-    Notes:
-    - This function requires `matplotlib.pyplot` for plotting, `scipy.signal`
-      for PSD calculation, and `scipy.stats` for KDE.
-    - The function plots three subplots for each channel: time history, PSD, and KDE.
-    - The function returns the figure and a list of axes for further customization or saving.
-    - If `ch_names` is provided, each figure is titled with the corresponding channel name.
-    - The PSD plot's frequency range can be limited using the `freqlim` parameter.
-    - The function assumes that the input data is properly formatted and does not perform error checking."""
+    Note
+    -----
+    Each figure includes three subplots: time history, PSD, and KDE for the respective channel.
+    Allows for comprehensive analysis of each channel's signal characteristics.
+    """
     if ch_idx != "all":
         data = data[:, ch_idx]
     ndat, nch = data.shape

@@ -1,3 +1,10 @@
+"""
+Operational Modal Analysis Module for Single and Multi-Setup Configurations.
+Part of the pyOMA2 package.
+Authors:
+Dag Pasca
+Diego Margoni
+"""
 from __future__ import annotations
 
 import copy
@@ -38,38 +45,44 @@ logger = logging.getLogger(__name__)
 
 class BaseSetup:
     """
-    BaseSetup class for operational modal analysis.
+    Base class for operational modal analysis (OMA) setups.
 
     This class provides foundational methods and attributes used by both
-    SingleSetup and MultiSetup_PreGER classes.
-    It is not intended to be instantiated directly by users but serves as a
-    superclass for specific setup types.
+    SingleSetup and MultiSetup classes. It serves as a superclass for specific
+    setup types, offering common functionalities for handling data, running algorithms, and
+    extracting modal properties.
+
+    Attributes
+    ----------
+    algorithms : dict[str, BaseAlgorithm]
+        Dictionary storing algorithms added to the setup, keyed by their names.
+    data : np.ndarray, optional
+        Time series data array, typically representing the system's output.
+    fs : float, optional
+        Sampling frequency of the data.
 
     Methods
     -------
-    add_algorithms(*algorithms)
+    add_algorithms(...)
         Adds algorithms to the setup and sets the data and sampling frequency for them.
-    run_all()
+    run_all(...)
         Runs all the algorithms added to the class.
-    run_by_name(name)
+    run_by_name(...)
         Executes a specific algorithm by its name.
-    MPE(name, *args, **kwargs)
+    MPE(...)
         Extracts modal parameters from selected poles/peaks.
-    MPE_fromPlot(name, *args, **kwargs)
+    MPE_fromPlot(...)
         Extracts modal parameters directly from plot selections.
-    plot_geo1(scaleF, view, remove_fill, remove_grid, remove_axis)
+    plot_geo1(...)
         Plots the first type of geometry setup for the structure.
-    plot_geo2(scaleF, view, remove_fill, remove_grid, remove_axis)
+    plot_geo2(...)
         Plots the second type of geometry setup for the structure.
 
-    Notes
-    -----
-    - The BaseSetup class is designed as a common interface for handling different
-     types of setup configurations.
-    - Algorithms must be instantiated and have unique names before being
-     added to the setup.
-    - The class provides methods for running algorithms and extracting modal properties,
-     as well as visualizing geometries.
+    Warning
+    -------
+    The BaseSetup class is not intended for direct instantiation by users.
+    It acts as a common interface for handling different types of setup configurations.
+    Specific functionalities are provided through its subclasses.
     """
 
     algorithms: typing.Dict[str, BaseAlgorithm]
@@ -79,10 +92,17 @@ class BaseSetup:
     # add algorithm (method) to the set.
     def add_algorithms(self, *algorithms: BaseAlgorithm):
         """
-        Add algorithms to the set and set the data and fs.
-        N.B:
-            the algorithms must be instantiated before adding them to the set.
-            algorithms names must be unique.
+        Adds algorithms to the setup and configures them with data and sampling frequency.
+
+        Parameters
+        ----------
+        algorithms : variable number of BaseAlgorithm
+            One or more algorithm instances to be added to the setup.
+
+        Notes
+        -----
+        The algorithms must be instantiated before adding them to the setup,
+        and their names must be unique.
         """
         self.algorithms = {
             **self.algorithms,
@@ -92,7 +112,15 @@ class BaseSetup:
     # run the whole set of algorithms (methods). METODO 1 di tutti
     def run_all(self):
         """
-        This method run all the algorithms added to the class.
+        Runs all the algorithms added to the setup.
+
+        Iterates through each algorithm stored in the setup and executes it. The results are saved within
+        each algorithm instance.
+
+        Notes
+        -----
+        This method assumes that all algorithms are properly initialized and can be executed without
+        additional parameters.
         """
         for alg_name in self.algorithms:
             self.run_by_name(name=alg_name)
@@ -100,7 +128,23 @@ class BaseSetup:
 
     # run algorithm (method) by name. QUESTO è IL METODO 1 di un singolo
     def run_by_name(self, name: str):
-        """Run an algorithm by its name and save the result in the algorithm itself."""
+        """
+        Runs a specific algorithm by its name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the algorithm to be executed.
+
+        Raises
+        ------
+        KeyError
+            If the specified algorithm name does not exist in the setup.
+
+        Notes
+        -----
+        The result of the algorithm execution is saved within the algorithm instance.
+        """
         logger.info("Running %s...", name)
         logger.debug("...with parameters: %s", self[name].run_params)
         result = self[name].run()
@@ -110,7 +154,21 @@ class BaseSetup:
     # get the modal properties (all results).
     def MPE(self, name: str, *args, **kwargs):
         """
-        This method extract the modal parameters from the selected pole(s)/peack(s).
+        Extracts modal parameters from selected poles/peaks of a specified algorithm.
+
+        Parameters
+        ----------
+        name : str
+            Name of the algorithm from which to extract modal parameters.
+        args : tuple
+            Positional arguments to be passed to the algorithm's MPE method.
+        kwargs : dict
+            Keyword arguments to be passed to the algorithm's MPE method.
+
+        Raises
+        ------
+        KeyError
+            If the specified algorithm name does not exist in the setup.
         """
         logger.info("Getting MPE modal parameters from %s", name)
         self[name].mpe(*args, **kwargs)
@@ -118,15 +176,43 @@ class BaseSetup:
     # get the modal properties (all results) from the plots.
     def MPE_fromPlot(self, name: str, *args, **kwargs):
         """
-        This method extract the modal parameters directly from the selection of the plots.
+        Extracts modal parameters directly from plot selections of a specified algorithm.
+
+        Parameters
+        ----------
+        name : str
+            Name of the algorithm from which to extract modal parameters.
+        args : tuple
+            Positional arguments to be passed to the algorithm's MPE method.
+        kwargs : dict
+            Keyword arguments to be passed to the algorithm's MPE method.
+
+        Raises
+        ------
+        KeyError
+            If the specified algorithm name does not exist in the setup.
         """
         logger.info("Getting MPE modal parameters from plot... %s", name)
         self[name].mpe_fromPlot(*args, **kwargs)
 
     def __getitem__(self, name: str) -> BaseAlgorithm:
         """
-        Retrieve an algorithm from the set by its name.
-        Raises a KeyError if the algorithm does not exist.
+        Retrieves an algorithm from the setup by its name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the algorithm to retrieve.
+
+        Returns
+        -------
+        BaseAlgorithm
+            The algorithm instance with the specified name.
+
+        Raises
+        ------
+        KeyError
+            If no algorithm with the given name exists in the setup.
         """
         if name in self.algorithms:
             return self.algorithms[name]
@@ -137,8 +223,19 @@ class BaseSetup:
         self, name: str, default: typing.Optional[BaseAlgorithm] = None
     ) -> typing.Optional[BaseAlgorithm]:
         """
-        Retrieve an algorithm from the set by its name.
-        Returns the default value if the algorithm does not exist.
+        Retrieves an algorithm from the setup by its name, returning a default value if not found.
+
+        Parameters
+        ----------
+        name : str
+            The name of the algorithm to retrieve.
+        default : BaseAlgorithm, optional
+            The default value to return if the specified algorithm is not found.
+
+        Returns
+        -------
+        BaseAlgorithm or None
+            The algorithm instance with the specified name or the default value if not found.
         """
         return self.algorithms.get(name, default)
 
@@ -367,71 +464,55 @@ class BaseSetup:
 
 class SingleSetup(BaseSetup):
     """
-    A class for managing and processing single setup data for operational modal analysis.
+    Class for managing and processing single setup data for Operational Modal Analysis.
 
-    This class is designed for handling data from a single setup (e.g., a single test or measurement session),
-    including plotting, data processing, and interaction with various analysis algorithms.
-    It inherits several methods from the BaseSetup class.
+    This class handles data from a single setup, offering functionalities like plotting,
+    data processing, and interaction with various analysis algorithms. It inherits
+    attributes and methods from the BaseSetup class.
 
     Parameters
     ----------
-    data : np.array(float)
+    data : Iterable[float]
         The data to be processed, expected as an iterable of floats.
     fs : float
         The sampling frequency of the data.
 
     Attributes
     ----------
-    data : typing.Iterable[float]
+    data : Iterable[float]
         Stores the input data.
     fs : float
         Stores the sampling frequency.
     dt : float
         The sampling interval, calculated as the inverse of the sampling frequency.
-    algorithms : typing.Dict[str, BaseAlgorithm]
+    algorithms : Dict[str, BaseAlgorithm]
         A dictionary to store algorithms associated with the setup.
-
-    Methods, inherited from BaseSetup
-    -------
-    add_algorithms(*algorithms)
-        Adds algorithms to the setup and sets the data and sampling frequency for them.
-    run_all()
-        Runs all the algorithms added to the class.
-    run_by_name(name)
-        Executes a specific algorithm by its name.
-    MPE(name, *args, **kwargs)
-        Extracts modal parameters from selected poles/peaks.
-    MPE_fromPlot(name, *args, **kwargs)
-        Extracts modal parameters directly from plot selections.
-    plot_geo1(scaleF, view, remove_fill, remove_grid, remove_axis)
-        Plots the first type of geometry setup for the structure.
-    plot_geo2(scaleF, view, remove_fill, remove_grid, remove_axis)
-        Plots the second type of geometry setup for the structure.
 
     Methods
     -------
-    plot_data(nc, names, unit, show_rms)
+    plot_data(...)
         Plots the time histories of the data channels in a subplot format.
-    plot_ch_info(ch_idx, ch_names, freqlim, logscale, nxseg, pov, window)
+    plot_ch_info(...)
         Plots Time History (TH), Power Spectral Density (PSD),
         and Kernel Density Estimation (KDE) for each channel.
-    decimate_data(q, n, ftype, axis, zero_phase)
+    decimate_data(...)
         Decimates the data using a wrapper for the scipy.signal.decimate function.
-    detrend_data(axis, type, bp)
+    detrend_data(...)
         Detrends the data using a wrapper for the scipy.signal.detrend function.
-    def_geo1(sens_names, sens_coord, sens_dir, sens_lines, bg_nodes, bg_lines, bg_surf)
+    def_geo1(...)
         Defines the first geometry setup (Geo1) for the instance.
-    def_geo2(sens_names, pts_coord, sens_map, sens_sign, order_red, sens_lines, bg_nodes, bg_lines, bg_surf)
+    def_geo2(...)
         Defines the second geometry setup (Geo2) for the instance.
-    __getitem__(name)
+    __getitem__(...)
         Retrieve an algorithm from the set by its name.
-    get(name, default)
+    get(...)
         Retrieve an algorithm from the set by its name, returning a default value if it does not exist.
 
     Notes
     -----
-    - The sampling interval `dt` is calculated automatically from the provided sampling frequency.
-    - `algorithms` dictionary is initialized empty and is meant to store various algorithms as needed."""
+    - The sampling interval ``dt`` is calculated automatically from the provided sampling frequency.
+    - The ``algorithms`` dictionary is initialized empty and is meant to store various algorithms as needed.
+    """
 
     def __init__(self, data: typing.Iterable[float], fs: float):
         """
@@ -439,26 +520,11 @@ class SingleSetup(BaseSetup):
 
         Parameters
         ----------
-        data : np.array(float)
+        data : Iterable[float]
             The data to be processed, expected as an iterable of floats.
         fs : float
             The sampling frequency of the data.
-
-        Attributes
-        ----------
-        data : typing.Iterable[float]
-            Stores the input data.
-        fs : float
-            Stores the sampling frequency.
-        dt : float
-            The sampling interval, calculated as the inverse of the sampling frequency.
-        algorithms : typing.Dict[str, BaseAlgorithm]
-            A dictionary to store algorithms associated with the setup.
-
-        Notes
-        -----
-        - The sampling interval `dt` is calculated automatically from the provided sampling frequency.
-        - `algorithms` dictionary is initialized empty and is meant to store various algorithms as needed."""
+        """
         self.data = data  # data
         self.fs = fs  # sampling frequency
         self.dt = 1 / fs  # sampling interval
@@ -475,15 +541,11 @@ class SingleSetup(BaseSetup):
         """
         Plots the time histories of the data channels in a subplot format.
 
-        This method generates plots for each channel of the dataset. It can display these
-        in multiple subplots with customizable number of columns, names, units, and an
-        option to show RMS acceleration.
-
         Parameters
         ----------
         nc : int, optional
             Number of columns for the subplot. Default is 1.
-        names : list[str], optional
+        names : List[str], optional
             List of names for the channels. If provided, these names are used as labels.
             Default is None.
         unit : str, optional
@@ -496,12 +558,7 @@ class SingleSetup(BaseSetup):
         tuple
             A tuple containing the figure and axis objects of the plot for further customization
             or saving externally.
-
-        Notes
-        -----
-        - Utilizes the `plt_data` function for plotting.
-        - The method assumes that the data is structured in a way that each column represents
-          a channel."""
+        """
         data = self.data
         dt = self.dt
         nc = nc  # number of columns for subplot
@@ -526,18 +583,14 @@ class SingleSetup(BaseSetup):
         Plots Time History (TH), Power Spectral Density (PSD),
         and Kernel Density Estimation (KDE) for each channel.
 
-        This method generates plots for TH, PSD, and KDE based on the specified channel indices.
-        It allows customization of frequency limits, log scale, number of segments for PSD,
-        percentage of overlap, and windowing function.
-
         Parameters
         ----------
-        ch_idx : str | list[int], optional
+        ch_idx : str | List[int], optional
             Channel indices to be plotted. Can be a list of indices or 'all' for all channels.
             Default is 'all'.
-        ch_names : typing.Optional[typing.List[str]], optional
+        ch_names : List[str], optional
             List of channel names for labeling purposes. Default is None.
-        freqlim : float | None, optional
+        freqlim : Tuple[float, float] | None, optional
             Frequency limit for the plots. Default is None.
         logscale : bool, optional
             If True, the PSD plot is in logarithmic scale. Default is True.
@@ -552,10 +605,6 @@ class SingleSetup(BaseSetup):
         -------
         tuple
             A tuple containing the figure and axis objects of the plots.
-
-        Notes
-        -----
-        - Utilizes the `plt_ch_info` function for plotting.
         """
         data = self.data
         fs = self.fs
@@ -574,31 +623,80 @@ class SingleSetup(BaseSetup):
         return fig, ax
 
     # method to decimate data
-    def decimate_data(
-        self,
-        q: int,
-        n: int | None = None,
-        ftype: typing.Literal["iir", "fir"] = "iir",
-        axis: int = 0,
-        zero_phase: bool = True,
-    ):
+    def decimate_data(self, q: int, axis: int = 0, **kwargs):
         """
-        wrapper method for scipy.signal.decimate function"""
+        Applies decimation to the data using the scipy.signal.decimate function.
 
-        self.data = decimate(self.data, q, n, ftype, axis, zero_phase)
+        This method reduces the sampling rate of the data by a factor of 'q'.
+        The decimation process includes low-pass filtering to reduce aliasing.
+        The method updates the instance's data and sampling frequency attributes.
+
+        Parameters
+        ----------
+        q : int
+            The decimation factor. Must be greater than 1.
+        axis : int, optional
+            The axis along which to decimate the data. Default is 0.
+        **kwargs : dict, optional
+            Additional keyword arguments for the scipy.signal.decimate function:
+            n : int, optional
+                The order of the filter (if 'ftype' is 'fir') or the number of times
+                to apply the filter (if 'ftype' is 'iir'). If None, a default value is used.
+            ftype : {'iir', 'fir'}, optional
+                The type of filter to use for decimation: 'iir' for an IIR filter
+                or 'fir' for an FIR filter. Default is 'iir'.
+
+            zero_phase : bool, optional
+                If True, applies a zero-phase filter, which has no phase distortion.
+                If False, uses a causal filter with some phase distortion. Default is True.
+
+        Raises
+        ------
+        ValueError
+            If the decimation factor 'q' is not greater than 1.
+
+        See Also
+        --------
+        scipy.signal.decimate : For more details on the decimation process.
+        [scipy.signal.decimate](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html)
+        """
+
+        self.data = decimate(self.data, q, axis, **kwargs)
         self.fs = self.fs / q
         self.dt = 1 / self.fs
 
     # method to detrend data
-    def detrend_data(
-        self,
-        axis: int = 0,
-        type: typing.Literal["linear", "constant"] = "linear",
-        bp: int | npt.NDArray[np.int64] = 0,
-    ):
+    def detrend_data(self, axis: int = 0, **kwargs):
         """
-        wrapper method for scipy.signal.detrend function"""
-        self.data = detrend(self.data, axis, type, bp)
+        Applies detrending to the data using the scipy.signal.detrend function.
+
+        This method removes a linear or constant trend from the data, commonly used to remove drifts
+        or offsets in time series data. It's a preprocessing step, often necessary for methods that
+        assume stationary data. The method updates the instance's data attribute.
+
+        Parameters
+        ----------
+        axis : int, optional
+            The axis along which to detrend the data. Default is 0.
+        **kwargs : dict, optional
+            Additional keyword arguments for the scipy.signal.detrend function:
+            type : {'linear', 'constant'}, optional
+                The type of detrending: 'linear' for linear detrend, or 'constant' for just
+                subtracting the mean. Default is 'linear'.
+            bp : int or numpy.ndarray of int, optional
+                Breakpoints where the data is split for piecewise detrending. Default is 0.
+
+        Raises
+        ------
+        ValueError
+            If invalid parameters are provided.
+
+        See Also
+        --------
+        scipy.signal.detrend : For more details on the detrending process.
+        [scipy.signal.detrend](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html)
+        """
+        self.data = detrend(self.data, axis, **kwargs)
 
     # metodo per definire geometria 1
     def def_geo1(
@@ -623,31 +721,26 @@ class SingleSetup(BaseSetup):
 
         Parameters
         ----------
-        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+        sens_names : Union[numpy.ndarray of string, List of string]
             An array or list containing the names of the sensors.
-        sens_coord : pd.DataFrame
-            A pandas DataFrame containing the coordinates of the sensors.
-        sens_dir : npt.NDArray[np.int64]
+        sens_coord : pandas.DataFrame
+            A DataFrame containing the coordinates of the sensors.
+        sens_dir : numpy.ndarray of int64
             An array defining the directions of the sensors.
-        sens_lines : npt.NDArray[np.int64], optional
+        sens_lines : numpy.ndarray of int64, optional
             An array defining lines connecting sensors. Default is None.
-        bg_nodes : npt.NDArray[np.float64], optional
+        bg_nodes : numpy.ndarray of float64, optional
             An array defining background nodes. Default is None.
-        bg_lines : npt.NDArray[np.int64], optional
+        bg_lines : numpy.ndarray of int64, optional
             An array defining background lines. Default is None.
-        bg_surf : npt.NDArray[np.float64], optional
+        bg_surf : numpy.ndarray of float64, optional
             An array defining background surfaces. Default is None.
 
         Raises
         ------
         AssertionError
             If the number of sensors does not match between data, coordinates, and directions.
-
-        Notes
-        -----
-        - The method performs various checks to ensure the integrity and consistency of the input data.
-        - Adapts to zero-indexing for background lines if provided.
-        - Reorders sensor coordinates and directions to match the provided sensor names."""
+        """
         # ---------------------------------------------------------------------
         # Checks on input
         nr_s = len(sens_names)
@@ -706,23 +799,23 @@ class SingleSetup(BaseSetup):
 
         Parameters
         ----------
-        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+        sens_names : Union[numpy.ndarray of string, List of string]
             An array or list containing the names of the sensors.
-        pts_coord : pd.DataFrame
+        pts_coord : pandas.DataFrame
             A DataFrame containing the coordinates of the points.
-        sens_map : pd.DataFrame
+        sens_map : pandas.DataFrame
             A DataFrame containing the mapping data for sensors.
-        sens_sign : pd.DataFrame
+        sens_sign : pandas.DataFrame
             A DataFrame containing sign data for the sensors.
-        order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
+        order_red : {'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
             Specifies the order reduction if any. Default is None.
-        sens_lines : npt.NDArray[np.int64], optional
+        sens_lines : numpy.ndarray of int64, optional
             An array defining lines connecting sensors. Default is None.
-        bg_nodes : npt.NDArray[np.float64], optional
+        bg_nodes : numpy.ndarray of float64, optional
             An array defining background nodes. Default is None.
-        bg_lines : npt.NDArray[np.float64], optional
+        bg_lines : numpy.ndarray of float64, optional
             An array defining background lines. Default is None.
-        bg_surf : npt.NDArray[np.float64], optional
+        bg_surf : numpy.ndarray of float64, optional
             An array defining background surfaces. Default is None.
 
         Raises
@@ -730,11 +823,7 @@ class SingleSetup(BaseSetup):
         AssertionError
             If the number of columns in mapping and sign data does not match the expected
             dimensions based on the order reduction.
-
-        Notes
-        -----
-        - Performs checks to ensure consistency and correctness of input data based on the order reduction.
-        - Adapts to zero-indexing for sensor and background lines if provided."""
+        """
         # ---------------------------------------------------------------------
         # Checks on input
         if order_red == "xy" or order_red == "xz" or order_red == "yz":
@@ -795,34 +884,51 @@ class SingleSetup(BaseSetup):
 # FIXME add references!
 class MultiSetup_PoSER:
     """
-    A class to conduct OMA of multi-setup experiments, with the
-    "Post Separate Estimation Re-scaling" (PoSER) approach. (add reference)
+    Class for conducting Operational Modal Analysis (OMA) on multi-setup experiments using
+    the Post Separate Estimation Re-scaling (PoSER) approach. This approach is designed to
+    merge and analyze data from multiple experimental setups for comprehensive modal analysis.
+
+    The PoSER method is particularly useful in situations where data from different setups
+    need to be combined to enhance the understanding of the system's modal properties.
 
     Attributes
     ----------
-    __result : typing.Optional[typing.Dict[str, MsPoserResult]]
-        A private attribute storing the results after merging.
-    __alg_ref : typing.Optional[typing.Dict[type[BaseAlgorithm], str]]
-        A private attribute storing a reference to the algorithms used in the setups.
+    __result : Optional[Dict[str, MsPoserResult]]
+        Private attribute to store the merged results from multiple setups. Each entry in the
+        dictionary corresponds to a specific algorithm used across setups, with its results.
+    __alg_ref : Optional[Dict[type[BaseAlgorithm], str]]
+        Private attribute to store references to the algorithms used in the setups. It maps
+        each algorithm type to its corresponding name.
 
     Methods
     -------
     merge_results()
-        Merges the results from individual setups into a combined result.
-    plot_mode_g1(...)
-        Plots the mode shapes for Geometry 1 setup using results from an algorithm.
-    plot_mode_g2(...)
-        Plots the mode shapes for Geometry 2 setup using results from an algorithm.
-    anim_mode_g2(...)
-        Creates an animation for the mode shapes for Geometry 2 setup using results from an algorithm.
+        Merges the results from individual setups into a combined result for holistic analysis.
+    plot_mode_g1(mode_number: int, scale_factor: int, view_type: str)
+        Plots mode shapes for a specified mode number using the first type of geometric setup (Geo1).
+    plot_mode_g2(mode_number: int, scale_factor: int, view_type: str)
+        Plots mode shapes for a specified mode number using the second type of geometric setup (Geo2).
+    anim_mode_g2(mode_number: int, scale_factor: int, view_type: str, save_as_gif: bool)
+        Creates an animation of the mode shapes for a specified mode number using the second type
+        of geometric setup (Geo2). Option to save the animation as a GIF file.
     def_geo1(...)
-        Defines the first geometry setup (Geo1) for the instance.
+        Defines the first type of geometric setup (Geo1) for the instance, based on sensor placements
+        and structural characteristics.
     def_geo2(...)
-        Defines the second geometry setup (Geo2) for the instance.
+        Defines the second type of geometric setup (Geo2) for the instance, typically involving more
+        complex geometries or additional data.
+
     plot_geo1(...)
-        Plots the geometry (type 1) of tested structure.
+        Plots the geometric configuration of the structure based on the Geo1 setup, including sensor
+        placements and structural details.
     plot_geo2(...)
-        Plots the geometry (type 2) of tested structure.
+        Plots the geometric configuration of the structure based on the Geo2 setup, highlighting
+        more intricate details or alternative layouts.
+
+    Warning
+    -------
+    The PoSER approach assumes that the setups used are compatible in terms of their experimental
+    setup and data characteristics.
     """
 
     __result: typing.Optional[typing.Dict[str, MsPoserResult]] = None
@@ -838,15 +944,16 @@ class MultiSetup_PoSER:
 
         Parameters
         ----------
-        ref_ind : list[list[int]]
+        ref_ind : List[List[int]]
             Reference indices for merging results from different setups.
-        single_setups : list[SingleSetup]
+        single_setups : List[SingleSetup]
             A list of SingleSetup instances to be merged using the PoSER approach.
 
         Raises
         ------
         ValueError
-            If any of the provided setups are invalid or incompatible."""
+            If any of the provided setups are invalid or incompatible.
+        """
         self._setups = (
             [el for el in self._init_setups(single_setups)] if single_setups else []
         )
@@ -855,10 +962,21 @@ class MultiSetup_PoSER:
 
     @property
     def setups(self):
+        """
+        Returns the list of SingleSetup instances representing individual measurement setups.
+        """
         return self._setups
 
     @setups.setter
     def setups(self, setups):
+        """
+        Sets the list of SingleSetup instances. Not allowed after initialization.
+
+        Raises
+        ------
+        AttributeError
+            If trying to set setups after initialization.
+        """
         # not allow to set setups after initialization
         if hasattr(self, "_setups"):
             raise AttributeError("Cannot set setups after initialization")
@@ -866,6 +984,14 @@ class MultiSetup_PoSER:
 
     @property
     def result(self) -> typing.Dict[str, MsPoserResult]:
+        """
+        Returns the merged results after applying the PoSER method.
+
+        Raises
+        ------
+        ValueError
+            If the merge_results() method has not been run yet.
+        """
         if self.__result is None:
             raise ValueError("You must run merge_results() first")
         return self.__result
@@ -873,22 +999,23 @@ class MultiSetup_PoSER:
     def _init_setups(
         self, setups: typing.List[SingleSetup]
     ) -> typing.Generator[SingleSetup, None, None]:
-        """Ensure that each setup has run its algorithms and that internally consistent algorithms.
+        """
+        Ensures each setup has run its algorithms and that algorithms are internally consistent.
 
         Parameters
         ----------
-        setups : list[SingleSetup]
+        setups : List[SingleSetup]
+            List of SingleSetup instances to initialize.
+
+        Yields
+        ------
+        Generator[SingleSetup, None, None]
+            Generator yielding initialized SingleSetup instances.
 
         Raises
         ------
         ValueError
-            if no setups are passed
-        ValueError
-            if any setup has no algorithms
-        ValueError
-            if any setup has multiple algorithms of same type
-        ValueError
-            if any setup has algorithms that have not been run
+            If there are issues with the provided setups or algorithms.
         """
         if len(setups) == 0:
             raise ValueError("You must pass at least one setup")
@@ -932,25 +1059,22 @@ class MultiSetup_PoSER:
 
     def merge_results(self) -> typing.Dict[str, MsPoserResult]:
         """
-        Merges results from individual setups into a combined result using the PoSER approach.
+        Merges results from individual setups into a combined result using the PoSER method.
 
-        This method groups algorithms by type across all setups and merges their results. It calculates
-        the mean and covariance of natural frequencies and damping ratios, and merges mode shapes.
+        Groups algorithms by type across all setups and merges their results.
+        Calculates the mean and covariance of natural frequencies and damping ratios,
+        and merges mode shapes.
 
         Returns
         -------
-        dict[str, MsPoserResult]
+        Dict[str, MsPoserResult]
             A dictionary containing the merged results for each algorithm type.
 
         Raises
         ------
         ValueError
             If the method is called before running algorithms on the setups.
-
-        Notes
-        -----
-        - This method assumes that all SingleSetup instances have been processed by
-          their respective algorithms."""
+        """
         # group algorithms by type
         alg_groups: typing.Dict[type[BaseAlgorithm], BaseAlgorithm] = {}
         for setup in self.setups:
@@ -1007,27 +1131,26 @@ class MultiSetup_PoSER:
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
         """
-        Defines the first geometry setup (Geo1) for the instance.
-
-        This method sets up the geometry involving sensors' names, coordinates, directions,
-        and optional elements like sensor lines, background nodes, lines, and surfaces.
+        Defines the first geometry setup (Geo1) for the instance, integrating sensors' names,
+        coordinates, and directions, along with optional elements like sensor lines, background
+        nodes, lines, and surfaces.
 
         Parameters
         ----------
-        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
-            An array or list containing the names of the sensors.
+        sens_names : List[List[str]]
+            A nested list containing the names of the sensors for each setup.
         sens_coord : pd.DataFrame
-            A pandas DataFrame containing the coordinates of the sensors.
-        sens_dir : npt.NDArray[np.int64]
-            An array defining the directions of the sensors.
-        sens_lines : npt.NDArray[np.int64], optional
-            An array defining lines connecting sensors. Default is None.
-        bg_nodes : npt.NDArray[np.float64], optional
-            An array defining background nodes. Default is None.
-        bg_lines : npt.NDArray[np.int64], optional
-            An array defining background lines. Default is None.
-        bg_surf : npt.NDArray[np.float64], optional
-            An array defining background surfaces. Default is None.
+            A DataFrame containing the coordinates of the sensors. Columns should include 'x', 'y', and 'z'.
+        sens_dir : np.ndarray
+            A NumPy array defining the directions of the sensors. Shape: (number of sensors, 3).
+        sens_lines : Optional[np.ndarray], optional
+            An array defining lines connecting sensors, by default None.
+        bg_nodes : Optional[np.ndarray], optional
+            An array defining background nodes for additional context, by default None.
+        bg_lines : Optional[np.ndarray], optional
+            An array defining background lines to connect nodes, by default None.
+        bg_surf : Optional[np.ndarray], optional
+            An array defining background surfaces, useful for visual context, by default None.
 
         Raises
         ------
@@ -1036,9 +1159,8 @@ class MultiSetup_PoSER:
 
         Notes
         -----
-        - The method performs various checks to ensure the integrity and consistency of the input data.
-        - Adapts to zero-indexing for background lines if provided.
-        - Reorders sensor coordinates and directions to match the provided sensor names."""
+        Adapts to zero-indexing for background lines if provided.
+        """
 
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
@@ -1090,32 +1212,29 @@ class MultiSetup_PoSER:
         remove_axis: bool = True,
     ):
         """
-        Plots the geometry of tested structure.
+        Plots the geometry of the tested structure based on the first geometry setup (Geo1).
 
-        This method visualizes the geometry of a structure, including sensor placements and directions.
-        It allows customization of the plot through various parameters such as scaling factor,
-        view type, and options to remove fill, grid, and axis from the plot.
+        This method visualizes the geometry including sensor placements and directions, offering
+        customizable plot parameters such as scaling factor, view type, and options to remove
+        fill, grid, and axis from the plot.
 
         Parameters
         ----------
         scaleF : int, optional
-            The scaling factor for the sensor direction quivers. A higher value results in
-            longer quivers. Default is 1.
-        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
-            The type of view for plotting the geometry. Options include 3D and 2D projections
-            on various planes. Default is "3D".
+            The scaling factor for the sensor direction quivers, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            The type of view for plotting the geometry (3D or 2D projections), by default "3D".
         remove_fill : bool, optional
-            If True, removes the fill from the plot. Default is True.
+            If True, removes the fill from the plot, by default True.
         remove_grid : bool, optional
-            If True, removes the grid from the plot. Default is True.
+            If True, removes the grid from the plot, by default True.
         remove_axis : bool, optional
-            If True, removes the axis labels and ticks from the plot. Default is True.
+            If True, removes the axis labels and ticks from the plot, by default True.
 
         Returns
         -------
         tuple
-            A tuple containing the figure and axis objects of the plot. This can be used for
-            further customization or saving the plot externally.
+            A tuple containing the figure and axis objects of the plot for further customization.
         """
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
@@ -1180,32 +1299,30 @@ class MultiSetup_PoSER:
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
         """
-        Defines the second geometry setup (Geo2) for the instance.
-
-        This method sets up an alternative geometry configuration, including sensors' names,
+        Defines the second geometry setup (Geo2) for the instance, incorporating sensors' names,
         points' coordinates, mapping, sign data, and optional elements like order reduction,
         sensor lines, background nodes, lines, and surfaces.
 
         Parameters
         ----------
-        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
+        sens_names : Union[np.ndarray, List[str]]
             An array or list containing the names of the sensors.
         pts_coord : pd.DataFrame
-            A DataFrame containing the coordinates of the points.
+            A DataFrame containing the coordinates of the points. Columns should include 'x', 'y', and 'z'.
         sens_map : pd.DataFrame
             A DataFrame containing the mapping data for sensors.
         sens_sign : pd.DataFrame
             A DataFrame containing sign data for the sensors.
-        order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
-            Specifies the order reduction if any. Default is None.
-        sens_lines : npt.NDArray[np.int64], optional
-            An array defining lines connecting sensors. Default is None.
-        bg_nodes : npt.NDArray[np.float64], optional
-            An array defining background nodes. Default is None.
-        bg_lines : npt.NDArray[np.float64], optional
-            An array defining background lines. Default is None.
-        bg_surf : npt.NDArray[np.float64], optional
-            An array defining background surfaces. Default is None.
+        order_red : Optional[Literal["xy", "xz", "yz", "x", "y", "z"]], optional
+            Specifies the order reduction if any, by default None.
+        sens_lines : Optional[np.ndarray], optional
+            An array defining lines connecting sensors, by default None.
+        bg_nodes : Optional[np.ndarray], optional
+            An array defining background nodes, by default None.
+        bg_lines : Optional[np.ndarray], optional
+            An array defining background lines, by default None.
+        bg_surf : Optional[np.ndarray], optional
+            An array defining background surfaces, by default None.
 
         Raises
         ------
@@ -1215,8 +1332,8 @@ class MultiSetup_PoSER:
 
         Notes
         -----
-        - Performs checks to ensure consistency and correctness of input data based on the order reduction.
-        - Adapts to zero-indexing for sensor and background lines if provided."""
+        Adapts to zero-indexing for sensor and background lines if provided.
+        """
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
@@ -1276,33 +1393,28 @@ class MultiSetup_PoSER:
         remove_axis: bool = True,
     ):
         """
-        Plots the geometry (type 2) of tested structure.
+        Plots the geometry of the tested structure based on the second geometry setup (Geo2).
 
-        This method creates a 3D or 2D plot of a specific geometric configuration (Geo2) with
-        customizable features such as scaling factor, view type, and visibility options for
-        fill, grid, and axes. It involves plotting sensor points, directions, and additional
-        geometric elements if available.
+        This method allows for visualization of a more complex geometric configuration of the
+        structure, with customizable plot parameters.
 
         Parameters
         ----------
         scaleF : int, optional
-            Scaling factor for the quiver plots representing sensors' directions. Default is 1.
-        view : {'3D', 'xy', 'xz', 'yz'}, optional
-            Specifies the type of view for the plot. Can be a 3D view or 2D projections on
-            various planes. Default is "3D".
+            Scaling factor for quiver plots representing sensors' directions, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            Type of view for the plot (3D or 2D projections), by default "3D".
         remove_fill : bool, optional
-            If True, the plot's fill is removed. Default is True.
+            If True, removes the plot's fill, by default True.
         remove_grid : bool, optional
-            If True, the plot's grid is removed. Default is True.
+            If True, removes the plot's grid, by default True.
         remove_axis : bool, optional
-            If True, the plot's axes are removed. Default is True.
+            If True, removes the plot's axes, by default True.
 
         Returns
         -------
         tuple
-            Returns a tuple containing the figure and axis objects of the matplotlib plot.
-            This allows for further customization or saving outside the method.
-
+            A tuple containing the figure and axis objects of the matplotlib plot.
         """
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
@@ -1417,13 +1529,8 @@ class MultiSetup_PoSER:
         remove_axis: bool = True,
     ) -> typing.Any:
         """
-        Plots the mode shapes for the specified mode number from the results of an algorithm,
+        Plots the mode shapes for a specified mode number from the results of an algorithm,
         using Geometry 1 setup.
-
-        This method visualizes the mode shapes of a structure based on the results
-        obtained from a specific algorithm, using geometry type 1 configuration.
-        It allows customization of the plot through parameters such as scaling factor,
-        view type, and visibility options.
 
         Parameters
         ----------
@@ -1434,23 +1541,20 @@ class MultiSetup_PoSER:
         mode_numb : int
             The mode number to be visualized.
         scaleF : int, optional
-            Scaling factor for the mode shape visualization. Default is 1.
-        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
-            The type of view for plotting the mode shape. Default is "3D".
+            Scaling factor for the mode shape visualization, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            The type of view for plotting the mode shape, by default "3D".
         remove_fill : bool, optional
-            If True, removes the fill from the plot. Default is True.
+            If True, removes the fill from the plot, by default True.
         remove_grid : bool, optional
-            If True, removes the grid from the plot. Default is True.
+            If True, removes the grid from the plot, by default True.
         remove_axis : bool, optional
-            If True, removes the axis labels and ticks from the plot. Default is True.
+            If True, removes the axis labels and ticks from the plot, by default True.
 
         Returns
         -------
         tuple
             A tuple containing the figure and axis objects of the plot.
-
-        Notes
-        -----
         """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
@@ -1525,37 +1629,29 @@ class MultiSetup_PoSER:
         Plots the mode shapes for the specified mode number from the results of an algorithm,
         using Geometry 2 setup.
 
-        This method visualizes the mode shapes of a structure based on the results
-        obtained from a specific algorithm, using geometry type 2 configuration.
-        It allows customization of the plot through parameters such as scaling factor,
-        view type, and visibility options.
-
         Parameters
         ----------
         Algo_Res : MsPoserResult
             The results from an algorithm, containing mode shapes and other modal properties.
         Geo2 : Geometry2
-            The geometry  (type2) of the structure.
-        mode_numb : int
-            The mode number to be visualized..
+            The geometry (type2) of the structure.
+        mode_numb : Optional[int]
+            The mode number to be visualized.
         scaleF : int, optional
-            Scaling factor for the mode shape visualization. Default is 1.
-        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
-            The type of view for plotting the mode shape. Default is "3D".
+            Scaling factor for the mode shape visualization, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            The type of view for plotting the mode shape, by default "3D".
         remove_fill : bool, optional
-            If True, removes the fill from the plot. Default is True.
+            If True, removes the fill from the plot, by default True.
         remove_grid : bool, optional
-            If True, removes the grid from the plot. Default is True.
+            If True, removes the grid from the plot, by default True.
         remove_axis : bool, optional
-            If True, removes the axis labels and ticks from the plot. Default is True.
+            If True, removes the axis labels and ticks from the plot, by default True.
 
         Returns
         -------
         tuple
             A tuple containing the figure and axis objects of the plot.
-
-        Notes
-        -----
         """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
@@ -1628,8 +1724,38 @@ class MultiSetup_PoSER:
         *args,
         **kwargs,
     ) -> typing.Any:
-        """Tobe implemented, plot for FDD, EFDD, FSDD
-        Mode Identification Function (MIF)
+        """
+        Creates an animation of the mode shapes for the specified mode number from the results
+        of an algorithm, using Geometry 2 setup.
+
+        This method visualizes the animated mode shapes of a structure based on the results obtained
+        from a specific algorithm, using geometry type 2 configuration.
+
+        Parameters
+        ----------
+        Algo_Res : MsPoserResult
+            The results from an algorithm, containing mode shapes and other modal properties.
+        Geo2 : Geometry2
+            The geometry (type2) of the structure.
+        mode_numb : Optional[int]
+            The mode number to be visualized.
+        scaleF : int, optional
+            Scaling factor for the mode shape visualization, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            The type of view for plotting the mode shape, by default "3D".
+        remove_fill : bool, optional
+            If True, removes the fill from the plot, by default True.
+        remove_grid : bool, optional
+            If True, removes the grid from the plot, by default True.
+        remove_axis : bool, optional
+            If True, removes the axis labels and ticks from the plot, by default True.
+        saveGIF : bool, optional
+            If True, saves the animation as a GIF file, by default False.
+
+        Returns
+        -------
+        Any
+            The generated animation object.
         """
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
@@ -1654,72 +1780,61 @@ class MultiSetup_PoSER:
 # FIXME add reference!
 class MultiSetup_PreGER(BaseSetup):
     """
-    A class to conduct OMA of multi-setup experiments, with the
-    "Pre Global Estimation Re-scaling" (PreGER) approach. (add reference)
-
-    This class is designed to handle multiple datasets and apply the
-    pre-global estimation re-scaling method. It allows plotting of data,
-    channel information, and geometric configurations, and provides methods
-    for data decimation and detrending.
+    Class for conducting Operational Modal Analysis on multi-setup experiments using the
+    Pre-Global Estimation Re-scaling (PreGER) approach.
+    This class is tailored for handling and processing multiple datasets, applying the PreGER method
+    efficiently. It offers functionalities for data visualization, preprocessing, and geometric
+    configuration for the structure under analysis.
 
     Attributes
     ----------
     fs : float
-        The sampling frequency, assumed to be the same for all datasets.
+        Sampling frequency, assumed to be uniform across all datasets.
     dt : float
-        The sampling interval, calculated as the inverse of the sampling frequency.
+        Sampling interval, calculated as the inverse of the sampling frequency.
     ref_ind : list[list[int]]
-        A list of lists indicating reference indices for each dataset.
+        Indices of reference sensors for each dataset, as a list of lists.
     datasets : list[npt.NDArray[np.float64]]
-        A list of NumPy arrays, each representing a dataset.
+        List of datasets, each represented as a NumPy array.
     data : npt.NDArray[np.float64]
-        The processed data after applying the PreGER method.
+        Processed data after applying the PreGER method.
     algorithms : typing.Dict[str, BaseAlgorithm]
-        A dictionary to store algorithms associated with the setup.
-
-    Methods, inherited from BaseSetup
-    -------
-    add_algorithms(*algorithms)
-        Adds algorithms to the setup and sets the data and sampling frequency for them.
-    run_all()
-        Runs all the algorithms added to the class.
-    run_by_name(name)
-        Executes a specific algorithm by its name.
-    MPE(name, *args, **kwargs)
-        Extracts modal parameters from selected poles/peaks.
-    MPE_fromPlot(name, *args, **kwargs)
-        Extracts modal parameters directly from plot selections.
-    plot_geo1(scaleF, view, remove_fill, remove_grid, remove_axis)
-        Plots the first type of geometry setup for the structure.
-    plot_geo2(scaleF, view, remove_fill, remove_grid, remove_axis)
-        Plots the second type of geometry setup for the structure.
+        Dictionary storing algorithms associated with the setup, keyed by their names.
 
     Methods
     -------
+    add_algorithms(...)
+        Adds algorithms to the setup and initializes them with data and sampling frequency.
+    run_all(...)
+        Executes all algorithms added to the setup.
+    run_by_name(...)
+        Runs a specific algorithm identified by its name.
+    MPE(...)
+        Extracts modal parameters based on selected poles/peaks.
+    MPE_fromPlot(...)
+        Allows modal parameter extraction directly from interactive plot selections.
+    plot_geo1(...)
+        Plots the first type of geometric configuration for the structure.
+    plot_geo2(...)
+        Plots the second type of geometric configuration for the structure.
     plot_data(...)
-        Plots the time histories of the data channels for selected datasets.
+        Visualizes time history data of channels for selected datasets.
     plot_ch_info(...)
-        Plots Time History (TH), Power Spectral Density (PSD), and Kernel Density Estimation (KDE)
+        Displays Time History (TH), Power Spectral Density (PSD), and Kernel Density Estimation (KDE)
         for each channel.
     decimate_data(...)
-        Applies decimation to the data using a wrapper method for scipy.signal.decimate function.
+        Applies data decimation using scipy.signal.decimate.
     detrend_data(...)
-        Applies detrending to the data using a wrapper method for scipy.signal.detrend function.
+        Detrends data using scipy.signal.detrend.
     def_geo1(...)
-        Defines the first geometry setup (Geo1) for the instance.
+        Defines the first type of geometric setup (Geo1) for the instance.
     def_geo2(...)
-        Defines the second geometry setup (Geo2) for the instance.
+        Defines the second type of geometric setup (Geo2) for the instance.
 
-    Notes
-    -----
-    - The class inherits from `BaseSetup`, which provide foundational attributes and methods.
-    - The `ref_ind` attribute determines how datasets are merged and scaled.
-    - The `plot_data` and `plot_ch_info` methods allow visualization of the datasets'
-      time history and channel information.
-    - The `decimate_data` and `detrend_data` methods provide preprocessing capabilities.
-    - The `def_geo1` and `def_geo2` methods allow setting up geometric configurations for the tested
-        structure.
-
+    Warning
+    -------
+    The PreGER approach assumes that the setups used are compatible in terms of their experimental
+    setup and data characteristics.
     """
 
     def __init__(
@@ -1785,11 +1900,6 @@ class MultiSetup_PreGER(BaseSetup):
         -------
         list
             A list of tuples, each containing the figure and axes objects for the plots of each dataset.
-
-        Notes
-        -----
-        - The method uses `plt_data` function for plotting.
-        - The method can handle multiple datasets and plot them separately.
         """
         if data_idx != "all":
             datasets = [self.datasets[i] for i in data_idx]
@@ -1854,11 +1964,6 @@ class MultiSetup_PreGER(BaseSetup):
         -------
         list
             A list of tuples, each containing the figure and axes objects for the plots of each dataset.
-
-        Notes
-        -----
-        - Utilizes `plt_ch_info` function for plotting.
-        - Capable of handling and visualizing multiple datasets separately.
         """
         if data_idx != "all":
             datasets = [self.datasets[i] for i in data_idx]
@@ -1965,9 +2070,8 @@ class MultiSetup_PreGER(BaseSetup):
 
         Notes
         -----
-        - The method performs various checks to ensure the integrity and consistency of the input data.
-        - Adapts to zero-indexing for background lines if provided.
-        - Reorders sensor coordinates and directions to match the provided sensor names."""
+        Adapts to zero-indexing for background lines if provided.
+        """
 
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
@@ -2017,7 +2121,7 @@ class MultiSetup_PreGER(BaseSetup):
         sens_map: pd.DataFrame,  # mapping
         sens_sign: pd.DataFrame,
         # # OPTIONAL
-        order_red: typing.Union[typing.Literal["xy", "xz", "yz", "x", "y", "z"]] = None,
+        order_red: typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
@@ -2059,8 +2163,8 @@ class MultiSetup_PreGER(BaseSetup):
 
         Notes
         -----
-        - Performs checks to ensure consistency and correctness of input data based on the order reduction.
-        - Adapts to zero-indexing for sensor and background lines if provided."""
+        Adapts to zero-indexing for sensor and background lines if provided.
+        """
         # ---------------------------------------------------------------------
         sens_names_c = copy.deepcopy(sens_names)
         ref_ind = self.ref_ind
