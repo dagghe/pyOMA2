@@ -1,9 +1,10 @@
 [project]
 name = "pyOMA_2"
-version = "0.3.1"
-description = "Software for Structural Health Monitoring with Advanced Signal Processing Techniques"
+version = "0.3.2"
+description = "Python module for conducting Operational Modal Analysis"
 authors = [
     {name = "Dag Pasca", email = "dpa@treteknisk.no"},
+    {name = "Angelo Aloisio", email = "angelo.aloisio1@univaq.it"},
     {name = "Marco Martino Rosso", email = "marco.rosso@polito.it"},
     {name = "Diego Federico Margoni", email = "diegofederico.margoni@studenti.polito.it"},
 ]
@@ -22,7 +23,7 @@ license = {text = "MIT"}
 
 [project.urls]
 Homepage = "https://github.com/dagghe/pyOMA2"
-Documentation = "https://dagghe.github.io/pyOMA2/index.html"
+Documentation = "https://pyoma.readthedocs.io/en/latest/"
 Repository = "https://github.com/dagghe/pyOMA2"
 Changelog = "https://github.com/dagghe/pyOMA2/blob/main/CHANGELOG.md"
 Contributing = "https://github.com/dagghe/pyOMA2/blob/main/CONTRIBUTING.md"

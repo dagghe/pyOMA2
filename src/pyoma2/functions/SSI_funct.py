@@ -8,20 +8,14 @@ Angelo Aloisio
 import logging
 
 import numpy as np
+from Gen_funct import MAC
 from tqdm import tqdm, trange
 
 logger = logging.getLogger(__name__)
 
-
-# from . import Gen_funct as GF
-# from Gen_funct import *
 # =============================================================================
 # FUNZIONI SSI
 # =============================================================================
-def MAC(phi_X, phi_A):
-    return np.abs(np.dot(phi_X.conj().T, phi_A)) ** 2 / (
-        (np.dot(phi_X.conj().T, phi_X)) * (np.dot(phi_A.conj().T, phi_A))
-    )
 
 
 def BuildHank(Y, Yref, br, fs, method):

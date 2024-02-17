@@ -6,7 +6,7 @@ Support classes
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    3_1
    3_2

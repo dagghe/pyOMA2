@@ -23,7 +23,7 @@ Please note that this is still an alpha release, and we are continuously refinin
 
 You can check the documentation at the following link:
 
-https://dagghe.github.io/pyOMA2/index.html
+https://pyoma.readthedocs.io/en/latest/
 
 ## Quick start
 
