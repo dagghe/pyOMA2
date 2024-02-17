@@ -486,7 +486,7 @@ class EFDD_algo(FDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
 
     Note
     -----
-    - Inherits from `FDD_algo` and provides specialized methods and functionalities
+    Inherits from `FDD_algo` and provides specialized methods and functionalities
     for EFDD-specific analyses.
     """
 
@@ -698,7 +698,7 @@ class FSDD_algo(EFDD_algo):
     Note
     -----
     Inherits functionalities from the EFDD_algo class while focusing on the unique
-    aspects of the FSDD approach for more refined modal analysis.
+    aspects of the FSDD approach.
     """
 
     method: str = "FSDD"
@@ -733,8 +733,8 @@ class FDD_algo_MS(FDD_algo[FDDRunParams, FDDResult, typing.Iterable[dict]]):
 
     Note
     -----
-    Inherits the functionality from the standard FDD algorithm class, modifying and extending it
-    for application to datasets derived from multiple experimental setups.
+    Inherits the functionality from the standard FDD algorithm class, modifying it
+    for application with multiple experimental setups.
     """
 
     RunParamCls = FDDRunParams
@@ -802,8 +802,7 @@ class EFDD_algo_MS(EFDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
 
     Note
     -----
-    This class adapts and enhances the standard EFDD algorithm's functionality for datasets
-    derived from multiple experimental setups.
+    This class adapts the EFDD algorithm's functionality for multiple experimental setups.
     """
 
     method = "EFDD"

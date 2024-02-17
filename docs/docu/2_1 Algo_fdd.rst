@@ -1,5 +1,5 @@
 The ``fdd`` module
-------------------
+==================
 
 This module provides implementation of the Frequency Domain Decomposition (FDD) and Enhanced
 Frequency Domain Decomposition (EFDD) algorithms, along with their adaptations for multi-setup
@@ -39,7 +39,7 @@ and interactive analysis.
 
 
 The ``FDD_algo`` class
-######################
+----------------------
 
 .. autoclass:: pyoma2.algorithm.fdd.FDD_algo
    :members:
@@ -47,7 +47,7 @@ The ``FDD_algo`` class
    :show-inheritance:
 
 The ``EFDD_algo`` class
-######################
+-----------------------
 
 .. autoclass:: pyoma2.algorithm.fdd.EFDD_algo
    :members:
@@ -55,7 +55,7 @@ The ``EFDD_algo`` class
    :show-inheritance:
 
 The ``FSDD_algo`` class
-######################
+-----------------------
 
 .. autoclass:: pyoma2.algorithm.fdd.FSDD_algo
    :members:
@@ -63,7 +63,7 @@ The ``FSDD_algo`` class
    :show-inheritance:
 
 The ``FDD_algo_MS`` class
-#########################
+-------------------------
 
 .. autoclass:: pyoma2.algorithm.fdd.FDD_algo_MS
    :members:
@@ -71,7 +71,7 @@ The ``FDD_algo_MS`` class
    :show-inheritance:
 
 The ``EFDD_algo_MS`` class
-##########################
+--------------------------
 
 .. autoclass:: pyoma2.algorithm.fdd.EFDD_algo_MS
    :members:
