@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - link to documentation in toml file
-- pyOMA version in the requirements for docu build
+- pyOMA version in the requirements for documentation build
 - small fixes in documentation
 
 ### Removed
