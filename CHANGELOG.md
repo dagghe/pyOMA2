@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2024-02-17
+
 ### Added
 - docstring to all classes and functions
 - option to save gif figure from animation of the mode shape
