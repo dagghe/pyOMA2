@@ -61,6 +61,23 @@ class SSIResult(BaseResult):
     order_out: typing.Union[typing.List[int], int, None] = None
 
 
+class pLSCFResult(BaseResult):
+    """Class for storing pLSCF results data."""
+
+    freq: typing.Optional[npt.NDArray[np.float64]] = None
+    Sy: typing.Optional[npt.NDArray[np.float64]] = None
+    Ad: typing.Optional[list[npt.NDArray[np.float64]]] = None
+    Bn: typing.Optional[list[npt.NDArray[np.float64]]] = None
+    Fn_poles: typing.Optional[npt.NDArray[np.float64]] = None
+    xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
+    Phi_poles: typing.Optional[npt.NDArray[np.float64]] = None
+    # lam_poles: npt.NDArray[np.float64]
+    Lab: typing.Optional[npt.NDArray[np.float64]] = None
+    # dopo MPE, MPE_forPlot
+    Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
+    order_out: typing.Union[typing.List[int], int, None] = None
+
+
 class MsPoserResult(BaseModel):
     # FIXME non molto corretto che sia sotto la cartella algorithms..
     # valutare se creare una cartella apposita per i setups

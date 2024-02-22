@@ -4,15 +4,120 @@ Part of the pyOMA2 package.
 Author:
 Dag Pasca
 """
+import logging
 import typing
 
 import numpy as np
 
-# FIXME =============================================================================
-# FUNZIONI GENERALI
-# N.B. citare e ringraziare JANKO E PYEMA!!
-# (SDypy https://github.com/sdypy/sdypy)
+logger = logging.getLogger(__name__)
+
 # =============================================================================
+# FUNZIONI GENERALI
+# =============================================================================
+
+
+def Lab_stab(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_xi):
+    """
+    Construct a Stability Chart.
+
+    Parameters
+    ----------
+    Fn : numpy.ndarray
+        Frequency poles,
+    Sm : numpy.ndarray
+        Damping poles,
+    Ms : numpy.ndarray
+        Mode shape array,
+    ordmin : int
+        Minimum order of model.
+    ordmax : int
+        Maximum order of model.
+    step : int
+        Step when iterating through model orders.
+    err_fn : float
+        Threshold for relative frequency difference for stability checks.
+    err_xi : float
+        Threshold for relative damping ratio difference for stability checks.
+    err_ms : float
+        Threshold for Modal Assurance Criterion (MAC) for stability checks.
+    max_xi : float
+        Threshold for max allowed damping.
+
+    Returns
+    -------
+    numpy.ndarray
+        Stability label matrix (Lab),.
+
+    Note
+    -----
+    This function categorizes modes based on their stability in terms of frequency, damping, and mode shape.
+    """
+    Lab = np.zeros(Fn.shape, dtype="int")
+    Ms = np.moveaxis(Ms, 1, 0)
+    # -----------------------------------------------------------------------------
+    # REMOVING HARD CONDITIONS
+    # Create Mask array to pick only damping xi, which are xi> 0 and xi<max_xi
+    Mask = np.logical_and(Sm < max_xi, Sm > 0).astype(int)
+    # Mask Damping Array
+    Sm1 = Sm * Mask
+    Sm1[Sm1 == 0] = np.nan
+    # Mask Frequency Array
+    Fn1 = Fn * Mask
+    Fn1[Fn1 == 0] = np.nan
+    # Mask ModeShape array (N.B. modify mask to fit the MS dimension)
+    nDOF = Ms.shape[2]
+    MaskMS = np.repeat(Mask[:, :, np.newaxis], nDOF, axis=2)
+    Ms1 = Ms * MaskMS
+    Ms1[Ms1 == 0] = np.nan
+    # -----------------------------------------------------------------------------
+    # STABILITY BETWEEN CONSECUTIVE ORDERS
+    for i in range(ordmin, ordmax, step):
+        ii = int((i - ordmin) / step)
+
+        f_n = Fn1[:, ii].reshape(-1, 1)
+        xi_n = Sm1[:, ii].reshape(-1, 1)
+        phi_n = Ms1[:, ii, :]
+
+        f_n1 = Fn1[:, ii - 1].reshape(-1, 1)
+        xi_n1 = Sm1[:, ii - 1].reshape(-1, 1)
+        phi_n1 = Ms1[:, ii - 1, :]
+
+        if ii != 0 and ii != 1:
+            for i in range(len(f_n)):
+                try:
+                    idx = np.nanargmin(np.abs(f_n1 - f_n[i]))
+
+                    cond1 = np.abs(f_n[i] - f_n1[idx]) / f_n[i]
+                    cond2 = np.abs(xi_n[i] - xi_n1[idx]) / xi_n[i]
+                    cond3 = 1 - MAC(phi_n[i, :], phi_n1[idx, :])
+                    if cond1 < err_fn and cond2 < err_xi and cond3 < err_ms:
+                        Lab[i, ii] = 7  # Stable
+
+                    elif cond1 < err_fn and cond3 < err_ms:
+                        # Stable frequency, stable mode shape
+                        Lab[i, ii] = 6
+
+                    elif cond1 < err_fn and cond2 < err_xi:
+                        Lab[i, ii] = 5  # Stable frequency, stable damping
+
+                    elif cond2 < err_xi and cond3 < err_ms:
+                        Lab[i, ii] = 4  # Stable damping, stable mode shape
+
+                    elif cond2 < err_xi:
+                        Lab[i, ii] = 3  # Stable damping
+
+                    elif cond3 < err_ms:
+                        Lab[i, ii] = 2  # Stable mode shape
+
+                    elif cond1 < err_fn:
+                        Lab[i, ii] = 1  # Stable frequency
+
+                    else:
+                        Lab[i, ii] = 0  # Nuovo polo o polo instabile
+                except Exception as e:
+                    # If f_n[i] is nan, do nothin, n.b. the lab stays 0
+                    logger.debug(e)
+    return Lab
 
 
 def merge_mode_shapes(
@@ -82,6 +187,30 @@ def merge_mode_shapes(
 
 
 # -----------------------------------------------------------------------------
+
+
+def MPC(phi):
+    """
+    Modal phase collinearity
+    """
+    S = np.cov(phi.real, phi.imag)
+    lambd = np.linalg.eigvals(S)
+    MPC = (lambd[0] - lambd[1]) ** 2 / (lambd[0] + lambd[1]) ** 2
+    return MPC
+
+
+def MPD(phi):
+    """
+    Mean phase deviation
+    """
+
+    U, s, VT = np.linalg.svd(np.c_[phi.real, phi.imag])
+    V = VT.T
+    w = np.abs(phi)
+    num = phi.real * V[1, 1] - phi.imag * V[0, 1]
+    den = np.sqrt(V[0, 1] ** 2 + V[1, 1] ** 2) * np.abs(phi)
+    MPD = np.sum(w * np.arccos(np.abs(num / den))) / np.sum(w)
+    return MPD
 
 
 def MSF(phi_1, phi_2):

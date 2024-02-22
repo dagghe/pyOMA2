@@ -67,6 +67,24 @@ class SSIRunParams(BaseModel):
     rtol: float = (1e-2,)
 
 
-# class pLSCFRunParams(BaseModel):
-#     # DA FARE
-#     pass
+class pLSCFRunParams(BaseModel):
+    """Class for storing pLSCF run parameters data."""
+
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+    # METODO 1: run
+    ordmax: int
+    ordmin: int = 0
+    nxseg: int = 1024
+    method_SD: str = "per"
+    pov: float = 0.5
+    sgn_basf: int = -1
+    step: int = 1
+    err_fn: float = 0.01
+    err_xi: float = 0.05
+    err_phi: float = 0.03
+    xi_max: float = 0.1
+    # METODO 2: MPE e MPE_fromPlot
+    sel_freq: typing.Optional[typing.List[float]] = None
+    order_in: typing.Union[int, str] = "find_min"
+    deltaf: float = (0.05,)
+    rtol: float = (1e-2,)
