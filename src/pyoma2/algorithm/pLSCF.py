@@ -1,5 +1,5 @@
 """
-Stochastic Subspace Identification (SSI) Algorithm Module.
+poly-reference Least Square Frequency Domain Module.
 Part of the pyOMA2 package.
 Authors:
 Dag Pasca
@@ -14,14 +14,15 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
-from pyoma2.algorithm.data.result import SSIResult
+from pyoma2.algorithm.data.result import pLSCFResult
 
 # from .result import BaseResult
-from pyoma2.algorithm.data.run_params import SSIRunParams
+from pyoma2.algorithm.data.run_params import pLSCFRunParams
 from pyoma2.functions import (
+    FDD_funct,
     Gen_funct,
-    SSI_funct,
     plot_funct,
+    pLSCF_funct_new,
 )
 from pyoma2.functions.plot_funct import (
     plt_lines,
@@ -45,95 +46,59 @@ logger = logging.getLogger(__name__)
 # SINGLE SETUP
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
-    """
-    Data-Driven Stochastic Subspace Identification (SSI) algorithm for single setup
-    analysis.
+class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
+    """_summary_
 
-    This class processes measurement data from a single setup experiment to identify
-    and extract modal parameters using the SSIdat-ref method.
-
-    Attributes
-    ----------
-    RunParamCls : Type[SSIRunParams]
-        The class of parameters specific to this algorithm's run.
-    ResultCls : Type[SSIResult]
-        The class of results produced by this algorithm.
-    method : str
-        The method used in this SSI algorithm, set to 'dat' by default.
-
-    Methods
-    -------
-    run() -> SSIResult
-        Executes the SSIdat algorithm on provided data, returning a SSIResult object with analysis results.
-    mpe(...)
-        Extracts modal parameters at selected frequencies.
-    mpe_fromPlot(...)
-        Interactive modal parameter extraction from a plot.
-    plot_STDiag(...)
-        Plots the Stability Diagram.
-    plot_cluster(...)
-        Plots the cluster diagram of identified modal parameters.
-    plot_mode_g1(...)
-        Plots the mode shapes using Geometry1.
-    plot_mode_g2(...)
-        Plots the mode shapes using Geometry2.
-    anim_mode_g2(...)
-        Creates an animation of mode shapes using Geometry2.
+    Args:
+        BaseAlgorithm (_type_): _description_
     """
 
-    RunParamCls = SSIRunParams
-    ResultCls = SSIResult
-    method: typing.Literal["dat"] = "dat"
+    RunParamCls = pLSCFRunParams
+    ResultCls = pLSCFResult
 
-    def run(self) -> SSIResult:
-        """
-        Executes the SSIdat algorithm and returns the results.
-
-        Processes the input data using the Data-Driven Stochastic Subspace Identification method.
-        Computes state space matrices, modal parameters, and other relevant results.
-
-        Returns
-        -------
-        SSIResult
-            An object containing the computed matrices and modal parameters.
-        """
+    def run(self) -> pLSCFResult:
+        """ """
         super()._pre_run()
         Y = self.data.T
-        br = self.run_params.br
-        method = self.run_params.method or self.method
-        ordmin = self.run_params.ordmin
+        nxseg = self.run_params.nxseg
+        method = self.run_params.method_SD
+        pov = self.run_params.pov
         ordmax = self.run_params.ordmax
+        ordmin = self.run_params.ordmin
         step = self.run_params.step
         err_fn = self.run_params.err_fn
         err_xi = self.run_params.err_xi
         err_phi = self.run_params.err_phi
         xi_max = self.run_params.xi_max
+        # self.run_params.df = 1 / dt / nxseg
 
-        if self.run_params.ref_ind is not None:
-            ref_ind = self.run_params.ref_ind
-            Yref = Y[ref_ind, :]
-        else:
-            Yref = Y
+        freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, method=method, pov=pov)
 
-        # Build Hankel matrix
-        H = SSI_funct.BuildHank(Y, Yref, br, self.fs, method=method)
-        # Get state matrix and output matrix
-        A, C = SSI_funct.SSI_FAST(H, br, ordmax)
-        # Get frequency poles (and damping and mode shapes)
-        Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
-        # Get the labels of the poles
+        Ad, Bn = pLSCF(Sy, self.dt, self.ordmax, sgn_basf=self.sgn_basf)
+        Fn_pol, Xi_pol, Ms_pol = pLSCF_funct_new.pLSCF_Poles(
+            Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
+        )
         Lab = Gen_funct.Lab_stab(
-            Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
+            Fn_pol,
+            Xi_pol,
+            Ms_pol,
+            ordmin,
+            ordmax,
+            step,
+            err_fn=err_fn,
+            err_xi=err_xi,
+            err_ms=err_phi,
+            max_xi=xi_max,
         )
 
         # Return results
-        return SSIResult(
-            A=A,
-            C=C,
-            H=H,
+        return self.ResultCls(
+            freq=freq,
+            Sy=Sy,
+            Ad=Ad,
+            Bn=Bn,
             Fn_poles=Fn_pol,
-            xi_poles=Sm_pol,
+            xi_poles=Xi_pol,
             Phi_poles=Ms_pol,
             Lab=Lab,
         )
@@ -145,26 +110,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         deltaf: float = 0.05,
         rtol: float = 1e-2,
     ) -> typing.Any:
-        """
-        Extracts the modal parameters at the selected frequencies.
-
-        Parameters
-        ----------
-        sel_freq : list of float
-            Selected frequencies for modal parameter extraction.
-        order : int or str, optional
-            Model order for extraction, or 'find_min' to auto-determine the minimum stable order.
-            Default is 'find_min'.
-        deltaf : float, optional
-            Frequency bandwidth for searching poles. Default is 0.05.
-        rtol : float, optional
-            Relative tolerance for comparing frequencies. Default is 1e-2.
-
-        Returns
-        -------
-        typing.Any
-            The extracted modal parameters. The format and content depend on the algorithm's implementation.
-        """
+        """ """
         super().mpe(sel_freq=sel_freq, order=order, deltaf=deltaf, rtol=rtol)
 
         # Save run parameters
@@ -180,7 +126,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         Lab = self.result.Lab
 
         # Extract modal results
-        Fn_SSI, Xi_SSI, Phi_SSI, order_out = SSI_funct.SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI, order_out = pLSCF_funct_new.pLSCF_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, deltaf=deltaf, rtol=rtol
         )
 
@@ -196,24 +142,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         deltaf: float = 0.05,
         rtol: float = 1e-2,
     ) -> typing.Any:
-        """
-        Interactive method for extracting modal parameters by selecting frequencies from a plot.
-
-        Parameters
-        ----------
-        freqlim : tuple of float, optional
-            Frequency limits for the plot. If None, limits are determined automatically. Default is None.
-        deltaf : float, optional
-            Frequency bandwidth for searching poles. Default is 0.05.
-        rtol : float, optional
-            Relative tolerance for comparing frequencies. Default is 1e-2.
-
-        Returns
-        -------
-        typing.Any
-            The extracted modal parameters after interactive selection. Format depends on algorithm's
-            implementation.
-        """
+        """ """
         super().mpe_fromPlot(freqlim=freqlim, deltaf=deltaf, rtol=rtol)
 
         # Save run parameters
@@ -231,7 +160,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         order = SFP.result[1]
 
         # e poi estrarre risultati
-        Fn_SSI, Xi_SSI, Phi_SSI, order_out = SSI_funct.SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI, order_out = pLSCF_funct_new.SSI_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=deltaf, rtol=rtol
         )
 
@@ -246,21 +175,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
-        """
-        Plots the Stability Diagram for the SSIdat algorithm.
-
-        Parameters
-        ----------
-        freqlim : tuple of float, optional
-            Frequency limits for the plot. If None, limits are determined automatically. Default is None.
-        hide_poles : bool, optional
-            Option to hide poles in the plot for clarity. Default is True.
-
-        Returns
-        -------
-        typing.Any
-            A tuple containing the matplotlib figure and axes of the Stability Diagram plot.
-        """
+        """ """
         fig, ax = plot_funct.Stab_SSI_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,
@@ -558,127 +473,3 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 
 
 # ------------------------------------------------------------------------------
-# (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-# FIXME ADD REFERENCE
-class SSIcov_algo(SSIdat_algo):
-    """
-    Implements the Covariance-driven Stochastic Subspace Identification (SSI) algorithm
-    for single setup experiments.
-
-    This class is an extension of the SSIdat_algo class, adapted for covariance-driven analysis.
-    It processes measurement data from a single setup to identify system dynamics and extract
-    modal parameters using the SSIcov-ref method.
-
-    Inherits all attributes and methods from SSIdat_algo.
-
-    Attributes
-    ----------
-    method : str
-        The method used in this SSI algorithm, overridden to 'cov_bias', 'cov_mm', or 'cov_unb' for
-        covariance-based analysis.
-
-    Methods
-    -------
-    Inherits all methods from SSIdat_algo with covariance-specific implementations.
-    """
-
-    method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
-
-
-# =============================================================================
-# MULTISETUP
-# =============================================================================
-# (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]):
-    """
-    Implements the Data-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup
-    experiments.
-
-    This class extends the SSIdat_algo class to handle data from multiple experimental setups, with
-    moving and reference sensors.
-
-    Inherits all attributes and methods from SSIdat_algo, with focus on multi-setup data handling.
-
-    Attributes
-    ----------
-    Inherits all attributes from SSIdat_algo.
-
-    Methods
-    -------
-    run() -> SSIResult
-        Executes the algorithm for multiple setups and returns the identification results.
-    Inherits other methods from SSIdat_algo, applicable to multi-setup scenarios.
-    """
-
-    def run(self) -> SSIResult:
-        """
-        Executes the SSI algorithm for multiple setups and returns the results.
-
-        Processes the input data from multiple setups using the Data-Driven Stochastic Subspace
-        Identification method. It builds Hankel matrices for each setup and computes the state and
-        output matrices, along with frequency poles.
-
-        Returns
-        -------
-        SSIResult
-            An object containing the system matrices, poles, damping ratios, and mode shapes across
-            multiple setups.
-        """
-        super()._pre_run()
-        Y = self.data
-        br = self.run_params.br
-        method = self.run_params.method or self.method
-        ordmin = self.run_params.ordmin
-        ordmax = self.run_params.ordmax
-        step = self.run_params.step
-        err_fn = self.run_params.err_fn
-        err_xi = self.run_params.err_xi
-        err_phi = self.run_params.err_phi
-        xi_max = self.run_params.xi_max
-
-        # Build Hankel matrix and Get state matrix and output matrix
-        A, C = SSI_funct.SSI_MulSet(
-            Y, self.fs, br, ordmax, step=1, methodHank=method, method="FAST"
-        )
-
-        # Get frequency poles (and damping and mode shapes)
-        Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
-        # Get the labels of the poles
-        Lab = Gen_funct.Lab_stab(
-            Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
-        )
-
-        # Return results
-        return SSIResult(
-            A=A,
-            C=C,
-            Fn_poles=Fn_pol,
-            xi_poles=Sm_pol,
-            Phi_poles=Ms_pol,
-            Lab=Lab,
-        )
-
-
-# ------------------------------------------------------------------------------
-# (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIcov_algo_MS(SSIdat_algo_MS):
-    """
-    Implements the Covariance-Driven Stochastic Subspace Identification (SSI) algorithm
-    for multi-setup experiments.
-
-    This class extends SSIdat_algo_MS, focusing on the covariance-driven approach to SSI
-    for multiple experimental setups.
-
-    Inherits all attributes and methods from SSIdat_algo_MS, adapted for covariance-driven
-    analysis methods.
-
-    Attributes
-    ----------
-    Inherits all attributes from SSIdat_algo_MS.
-
-    Methods
-    -------
-    Inherits all methods from SSIdat_algo_MS, adapted for covariance-based analysis.
-    """
-
-    method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
