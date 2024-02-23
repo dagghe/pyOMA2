@@ -16,6 +16,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
+
+# from matplotlib.cm import get_cmap
 from mpl_toolkits.mplot3d.art3d import Line3D
 
 from pyoma2.algorithm.data.geometry import Geometry2
@@ -42,10 +44,12 @@ def animate_scatters(iteration, Data, scatters, lines=None, sens_lines=None):
     # Update lines
     if lines is not None and sens_lines is not None:
         for line, (idx1, idx2) in zip(lines, sens_lines):
+
             line.set_data(
                 Data[[idx1, idx2], 0, iteration], Data[[idx1, idx2], 1, iteration]
             )
             line.set_3d_properties(Data[[idx1, idx2], 2, iteration])
+
             line.set_color("r")
         return scatters + lines
     else:

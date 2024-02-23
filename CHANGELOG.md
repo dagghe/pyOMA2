@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+### Fixed
+- axis argument for `detrend_data()` and `decimate_data()` methods
+
+### Changed
+
+
 ## [0.3.2] - 2024-02-17
 
 ### Fixed

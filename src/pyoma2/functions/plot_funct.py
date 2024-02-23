@@ -192,10 +192,8 @@ def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
         ax4.text(
             left,
             top,
-            r"""
-$f_n$ = %.3f
-$\xi$ = %.2f%s
-"""
+            r"""$f_n$ = %.3f
+        $\xi$ = %.2f%s"""
             % (fn_EFDD, float(xi_EFDD) * 100, "%"),
             transform=ax4.transAxes,
         )
@@ -227,38 +225,51 @@ def Stab_plot(
     ax=None,
 ):
     """
-    Plots the stabilization chart.
+    Plot the stabilization chart for modal analysis.
+
+    This function creates a stabilization chart, which is a graphical representation used in
+    system identification to assess the stability of identified modes across different model
+    orders.
 
     Parameters
     ----------
     Fn : ndarray
-        An array containing the frequencies of poles for each model order and identification step.
+        An array containing the frequencies for each model order and identification step.
     Lab : ndarray
-        An array of labels indicating the stability status of each pole, where different numbers represent
-        different stability statuses (e.g., stable pole, stable frequency, stable mode shape).
+        An array of labels indicating the stability status of each pole. Different numbers represent
+        different stability statuses such as stable pole, stable frequency, stable mode shape, etc.
     step : int
         The step size between model orders in the identification process.
     ordmax : int
         The maximum model order to be displayed on the plot.
     ordmin : int, optional
-        The minimum model order to be displayed on the plot. Default is 0.
+        The minimum model order to be displayed on the plot, by default 0.
     freqlim : tuple of float, optional
-        The upper frequency limit for the plot. If None, includes all frequencies. Default is None.
-    hide_poles : bool, optional
-        If True, only stable poles are plotted. If False, all types of poles are plotted. Default is True.
-    fig : matplotlib.figure.Figure, optional
-        An existing matplotlib figure object to plot on. If None, a new figure is created. Default is None.
-    ax : matplotlib.axes.Axes, optional
-        An existing axes object to plot on. If None, new axes are created on the provided or new figure.
+        A tuple defining the frequency limits for the plot. If None, includes all frequencies.
         Default is None.
+    hide_poles : bool, optional
+        If True, only stable poles are plotted; if False, all types of poles are plotted.
+        Default is True.
+    fig : matplotlib.figure.Figure, optional
+        An existing matplotlib figure object to plot on. If None, a new figure is created.
+        Default is None.
+    ax : matplotlib.axes.Axes, optional
+        An existing axes object to plot on. If None, new axes are created on the provided
+        or new figure. Default is None.
 
     Returns
     -------
     tuple
-        fig : matplotlib.figure.Figure
-            The matplotlib figure object.
-        ax : matplotlib.axes.Axes
+        - fig : matplotlib.figure.Figure
+            The matplotlib figure object containing the plot.
+        - ax : matplotlib.axes.Axes
             The axes object with the stabilization chart.
+
+    Notes
+    -----
+    The stabilization chart helps in identifying the number of physical modes and their
+    stability by observing how poles behave across different model orders. Stable poles are
+    typically considered as indicators of physical modes.
     """
     if fig is None and ax is None:
         fig, ax = plt.subplots()

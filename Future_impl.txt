@@ -1,0 +1,3 @@
+Fix Polymax
+Uncertainty calculations
+Add spectrogram plot (ShortTimeFFT)?
