@@ -20,12 +20,27 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-def pLSCF(
-    Sy,
-    dt,
-    ordmax,
-    sgn_basf=-1,
-):
+def pLSCF(Sy, dt, ordmax, sgn_basf=-1):
+    """
+    Perform the poly-reference Least Square Complex Frequency (pLSCF) algorithm.
+
+    Parameters
+    ----------
+    Sy : numpy.ndarray
+        Spectral density matrix of the system.
+    dt : float
+        Time step of the measurement data.
+    ordmax : int
+        Maximum model order for the algorithm.
+    sgn_basf : int, optional
+        Sign of the basis function, -1 for 'LO' and 1 for 'HI', by default -1.
+
+    Returns
+    -------
+    tuple of numpy.ndarray
+        - Ad : The denominator polynomial coefficients of the transfer function.
+        - Bn : The numerator polynomial coefficients of the transfer function.
+    """
     if sgn_basf == -1:
         constr = "LO"
     if sgn_basf == 1:
@@ -85,6 +100,28 @@ def pLSCF(
 
 
 def pLSCF_Poles(Ad, Bn, dt, methodSy, nxseg):
+    """
+    Extract poles from the pLSCF algorithm results.
+
+    Parameters
+    ----------
+    Ad : numpy.ndarray
+        Denominator polynomial coefficients from pLSCF.
+    Bn : numpy.ndarray
+        Numerator polynomial coefficients from pLSCF.
+    dt : float
+        Time step of the measurement data.
+    methodSy : str
+        Method used for the PSD estimation (either "per" or "cor")
+    nxseg : int
+        Number of segments used in the algorithm.
+
+    Returns
+    -------
+    tuple of numpy.ndarray
+        - Fns : Natural frequencies from the pLSCF analysis.
+        - Xis : Damping ratios from the pLSCF analysis.
+        - Phis : Mode shapes from the pLSCF analysis."""
     Fns = []
     Xis = []
     Phis = []
@@ -120,19 +157,20 @@ def pLSCF_Poles(Ad, Bn, dt, methodSy, nxseg):
 
 def rmfd2AC(A_den, B_num):
     """
-
+    Convert Right Matrix Fraction Description (RMFD) to state-space representation.
 
     Parameters
     ----------
-    A_den : TYPE
-        DESCRIPTION.
-    B_num : TYPE
-        DESCRIPTION.
+    A_den : numpy.ndarray
+        Denominator matrix of the RMFD.
+    B_num : numpy.ndarray
+        Numerator matrix of the RMFD.
 
     Returns
     -------
-    None.
-
+    tuple of numpy.ndarray
+        - A : State matrix of the system.
+        - C : Output matrix of the system.
     """
     n, l, m = B_num.shape
     A = np.zeros((n * m, n * m))
@@ -149,7 +187,7 @@ def rmfd2AC(A_den, B_num):
 
 def AC2MP_poly(A, C, dt, methodSy, nxseg):
     """
-    Convert state-space representation (A, C matrices) to modal parameters.
+    Convert state-space representation to modal parameters.
 
     Parameters
     ----------
@@ -158,17 +196,18 @@ def AC2MP_poly(A, C, dt, methodSy, nxseg):
     C : numpy.ndarray
         Output matrix of the system.
     dt : float
-        Time step or sampling interval (1/fs, where fs is the sampling frequency).
+        Time step or sampling interval.
+    methodSy : str
+        Method used for PSD estimation.
+    nxseg : int
+        Number of segments used in the algorithm.
 
     Returns
     -------
-    tuple
-        - fn : numpy.ndarray
-            Natural frequencies in Hz.
-        - xi : numpy.ndarray
-            Damping ratios.
-        - phi : numpy.ndarray
-            Complex mode shapes.
+    tuple of numpy.ndarray
+        - fn : Natural frequencies in Hz.
+        - xi : Damping ratios.
+        - phi : Complex mode shapes.
     """
     Nch = C.shape[0]
     AuVal, AuVett = np.linalg.eig(A)
@@ -204,46 +243,34 @@ def AC2MP_poly(A, C, dt, methodSy, nxseg):
 
 def pLSCF_MPE(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab=None, deltaf=0.05, rtol=1e-2):
     """
-    Extract modal parameters using XXX method for selected frequencies.
+    Extract modal parameters using the pLSCF method for selected frequencies.
 
     Parameters
     ----------
-    sel_freq : list
-        List of selected frequencies for modal parameter extraction.
+    sel_freq : list of float
+        Selected frequencies for modal parameter extraction.
     Fn_pol : numpy.ndarray
-        Array of natural frequencies obtained from SSI for each model order.
-    Sm_pol : numpy.ndarray
-        Array of damping ratios obtained from SSI for each model order.
-    Ms_pol : numpy.ndarray
-        3D array of mode shapes obtained from SSI for each model order.
+        Natural frequencies obtained from the pLSCF method.
+    Xi_pol : numpy.ndarray
+        Damping ratios obtained from the pLSCF method.
+    Phi_pol : numpy.ndarray
+        Mode shapes obtained from the pLSCF method.
     order : int, list of int, or 'find_min'
-        Specifies the model order(s) for which the modal parameters are to be extracted.
-        If 'find_min', the function attempts to find the minimum model order that provides
-        stable poles for each mode of interest.
+        Model order for extraction.
     Lab : numpy.ndarray, optional
-        Array of labels identifying stable poles. Required if order='find_min'.
+        Labels identifying stable poles.
     deltaf : float, optional
-        Frequency bandwidth around each selected frequency for searching poles. Default is 0.05.
+        Frequency bandwidth for searching poles, by default 0.05.
     rtol : float, optional
-        Relative tolerance for comparing frequencies. Default is 1e-2.
+        Relative tolerance for frequency comparison, by default 1e-2.
 
     Returns
     -------
-    tuple
-        Fn : numpy.ndarray
-            Extracted natural frequencies.
-        Xi : numpy.ndarray
-            Extracted damping ratios.
-        Phi : numpy.ndarray
-            Extracted mode shapes.
-        order_out : numpy.ndarray or int
-            Output model order used for extraction for each frequency.
-
-    Raises
-    ------
-    ValueError
-        If 'order' is not an int, list of int, or 'find_min', or if 'order' is 'find_min'
-        but 'Lab' is not provided.
+    tuple of numpy.ndarray
+        - Fn : Extracted natural frequencies.
+        - Xi : Extracted damping ratios.
+        - Phi : Extracted mode shapes.
+        - order_out : Model order used for extraction.
     """
 
     # if order != "find_min" and type(order) != int and type(order) != list[int]:

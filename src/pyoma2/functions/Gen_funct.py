@@ -18,22 +18,26 @@ logger = logging.getLogger(__name__)
 
 def Lab_stab(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_xi):
     """
-    Construct a Stability Chart.
+    Construct a Stability Chart for modal analysis.
+
+    This function evaluates the stability of identified modes based on their behavior
+    across different model orders. It generates a label matrix where each element
+    represents the stability of a mode at a specific order.
 
     Parameters
     ----------
     Fn : numpy.ndarray
-        Frequency poles,
+        Array of frequency poles for each model order.
     Sm : numpy.ndarray
-        Damping poles,
+        Array of damping ratios for each model order.
     Ms : numpy.ndarray
-        Mode shape array,
+        3D array of mode shapes for each model order.
     ordmin : int
-        Minimum order of model.
+        Minimum model order to consider.
     ordmax : int
-        Maximum order of model.
+        Maximum model order to consider.
     step : int
-        Step when iterating through model orders.
+        Step size when iterating through model orders.
     err_fn : float
         Threshold for relative frequency difference for stability checks.
     err_xi : float
@@ -41,16 +45,19 @@ def Lab_stab(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_xi):
     err_ms : float
         Threshold for Modal Assurance Criterion (MAC) for stability checks.
     max_xi : float
-        Threshold for max allowed damping.
+        Maximum allowed damping ratio.
 
     Returns
     -------
     numpy.ndarray
-        Stability label matrix (Lab),.
+        Stability label matrix (Lab), where each element represents the stability
+        category of a mode at a specific model order.
 
-    Note
+    Notes
     -----
-    This function categorizes modes based on their stability in terms of frequency, damping, and mode shape.
+    Stability is assessed based on the consistency of mode frequency, damping, and
+    shape across successive model orders. Different stability categories are assigned
+    based on how closely each mode adheres to the specified thresholds.
     """
     Lab = np.zeros(Fn.shape, dtype="int")
 

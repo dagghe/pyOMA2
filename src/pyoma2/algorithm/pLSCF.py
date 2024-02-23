@@ -41,17 +41,44 @@ logger = logging.getLogger(__name__)
 # SINGLE SETUP
 # =============================================================================
 class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
-    """_summary_
+    """
+    Implementation of the poly-reference Least Square Complex Frequency (pLSCF) algorithm for modal analysis.
 
-    Args:
-        BaseAlgorithm (_type_): _description_
+    This class inherits from `BaseAlgorithm` and specializes in handling modal analysis computations and
+    visualizations based on the pLSCF method. It provides methods to run the analysis, extract modal parameter
+    estimation (MPE), plot stability diagrams, cluster diagrams, mode shapes, and animations of mode shapes.
+
+    Parameters
+    ----------
+    BaseAlgorithm : type
+        Inherits from the BaseAlgorithm class with specified type parameters for pLSCFRunParams, pLSCFResult,
+        and Iterable[float].
+
+    Attributes
+    ----------
+    RunParamCls : pLSCFRunParams
+        Class attribute for run parameters specific to pLSCF algorithm.
+    ResultCls : pLSCFResult
+        Class attribute for results specific to pLSCF algorithm.
     """
 
     RunParamCls = pLSCFRunParams
     ResultCls = pLSCFResult
 
     def run(self) -> pLSCFResult:
-        """ """
+        """
+        Execute the pLSCF algorithm to perform modal analysis on the provided data.
+
+        This method conducts a frequency domain analysis using the Least Square Complex Frequency method.
+        It computes system matrices, identifies poles, and labels them based on stability and other
+        criteria.
+
+        Returns
+        -------
+        pLSCFResult
+            An instance of `pLSCFResult` containing the analysis results, including frequencies, system
+            matrices, identified poles, and their labels.
+        """
         super()._pre_run()
         Y = self.data.T
         nxseg = self.run_params.nxseg
@@ -103,7 +130,27 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         deltaf: float = 0.05,
         rtol: float = 1e-2,
     ) -> typing.Any:
-        """ """
+        """
+        Extract the modal parameters at the selected frequencies and order.
+
+        Parameters
+        ----------
+        sel_freq : List[float]
+            A list of frequencies for which the modal parameters are to be estimated.
+        order : int or str, optional
+            The order for modal parameter estimation or "find_min".
+            Default is 'find_min'.
+        deltaf : float, optional
+            The frequency range around each selected frequency to consider for estimation. Default is 0.05.
+        rtol : float, optional
+            Relative tolerance for convergence in the iterative estimation process. Default is 1e-2.
+
+        Returns
+        -------
+        Any
+            The results of the modal parameter estimation, typically including estimated frequencies, damping
+            ratios, and mode shapes.
+        """
         super().mpe(sel_freq=sel_freq, order=order, deltaf=deltaf, rtol=rtol)
 
         # Save run parameters
@@ -135,7 +182,24 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         deltaf: float = 0.05,
         rtol: float = 1e-2,
     ) -> typing.Any:
-        """ """
+        """
+        Extract the modal parameters directly from the stabilisation chart.
+
+        Parameters
+        ----------
+        freqlim : tuple of float, optional
+            A tuple specifying the frequency limits (min, max) for the plot. If None, the limits are
+            determined automatically. Default is None.
+        deltaf : float, optional
+            The frequency range around each selected frequency to consider for estimation. Default is 0.05.
+        rtol : float, optional
+            Relative tolerance for convergence in the iterative estimation process. Default is 1e-2.
+
+        Returns
+        -------
+        Any
+            The results of the modal parameter estimation based on user selection from the plot.
+        """
         super().mpe_fromPlot(freqlim=freqlim, deltaf=deltaf, rtol=rtol)
 
         # Save run parameters
@@ -168,7 +232,22 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
-        """ """
+        """
+        Plot the Stability Diagram.
+
+        Parameters
+        ----------
+        freqlim : tuple of float, optional
+            Frequency limits (min, max) for the stability diagram. If None, limits are determined
+            automatically. Default is None.
+        hide_poles : bool, optional
+            Option to hide the unstable poles in the diagram for clarity. Default is True.
+
+        Returns
+        -------
+        Any
+            A tuple containing the matplotlib figure and axes objects for the stability diagram.
+        """
         fig, ax = plot_funct.Stab_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,
@@ -469,11 +548,41 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
 # MULTI SETUP
 # =============================================================================
 class pLSCF_algo_MS(pLSCF_algo[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
+    """
+    A multi-setup extension of the pLSCF_algo class for the poly-reference Least Square Complex Frequency
+    (pLSCF) algorithm.
+
+
+    Parameters
+    ----------
+    pLSCF_algo : type
+        Inherits from the pLSCF_algo class with specified type parameters for pLSCFRunParams, pLSCFResult, and
+        Iterable[dict].
+
+    Attributes
+    ----------
+    RunParamCls : pLSCFRunParams
+        Class attribute for run parameters specific to pLSCF algorithm.
+    ResultCls : pLSCFResult
+        Class attribute for results specific to pLSCF algorithm.
+    """
+
     RunParamCls = pLSCFRunParams
     ResultCls = pLSCFResult
 
     def run(self) -> pLSCFResult:
-        """ """
+        """
+        Execute the pLSCF algorithm to perform modal analysis on the provided data.
+
+        This method conducts a frequency domain analysis using the Least Square Complex Frequency method.
+        It computes system matrices, identifies poles, and labels them based on stability and other criteria.
+
+        Returns
+        -------
+        pLSCFResult
+            An instance of `pLSCFResult` containing the analysis results, including frequencies,
+            system matrices, identified poles, and their labels.
+        """
 
         super()._pre_run()
         Y = self.data
