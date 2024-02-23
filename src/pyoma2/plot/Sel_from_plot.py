@@ -107,7 +107,7 @@ class SelFromPlot:
         self,
         algo: BaseAlgorithm,
         freqlim=None,
-        plot: typing.Literal["FDD", "SSI"] = "FDD",
+        plot: typing.Literal["FDD", "SSI", "pLSCF"] = "FDD",
     ):
         """
         Initializes the SelFromPlot class with specified algorithm, frequency limit, and plot type.
@@ -339,8 +339,8 @@ class SelFromPlot:
             # self.ax2.grid(True)
 
             # -----------------------
-            if plot == "SSI":
-                Stab_SSI_plot(
+            if plot == "SSI" or plot == "pLSCF":
+                Stab_plot(
                     Fn,
                     Lab,
                     step,
@@ -362,30 +362,6 @@ class SelFromPlot:
                     markersize=10,
                 )
 
-            # ATTENZIONE DA FARE
-            # #-----------------------
-            # elif plot == "pLSCF":
-            #     Fr = self.AlgoName.Results[f"pLSCF_{simnum}"]['Fn_poles']
-            #     Lab = self.Lab
-
-            #     if self.hide_poles:
-            #         x = a.flatten(order='f')
-            #         y = np.array([i//len(a) for i in range(len(x))])
-
-            #         self.ax1.plot(x, y, 'go', markersize=7, label="Stable pole")
-
-            #         self.MARKER, = self.ax1.plot(self.AlgoName.sel_freq,
-            #                                    [i for i in self.AlgoName.pole_ind]
-            #                                     , 'kx', markersize=10)
-
-            #     else:
-            #         # PLOT ALL
-
-            #         self.MARKER, = self.ax1.plot(self.AlgoName.sel_freq,
-            #                                    [i for i in self.AlgoName.pole_ind]
-            #                                     , 'kx', markersize=10)
-
-            # #-----------------------
             if self.show_legend:
                 self.pole_legend = self.ax2.legend(
                     loc="lower center", ncol=4, frameon=True
@@ -414,12 +390,8 @@ class SelFromPlot:
             Type of plot ("SSI" or "pLSCF") for which the pole is being selected.
         """
 
-        if plot == "SSI":
+        if plot == "SSI" or plot == "pLSCF":
             Fn_poles = self.algo.result.Fn_poles
-
-        # elif plot == "pLSCF":
-        #     Fr = self.AlgoName.Results[f"pLSCF_{simnum}"]['Fn_poles']
-        #     Sm = self.AlgoName.Results[f"pLSCF_{simnum}"]['xi_poles']
 
         y_ind = int(
             np.argmin(np.abs(np.arange(Fn_poles.shape[1]) - self.y_data_pole))

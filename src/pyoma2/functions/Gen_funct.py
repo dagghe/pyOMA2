@@ -53,7 +53,7 @@ def Lab_stab(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_xi):
     This function categorizes modes based on their stability in terms of frequency, damping, and mode shape.
     """
     Lab = np.zeros(Fn.shape, dtype="int")
-    Ms = np.moveaxis(Ms, 1, 0)
+
     # -----------------------------------------------------------------------------
     # REMOVING HARD CONDITIONS
     # Create Mask array to pick only damping xi, which are xi> 0 and xi<max_xi
