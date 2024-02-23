@@ -40,7 +40,6 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # SINGLE SETUP
 # =============================================================================
-# (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
     """_summary_
 
@@ -65,7 +64,6 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         err_xi = self.run_params.err_xi
         err_phi = self.run_params.err_phi
         xi_max = self.run_params.xi_max
-        # self.run_params.df = 1 / dt / nxseg
 
         freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, method=method, pov=pov)
 
@@ -121,15 +119,15 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         Lab = self.result.Lab
 
         # Extract modal results
-        Fn_SSI, Xi_SSI, Phi_SSI, order_out = pLSCF_funct.pLSCF_MPE(
+        Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = pLSCF_funct.pLSCF_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, deltaf=deltaf, rtol=rtol
         )
 
         # Save results
         self.result.order_out = order_out
-        self.result.Fn = Fn_SSI
-        self.result.Xi = Xi_SSI
-        self.result.Phi = Phi_SSI
+        self.result.Fn = Fn_pLSCF
+        self.result.Xi = Xi_pLSCF
+        self.result.Phi = Phi_pLSCF
 
     def mpe_fromPlot(
         self,
@@ -150,20 +148,20 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         Ms_pol = self.result.Phi_poles
 
         # chiamare plot interattivo
-        SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
+        SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="pLSCF")
         sel_freq = SFP.result[0]
         order = SFP.result[1]
 
         # e poi estrarre risultati
-        Fn_SSI, Xi_SSI, Phi_SSI, order_out = pLSCF_funct.pLSCF_MPE(
+        Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = pLSCF_funct.pLSCF_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=deltaf, rtol=rtol
         )
 
         # Save results
         self.result.order_out = order_out
-        self.result.Fn = Fn_SSI
-        self.result.Xi = Xi_SSI
-        self.result.Phi = Phi_SSI
+        self.result.Fn = Fn_pLSCF
+        self.result.Xi = Xi_pLSCF
+        self.result.Phi = Phi_pLSCF
 
     def plot_STDiag(
         self,

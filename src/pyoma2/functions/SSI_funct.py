@@ -664,7 +664,7 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
 
             ii = 0
             check = np.array([False, False])
-            while check.any() == False:
+            while check.any() == False:  # noqa: E712
                 # try:
                 fn_at_ord_ii = aa[:, ii]
                 fn_at_ord_ii = np.unique(fn_at_ord_ii)

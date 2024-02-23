@@ -10,7 +10,7 @@ import logging
 import numpy as np
 
 # import matplotlib.pyplot as plt
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 np.seterr(divide="ignore", invalid="ignore")
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ def pLSCF(
 
     Ad = []
     Bn = []
-    for n in range(1, ordmax + 1):
+    for n in trange(1, ordmax + 1):
         M = np.zeros(((n + 1) * Nch, (n + 1) * Nch))  # iNchzializzo
         Xo = np.array([Omega**i for i in range(n + 1)]).T
         Xoh = Xo.conj().T
@@ -114,7 +114,7 @@ def pLSCF_Poles(Ad, Bn, dt, methodSy, nxseg):
         Phi1.append(phi1)
 
     Phi1 = np.array(Phi1)
-
+    Phi1 = np.moveaxis(Phi1, 1, 0)
     return Fns, Xis, Phi1
 
 
@@ -294,7 +294,7 @@ def pLSCF_MPE(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab=None, deltaf=0.05, r
 
             ii = 0
             check = np.array([False, False])
-            while check.any() == False:
+            while check.any() == False:  # noqa: E712
                 # try:
                 fn_at_ord_ii = aa[:, ii]
                 fn_at_ord_ii = np.unique(fn_at_ord_ii)
