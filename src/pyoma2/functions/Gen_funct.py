@@ -160,7 +160,7 @@ def merge_mode_shapes(
         if MSarr_list[i].shape[1] != Nmodes:
             raise ValueError("All mode shape arrays must have the same number of modes.")
     # Initialize merged mode shape array
-    merged_mode_shapes = np.zeros((M, Nmodes))
+    merged_mode_shapes = np.zeros((M, Nmodes)).astype(complex)
     # Loop through each mode
     for k in range(Nmodes):
         phi_1_k = MSarr_list[0][:, k]  # Save the mode shape from first setup
