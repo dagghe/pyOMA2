@@ -160,7 +160,7 @@ def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
         )
         ax1.plot(
             fsval,
-            10 * np.log10(SDOFbell[idSV].real / SDOFbell[np.argmax(SDOFbell)]),
+            10 * np.log10(SDOFbell[idSV].real / SDOFbell[np.argmax(SDOFbell)].real),
             c="r",
             label="SDOF bell",
         )
@@ -192,8 +192,10 @@ def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
         ax4.text(
             left,
             top,
-            r"""$f_n$ = %.3f
-        $\xi$ = %.2f%s"""
+            r"""
+$f_n$ = %.3f
+$\xi$ = %.2f%s
+"""
             % (fn_EFDD, float(xi_EFDD) * 100, "%"),
             transform=ax4.transAxes,
         )
