@@ -151,42 +151,29 @@ def SD_Est(
     """
     if method == "cor":
         Ndat = Yref.shape[1]  # number of data points
-        # n_ref =  Yref.shape[0] # number of data points
-        # n_all = Yall.shape[0]
+        n_ref = Yref.shape[0]
+        n_all = Yall.shape[0]
         # Calculating Auto e Cross-Spectral Density (Y_all, Y_ref)
-        logger.debug("Estimating spectrum...")
-        R_i = np.array(
-            [
-                1 / (Ndat - ii) * np.dot(Yall[:, : Ndat - ii], Yref[:, ii:].T)
-                for ii in trange(nxseg)
-            ]
+        _, Pxy = signal.csd(
+            Yall.reshape(n_all, 1, Ndat),
+            Yref.reshape(1, n_ref, Ndat),
+            nperseg=nxseg // 2,
+            nfft=nxseg,
+            noverlap=0,
+            window="boxcar",
         )
-        logger.debug("... Done!")
+        Rxy = np.fft.irfft(Pxy)
 
-        nxseg, nr, nc = R_i.shape
-        # N.B. beta = 1/tau
-        tau = -(nxseg - 1) / np.log(0.01)
-        W = signal.windows.exponential(nxseg, center=0, tau=tau, sym=False)
-        R = np.zeros((nr, nc, nxseg))
-        for ii in range(nr):
-            for jj in range(nc):
-                R[ii, jj, :] = R_i[:, ii, jj] * W
-
-        Sy = np.zeros((nr, nc, nxseg), dtype=complex)
-        R11 = np.zeros(nxseg)
-        for r in range(nr):
-            for c in range(nc):
-                R11 = R[r, c, :]
-                # for full spectrum, do not multiply by zero
-                R1 = np.concatenate((R11, np.flipud(R11[:nxseg]) * 0))
-                G = np.fft.fft(R1)
-                Sy[r, c, :] = G[:nxseg]
-        freq = np.arange(0, nxseg) * (1 / dt / (2 * nxseg))  # Frequency vector
+        tau = -Rxy.shape[2] / np.log(0.01)
+        win = signal.windows.exponential(Rxy.shape[2], center=0, tau=tau, sym=False)
+        Rxy *= win
+        Sy = np.fft.rfft(Rxy)
+        freq = np.arange(0, Sy.shape[2]) * (1 / dt / (nxseg))  # Frequency vector
 
     elif method == "per":
         noverlap = nxseg * pov
-        Ndat = Yref.shape[1]  # number of data points
-        n_ref = Yref.shape[0]  # number of data points
+        Ndat = Yref.shape[1]
+        n_ref = Yref.shape[0]
         n_all = Yall.shape[0]
         # Calculating Auto e Cross-Spectral Density (Y_all, Y_ref)
         freq, Sy = signal.csd(

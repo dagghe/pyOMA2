@@ -250,7 +250,6 @@ def pLSCF_MPE(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab=None, deltaf=0.05, r
     #     raise ValueError(
     #         f"The argument order must either be 'find_min' or be and integer, your input is {order}"
     #     )
-    Phi_pol = np.moveaxis(Phi_pol, 1, 0)
     if order == "find_min" and Lab is None:
         raise ValueError(
             "When order ='find_min', one must also provide the Lab list for the poles"
