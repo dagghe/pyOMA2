@@ -5,7 +5,7 @@ Authors:
 Dag Pasca
 Diego Margoni
 """
-# FIXME DIEGO (set_result, set_data)
+
 from __future__ import annotations
 
 import abc
@@ -54,9 +54,9 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         Initializes the algorithm with optional run parameters and a name.
     set_run_params(self, run_params)
         Sets the run parameters for the algorithm.
-    set_result(self, result)
+    _set_result(self, result)
         Assigns the result to the algorithm after execution.
-    set_data(self, data, fs)
+    _set_data(self, data, fs)
         Sets the input data and sampling frequency for the algorithm.
     __class_getitem__(cls, item)
         Evaluates the types of `RunParamCls` and `ResultCls` at runtime.
@@ -184,7 +184,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         self.run_params = run_params
         return self
 
-    def set_result(self, result: T_Result) -> "BaseAlgorithm":
+    def _set_result(self, result: T_Result) -> "BaseAlgorithm":
         """
         Set the result of the algorithm.
 
@@ -272,7 +272,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         if not self.result:
             raise ValueError(f"{self.name}:Run algorithm first")
 
-    def set_data(self, data: T_Data, fs: float) -> "BaseAlgorithm":
+    def _set_data(self, data: T_Data, fs: float) -> "BaseAlgorithm":
         """
         Set the input data and sampling frequency for the algorithm.
 

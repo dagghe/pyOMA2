@@ -213,86 +213,7 @@ def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
 # -----------------------------------------------------------------------------
 
 # COMMENT
-def Stab_pLSCF_plot(Fn, Lab, ordmax, freqlim=None, hide_poles=True, Sval=None, nSv=None):
-    """
-    Plots a stabilization chart for the pLSCF (polyreference Least Squares Complex Frequency domain) method.
-
-    Parameters
-    ----------
-    Fn : ndarray
-        An array containing the frequencies of poles for each model order and identification run.
-    Lab : ndarray
-        An array of labels indicating the stability of each pole (e.g., stable pole,
-        stable damping, stable frequency, unstable pole).
-    ordmax : int
-        The maximum model order to be displayed on the plot.
-    freqlim : tuple of float, optional
-        The upper frequency limit for the plot. If None, includes all frequencies. Default is None.
-    hide_poles : bool, optional
-        If True, only stable poles are plotted. If False, all types of poles are plotted. Default is True.
-    Sval : ndarray, optional
-        Singular values to be plotted on a twin axis. Not implemented yet. Default is None.
-    nSv : int, optional
-        Number of singular values to be plotted. Not implemented yet. Default is None.
-
-    Returns
-    -------
-    tuple
-        fig : matplotlib.figure.Figure
-            The matplotlib figure object.
-        ax1 : matplotlib.axes.Axes
-            The axes object with the stabilization chart.
-    """
-    # TO DO: Add sval plot on twin ax
-
-    # Stable pole
-    a = np.where(Lab == 3, Fn, np.nan)
-    # Stable damping
-    b = np.where(Lab == 2, Fn, np.nan)
-    # Stable frequency
-    c = np.where(Lab == 1, Fn, np.nan)
-    # Unstable pole
-    d = np.where(Lab == 0, Fn, np.nan)
-
-    fig, ax1 = plt.subplots()
-    ax1.set_title("Stabilisation Chart")
-    ax1.set_ylabel("Model Order")
-    ax1.set_xlabel("Frequency [Hz]")
-
-    if hide_poles:
-        x = a.flatten(order="f")
-        y = np.array([i // len(a) for i in range(len(x))])
-
-        ax1.plot(x, y, "go", markersize=7, label="Stable pole")
-
-    else:
-        x = a.flatten(order="f")
-        x1 = b.flatten(order="f")
-        x2 = c.flatten(order="f")
-        x3 = d.flatten(order="f")
-
-        y = np.array([i // len(a) for i in range(len(x))])
-
-        ax1.plot(x, y, "go", markersize=7, label="Stable pole")
-
-        ax1.scatter(x1, y, marker="o", s=4, c="#FFFF00", label="Stable damping")
-        ax1.scatter(x2, y, marker="o", s=4, c="#FFFF00", label="Stable frequency")
-        ax1.scatter(x3, y, marker="o", s=4, c="r", label="Unstable pole")
-
-        ax1.legend(loc="lower center", ncol=2)
-        ax1.set_ylim(0, ordmax + 1)
-
-    ax1.grid()
-    if freqlim is not None:
-        ax1.set_xlim(freqlim[0], freqlim[1])
-    plt.tight_layout()
-    return fig, ax1
-
-
-# -----------------------------------------------------------------------------
-
-# COMMENT
-def Stab_SSI_plot(
+def Stab_plot(
     Fn,
     Lab,
     step,
@@ -304,7 +225,7 @@ def Stab_SSI_plot(
     ax=None,
 ):
     """
-    Plots a stabilization chart for the Stochastic Subspace Identification (SSI) method.
+    Plots the stabilization chart.
 
     Parameters
     ----------

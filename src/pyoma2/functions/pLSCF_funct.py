@@ -3,12 +3,16 @@ poly-reference Least Square Complex Frequency (pLSCF) Utility Functions module.
 Part of the pyOMA2 package.
 Authors:
 Dag Pasca
-Angelo Aloisio
 """
+import itertools
 import logging
 
 import numpy as np
 
+# import matplotlib.pyplot as plt
+from tqdm import tqdm
+
+np.seterr(divide="ignore", invalid="ignore")
 logger = logging.getLogger(__name__)
 
 # =============================================================================
@@ -16,253 +20,345 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-def pLSCF(Sy, dt, ordmax):
-    """
-    Perform system identification using the p-LSCF (poly-reference Least Square
-    Complex Frequency) method, also known as polyMAX.
+def pLSCF(
+    Sy,
+    dt,
+    ordmax,
+    sgn_basf=-1,
+):
+    if sgn_basf == -1:
+        constr = "LO"
+    if sgn_basf == 1:
+        constr = "HI"
 
-    Parameters:
-    Sy (numpy.ndarray): 3D array representing the power spectral density (PSD) matrix.
-                        Shape should be (Nf, Nch, Nref), where:
-                        Nf - Number of frequencies,
-                        Nch - Number of channels, and
-                        Nref - Number of reference channels.
-
-    dt (float): Time resolution or sampling interval.
-
-    ordmax (int): Maximum model order for calculating the companion matrix.
-
-    Returns:
-    list: List of companion matrices for each order up to ordmax.
-
-    Notes:"""
-    Nf = Sy.shape[2]
-    freq = np.arange(0, Nf) * (1 / dt / (2 * Nf))
-    # p-LSCF - METODO CON MATRICI REALI
-    freq_w = 2 * np.pi * freq
-
-    # The PSD matrix should be in the format (k, o, o) where:
-    # k=1,2,...Nf; and o=1,2...Nch
-    Sy = np.moveaxis(Sy, 2, 0)
-    Nf = Sy.shape[0]
     Nch = Sy.shape[1]
-    Nref = Sy.shape[2]
-    A = []
-    # Calculation of companion matrix A and modal parameters for each order
-    for j in range(1, ordmax + 1):  # loop for increasing model order
-        M = np.zeros(((j + 1) * Nref, (j + 1) * Nref))  # inizializzo
-        X0 = np.array([np.exp(1j * freq_w * dt * jj) for jj in range(j + 1)]).T
-        X0h = X0.conj().T  # Calculate complex transpose
-        R0 = np.real(np.dot(X0h, X0))  # 4.163
+    Nref = Sy.shape[0]
+    Nf = Sy.shape[2]
 
-        for o in range(0, Nch):  # loop on channels
-            Y0 = np.array([np.kron(-X0[kk, :], Sy[kk, o, :]) for kk in range(Nf)])
-            S0 = np.real(np.dot(X0h, Y0))  # 4.164
-            T0 = np.real(np.dot(Y0.conj().T, Y0))  # 4.165
-            # np.linalg.solve(R0, S0))) # 4.167
-            M += 2 * (T0 - np.dot(np.dot(S0.T, np.linalg.inv(R0)), S0))
-        alfa = np.linalg.solve(
-            -M[: j * Nref, : j * Nref], M[: j * Nref, j * Nref : (j + 1) * Nref]
-        )  # 4.169
-        alfa = np.vstack((alfa, np.eye(Nref)))
-        # beta0 = np.linalg.solve(-R0, np.dot(S0,alfa))
-        # Companion matrix
-        AA = np.zeros((j * Nref, j * Nref))
-        for ii in range(j):
-            Aj = alfa[ii * Nref : (ii + 1) * Nref, :]
-            AA[(j - 1) * Nref :, ii * Nref : (ii + 1) * Nref] = -Aj.T
-        if j == 1:
-            A.append(np.zeros((0, 0)))
-        AA[: (j - 1) * Nref, Nref : j * Nref] = np.eye((j - 1) * Nref)
-        A.append(AA)
-    return A
+    fs = 1 / dt
+    freq = np.linspace(0.0, fs / 2, Nf)
+    omega = 2 * np.pi * freq
+    Omega = np.exp(sgn_basf * 1j * omega * dt)
 
+    Ad = []
+    Bn = []
+    for n in range(1, ordmax + 1):
+        M = np.zeros(((n + 1) * Nch, (n + 1) * Nch))  # iNchzializzo
+        Xo = np.array([Omega**i for i in range(n + 1)]).T
+        Xoh = Xo.conj().T
+        Ro = np.real(np.dot(Xoh, Xo))  # 4.163
+        So_s = []
+        for o in range(0, Nref):  # loop on channels
+            Syo = Sy[o, :, :]
+            Yo = np.array([-np.kron(xo, Hoi) for xo, Hoi in zip(Xo, Syo.T)])
+            So = np.real(np.dot(Xoh, Yo))  # 4.164
+            To = np.real(np.dot(Yo.conj().T, Yo))  # 4.165
+            # M += To - np.dot(np.dot(So.T, np.linalg.inv(Ro)), So)
+            M += To - np.dot(So.T.conj(), np.linalg.solve(Ro, So))
+            So_s.append(So)
 
-# -----------------------------------------------------------------------------
-
-
-def pLSCF_Poles(A, ordmax, dt, methodSy, nxseg, Nref=None):
-    Nch = int(A[1].shape[0])
-    if Nref is None:
-        Nref = Nch
-    Fn = np.full((ordmax * Nch, ordmax + 1), np.nan)  # initialise
-    Sm = np.full((ordmax * Nch, ordmax + 1), np.nan)  # initialise
-    # initialise    for ii in range(NAC):
-    Ls = np.full((ordmax * Nch, ordmax + 1), np.nan, dtype=complex)
-    for j in range(1, ordmax + 1):  # loop for increasing model order
-        # Eigenvalueproblem
-        [my, My] = np.linalg.eig(A[j])
-        lambd = np.log(my) / dt  # From discrete-time to continuous time 4.136
-        # replace with nan every value with negative real part (should be the other way around!)
-        lambd = np.where(np.real(lambd) < 0, np.nan, lambd)
-        if methodSy == "cor":  # correct for exponential window
-            tau = -(nxseg - 1) / np.log(0.01)
-            lambd = lambd - 1 / tau
-
-        Ls[: (j) * Nch, (j)] = lambd
-        # Natural frequencies (Hz) 4.137
-        Fn[: (j) * Nch, (j)] = abs(lambd) / (2 * np.pi)
-        # Damping ratio initial calc 4.139
-        Sm[: (j) * Nch, (j)] = (np.real(lambd)) / abs(lambd)
-    return Fn, Sm, Ls
-
-
-# -----------------------------------------------------------------------------
-
-
-def Lab_stab_pLSCF(Fn, Sm, ordmax, err_fn, err_xi, max_xi):
-    """
-    Helping function for the construction of the Stability Chart when using
-    poly-reference Least Square Complex Frequency (pLSCF, also known as
-    Polymax) method.
-
-    This function performs stability analysis of identified poles,
-    it categorizes modes based on their stability in terms
-    of frequency and damping.
-
-    :param Fr: Frequency matrix, shape: ``(n_locations, n_modes)``
-    :param Sm: Damping matrix, shape: ``(n_locations, n_modes)``
-    :param ordmax: Maximum order of modes to consider (exclusive)
-    :param err_fn: Threshold for relative frequency difference for stability checks
-    :param err_xi: Threshold for relative damping ratio difference for stability checks
-    :param nch: Number of channels (modes) in the analysis
-
-    :return: Stability label matrix (Lab), shape: ``(n_locations, n_modes)``
-        - 3: Stable Pole (frequency and damping)
-        - 2: Stable damping
-        - 1: Stable frequency
-        - 0: New or unstable pole
-
-    Note:
-
-    """
-    Lab = np.zeros(Fn.shape, dtype="int")
-
-    # -----------------------------------------------------------------------------
-    # REMOVING HARD CONDITIONS
-    # Create Mask array to pick only damping xi, which are xi> 0 and xi<max_xi
-    Mask = np.logical_and(Sm < max_xi, Sm > 0).astype(int)
-    # Mask Damping Array
-    Sm1 = Sm * Mask
-    Sm1[Sm1 == 0] = np.nan
-    # Mask Frequency Array
-    Fn1 = Fn * Mask
-    Fn1[Fn1 == 0] = np.nan
-
-    # -----------------------------------------------------------------------------
-    # STABILITY BETWEEN CONSECUTIVE ORDERS
-    for nn in range(1, ordmax + 1):
-
-        f_n = Fn1[:, nn].reshape(-1, 1)
-        xi_n = Sm[:, nn].reshape(-1, 1)
-
-        f_n1 = Fn1[:, nn - 1].reshape(-1, 1)
-        xi_n1 = Sm[:, nn - 1].reshape(-1, 1)
-
-        if nn != 0:
-
-            for i in range(len(f_n)):
-
-                if np.isnan(f_n[i]):
-                    pass
-                else:
-                    try:
-                        idx = np.nanargmin(np.abs(f_n1 - f_n[i]))
-
-                        cond1 = np.abs(f_n[i] - f_n1[idx]) / f_n[i]
-                        cond2 = np.abs(xi_n[i] - xi_n1[idx]) / xi_n[i]
-
-                        if cond1 < err_fn and cond2 < err_xi:
-                            Lab[i, nn] = 3  # Stable Pole
-
-                        elif cond2 < err_xi:
-                            Lab[i, nn] = 2  # Stable damping
-
-                        elif cond1 < err_fn:
-                            Lab[i, nn] = 1  # Stable frequency
-
-                        else:
-                            Lab[i, nn] = 0  # Nuovo polo o polo instabile
-                    except Exception as e:
-                        logger.debug(e)
-    return Lab
-
-
-# -----------------------------------------------------------------------------
-
-# FIXME
-# The returned mode shapes are wrong!
-# find the error!
-def pLSCF_MPE_New(sel_freq, Sy, Fn_pol, Sm_pol, Ls_pol, order, dt, DF=1):
-    """
-    Bla bla bla
-    """
-    sel_freq1 = []
-    sel_xi = []
-    sel_lam = []
-    for fj in sel_freq:
-        if order == "find_min":
-            # here we find the minimum model order so to get a stable pole for every mode of interest
-            pass
-        else:  # when the model order is provided
-            # Find closest frequency index
-            sel = np.nanargmin(np.abs(Fn_pol[:, order] - fj))
-
-            sel_freq1.append(Fn_pol[:, order][sel])
-            sel_xi.append(Sm_pol[:, order][sel])
-            sel_lam.append(Ls_pol[:, order][sel])
-
-    Nch, Nref, Nf = Sy.shape
-    w_sel = np.array(sel_freq) * (2 * np.pi)
-    Nm = len(sel_lam)  # numero modi
-    Phi = np.zeros((Nch, Nm), dtype=complex)
-    freq = np.arange(0, Nf) * (1 / dt / (2 * Nf))
-    freq_rad = 2 * np.pi * freq
-    LL = np.zeros((Nch * 2 * Nm, Nch * 2 * Nm), dtype=complex)  # inizializzo
-    GL = np.zeros((Nch * 2 * Nm, Nch), dtype=complex)  # inizializzo
-    Sy = np.moveaxis(Sy, 2, 0)
-    sel_lam_conj = np.conj(sel_lam)
-    sel_lam1 = np.empty((len(sel_lam) * 2), dtype=complex)
-    sel_lam1[0::2] = sel_lam
-    sel_lam1[1::2] = sel_lam_conj
-
-    for kk in range(Nf):
-        GL += np.array(
-            [Sy[kk, :, :] / (1j * freq_rad[kk] - sel_lam1[jj]) for jj in range(2 * Nm)]
-        ).reshape(-1, Nch)
-
-        LL += np.array(
-            [
-                np.array(
-                    [
-                        np.eye(Nch)
-                        / (
-                            (1j * freq_rad[kk] - sel_lam1[jj1])
-                            * (1j * freq_rad[kk] - sel_lam1[jj2])
-                        )
-                        for jj2 in range(2 * Nm)
-                    ]
-                )
-                .reshape((Nch * 2 * Nm, Nch), order="c")
-                .T
-                for jj1 in range(2 * Nm)
+        if constr == "LO":
+            alpha = np.r_[
+                np.eye(Nch),
+                np.linalg.solve(
+                    -M[Nch : (n + 1) * Nch, Nch : (n + 1) * Nch],
+                    M[Nch : (n + 1) * Nch, 0:Nch],
+                ),
             ]
-        ).reshape((Nch * 2 * Nm, Nch * 2 * Nm))
+        elif constr == "HI":
+            alpha = np.r_[
+                np.linalg.solve(
+                    -M[0 : n * Nch, 0 : n * Nch], M[0 : n * Nch, n * Nch : (n + 1) * Nch]
+                ),
+                np.eye(Nch),
+            ]
 
-    R = np.linalg.solve(LL, GL)  # matrice dei residui (fi@fi^T
+        A_den = alpha.reshape((-1, Nch, Nch))
+        beta = np.array(
+            [np.linalg.solve(-Ro, np.dot(So_s[o], alpha)) for o in range(Nref)]
+        )
+        B_num = np.moveaxis(beta, 1, 0)
+        Ad.append(A_den)
+        Bn.append(B_num)
 
-    for jj in range(len(w_sel)):
-        # SVD della matrice dei residui per ciascun modo fisico del sistema
-        U, S, VT = np.linalg.svd(R[jj * Nch : (jj + 1) * Nch, :])
+    return Ad, Bn
 
-        phi = U[:, 0]  # la forma modale è la prima colonna di U
 
-        idmax = np.argmax(abs(phi))
-        phiN = phi / phi[idmax]  # normalised (unity displacement)
+def pLSCF_Poles(Ad, Bn, dt, methodSy, nxseg):
+    Fns = []
+    Xis = []
+    Phis = []
+    for ii in range(len(Ad)):
+        A_den = Ad[ii]
+        B_num = Bn[ii]
 
-        Phi[:, jj] = phiN
-    # Save results
+        A, C = rmfd2AC(A_den, B_num)
+
+        fn, xi, phi = AC2MP_poly(A, C, dt, methodSy, nxseg)
+        fn[fn == np.inf] = np.nan
+        Fns.append(fn)
+        Xis.append(xi)
+        Phis.append(phi)
+    # Transform each array in list
+    Fns = [list(c) for c in Fns]
+    Xis = [list(c) for c in Xis]
+    Phi1 = [list(c) for c in Phis]
+
+    # Fill with nan values so to get same size and then convert back to array
+    Fns = np.array(list(itertools.zip_longest(*Fns, fillvalue=np.nan)))
+    Xis = np.array(list(itertools.zip_longest(*Xis, fillvalue=np.nan)))
+    Phi1 = []
+    for phi in Phis:
+        phi1 = np.full((len(Phis[-1]), phi.shape[1]), np.nan).astype(complex)
+        phi1[: len(phi)] = phi
+        Phi1.append(phi1)
+
+    Phi1 = np.array(Phi1)
+
+    return Fns, Xis, Phi1
+
+
+def rmfd2AC(A_den, B_num):
+    """
+
+
+    Parameters
+    ----------
+    A_den : TYPE
+        DESCRIPTION.
+    B_num : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    n, l, m = B_num.shape
+    A = np.zeros((n * m, n * m))
+    A[m:, :-m] = np.eye((n - 1) * m)
+    C = np.zeros((l, n * m))
+    Bn_last = B_num[-1]
+    Ad_last = A_den[-1]
+    for i, (Adi, Bni) in enumerate(zip(A_den[:-1][::-1], B_num[:-1][::-1])):
+        prod = np.linalg.solve(Ad_last, Adi)
+        A[:m, i * m : (i + 1) * m] = -prod
+        C[:, i * m : (i + 1) * m] = Bni - np.dot(Bn_last, prod)
+    return A, C
+
+
+def AC2MP_poly(A, C, dt, methodSy, nxseg):
+    """
+    Convert state-space representation (A, C matrices) to modal parameters.
+
+    Parameters
+    ----------
+    A : numpy.ndarray
+        State matrix of the system.
+    C : numpy.ndarray
+        Output matrix of the system.
+    dt : float
+        Time step or sampling interval (1/fs, where fs is the sampling frequency).
+
+    Returns
+    -------
+    tuple
+        - fn : numpy.ndarray
+            Natural frequencies in Hz.
+        - xi : numpy.ndarray
+            Damping ratios.
+        - phi : numpy.ndarray
+            Complex mode shapes.
+    """
+    Nch = C.shape[0]
+    AuVal, AuVett = np.linalg.eig(A)
+    lambd1 = (np.log(AuVal)) * (1 / dt)
+    # replace with nan every value with positive real part
+    lambd = np.where(np.real(lambd1) > 0, np.nan, lambd1)
+    # also for the part fact
+    Q = np.array(
+        [
+            np.where(
+                np.real(lambd1[ii]) > 0, np.repeat(np.nan, AuVett.shape[1]), AuVett[:, ii]
+            )
+            for ii in range(len(lambd))
+        ]
+    ).T
+    # correct for exponential window
+    if methodSy == "cor":
+        tau = -(nxseg - 1) / np.log(0.01)
+        lambd = lambd - 1 / tau
+    fn = abs(lambd) / (2 * np.pi)  # natural frequencies
+    xi = -((np.real(lambd)) / (abs(lambd)))  # damping ratios
+    # Complex mode shapes
+    phi = np.dot(C, Q)
+    # normalised (unity displacement)
+    phi = np.array(
+        [phi[:, ii] / phi[np.argmax(abs(phi[:, ii])), ii] for ii in range(phi.shape[1])]
+    ).reshape(-1, Nch)
+    return fn, xi, phi
+
+
+# -----------------------------------------------------------------------------
+
+
+def pLSCF_MPE(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab=None, deltaf=0.05, rtol=1e-2):
+    """
+    Extract modal parameters using XXX method for selected frequencies.
+
+    Parameters
+    ----------
+    sel_freq : list
+        List of selected frequencies for modal parameter extraction.
+    Fn_pol : numpy.ndarray
+        Array of natural frequencies obtained from SSI for each model order.
+    Sm_pol : numpy.ndarray
+        Array of damping ratios obtained from SSI for each model order.
+    Ms_pol : numpy.ndarray
+        3D array of mode shapes obtained from SSI for each model order.
+    order : int, list of int, or 'find_min'
+        Specifies the model order(s) for which the modal parameters are to be extracted.
+        If 'find_min', the function attempts to find the minimum model order that provides
+        stable poles for each mode of interest.
+    Lab : numpy.ndarray, optional
+        Array of labels identifying stable poles. Required if order='find_min'.
+    deltaf : float, optional
+        Frequency bandwidth around each selected frequency for searching poles. Default is 0.05.
+    rtol : float, optional
+        Relative tolerance for comparing frequencies. Default is 1e-2.
+
+    Returns
+    -------
+    tuple
+        Fn : numpy.ndarray
+            Extracted natural frequencies.
+        Xi : numpy.ndarray
+            Extracted damping ratios.
+        Phi : numpy.ndarray
+            Extracted mode shapes.
+        order_out : numpy.ndarray or int
+            Output model order used for extraction for each frequency.
+
+    Raises
+    ------
+    ValueError
+        If 'order' is not an int, list of int, or 'find_min', or if 'order' is 'find_min'
+        but 'Lab' is not provided.
+    """
+
+    # if order != "find_min" and type(order) != int and type(order) != list[int]:
+    #     raise ValueError(
+    #         f"The argument order must either be 'find_min' or be and integer, your input is {order}"
+    #     )
+    Phi_pol = np.moveaxis(Phi_pol, 1, 0)
+    if order == "find_min" and Lab is None:
+        raise ValueError(
+            "When order ='find_min', one must also provide the Lab list for the poles"
+        )
+    sel_xi = []
+    sel_phi = []
+    sel_freq1 = []
+    # Loop through the frequencies given in the input list
+    logger.info("Extracting SSI modal parameters")
+    order_out = np.empty(len(sel_freq))
+    for ii, fj in enumerate(tqdm(sel_freq)):
+        # =============================================================================
+        # OPZIONE order = "find_min"
+        # here we find the minimum model order so to get a stable pole for every mode of interest
+        # -----------------------------------------------------------------------------
+        if order == "find_min":
+            # keep only Stable pole
+            a = np.where(Lab == 7, Fn_pol, np.nan)
+            # find the limits for the search
+            limits = [(fj - deltaf, fj + deltaf) for fj in sel_freq]
+            # find poles between limits and append them to list
+            aas = [
+                np.where(((a < limits[ii][1]) & (a > limits[ii][0])), a, np.nan)
+                for ii in range(len(sel_freq))
+            ]
+            # =============================================================================
+            # N.B if deltaf is too big and a +- limits includes also another frequency from
+            # sel_freq, then the method of adding the matrices together in the next loop
+            # wont work.
+            # DOVREI ESCLUDERE LE FREQUENZE CHE HANNO FORME MODALI DIVERSE (MAC<0.85?)
+            # RISPETTO AD UNA FORMA DI RIFERIMENTO FORNITA
+            # =============================================================================
+            # then loop through list
+            aa = 0
+            for bb in aas:
+                # transform nan into 0 (so to be able to add the matrices together)
+                bb = np.nan_to_num(bb, copy=True, nan=0.0)
+                aa += bb
+            # convert back 0s to nans
+            aa = np.where(aa == 0, np.nan, aa)
+
+            ii = 0
+            check = np.array([False, False])
+            while check.any() == False:
+                # try:
+                fn_at_ord_ii = aa[:, ii]
+                fn_at_ord_ii = np.unique(fn_at_ord_ii)
+                # remove nans
+                fn_at_ord_ii = fn_at_ord_ii[~np.isnan(fn_at_ord_ii)]
+
+                if fn_at_ord_ii.shape[0] == len(sel_freq):
+                    check = np.isclose(fn_at_ord_ii, sel_freq, rtol=rtol)
+                else:
+                    pass
+                if ii == aa.shape[1] - 1:
+                    logger.warning("Could not find any values")
+                    break
+                ii += 1
+                # except:
+                #     pass
+            ii -= 1  # remove last iteration to find the correct index
+
+            sel_freq1 = fn_at_ord_ii
+            sel_xi = []
+            sel_phi = []
+            b = aa[:, ii]
+            c = b[~np.isnan(b)]
+            if c.any():
+                for fj in sel_freq1:
+                    r_ind = np.nanargmin(np.abs(b - fj))
+                    sel_xi.append(Xi_pol[r_ind, ii])
+                    sel_phi.append(Phi_pol[r_ind, ii, :])
+            order_out = ii
+        # =============================================================================
+        # OPZIONE 2 order = int
+        # -----------------------------------------------------------------------------
+        elif type(order) == int:
+            sel = np.nanargmin(np.abs(Fn_pol[:, order] - fj))
+            fns_at_ord_ii = Fn_pol[:, order][sel]
+            check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)
+            if not check.any():
+                logger.warning("Could not find any values")
+                order_out = order
+            else:
+                sel_freq1.append(Fn_pol[:, order][sel])
+                sel_xi.append(Xi_pol[:, order][sel])
+                sel_phi.append(Phi_pol[:, order][sel, :])
+                order_out = order
+        # =============================================================================
+        # OPZIONE 3 order = list[int]
+        # -----------------------------------------------------------------------------
+        elif type(order) == list:
+            sel = np.nanargmin(np.abs(Fn_pol[:, order[ii]] - fj))
+            fns_at_ord_ii = Fn_pol[:, order[ii]][sel]
+            check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)
+            if not check.any():
+                logger.warning("Could not find any values")
+                order_out[ii] = order[ii]
+            else:
+                sel_freq1.append(Fn_pol[:, order[ii]][sel])
+                sel_xi.append(Xi_pol[:, order[ii]][sel])
+                sel_phi.append(Phi_pol[:, order[ii]][sel, :])
+                order_out[ii] = order[ii]
+        else:
+            raise ValueError('order must be either of type(int) or "find_min"')
+    logger.debug("Done!")
+
     Fn = np.array(sel_freq1)
+    Phi = np.array(sel_phi).T
     Xi = np.array(sel_xi)
-
-    return Fn, Xi, Phi
+    return Fn, Xi, Phi, order_out

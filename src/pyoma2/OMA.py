@@ -106,7 +106,7 @@ class BaseSetup:
         """
         self.algorithms = {
             **self.algorithms,
-            **{alg.name: alg.set_data(data=self.data, fs=self.fs) for alg in algorithms},
+            **{alg.name: alg._set_data(data=self.data, fs=self.fs) for alg in algorithms},
         }
 
     # run the whole set of algorithms (methods). METODO 1 di tutti
@@ -149,7 +149,7 @@ class BaseSetup:
         logger.debug("...with parameters: %s", self[name].run_params)
         result = self[name].run()
         logger.debug("...saving %s result", name)
-        self[name].set_result(result)
+        self[name]._set_result(result)
 
     # get the modal properties (all results).
     def MPE(self, name: str, *args, **kwargs):
@@ -623,7 +623,7 @@ class SingleSetup(BaseSetup):
         return fig, ax
 
     # method to decimate data
-    def decimate_data(self, q: int, axis: int = 0, **kwargs):
+    def decimate_data(self, q: int, **kwargs):
         """
         Applies decimation to the data using the scipy.signal.decimate function.
 
@@ -661,12 +661,12 @@ class SingleSetup(BaseSetup):
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
 
-        self.data = decimate(self.data, q, axis, **kwargs)
+        self.data = decimate(self.data, q, axis=0, **kwargs)
         self.fs = self.fs / q
         self.dt = 1 / self.fs
 
     # method to detrend data
-    def detrend_data(self, axis: int = 0, **kwargs):
+    def detrend_data(self, **kwargs):
         """
         Applies detrending to the data using the scipy.signal.detrend function.
 
@@ -696,7 +696,7 @@ class SingleSetup(BaseSetup):
         For further information, see `scipy.signal.detrend
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
         """
-        self.data = detrend(self.data, axis, **kwargs)
+        self.data = detrend(self.data, axis=0, **kwargs)
 
     # metodo per definire geometria 1
     def def_geo1(
