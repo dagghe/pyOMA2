@@ -37,12 +37,12 @@ class EFDDRunParams(BaseModel):
     pov: float = 0.5
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[npt.NDArray[np.float64]] = None
-    DF1: float = (0.1,)
-    DF2: float = (1.0,)
-    cm: int = (1,)
-    MAClim: float = (0.85,)
-    sppk: int = (3,)
-    npmax: int = (20,)
+    DF1: float = 0.1
+    DF2: float = 1.0
+    cm: int = 1
+    MAClim: float = 0.85
+    sppk: int = 3
+    npmax: int = 20
 
 
 class SSIRunParams(BaseModel):
@@ -63,8 +63,8 @@ class SSIRunParams(BaseModel):
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"
-    deltaf: float = (0.05,)
-    rtol: float = (1e-2,)
+    deltaf: float = 0.05
+    rtol: float = 1e-2
 
 
 class pLSCFRunParams(BaseModel):
@@ -86,5 +86,5 @@ class pLSCFRunParams(BaseModel):
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"
-    deltaf: float = (0.05,)
-    rtol: float = (1e-2,)
+    deltaf: float = 0.05
+    rtol: float = 1e-2

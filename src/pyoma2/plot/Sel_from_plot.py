@@ -25,7 +25,7 @@ if typing.TYPE_CHECKING:
 
 from pyoma2.functions.plot_funct import (
     CMIF_plot,
-    Stab_SSI_plot,
+    Stab_plot,
 )
 
 logger = logging.getLogger(__name__)

@@ -18,12 +18,7 @@ from pyoma2.algorithm.data.result import pLSCFResult
 
 # from .result import BaseResult
 from pyoma2.algorithm.data.run_params import pLSCFRunParams
-from pyoma2.functions import (
-    FDD_funct,
-    Gen_funct,
-    plot_funct,
-    pLSCF_funct_new,
-)
+from pyoma2.functions import FDD_funct, Gen_funct, plot_funct, pLSCF_funct
 from pyoma2.functions.plot_funct import (
     plt_lines,
     plt_nodes,
@@ -46,7 +41,7 @@ logger = logging.getLogger(__name__)
 # SINGLE SETUP
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
+class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
     """_summary_
 
     Args:
@@ -63,9 +58,9 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         pov = self.run_params.pov
+        sgn_basf = self.run_params.sgn_basf
         ordmax = self.run_params.ordmax
         ordmin = self.run_params.ordmin
-        step = self.run_params.step
         err_fn = self.run_params.err_fn
         err_xi = self.run_params.err_xi
         err_phi = self.run_params.err_phi
@@ -74,8 +69,8 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
 
         freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, method=method, pov=pov)
 
-        Ad, Bn = pLSCF(Sy, self.dt, self.ordmax, sgn_basf=self.sgn_basf)
-        Fn_pol, Xi_pol, Ms_pol = pLSCF_funct_new.pLSCF_Poles(
+        Ad, Bn = pLSCF_funct.pLSCF(Sy, self.dt, ordmax, sgn_basf=sgn_basf)
+        Fn_pol, Xi_pol, Ms_pol = pLSCF_funct.pLSCF_Poles(
             Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
         )
         Lab = Gen_funct.Lab_stab(
@@ -84,7 +79,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
             Ms_pol,
             ordmin,
             ordmax,
-            step,
+            step=1,
             err_fn=err_fn,
             err_xi=err_xi,
             err_ms=err_phi,
@@ -126,7 +121,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         Lab = self.result.Lab
 
         # Extract modal results
-        Fn_SSI, Xi_SSI, Phi_SSI, order_out = pLSCF_funct_new.pLSCF_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI, order_out = pLSCF_funct.pLSCF_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, deltaf=deltaf, rtol=rtol
         )
 
@@ -160,7 +155,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         order = SFP.result[1]
 
         # e poi estrarre risultati
-        Fn_SSI, Xi_SSI, Phi_SSI, order_out = pLSCF_funct_new.SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI, order_out = pLSCF_funct.pLSCF_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=deltaf, rtol=rtol
         )
 
@@ -176,7 +171,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
         """ """
-        fig, ax = plot_funct.Stab_SSI_plot(
+        fig, ax = plot_funct.Stab_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,
             step=self.run_params.step,
@@ -457,7 +452,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
             raise ValueError("Run algorithm first")
 
         Res = self.result
-        logger.debug("Running AniMode SSI...")
+        logger.debug("Running AniMode...")
         AniMode(
             Geo=Geo2,
             Res=Res,
@@ -469,7 +464,60 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
             remove_grid=remove_grid,
             saveGIF=saveGIF,
         )
-        logger.debug("...end AniMode SSI...")
+        logger.debug("...end AniMode...")
 
 
-# ------------------------------------------------------------------------------
+# =============================================================================
+# MULTI SETUP
+# =============================================================================
+class pLSCF_algo_MS(pLSCF_algo[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
+    RunParamCls = pLSCFRunParams
+    ResultCls = pLSCFResult
+
+    def run(self) -> pLSCFResult:
+        """ """
+
+        super()._pre_run()
+        Y = self.data
+        nxseg = self.run_params.nxseg
+        method = self.run_params.method_SD
+        pov = self.run_params.pov
+        sgn_basf = self.run_params.sgn_basf
+        step = self.run_params.step
+        ordmax = self.run_params.ordmax
+        ordmin = self.run_params.ordmin
+        err_fn = self.run_params.err_fn
+        err_xi = self.run_params.err_xi
+        err_phi = self.run_params.err_phi
+        xi_max = self.run_params.xi_max
+        # self.run_params.df = 1 / dt / nxseg
+
+        freq, Sy = FDD_funct.SD_PreGER(Y, self.fs, nxseg=nxseg, method=method, pov=pov)
+        Ad, Bn = pLSCF_funct.pLSCF(Sy, self.dt, ordmax, sgn_basf=sgn_basf)
+        Fn_pol, Xi_pol, Ms_pol = pLSCF_funct.pLSCF_Poles(
+            Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
+        )
+        Lab = Gen_funct.Lab_stab(
+            Fn_pol,
+            Xi_pol,
+            Ms_pol,
+            ordmin,
+            ordmax,
+            step,
+            err_fn=err_fn,
+            err_xi=err_xi,
+            err_ms=err_phi,
+            max_xi=xi_max,
+        )
+
+        # Return results
+        return self.ResultCls(
+            freq=freq,
+            Sy=Sy,
+            Ad=Ad,
+            Bn=Bn,
+            Fn_poles=Fn_pol,
+            xi_poles=Xi_pol,
+            Phi_poles=Ms_pol,
+            Lab=Lab,
+        )
