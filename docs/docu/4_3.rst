@@ -18,7 +18,6 @@ Functions:
     - :func:`.SSI_FAST`: Efficient implementation of the SSI system identification.
     - :func:`.SSI_Poles`: Computes modal parameters from identified state-space models.
     - :func:`.SSI_MulSet`: SSI for multiple setup measurements.
-    - :func:`.Lab_stab_SSI`: Constructs a Stability Chart for SSI.
     - :func:`.SSI_MPE`: Extracts modal parameters for selected frequencies.
 
 .. automodule:: pyoma2.functions.SSI_funct
