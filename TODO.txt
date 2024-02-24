@@ -1,3 +1,0 @@
-1. Cambiare a privati i metodi "set_data" e "set_result" in OMA.py []
-2. nbsphinx si dovrebbe poter togliere dai requirements della docu []
-3.
