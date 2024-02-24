@@ -353,7 +353,7 @@ def Stab_plot(
 # -----------------------------------------------------------------------------
 
 
-def Cluster_plot(
+def Cluster_SSI_plot(
     Fn,
     Sm,
     Lab,
@@ -481,6 +481,95 @@ def Cluster_plot(
 
 
 # -----------------------------------------------------------------------------
+
+
+def Cluster_pLSCF_plot(
+    Fn,
+    Sm,
+    Lab,
+    ordmax,
+    ordmin=0,
+    freqlim=None,
+    hide_poles=True,
+):
+    """
+    Plots the frequency-damping clusters of the identified poles using the polyreference
+    Least Squares Complex Frequency (pLSCF) method.
+
+    Parameters
+    ----------
+    Fn : ndarray
+        An array containing the frequencies of poles for each model order.
+    Sm : ndarray
+        An array containing the damping ratios associated with the poles in `Fn`.
+    Lab : ndarray
+        An array of labels indicating the stability status of each pole, where different numbers
+        represent different stability statuses.
+    ordmax : int
+        The maximum model order to be displayed on the plot.
+    ordmin : int, optional
+        The minimum model order to be displayed on the plot. Default is 0.
+    freqlim : tuple of float, optional
+        The upper frequency limit for the plot. If None, includes all frequencies. Default is None.
+    hide_poles : bool, optional
+        If True, only stable poles are plotted. If False, all types of poles are plotted. Default is True.
+
+    Returns
+    -------
+    tuple
+        fig : matplotlib.figure.Figure
+            The matplotlib figure object.
+        ax1 : matplotlib.axes.Axes
+            The axes object with the stabilization chart.
+    """
+    # Stable pole
+    a = np.where(Lab == 3, Fn, np.nan)
+    aa = np.where(Lab == 3, Sm, np.nan)
+    # Stable damping
+    b = np.where(Lab == 2, Fn, np.nan)
+    bb = np.where(Lab == 2, Sm, np.nan)
+    # Stable frequency
+    c = np.where(Lab == 1, Fn, np.nan)
+    cc = np.where(Lab == 1, Sm, np.nan)
+    # Unstable pole
+    d = np.where(Lab == 0, Fn, np.nan)
+    dd = np.where(Lab == 0, Sm, np.nan)
+
+    fig, ax1 = plt.subplots()
+    ax1.set_title("Stabilisation Chart")
+    ax1.set_ylabel("Model Order")
+    ax1.set_xlabel("Frequency [Hz]")
+
+    if hide_poles:
+        x = a.flatten(order="f")
+        y = aa.flatten(order="f")
+
+        ax1.plot(x, y, "go", markersize=7, label="Stable pole")
+
+    else:
+        x = a.flatten(order="f")
+        y = aa.flatten(order="f")
+        x1 = b.flatten(order="f")
+        y1 = bb.flatten(order="f")
+        x2 = c.flatten(order="f")
+        y2 = cc.flatten(order="f")
+        x3 = d.flatten(order="f")
+        y3 = dd.flatten(order="f")
+
+        ax1.plot(x, y, "go", markersize=7, label="Stable pole")
+
+        ax1.scatter(x1, y1, marker="o", s=4, c="#FFFF00", label="Stable damping")
+        ax1.scatter(x2, y2, marker="o", s=4, c="#FFFF00", label="Stable frequency")
+        ax1.scatter(x3, y3, marker="o", s=4, c="r", label="Unstable pole")
+
+        ax1.legend(loc="lower center", ncol=2)
+        ax1.set_ylim(0, ordmax + 1)
+
+    ax1.grid()
+    if freqlim is not None:
+        ax1.set_xlim(freqlim[0], freqlim[1])
+    plt.tight_layout()
+    return fig, ax1
 
 
 # =============================================================================

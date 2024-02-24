@@ -11,6 +11,7 @@
    docu/1 Setup Classes
    docu/2_1 Algo_fdd
    docu/2_2 Algo_ssi
+   docu/2_3 Algo_plscf
 
 ===============
 Support modules

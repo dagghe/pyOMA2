@@ -13,3 +13,4 @@ The following functions are the "foundamental bricks" to perform the analyses.
    4_2
    4_3
    4_4
+   4_5

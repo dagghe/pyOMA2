@@ -14,6 +14,7 @@ Functions:
     - :func:`.PRE_MultiSetup`: Preprocesses data from multiple setups, distinguishing between reference and moving sensors.
     - :func:`.invperm`: Computes the inverse permutation of an array.
     - :func:`.find_map`: Establishes a mapping between two arrays based on sorting order.
+    - :func:`.Lab_stab`: Get the labels to construct the Stability Chart.
 
 
 .. automodule:: pyoma2.functions.Gen_funct

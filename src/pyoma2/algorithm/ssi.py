@@ -297,7 +297,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         if not self.result:
             raise ValueError("Run algorithm first")
 
-        fig, ax = plot_funct.Cluster_SSI_plot(
+        fig, ax = plot_funct.Cluster_plot(
             Fn=self.result.Fn_poles,
             Sm=self.result.xi_poles,
             Lab=self.result.Lab,
