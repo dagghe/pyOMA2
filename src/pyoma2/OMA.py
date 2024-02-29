@@ -576,7 +576,7 @@ class SingleSetup(BaseSetup):
     # Method to plot info on channel (TH,auto-corr,PSD,PDF,dataVSgauss)
     def plot_ch_info(
         self,
-        nxseg: float | None = None,
+        nxseg: float = 1024,
         ch_idx: str | list[int] = "all",
         freqlim: tuple[float, float] | None = None,
         logscale: bool = True,
@@ -2075,7 +2075,7 @@ class MultiSetup_PreGER(BaseSetup):
     def plot_ch_info(
         self,
         data_idx: str | list[int] = "all",
-        nxseg: float | None = None,
+        nxseg: float = 1024,
         ch_idx: str | list[int] = "all",
         freqlim: tuple[float, float] | None = None,
         logscale: bool = True,
