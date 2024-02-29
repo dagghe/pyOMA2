@@ -7,13 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2024-02-29
+
 ### Added
+- `plscf` module for polymax
+- `plot_STFT()` to plot the Short Time Fourier Transform magnitude of a channel (time-frequency plot)
+- `filter_data()` method to apply a Butterworth filter to the dataset
+- origin and reference axes (xyz) in modeshape plots and animations
 
 ### Fixed
 - axis argument for `detrend_data()` and `decimate_data()` methods
+- minor fixes to `plot_data()` method
 
 ### Changed
-
+- revised `plot_ch_info()` method to assess quality of data
+- `Stab_plot()` and `Cluster_plot()` functions have been revised so that `plot_cluster()` `plot_STDiag()` methods work for both ssi and plscf
 
 ## [0.3.2] - 2024-02-17
 
