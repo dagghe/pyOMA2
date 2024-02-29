@@ -8,6 +8,7 @@ import logging
 import typing
 
 import numpy as np
+from scipy import signal
 
 logger = logging.getLogger(__name__)
 
@@ -459,3 +460,50 @@ def find_map(arr1, arr2):
     o1 = np.argsort(arr1)
     o2 = np.argsort(arr2)
     return o2[invperm(o1)]
+
+
+# -----------------------------------------------------------------------------
+
+
+def filter_data(data, fs, Wn, order=4, btype="lowpass"):
+    """
+    Apply a Butterworth filter to the input data.
+
+    This function designs and applies a digital Butterworth filter to the input data array. The filter
+    is applied in a forward-backward manner using the second-order sections representation to minimize
+    phase distortion.
+
+    Parameters
+    ----------
+    data : array_like
+        The input signal to filter. If `data` is a multi-dimensional array, the filter is applied along
+        the first axis.
+    fs : float
+        The sampling frequency of the input data.
+    Wn : array_like
+        The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar; for
+        bandpass and bandstop filters, Wn is a length-2 sequence.
+    order : int, optional
+        The order of the filter. Higher order means a sharper frequency cutoff, but the filter will
+        also be less stable. The default is 4.
+    btype : str, optional
+        The type of filter to apply. Can be 'lowpass', 'highpass', 'bandpass', or 'bandstop'. The default
+        is 'lowpass'.
+
+    Returns
+    -------
+    filt_data : ndarray
+        The filtered signal.
+
+    Note
+    ----
+    This function uses `scipy.signal.butter` to design the filter and `scipy.signal.sosfiltfilt` for
+    filtering to apply the filter in a zero-phase manner, which does not introduce phase delay to the
+    filtered signal. For more information, see the scipy documentation for `signal.butter`
+    (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html) and `signal.sosfiltfilt`
+    (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html).
+
+    """
+    sos = signal.butter(order, Wn, btype=btype, output="sos", fs=fs)
+    filt_data = signal.sosfiltfilt(sos, data, axis=0)
+    return filt_data

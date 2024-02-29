@@ -10,7 +10,8 @@ import logging
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 import numpy as np
-from scipy import signal, stats
+from scipy import signal
+from scipy.interpolate import interp1d
 
 logger = logging.getLogger(__name__)
 
@@ -664,28 +665,31 @@ def plt_quiver(
 
 
 def set_ax_options(
-    ax, bg_color="w", remove_fill=True, remove_grid=True, remove_axis=True
+    ax, bg_color="w", remove_fill=True, remove_grid=True, remove_axis=True, add_orig=True
 ):
     """
-    Configures various display options for a given matplotlib axes object.
+    Configures various display options for a given matplotlib 3D axes object.
 
     Parameters
     ----------
-    ax : matplotlib.axes.Axes
-        The axes object to be configured.
+    ax : matplotlib.axes._subplots.Axes3DSubplot
+        The 3D axes object to be configured.
     bg_color : str, optional
-        Background color for the axes panes. Default is "w" (white).
+        Background color for the axes. Default is "w" (white).
     remove_fill : bool, optional
         If True, removes the fill from the axes panes. Default is True.
     remove_grid : bool, optional
         If True, removes the grid from the axes. Default is True.
     remove_axis : bool, optional
         If True, turns off the axis lines, labels, and ticks. Default is True.
+    add_orig : bool, optional
+        If True, adds origin lines for the x, y, and z axes in red, green, and blue, respectively.
+        Default is True.
 
     Returns
     -------
-    matplotlib.axes.Axes
-        The modified axes object with the applied configurations.
+    matplotlib.axes._subplots.Axes3DSubplot
+        The modified 3D axes object with the applied configurations.
 
     Note
     -----
@@ -708,6 +712,24 @@ def set_ax_options(
     if remove_axis:
         # Turn off axis
         ax.set_axis_off()
+    if add_orig:
+        Or = (0, 0, 0)
+        CS = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        _colours = ["r", "g", "b"]
+        _axname = ["x", "y", "z"]
+        for ii, _col in enumerate(_colours):
+            ax.plot([Or[0], CS[ii, 0]], [Or[1], CS[ii, 1]], [Or[2], CS[ii, 2]], c=_col)
+            # Q = ax.quiver(
+            #     Or[0], Or[1], Or[2], (CS[ii,0] - Or[0]), (CS[ii,1] - Or[1]), (CS[ii,2] - Or[2]),
+            #     color=_col,)
+            ax.text(
+                (CS[ii, 0] - Or[0]),
+                (CS[ii, 1] - Or[1]),
+                (CS[ii, 2] - Or[2]),
+                f"{_axname[ii]}",
+                color=_col,
+            )
+
     return ax
 
 
@@ -767,7 +789,7 @@ def set_view(ax, view):
 # =============================================================================
 
 
-def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
+def plt_data(data, fs, nc=1, names=None, unit="unit", show_rms=False):
     """
     Plots time series data for multiple channels, with an option to include the Root Mean Square (RMS)
       of each signal.
@@ -777,8 +799,8 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
     data : ndarray
         A 2D array with dimensions [number of data points, number of channels], representing signal data
         for multiple channels.
-    dt : float
-        Time interval between data points.
+    fs : float
+        Sampling frequency.
     nc : int, optional
         Number of columns for subplots, indicating how many subplots per row to display. Default is 1.
     names : list of str, optional
@@ -813,12 +835,12 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
 
     Ndat = data.shape[0]  # number of data points
     Nch = data.shape[1]  # number of channels
-    timef = Ndat / (1 / dt)  # final time value
-    time = np.linspace(0, timef - dt, Ndat)  # time array
+    timef = Ndat / fs  # final time value
+    time = np.linspace(0, timef - 1 / fs, Ndat)  # time array
 
     nr = round(Nch / nc)  # number of rows in the subplot
-    fig, axs = plt.subplots(nrows=nr, ncols=nc, sharex=True, sharey=True)
-    fig.suptitle("Plot of the Time Histories of all channels")
+    fig, axs = plt.subplots(figsize=(8, 6), nrows=nr, ncols=nc, sharex=True, sharey=True)
+    fig.suptitle("Time Histories of all channels")
 
     kk = 0  # iterator for the dataset
     for ii in range(nr):
@@ -829,7 +851,7 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
                 ax = axs[ii, jj]
                 try:
                     # while kk < data.shape[1]
-                    ax.plot(time, data[:, kk])
+                    ax.plot(time, data[:, kk], c="k")
                     if names is not None:
                         ax.set_title(f"{names[kk]}")
                     if ii == nr - 1:
@@ -841,17 +863,17 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
                             time,
                             np.repeat(a_rmss[kk], len(time)),
                             label=f"arms={a_rmss[kk][0]:.3f}",
+                            c="r",
                         )
                         ax.legend()
                 except Exception as e:
                     logger.exception(e)
-                    # if k > data.shape[1]
-                    pass
+
                 kk += 1
         # if there is only 1 column
         else:
             ax = axs[ii]
-            ax.plot(time, data[:, kk])
+            ax.plot(time, data[:, kk], c="k")
             if names is not None:
                 ax.set_title(f"{names[kk]}")
             if ii == nr - 1:
@@ -861,11 +883,14 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
                     time,
                     np.repeat(a_rmss[kk], len(time)),
                     label=f"arms={a_rmss[kk]:.3f}",
+                    c="r",
                 )
                 ax.legend()
             ax.set_ylabel(f"{unit}")
             kk += 1
+        ax.grid()
     plt.tight_layout()
+
     return fig, ax
 
 
@@ -873,106 +898,232 @@ def plt_data(data, dt, nc=1, names=None, unit="unit", show_rms=False):
 
 
 def plt_ch_info(
-    data,
-    fs,
-    ch_idx="all",
-    ch_names=None,
-    freqlim=None,
-    logscale=True,
-    nxseg=None,
-    pov=0.0,
-    window="boxcar",
+    data, fs, nxseg=1024, freqlim=None, logscale=False, ch_idx="all", unit="unit"
 ):
     """
-    Generates plots for time history, power spectral density (PSD), and kernel density estimation
-    (KDE) for each channel in a multi-channel dataset.
+    Plot channel information including time history, normalised auto-correlation,
+    power spectral density (PSD), probability density function, and a normal
+    probability plot for each channel in the data.
 
     Parameters
     ----------
     data : ndarray
-        A 2D array with dimensions [number of data points, number of channels], representing signal data for
-        multiple channels.
+        The input signal data.
     fs : float
-        The sampling frequency of the data.
-    ch_idx : list of int or str, optional
-        Indices of channels to plot. If "all", plots all channels. Default is "all".
-    ch_names : list of str, optional
-        Names of the channels, used for titling plots if provided. Default is None.
+        The sampling frequency of the input data in Hz.
+    nxseg : int, optional
+        The number of points per segment.
     freqlim : tuple of float, optional
-        The frequency range (lower, upper) for the PSD plot. If None, includes all frequencies.
+        The frequency limits (min, max) for the PSD plot. If None, the full frequency range is used.
         Default is None.
     logscale : bool, optional
-        If True, uses a logarithmic scale for the PSD plot. If False, uses a linear scale. Default is True.
-    nxseg : int, optional
-        Number of data points per segment for PSD calculation using the Welch method. If None, uses full
-        length of the channel data. Default is None.
-    pov : float, optional
-        Proportion of overlap between segments in PSD calculation. Default is 0.0.
-    window : str, optional
-        Type of window function used in PSD calculation. Default is "boxcar".
+        If True, the PSD plot will be in log scale (decibel). Otherwise, it will be in linear scale.
+        Default is False.
+    ch_idx : int, list of int, or "all", optional
+        The index (indices) of the channel(s) to plot. If "all", information for all channels is plotted.
+        Default is "all".
+    unit : str, optional
+        The unit of the input data for labelling the PSD plot. Default is "unit".
 
     Returns
     -------
-    tuple
-        figs : list of matplotlib.figure.Figure
-            A list of matplotlib figure objects for each channel.
-        axs : list of matplotlib.axes.Axes
-            A list of axis objects for the generated subplots.
+    fig : matplotlib.figure.Figure
+        The figure object containing all the plots.
+    axes : list of matplotlib.axes.Axes
+        The list of axes objects corresponding to each subplot.
 
     Note
     -----
-    Each figure includes three subplots: time history, PSD, and KDE for the respective channel.
-    Allows for comprehensive analysis of each channel's signal characteristics.
+    This function is designed to provide a comprehensive overview of the signal characteristics for one or
+    multiple channels of a dataset. It plots the time history, normalised auto-correlation, PSD, probability
+    density function, and a normal probability plot for each specified channel.
     """
     if ch_idx != "all":
+
         data = data[:, ch_idx]
+
     ndat, nch = data.shape
-    figs = []
+
     for ii in range(nch):
         fig = plt.figure(figsize=(8, 6), layout="constrained")
-        spec = fig.add_gridspec(2, 2)
+        spec = fig.add_gridspec(3, 2)
 
         # select channel
-        ch = data[:, ii]
+        x = data[:, ii]
 
-        # plot TH
+        # Normalize data
+        x = x - np.mean(x)
+        x = x / np.std(x)
+        sorted_x = np.sort(x)
+        n = len(x)
+        y = np.arange(1, n + 1) / n
+
+        # Adjusted axis limits
+        xlim = max(abs(sorted_x.min()), abs(sorted_x.max()))
+        ylim = max(
+            abs(np.sort(np.random.randn(n)).min()), abs(np.sort(np.random.randn(n)).max())
+        )
+        maxlim = np.max((xlim, ylim))
+
+        # Plot 1: Time History
         ax0 = fig.add_subplot(spec[0, :])
-        ax0.plot(ch)
+        ax0.plot(np.linspace(0, len(x) / fs, len(x)), x, c="k")
         ax0.set_xlabel("Time [s]")
         ax0.set_title("Time History")
         ax0.set_ylabel("Unit")
+        ax0.grid()
 
-        # plot psd
-        if nxseg is None:
-            nxseg = len(ch)
-        noverlap = nxseg * pov
-        # FFT = np.fft.rfft(ch,nxseg)
-        # freq = np.fft.rfftfreq(nxseg,dt)
-        freq, psd = signal.welch(
-            ch, fs, nperseg=nxseg, noverlap=noverlap, window=window, scaling="spectrum"
-        )
+        # Plot 2: Normalised auto-correlation
         ax10 = fig.add_subplot(spec[1, 0])
+        # R_i = np.array([ 1/(ndat - kk) * np.dot(x[:ndat-kk], x[kk:].T)  for kk in range(nxseg)])
+        R_i = signal.correlate(x, x, mode="full")[len(x) - 1 : len(x) + nxseg - 1]
+        R_i /= np.max(R_i)
+        ax10.plot(np.linspace(0, len(R_i) / fs, len(R_i)), R_i, c="k")
+        ax10.set_xlabel("Time [s]")
+        ax10.set_ylabel("Norm. auto-corr.")
+        ax10.set_title("Normalised auto-correlation")
+        ax10.grid()
 
+        # Plot 3: PSD
+        freq, psd = signal.welch(
+            x,
+            fs,
+            nperseg=nxseg,
+            noverlap=nxseg * 0.5,
+            window="hann",
+        )
+        ax20 = fig.add_subplot(spec[2, 0])
         if logscale is True:
-            ax10.plot(freq, 10 * np.log10(psd / psd[np.argmax(psd)]))
+            ax20.plot(freq, 10 * np.log10(psd), c="k")
+            ax20.set_ylabel(f"dB rel. to {unit}")
         elif logscale is False:
-            ax10.plot(freq, np.sqrt(psd))
+            ax20.plot(freq, np.sqrt(psd), c="k")
+            ax20.set_ylabel(rf"${unit}^2 / Hz$")
         if freqlim is not None:
-            ax10.set_xlim(freqlim[0], freqlim[1])
-        ax10.set_xlabel("Frequency [Hz]")
-        ax10.set_ylabel("dB rel. to unit")
-        ax10.set_title("PSD")
+            ax20.set_xlim(freqlim[0], freqlim[1])
+        ax20.set_xlabel("Frequency [Hz]")
+        ax20.set_title("PSD")
+        ax20.grid()
 
-        # KDE of TH
+        # Plot 4: Density function
         ax11 = fig.add_subplot(spec[1, 1])
-        kde = stats.gaussian_kde(ch)
-        x_grid = np.linspace(ch.min(), ch.max(), 200)
-        ax11.plot(x_grid, kde.evaluate(x_grid))
-        ax11.set_title("KDE on channel data")
+        xm = min(abs(min(sorted_x)), abs(max(sorted_x)))
+        dx = nxseg * xm / n
+        xi = np.arange(-xm, xm + dx, dx)
+        Fi = interp1d(sorted_x, y, kind="linear", fill_value="extrapolate")(xi)
+        F2 = Fi[1:]
+        F1 = Fi[:-1]
+        f = (F2 - F1) / dx
+        xf = (xi[1:] + xi[:-1]) / 2
+        ax11.plot(
+            xf,
+            f,
+            "k",
+        )
+        ax11.set_title("Probability Density Function")
+        ax11.set_xlabel(
+            "Normalised data",
+        )
+        ax11.set_ylabel("Probability")
+        ax11.set_xlim(-xlim, xlim)
+        ax11.grid()
 
-        if ch_names is not None:
-            fig.suptitle(f"{ch_names[ii]}")
+        # Plot 5: Normal probability plot
+        ax21 = fig.add_subplot(spec[2, 1])
+        np.random.seed(0)
+        xn = np.random.randn(n)
+        sxn = np.sort(xn)
+        ax21.plot(sorted_x, sxn, "k+", markersize=5)
+        ax21.set_title(
+            "Normal probability plot",
+        )
+        ax21.set_xlabel(
+            "Normalised data",
+        )
+        ax21.set_ylabel(
+            "Gaussian axis",
+        )
+        ax21.grid()
+        ax21.set_xlim(-maxlim, maxlim)
+        ax21.set_ylim(-maxlim, maxlim)
 
-        axs = [ax0, ax10, ax11]
+        if ch_idx != "all":
+            fig.suptitle(f"Info plot channel nr.{ch_idx[ii]}")
+        else:
+            fig.suptitle(f"Info plot channel nr.{ii}")
+
+    return fig, [ax0, ax10, ax20, ax11, ax21]
+
+
+# -----------------------------------------------------------------------------
+# Short time Fourier transform - SPECTROGRAM
+def STFT(data, fs, nxseg=512, pov=0.9, win="hann", freqlim=None, ch_idx="all"):
+    """
+    Perform the Short Time Fourier Transform (STFT) to generate spectrograms for given signal data.
+
+    This function computes the STFT for each channel in the signal data, visualising the frequency content
+    of the signal over time. It allows for the selection of specific channels and customisation of the
+    STFT computation parameters.
+
+    Parameters
+    ----------
+    data : ndarray
+        The input signal data.
+    fs : float
+        The sampling frequency of the input data in Hz.
+    nxseg : int, optional
+        The number of points per segment for the STFT. Default is 512.
+    pov : float, optional
+        The proportion of overlap between segments, expressed as a value between 0 and 1. Default is 0.9.
+    win : str, optional
+        The type of window function to apply. Default is "hann".
+    freqlim : tuple of float, optional
+        The frequency limits (minimum, maximum) for the frequency axis of the spectrogram. If None,
+        the full frequency range is used. Default is None.
+    ch_idx : int, list of int, or "all", optional
+        The index (indices) of the channel(s) to compute the STFT for. If "all", the STFT for all
+        channels is computed. Default is "all".
+
+    Returns
+    -------
+    figs : list of matplotlib.figure.Figure
+        The list of figure objects created, each corresponding to a channel in the input data.
+    axs : list of matplotlib.axes.Axes
+        The list of Axes objects corresponding to each figure, used for plotting the spectrograms.
+
+    Notes
+    -----
+    The function visualises the magnitude of the STFT, showing how the frequency content of the signal
+    changes over time. This is useful for analysing non-stationary signals. The function returns the
+    figures and axes for further customisation or display.
+    """
+    if ch_idx != "all":
+        data = data[:, ch_idx]
+
+    ndat, nch = data.shape
+    figs = []
+    axs = []
+    for ii in range(nch):
+        # select channel
+        ch = data[:, ii]
+        fig = plt.figure(figsize=(8, 6))
+        ax = fig.add_subplot()
+        ax.set_title("STFT Magnitude")
+        ax.set_xlabel("Time [sec]")
+        ax.set_ylabel("Frequency [Hz]")
+        # nxseg = w_T*fs
+        noverlap = nxseg * pov
+        freq, time, Sxx = signal.stft(
+            ch, fs, window=win, nperseg=nxseg, noverlap=noverlap
+        )
+        if freqlim is not None:
+            idx1 = np.argmin(abs(freq - freqlim[0]))
+            idx2 = np.argmin(abs(freq - freqlim[1]))
+
+            freq = freq[idx1:idx2]
+            Sxx = Sxx[idx1:idx2]
+        ax.pcolormesh(time, freq, np.abs(Sxx))
+        plt.tight_layout()
         figs.append(fig)
+        axs.append(ax)
     return figs, axs
