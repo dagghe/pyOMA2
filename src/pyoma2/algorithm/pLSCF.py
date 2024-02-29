@@ -1,5 +1,5 @@
 """
-poly-reference Least Square Frequency Domain Module.
+poly-reference Least Square Frequency Domain (pLSCF) Module.
 Part of the pyOMA2 package.
 Authors:
 Dag Pasca

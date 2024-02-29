@@ -21,10 +21,12 @@ from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
 from pyoma2.algorithm.data.result import MsPoserResult
 from pyoma2.functions.Gen_funct import (
     PRE_MultiSetup,
+    filter_data,
     find_map,
     merge_mode_shapes,
 )
 from pyoma2.functions.plot_funct import (
+    STFT,
     plt_ch_info,
     plt_data,
     plt_lines,
@@ -495,23 +497,22 @@ class SingleSetup(BaseSetup):
     plot_ch_info(...)
         Plots Time History (TH), Power Spectral Density (PSD),
         and Kernel Density Estimation (KDE) for each channel.
+    plt_STFT(...)
+        Plots the Short Time Fourier Transform (STFT) magnitude spectrogram for specified channels.
     decimate_data(...)
         Decimates the data using a wrapper for the scipy.signal.decimate function.
     detrend_data(...)
         Detrends the data using a wrapper for the scipy.signal.detrend function.
+    filter_data(...)
+        Applies a Butterworth filter to the input data based on specified parameters.
     def_geo1(...)
-        Defines the first geometry setup (Geo1) for the instance.
+        Defines the first geometry setup (Geo1) for the instances.
     def_geo2(...)
-        Defines the second geometry setup (Geo2) for the instance.
-    __getitem__(...)
-        Retrieve an algorithm from the set by its name.
-    get(...)
-        Retrieve an algorithm from the set by its name, returning a default value if it does not exist.
+        Defines the second geometry setup (Geo2) for the instance..
 
     Notes
     -----
-    - The sampling interval ``dt`` is calculated automatically from the provided sampling frequency.
-    - The ``algorithms`` dictionary is initialized empty and is meant to store various algorithms as needed.
+    The ``algorithms`` dictionary is initialized empty and is meant to store various algorithms as needed.
     """
 
     def __init__(self, data: typing.Iterable[float], fs: float):
@@ -526,8 +527,12 @@ class SingleSetup(BaseSetup):
             The sampling frequency of the data.
         """
         self.data = data  # data
-        self.fs = fs  # sampling frequency
+        self.fs = fs  # sampling frequency [Hz]
         self.dt = 1 / fs  # sampling interval
+        self.Nch = data.shape[1]  # number of channels
+        self.Ndat = data.shape[0]  # number of data points
+        self.T = self.dt * self.Ndat  # Period of acquisition [sec]
+
         self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
 
     # method to plot the time histories of the data channels.
@@ -560,65 +565,131 @@ class SingleSetup(BaseSetup):
             or saving externally.
         """
         data = self.data
-        dt = self.dt
+        fs = self.fs
         nc = nc  # number of columns for subplot
         names = names  # list of names (str) of the channnels
         unit = unit  # str label for the y-axis (unit of measurement)
         show_rms = show_rms  # wheter to show or not the rms acc in the plot
-        fig, ax = plt_data(data, dt, nc, names, unit, show_rms)
+        fig, ax = plt_data(data, fs, nc, names, unit, show_rms)
         return fig, ax
 
-    # method to plot TH, PSD and KDE for each channel
+    # Method to plot info on channel (TH,auto-corr,PSD,PDF,dataVSgauss)
     def plot_ch_info(
         self,
+        nxseg: float | None = None,
         ch_idx: str | list[int] = "all",
-        ch_names: typing.Optional[typing.List[str]] = None,
         freqlim: tuple[float, float] | None = None,
         logscale: bool = True,
-        nxseg: float | None = None,
-        pov: float = 0.0,
-        window: str = "boxcar",
+        unit: str = "unit",
     ):
         """
-        Plots Time History (TH), Power Spectral Density (PSD),
-        and Kernel Density Estimation (KDE) for each channel.
+        Plot channel information including time history, normalized auto-correlation,
+        power spectral density (PSD), probability density function, and normal probability
+        plot for each channel in the data.
 
         Parameters
         ----------
-        ch_idx : str | List[int], optional
-            Channel indices to be plotted. Can be a list of indices or 'all' for all channels.
-            Default is 'all'.
-        ch_names : List[str], optional
-            List of channel names for labeling purposes. Default is None.
-        freqlim : Tuple[float, float] | None, optional
-            Frequency limit for the plots. Default is None.
+        data : ndarray
+            The input signal data.
+        fs : float
+            The sampling frequency of the input data.
+        nxseg : int, optional
+            The number of points per segment for the PSD estimation. Default is 1024.
+        freqlim : tuple of float, optional
+            The frequency limits (min, max) for the PSD plot. Default is None.
         logscale : bool, optional
-            If True, the PSD plot is in logarithmic scale. Default is True.
-        nxseg : float | None, optional
-            Number of segments for the Welch method in PSD calculation. Default is None.
-        pov : float, optional
-            Percentage of overlap for the segments in PSD calculation. Default is 0.
-        window : str, optional
-            Windowing function to be used in PSD calculation. Default is 'boxcar'.
+            If True, the PSD plot will use a logarithmic scale. Default is False.
+        ch_idx : str or list of int, optional
+            The indices of the channels to plot. If "all", information for all channels is plotted.
+            Default is "all".
+        unit : str, optional
+            The unit of the input data for labeling the plots. Default is "unit".
 
         Returns
         -------
-        tuple
-            A tuple containing the figure and axis objects of the plots.
+        figs : list of matplotlib.figure.Figure
+            A list of figure objects, one for each channel plotted.
+        axs : list of matplotlib.axes.Axes
+            A list of Axes objects corresponding to the subplots for each channel's information.
+
+        Notes
+        -----
+        This function provides a comprehensive overview of the signal characteristics for one or
+        multiple channels of a dataset. It's useful for initial signal analysis and understanding
+        signal properties.
         """
         data = self.data
         fs = self.fs
-
         fig, ax = plt_ch_info(
             data,
             fs,
-            ch_idx,
-            ch_names=ch_names,
+            ch_idx=ch_idx,
             freqlim=freqlim,
             logscale=logscale,
             nxseg=nxseg,
+            unit=unit,
+        )
+        return fig, ax
+
+    # Method to plot Short Time Fourier Transform
+    def plot_STFT(
+        self,
+        nxseg: float = 512,
+        pov: float = 0.9,
+        ch_idx: str | list[int] = "all",
+        freqlim: tuple[float, float] | None = None,
+        win: str = "hann",
+    ):
+        """
+        Plot the Short-Time Fourier Transform (STFT) magnitude spectrogram for the specified channels.
+
+        This function computes and plots the STFT magnitude spectrogram for each selected channel in the
+        data. The spectrogram is plotted as a heatmap where the x-axis represents time, the y-axis
+        represents frequency, and the color intensity represents the magnitude of the STFT.
+
+        Parameters
+        ----------
+        data : ndarray
+            The input signal data.
+        fs : float
+            The sampling frequency of the input data.
+        nxseg : int, optional
+            The number of data points used in each segment of the STFT. Default is 512.
+        pov : float, optional
+            The proportion of overlap between consecutive segments, expressed as a decimal between 0 and 1.
+            Default is 0.9.
+        win : str, optional
+            The type of window function to apply to each segment. Default is "hann".
+        freqlim : tuple of float, optional
+            The frequency limits (min, max) for the spectrogram display. Default is None, which uses the
+            full frequency range.
+        ch_idx : str or list of int, optional
+            The indices of the channels to plot. If "all", the STFT for all channels is plotted.
+            Default is "all".
+
+        Returns
+        -------
+        figs : list of matplotlib.figure.Figure
+            A list of figure objects, one for each channel plotted.
+        axs : list of matplotlib.axes.Axes
+            A list of Axes objects corresponding to the figures.
+
+        Notes
+        -----
+        This function is designed to visualize the frequency content of signals over time, which can be
+        particularly useful for analyzing non-stationary signals.
+        """
+
+        data = self.data
+        fs = self.fs
+        fig, ax = STFT(
+            data,
+            fs,
+            nxseg=nxseg,
             pov=pov,
-            window=window,
+            win=win,
+            ch_idx=ch_idx,
+            freqlim=freqlim,
         )
         return fig, ax
 
@@ -664,6 +735,7 @@ class SingleSetup(BaseSetup):
         self.data = decimate(self.data, q, axis=0, **kwargs)
         self.fs = self.fs / q
         self.dt = 1 / self.fs
+        self.Ndat = self.data.shape[0]
 
     # method to detrend data
     def detrend_data(self, **kwargs):
@@ -697,6 +769,56 @@ class SingleSetup(BaseSetup):
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
         """
         self.data = detrend(self.data, axis=0, **kwargs)
+
+    # method to detrend data
+    def filter_data(
+        self,
+        Wn: float | tuple,
+        order: int = 8,
+        btype: str = "lowpass",
+    ):
+        """
+        Apply a Butterworth filter to the input data and return the filtered signal.
+
+        This function designs and applies a Butterworth filter with the specified parameters to the input
+        data. It can be used to apply lowpass, highpass, bandpass, or bandstop filters.
+
+        Parameters
+        ----------
+        data : ndarray
+            The input signal data to be filtered. The filter is applied along the first axis
+            (i.e., each column is filtered independently).
+        fs : float
+            The sampling frequency of the input data.
+        Wn : array_like
+            The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar;
+            for bandpass and bandstop filters, Wn is a length-2 sequence.
+        order : int, optional
+            The order of the filter. A higher order leads to a sharper frequency cutoff but can also
+            lead to instability and significant phase delay. Default is 8.
+        btype : str, optional
+            The type of filter to apply. Options are "lowpass", "highpass", "bandpass", or "bandstop".
+            Default is "lowpass".
+
+        Returns
+        -------
+        filt_data : ndarray
+            The filtered signal, with the same shape as the input data.
+
+        Notes
+        -----
+        For more information, see the scipy documentation for `signal.butter`
+        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
+        and `signal.sosfiltfilt`
+        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html).
+        """
+        self.data = filter_data(
+            self.data,
+            self.fs,
+            Wn=Wn,
+            order=order,
+            btype=btype,
+        )
 
     # metodo per definire geometria 1
     def def_geo1(
@@ -1789,17 +1911,25 @@ class MultiSetup_PreGER(BaseSetup):
     Attributes
     ----------
     fs : float
-        Sampling frequency, assumed to be uniform across all datasets.
+        The common sampling frequency across all datasets.
     dt : float
-        Sampling interval, calculated as the inverse of the sampling frequency.
+        The sampling interval, calculated as the inverse of the sampling frequency.
     ref_ind : list[list[int]]
         Indices of reference sensors for each dataset, as a list of lists.
     datasets : list[npt.NDArray[np.float64]]
-        List of datasets, each represented as a NumPy array.
+        The original list of datasets, each represented as a NumPy array.
     data : npt.NDArray[np.float64]
-        Processed data after applying the PreGER method.
-    algorithms : typing.Dict[str, BaseAlgorithm]
-        Dictionary storing algorithms associated with the setup, keyed by their names.
+        Processed data after applying the PreGER method, ready for analysis.
+    algorithms : dict[str, BaseAlgorithm]
+        Dictionary storing algorithms added to the setup, keyed by their names.
+    Nchs : list[int]
+        A list containing the number of channels for each dataset.
+    Ndats : list[int]
+        A list containing the number of data points for each dataset.
+    Ts : list[float]
+        A list containing the total duration (in seconds) of each dataset.
+    Nsetup : int
+        The number of setups (or datasets) included in the analysis.
 
     Methods
     -------
@@ -1822,10 +1952,15 @@ class MultiSetup_PreGER(BaseSetup):
     plot_ch_info(...)
         Displays Time History (TH), Power Spectral Density (PSD), and Kernel Density Estimation (KDE)
         for each channel.
+    plt_STFT(...)
+        Computes and plots the Short Time Fourier Transform (STFT) magnitude spectrogram for the
+        specified channels.
     decimate_data(...)
         Applies data decimation using scipy.signal.decimate.
     detrend_data(...)
         Detrends data using scipy.signal.detrend.
+    filter_data(...)
+        Applies a Butterworth filter to the input data based on specified parameters.
     def_geo1(...)
         Defines the first type of geometric setup (Geo1) for the instance.
     def_geo2(...)
@@ -1856,13 +1991,28 @@ class MultiSetup_PreGER(BaseSetup):
         datasets : typing.List[npt.NDArray[np.float64]]
             A list of datasets, each as a NumPy array.
         """
-        self.fs = fs
-        self.dt = 1 / fs
-        self.ref_ind = ref_ind
+        self.fs = fs  # sampling frequencies
+        self.dt = 1 / fs  # sampling interval
+        self.ref_ind = ref_ind  # list of (list of) reference indices
+        self.Nsetup = len(ref_ind)
+        # Pre-process the data so to be multi-setup compatible
         Y = PRE_MultiSetup(datasets, ref_ind)
         self.data = Y
         self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
         self.datasets = datasets
+        Nchs = []
+        Ndats = []
+        Ts = []
+        for data in datasets:  # loop through each dataset in the dataset list
+            Nch = data.shape[1]  # number of channels
+            Ndat = data.shape[0]  # number of data points
+            T = self.dt * Ndat  # Period of acquisition [sec]
+            Nchs.append(Nch)
+            Ndats.append(Ndat)
+            Ts.append(T)
+        self.Nchs = Nchs
+        self.Ndats = Ndats
+        self.Ts = Ts
 
     # method to plot the time histories of the data channels.
     def plot_data(
@@ -1906,7 +2056,7 @@ class MultiSetup_PreGER(BaseSetup):
         else:
             datasets = self.datasets
 
-        dt = self.dt
+        fs = self.fs
         figs, axs = [], []
         for ii, data in enumerate(datasets):
             nc = nc  # number of columns for subplot
@@ -1916,7 +2066,7 @@ class MultiSetup_PreGER(BaseSetup):
                 nam = None
             unit = unit  # str label for the y-axis (unit of measurement)
             show_rms = show_rms  # wheter to show or not the rms acc in the plot
-            fig, ax = plt_data(data, dt, nc, nam, unit, show_rms)
+            fig, ax = plt_data(data, fs, nc, nam, unit, show_rms)
             figs.append(fig)
             axs.append(ax)
         return figs, axs
@@ -1925,46 +2075,13 @@ class MultiSetup_PreGER(BaseSetup):
     def plot_ch_info(
         self,
         data_idx: str | list[int] = "all",
+        nxseg: float | None = None,
         ch_idx: str | list[int] = "all",
-        ch_names: typing.Optional[typing.List[str]] = None,
         freqlim: tuple[float, float] | None = None,
         logscale: bool = True,
-        nxseg: float | None = None,
-        pov: float = 0.0,
-        window: str = "boxcar",
+        unit: str = "unit",
     ):
-        """
-        Plots Time History (TH), Power Spectral Density (PSD), and
-        Kernel Density Estimation (KDE) for each channel.
-
-        This method generates plots for TH, PSD, and KDE for the specified channels across
-        multiple datasets. Allows configuration of frequency limits, log scale, segments for
-        PSD calculation, overlap percentage, and windowing function.
-
-        Parameters
-        ----------
-        data_idx : str | list[int], optional
-            Indices of datasets to be plotted. Can be 'all' or a list of indices. Default is 'all'.
-        ch_idx : str | list[int], optional
-            Channel indices to be plotted. Can be 'all' or a list of indices. Default is 'all'.
-        ch_names : typing.Optional[typing.List[str]], optional
-            Channel names for labeling purposes. Default is None.
-        freqlim : float | None, optional
-            Frequency limit for the plots. Default is None.
-        logscale : bool, optional
-            If True, plots PSD in logarithmic scale. Default is True.
-        nxseg : float | None, optional
-            Number of segments for Welch's method in PSD calculation. Default is None.
-        pov : float, optional
-            Percentage of overlap for segments in PSD calculation. Default is 0.
-        window : str, optional
-            Windowing function used in PSD calculation. Default is 'boxcar'.
-
-        Returns
-        -------
-        list
-            A list of tuples, each containing the figure and axes objects for the plots of each dataset.
-        """
+        """ """
         if data_idx != "all":
             datasets = [self.datasets[i] for i in data_idx]
         else:
@@ -1975,13 +2092,42 @@ class MultiSetup_PreGER(BaseSetup):
             fig, ax = plt_ch_info(
                 data,
                 fs,
-                ch_idx,
-                ch_names=ch_names,
+                ch_idx=ch_idx,
                 freqlim=freqlim,
                 logscale=logscale,
                 nxseg=nxseg,
+                unit=unit,
+            )
+            figs.append(fig)
+            axs.append(ax)
+        return figs, axs
+
+    # method to plot TH, PSD and KDE for each channel
+    def plot_STFT(
+        self,
+        data_idx: str | list[int] = "all",
+        nxseg: float = 256,
+        pov: float = 0.9,
+        ch_idx: str | list[int] = "all",
+        freqlim: tuple[float, float] | None = None,
+        win: str = "hann",
+    ):
+        """ """
+        if data_idx != "all":
+            datasets = [self.datasets[i] for i in data_idx]
+        else:
+            datasets = self.datasets
+        fs = self.fs
+        figs, axs = [], []
+        for data in datasets:
+            fig, ax = STFT(
+                data,
+                fs,
+                nxseg=nxseg,
                 pov=pov,
-                window=window,
+                win=win,
+                ch_idx=ch_idx,
+                freqlim=freqlim,
             )
             figs.append(fig)
             axs.append(ax)
@@ -2034,14 +2180,43 @@ class MultiSetup_PreGER(BaseSetup):
         """
         datasets = self.datasets
         newdatasets = []
+        Ndats = []
+        Ts = []
         for data in datasets:
             newdata = decimate(data, q, n, ftype, axis, zero_phase)
             newdatasets.append(newdata)
+            Ndats.append(newdata.shape[0])
+            Ts.append(1 / self.fs / q * newdata.shape[0])
 
         Y = PRE_MultiSetup(newdatasets, self.ref_ind)
         self.data = Y
         self.fs = self.fs / q
         self.dt = 1 / self.fs
+        self.Ndats = Ndats
+        self.Ts = Ts
+
+    # method to detrend data
+    def filter_data(
+        self,
+        Wn: float | tuple,
+        order: int = 8,
+        btype: str = "lowpass",
+    ):
+        """ """
+        datasets = self.datasets
+        newdatasets = []
+        for data in datasets:
+            newdata = filter_data(
+                data,
+                self.fs,
+                Wn=Wn,
+                order=order,
+                btype=btype,
+            )
+            newdatasets.append(newdata)
+
+        Y = PRE_MultiSetup(newdatasets, self.ref_ind)
+        self.data = Y
 
     # method to detrend data
     def detrend_data(

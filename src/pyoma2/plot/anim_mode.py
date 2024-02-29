@@ -173,7 +173,7 @@ class AniMode:
         according to the specified parameters. It uses the geometry and mode shape data to
         animate the mode shape over time.
         """
-        nr_iter = 200
+        nr_iter = 100
 
         # create mode shape dataframe
         df_phi = pd.DataFrame(
