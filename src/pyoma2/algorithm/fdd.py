@@ -97,7 +97,6 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
             An object containing frequency spectrum, spectral density matrix, singular values,
             and vectors as analysis results.
         """
-        super()._pre_run()
         Y = self.data.T
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
@@ -754,8 +753,6 @@ class FDD_algo_MS(FDD_algo[FDDRunParams, FDDResult, typing.Iterable[dict]]):
             An object encapsulating the results of the FDD analysis for multi-setup data, including
             frequency spectrum, merged spectral density matrix, and associated singular values and vectors.
         """
-
-        super()._pre_run()
         Y = self.data
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
@@ -823,8 +820,6 @@ class EFDD_algo_MS(EFDD_algo[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
             An object encapsulating the results of the EFDD analysis for multi-setup data, including enhanced
             frequency spectrum, merged spectral density matrices, and associated singular values and vectors.
         """
-
-        super()._pre_run()
         Y = self.data
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD

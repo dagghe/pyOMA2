@@ -149,6 +149,7 @@ class BaseSetup:
         """
         logger.info("Running %s...", name)
         logger.debug("...with parameters: %s", self[name].run_params)
+        self[name]._pre_run()
         result = self[name].run()
         logger.debug("...saving %s result", name)
         self[name]._set_result(result)
