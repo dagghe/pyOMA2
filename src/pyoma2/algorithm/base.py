@@ -14,8 +14,9 @@ import typing
 from pydantic import BaseModel
 
 from pyoma2.algorithm.data.result import BaseResult
+from pyoma2.algorithm.data.run_params import BaseRunParams
 
-T_RunParams = typing.TypeVar("T_RunParams", bound=BaseModel)
+T_RunParams = typing.TypeVar("T_RunParams", bound=BaseRunParams)
 T_Result = typing.TypeVar("T_Result", bound=BaseResult)
 T_Data = typing.TypeVar("T_Data", bound=typing.Iterable)
 
@@ -160,7 +161,6 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         Implementing classes should handle the algorithm logic within this method and ensure that the
         output is an instance of the `ResultCls`.
         """
-        self._pre_run()
 
     def set_run_params(self, run_params: T_RunParams) -> "BaseAlgorithm":
         """
@@ -322,8 +322,10 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         subclasses of `BaseAlgorithm`.
         """
         # tricky way to evaluate at runtime the type of the RunParamCls and ResultCls
-        cls.RunParamCls = item[0]
-        cls.ResultCls = item[1]
+        if not issubclass(cls, BaseAlgorithm):
+            # avoid evaluating the types for the BaseAlgorithm class itself
+            cls.RunParamCls = item[0]
+            cls.ResultCls = item[1]
         return cls
 
     def __init_subclass__(cls, **kwargs):
@@ -345,11 +347,22 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         functioning of the algorithm's infrastructure.
         """
         super().__init_subclass__(**kwargs)
-        if not hasattr(cls, "RunParamCls") or not issubclass(cls.RunParamCls, BaseModel):
+
+        if not getattr(cls, "RunParamCls", None) or not issubclass(
+            cls.RunParamCls, BaseModel
+        ):
             raise ValueError(
-                f"{cls.__name__}: RunParamCls must be defined in subclasses of BaseAlgorithm"
+                f"{cls.__name__}: RunParamCls must be defined in subclasses of BaseAlgorithm\n\n"
+                "# Example\n"
+                f"class {cls.__name__}:\n"
+                f"\tRunParamCls = ...\n"
             )
-        if not hasattr(cls, "ResultCls") or not issubclass(cls.ResultCls, BaseResult):
+        if not getattr(cls, "ResultCls", None) or not issubclass(
+            cls.ResultCls, BaseResult
+        ):
             raise ValueError(
-                f"{cls.__name__}: ResultCls must be defined in subclasses of BaseResult"
+                f"{cls.__name__}: ResultCls must be defined in subclasses of BaseAlgorithm\n\n"
+                "# Example\n"
+                f"class {cls.__name__}:\n"
+                f"\tResultCls = ...\n"
             )
