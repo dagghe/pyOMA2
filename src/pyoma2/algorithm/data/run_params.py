@@ -11,7 +11,20 @@ import numpy.typing as npt
 from pydantic import BaseModel, ConfigDict
 
 
-class FDDRunParams(BaseModel):
+class BaseRunParams(BaseModel):
+    """
+    Base class for storing run parameters for modal analysis algorithms.
+
+    Attributes
+    ----------
+    model_config : ConfigDict
+        Configuration dictionary containing model attributes, allowing for arbitrary types.
+    """
+
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+
+
+class FDDRunParams(BaseRunParams):
     """
     Class for storing Frequency Domain Decomposition (FDD) run parameters.
 
@@ -33,7 +46,6 @@ class FDDRunParams(BaseModel):
     ``sel_freq`` and ``DF`` are used in the ``MPE`` method.
     """
 
-    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # METODO 1: run
     nxseg: int = 1024
     method_SD: str = "per"
@@ -43,7 +55,7 @@ class FDDRunParams(BaseModel):
     DF: float = 0.1
 
 
-class EFDDRunParams(BaseModel):
+class EFDDRunParams(BaseRunParams):
     """
     Class for storing Enhanced Frequency Domain Decomposition (EFDD) run parameters.
 
@@ -75,7 +87,6 @@ class EFDDRunParams(BaseModel):
     are used in the ``MPE`` method.
     """
 
-    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # METODO 1: run
     nxseg: int = 1024
     method_SD: str = "per"
@@ -90,7 +101,7 @@ class EFDDRunParams(BaseModel):
     npmax: int = 20
 
 
-class SSIRunParams(BaseModel):
+class SSIRunParams(BaseRunParams):
     """
     Class for storing Stochastic Subspace Identification (SSI) run parameters.
 
@@ -130,7 +141,6 @@ class SSIRunParams(BaseModel):
     ``sel_freq``, ``order_in``, ``deltaf`` and ``rtol`` are used in the ``MPE`` method.
     """
 
-    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # METODO 1: run
     br: int
     method: str = None
@@ -149,7 +159,7 @@ class SSIRunParams(BaseModel):
     rtol: float = 1e-2
 
 
-class pLSCFRunParams(BaseModel):
+class pLSCFRunParams(BaseRunParams):
     """
     Class for storing poly-reference Least Square Complex Frequency (pLSCF) run parameters.
 
@@ -190,7 +200,6 @@ class pLSCFRunParams(BaseModel):
     ``sel_freq``, ``order_in``, ``deltaf`` and ``rtol`` are used in the ``MPE`` method.
     """
 
-    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # METODO 1: run
     ordmax: int
     ordmin: int = 0
