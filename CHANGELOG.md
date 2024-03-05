@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `pytest-cov` to qa dependencies
+- first tests
+
+### Changed
+- evaluation types on BaseAlgorithm excluding itself
+- more readable error when defining new algorithms
+- `_pre_run` on algorithms is now called from setup classes
+
+### Fixed
+- `plscf.py` module name https://github.com/dagghe/pyOMA2/issues/5 ( #5 )
+
+
+
 ## [0.4.0] - 2024-02-29
 
 ### Added
