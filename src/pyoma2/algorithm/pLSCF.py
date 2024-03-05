@@ -79,7 +79,6 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
             An instance of `pLSCFResult` containing the analysis results, including frequencies, system
             matrices, identified poles, and their labels.
         """
-        super()._pre_run()
         Y = self.data.T
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
@@ -584,7 +583,6 @@ class pLSCF_algo_MS(pLSCF_algo[pLSCFRunParams, pLSCFResult, typing.Iterable[dict
             system matrices, identified poles, and their labels.
         """
 
-        super()._pre_run()
         Y = self.data
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD

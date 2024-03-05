@@ -98,7 +98,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         SSIResult
             An object containing the computed matrices and modal parameters.
         """
-        super()._pre_run()
         Y = self.data.T
         br = self.run_params.br
         method = self.run_params.method or self.method
@@ -624,7 +623,6 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
             An object containing the system matrices, poles, damping ratios, and mode shapes across
             multiple setups.
         """
-        super()._pre_run()
         Y = self.data
         br = self.run_params.br
         method = self.run_params.method or self.method
