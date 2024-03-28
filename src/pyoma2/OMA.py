@@ -5,6 +5,7 @@ Authors:
 Dag Pasca
 Diego Margoni
 """
+
 from __future__ import annotations
 
 import copy
@@ -289,7 +290,11 @@ class BaseSetup:
 
         # plot sensors' directions
         plt_quiver(
-            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, names=self.Geo1.sens_names
+            ax,
+            sens_coord,
+            self.Geo1.sens_dir,
+            scaleF=scaleF,
+            names=self.Geo1.sens_names,
         )
 
         # Check that BG nodes are defined
@@ -404,7 +409,7 @@ class BaseSetup:
 
         s_sign[s_sign == 0] = np.nan
         ch_names[ch_names == 0] = np.nan
-        for ii in range(3):
+        for _ in range(3):
             s_sign1 = np.hstack((s_sign[:, 0].reshape(-1, 1), zero2))
             s_sign2 = np.insert(zero2, 1, s_sign[:, 1], axis=1)
             s_sign3 = np.hstack((zero2, s_sign[:, 2].reshape(-1, 1)))
@@ -516,14 +521,14 @@ class SingleSetup(BaseSetup):
     The ``algorithms`` dictionary is initialized empty and is meant to store various algorithms as needed.
     """
 
-    def __init__(self, data: typing.Iterable[float], fs: float):
+    def __init__(self, data: np.ndarray, fs: float):
         """
         Initialize a SingleSetup instance with data and sampling frequency.
 
         Parameters
         ----------
-        data : Iterable[float]
-            The data to be processed, expected as an iterable of floats.
+        data : np.ndarray
+            The data to be processed, expected as a 2D array of shape (N, M)
         fs : float
             The sampling frequency of the data.
         """
@@ -1077,9 +1082,9 @@ class MultiSetup_PoSER:
         ValueError
             If any of the provided setups are invalid or incompatible.
         """
-        self._setups = (
-            [el for el in self._init_setups(single_setups)] if single_setups else []
-        )
+        self._setups = [
+            el for el in self._init_setups(setups=single_setups if single_setups else [])
+        ]
         self.ref_ind = ref_ind
         self.__result = None
 
@@ -1166,7 +1171,7 @@ class MultiSetup_PoSER:
                 # check for missing algorithms in a setup
                 setup_algs = [alg.__class__ for alg in setup.algorithms.values()]
                 missing = [
-                    alg_cl for alg_cl in self.__alg_ref.keys() if alg_cl not in setup_algs
+                    alg_cl for alg_cl in self.__alg_ref if alg_cl not in setup_algs
                 ]
                 raise ValueError(
                     f"You must pass all algorithms for setup {i+1}. Missing: {missing}"
@@ -1368,7 +1373,11 @@ class MultiSetup_PoSER:
 
         # plot sensors' directions
         plt_quiver(
-            ax, sens_coord, self.Geo1.sens_dir, scaleF=scaleF, names=self.Geo1.sens_names
+            ax,
+            sens_coord,
+            self.Geo1.sens_dir,
+            scaleF=scaleF,
+            names=self.Geo1.sens_names,
         )
 
         # Check that BG nodes are defined
@@ -1580,7 +1589,7 @@ class MultiSetup_PoSER:
 
         s_sign[s_sign == 0] = np.nan
         ch_names[ch_names == 0] = np.nan
-        for ii in range(3):
+        for _ in range(3):
             s_sign1 = np.hstack((s_sign[:, 0].reshape(-1, 1), zero2))
             s_sign2 = np.insert(zero2, 1, s_sign[:, 1], axis=1)
             s_sign3 = np.hstack((zero2, s_sign[:, 2].reshape(-1, 1)))
@@ -1900,6 +1909,7 @@ class MultiSetup_PoSER:
 
 # -----------------------------------------------------------------------------
 
+
 # FIXME add reference!
 class MultiSetup_PreGER(BaseSetup):
     """
@@ -2061,10 +2071,9 @@ class MultiSetup_PreGER(BaseSetup):
         figs, axs = [], []
         for ii, data in enumerate(datasets):
             nc = nc  # number of columns for subplot
-            if names is not None:
-                nam = names[ii]  # list of names (str) of the channnels
-            else:
-                nam = None
+            nam = (
+                names[ii] if names is not None else None
+            )  # list of names (str) of the channnels
             unit = unit  # str label for the y-axis (unit of measurement)
             show_rms = show_rms  # wheter to show or not the rms acc in the plot
             fig, ax = plt_data(data, fs, nc, nam, unit, show_rms)
