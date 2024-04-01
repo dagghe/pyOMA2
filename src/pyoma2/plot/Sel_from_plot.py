@@ -5,6 +5,7 @@ Authors:
 Dag Pasca
 Diego Margoni
 """
+
 from __future__ import annotations
 
 import glob
@@ -153,7 +154,7 @@ class SelFromPlot:
 
         self.sel_freq = []
 
-        if self.plot == "SSI" or self.plot == "pLSCF":
+        if self.plot in ("SSI", "pLSCF"):
             self.show_legend = 0
             self.hide_poles = 1
 
@@ -178,8 +179,7 @@ class SelFromPlot:
         filemenu.add_command(label="Save figure", command=self.save_this_figure)
         menubar.add_cascade(label="File", menu=filemenu)
 
-        if self.plot == "SSI" or self.plot == "pLSCF":
-
+        if self.plot in ("SSI", "pLSCF"):
             hidepolesmenu = tk.Menu(menubar, tearoff=0)
             hidepolesmenu.add_command(
                 label="Show unstable poles",
@@ -199,7 +199,7 @@ class SelFromPlot:
 
         # =============================================================================
         #         # Program execution
-        if self.plot == "SSI" or self.plot == "pLSCF":
+        if self.plot in ("SSI", "pLSCF"):
             self.plot_stab(self.plot)
         elif self.plot == "FDD":
             self.plot_svPSD()
@@ -214,7 +214,7 @@ class SelFromPlot:
         # Connecting functions to event manager
         self.fig.canvas.mpl_connect("key_press_event", lambda x: self.on_key_press(x))
         self.fig.canvas.mpl_connect("key_release_event", lambda x: self.on_key_release(x))
-        if self.plot == "SSI" or self.plot == "pLSCF":
+        if self.plot in ("SSI", "pLSCF"):
             self.fig.canvas.mpl_connect(
                 "button_press_event", lambda x: self.on_click_SSI(x, self.plot)
             )
@@ -228,7 +228,7 @@ class SelFromPlot:
         self.root.mainloop()
         # ------------------------------------------------------------------------------
         # SET RESULTS
-        if self.plot == "SSI" or self.plot == "pLSCF":
+        if self.plot in ("SSI", "pLSCF"):
             self.result = self.sel_freq, self.pole_ind
         elif self.plot == "FDD":
             self.result = self.sel_freq, None

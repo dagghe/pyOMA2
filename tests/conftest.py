@@ -3,7 +3,7 @@ import typing
 import numpy as np
 import pandas as pd
 import pytest
-from pyoma2.OMA import MultiSetup_PoSER, SingleSetup
+from pyoma2.OMA import BaseSetup, MultiSetup_PoSER, SingleSetup
 
 from .factory import FakeAlgorithm, FakeAlgorithm2, FakeResult, FakeRunParams
 
@@ -62,6 +62,7 @@ def fake_single_setup_fixture_with_param() -> typing.Generator[SingleSetup, None
 
 @pytest.fixture(scope="session")
 def single_setup_data_fixture():
+    """Fixture for SingleSetup data"""
     # load example dataset for single setup
     data = np.load(
         "./src/pyoma2/test_data/palisaden/Palisaden_dataset.npy", allow_pickle=True
@@ -95,17 +96,37 @@ def single_setup_data_fixture():
     )
 
 
-@pytest.fixture(scope="session", name="ss")
-def single_Setup_fixture(
+@pytest.fixture(scope="function", name="bs")
+def base_setup_fixture(
+    single_setup_data_fixture,
+) -> typing.Generator[BaseSetup, None, None]:
+    """
+    Fixture for BaseSetup with parameters.
+
+    it has 2 algorithms:
+        FakeAlgorithm with name "fake_1"
+        FakeAlgorithm2 with name "fake_2"
+    """
+    data, *_ = single_setup_data_fixture
+    ss = BaseSetup()
+    ss.data = data
+    ss.fs = 100
+    yield ss
+
+
+@pytest.fixture(scope="function", name="ss")
+def single_setup_fixture(
     single_setup_data_fixture,
 ) -> typing.Generator[SingleSetup, None, None]:
+    """Fixture for SingleSetup with parameters."""
     data, *_ = single_setup_data_fixture
-    ss = SingleSetup(data=data, fs=1000)
+    ss = SingleSetup(data=data, fs=100)
     yield ss
 
 
 @pytest.fixture(scope="session")
 def multi_setup_data_fixture():
+    """Fixture for MultiSetup data"""
     # import data files
     set1 = np.load("./src/pyoma2/test_data/3SL/set1.npy", allow_pickle=True)
     set2 = np.load("./src/pyoma2/test_data/3SL/set2.npy", allow_pickle=True)
@@ -182,6 +203,7 @@ def multi_setup_data_fixture():
 def multi_setup_poser_fixture(
     multi_setup_data_fixture,
 ) -> typing.Generator[MultiSetup_PoSER, None, None]:
+    """Fixture for MultiSetup Poser with parameters."""
     set1, set2, set3, *_ = multi_setup_data_fixture
     ss1 = SingleSetup(set1, fs=100)
     ss2 = SingleSetup(set2, fs=100)

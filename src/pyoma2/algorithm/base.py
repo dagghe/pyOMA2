@@ -13,6 +13,7 @@ import typing
 
 from pydantic import BaseModel
 
+from pyoma2.algorithm.data.geometry import Geometry1
 from pyoma2.algorithm.data.result import BaseResult
 from pyoma2.algorithm.data.run_params import BaseRunParams
 
@@ -271,6 +272,46 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         # METODO 2 (grafico)
         if not self.result:
             raise ValueError(f"{self.name}:Run algorithm first")
+
+    @abc.abstractmethod
+    def plot_mode_g1(
+        self,
+        Geo1: Geometry1,
+        mode_numb: int,
+        scaleF: int = 1,
+        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
+        remove_fill: bool = True,
+        remove_grid: bool = True,
+        remove_axis: bool = True,
+    ) -> typing.Any:
+        """
+        Plots the mode shapes for a specified mode number from the results of an algorithm,
+        using Geometry 1 setup.
+
+        Parameters
+        ----------
+        Algo_Res : MsPoserResult
+            The results from an algorithm, containing mode shapes and other modal properties.
+        Geo1 : Geometry1
+            The first geometry setup of the structure.
+        mode_numb : int
+            The mode number to be visualized.
+        scaleF : int, optional
+            Scaling factor for the mode shape visualization, by default 1.
+        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
+            The type of view for plotting the mode shape, by default "3D".
+        remove_fill : bool, optional
+            If True, removes the fill from the plot, by default True.
+        remove_grid : bool, optional
+            If True, removes the grid from the plot, by default True.
+        remove_axis : bool, optional
+            If True, removes the axis labels and ticks from the plot, by default True.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the figure and axis objects of the plot.
+        """
 
     def _set_data(self, data: T_Data, fs: float) -> "BaseAlgorithm":
         """
