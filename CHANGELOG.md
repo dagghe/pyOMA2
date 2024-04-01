@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `pre-commit` default formatter to `ruff`
+- `OMA.py` moved `decimate_data`, `detrend_data`, `filter_data` to BaseSetup and add `inplace` option default to false
 
 ## [0.4.1] - 2024-03-05
 
