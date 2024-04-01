@@ -91,6 +91,8 @@ class BaseSetup:
     algorithms: typing.Dict[str, BaseAlgorithm]
     data: typing.Optional[np.ndarray] = None  # TODO use generic typing
     fs: typing.Optional[float] = None  # sampling frequency
+    Geo1: typing.Optional[Geometry1] = None
+    Geo2: typing.Optional[Geometry2] = None
 
     # add algorithm (method) to the set.
     def add_algorithms(self, *algorithms: BaseAlgorithm):
@@ -108,7 +110,7 @@ class BaseSetup:
         and their names must be unique.
         """
         self.algorithms = {
-            **self.algorithms,
+            **getattr(self, "algorithms", {}),
             **{alg.name: alg._set_data(data=self.data, fs=self.fs) for alg in algorithms},
         }
 
@@ -274,6 +276,11 @@ class BaseSetup:
         remove_axis : bool, optional
             If True, removes the axis labels and ticks from the plot. Default is True.
 
+        Raises
+        ------
+        ValueError
+            If Geo1 is not defined in the setup.
+
         Returns
         -------
         tuple
@@ -281,6 +288,10 @@ class BaseSetup:
             further customization or saving the plot externally.
 
         """
+        if self.Geo1 is None:
+            raise ValueError(
+                f"Geo1 is not defined. cannot plot geometry on {self}. Call def_geo1 first."
+            )
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
@@ -361,6 +372,11 @@ class BaseSetup:
         remove_axis : bool, optional
             If True, the plot's axes are removed. Default is True.
 
+        Raises
+        ------
+        ValueError
+            If Geo2 is not defined in the setup.
+
         Returns
         -------
         tuple
@@ -368,6 +384,10 @@ class BaseSetup:
             This allows for further customization or saving outside the method.
 
         """
+        if self.Geo2 is None:
+            raise ValueError(
+                f"Geo2 is not defined. Cannot plot geometry on {self}. Call def_geo2 first."
+            )
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
@@ -469,6 +489,153 @@ class BaseSetup:
 
         return fig, ax
 
+    # method to decimate data
+    @staticmethod
+    def _decimate_data(data: np.ndarray, fs: float, q: int, **kwargs) -> tuple:
+        """
+        Applies decimation to the data using the scipy.signal.decimate function.
+
+        This method reduces the sampling rate of the data by a factor of 'q'.
+        The decimation process includes low-pass filtering to reduce aliasing.
+        The method updates the instance's data and sampling frequency attributes.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            The input data to be decimated.
+        q : int
+            The decimation factor. Must be greater than 1.
+        axis : int, optional
+            The axis along which to decimate the data. Default is 0.
+        **kwargs : dict, optional, will be passed to scipy.signal.decimate
+            Additional keyword arguments for the scipy.signal.decimate function:
+            n : int, optional
+                The order of the filter (if 'ftype' is 'fir') or the number of times
+                to apply the filter (if 'ftype' is 'iir'). If None, a default value is used.
+            ftype : {'iir', 'fir'}, optional
+                The type of filter to use for decimation: 'iir' for an IIR filter
+                or 'fir' for an FIR filter. Default is 'iir'.
+
+            zero_phase : bool, optional
+                If True, applies a zero-phase filter, which has no phase distortion.
+                If False, uses a causal filter with some phase distortion. Default is True.
+
+        Raises
+        ------
+        ValueError
+            If the decimation factor 'q' is not greater than 1.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the decimated data, updated sampling frequency, sampling interval,
+
+        See Also
+        --------
+        For further information, see `scipy.signal.decimate
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
+        """
+        newdata = decimate(data, q, **kwargs)
+        fs = fs / q
+        dt = 1 / fs
+        Ndat = newdata.shape[0]
+        T = 1 / fs / q * Ndat
+        return newdata, fs, dt, Ndat, T
+
+    # method to detrend data
+    @staticmethod
+    def _detrend_data(data: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Applies detrending to the data using the scipy.signal.detrend function.
+
+        This method removes a linear or constant trend from the data, commonly used to remove drifts
+        or offsets in time series data. It's a preprocessing step, often necessary for methods that
+        assume stationary data. The method updates the instance's data attribute.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            The input data to be detrended.
+        axis : int, optional
+            The axis along which to detrend the data. Default is 0.
+        **kwargs : dict, optional, will be passed to scipy.signal.detrend
+            Additional keyword arguments for the scipy.signal.detrend function:
+            type : {'linear', 'constant'}, optional
+                The type of detrending: 'linear' for linear detrend, or 'constant' for just
+                subtracting the mean. Default is 'linear'.
+            bp : int or numpy.ndarray of int, optional
+                Breakpoints where the data is split for piecewise detrending. Default is 0.
+
+        Raises
+        ------
+        ValueError
+            If invalid parameters are provided.
+
+        Returns
+        -------
+        np.ndarray
+            The detrended data.
+
+        See Also
+        --------
+        For further information, see `scipy.signal.detrend
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
+        """
+        axis = kwargs.pop("axis", 0)
+        return detrend(data, axis=axis, **kwargs)
+
+    # method to detrend data
+    @staticmethod
+    def _filter_data(
+        data: np.ndarray,
+        fs: float,
+        Wn: float | tuple,
+        order: int = 8,
+        btype: str = "lowpass",
+    ) -> np.ndarray:
+        """
+        Apply a Butterworth filter to the input data and return the filtered signal.
+
+        This function designs and applies a Butterworth filter with the specified parameters to the input
+        data. It can be used to apply lowpass, highpass, bandpass, or bandstop filters.
+
+        Parameters
+        ----------
+        data : ndarray
+            The input signal data to be filtered. The filter is applied along the first axis
+            (i.e., each column is filtered independently).
+        fs : float
+            The sampling frequency of the input data.
+        Wn : array_like
+            The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar;
+            for bandpass and bandstop filters, Wn is a length-2 sequence.
+        order : int, optional
+            The order of the filter. A higher order leads to a sharper frequency cutoff but can also
+            lead to instability and significant phase delay. Default is 8.
+        btype : str, optional
+            The type of filter to apply. Options are "lowpass", "highpass", "bandpass", or "bandstop".
+            Default is "lowpass".
+
+        Returns
+        -------
+        filt_data : ndarray
+            The filtered signal, with the same shape as the input data.
+
+        Notes
+        -----
+        For more information, see the scipy documentation for `signal.butter`
+        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
+        and `signal.sosfiltfilt`
+        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html).
+        """
+        return filter_data(
+            data=data,
+            fs=fs,
+            Wn=Wn,
+            order=order,
+            btype=btype,
+        )
+
 
 class SingleSetup(BaseSetup):
     """
@@ -520,6 +687,9 @@ class SingleSetup(BaseSetup):
     -----
     The ``algorithms`` dictionary is initialized empty and is meant to store various algorithms as needed.
     """
+
+    Geo1: typing.Optional[Geometry1] = None
+    Geo2: typing.Optional[Geometry2] = None
 
     def __init__(self, data: np.ndarray, fs: float):
         """
@@ -699,133 +869,6 @@ class SingleSetup(BaseSetup):
         )
         return fig, ax
 
-    # method to decimate data
-    def decimate_data(self, q: int, **kwargs):
-        """
-        Applies decimation to the data using the scipy.signal.decimate function.
-
-        This method reduces the sampling rate of the data by a factor of 'q'.
-        The decimation process includes low-pass filtering to reduce aliasing.
-        The method updates the instance's data and sampling frequency attributes.
-
-        Parameters
-        ----------
-        q : int
-            The decimation factor. Must be greater than 1.
-        axis : int, optional
-            The axis along which to decimate the data. Default is 0.
-        **kwargs : dict, optional
-            Additional keyword arguments for the scipy.signal.decimate function:
-            n : int, optional
-                The order of the filter (if 'ftype' is 'fir') or the number of times
-                to apply the filter (if 'ftype' is 'iir'). If None, a default value is used.
-            ftype : {'iir', 'fir'}, optional
-                The type of filter to use for decimation: 'iir' for an IIR filter
-                or 'fir' for an FIR filter. Default is 'iir'.
-
-            zero_phase : bool, optional
-                If True, applies a zero-phase filter, which has no phase distortion.
-                If False, uses a causal filter with some phase distortion. Default is True.
-
-        Raises
-        ------
-        ValueError
-            If the decimation factor 'q' is not greater than 1.
-
-        See Also
-        --------
-        For further information, see `scipy.signal.decimate
-        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
-        """
-
-        self.data = decimate(self.data, q, axis=0, **kwargs)
-        self.fs = self.fs / q
-        self.dt = 1 / self.fs
-        self.Ndat = self.data.shape[0]
-
-    # method to detrend data
-    def detrend_data(self, **kwargs):
-        """
-        Applies detrending to the data using the scipy.signal.detrend function.
-
-        This method removes a linear or constant trend from the data, commonly used to remove drifts
-        or offsets in time series data. It's a preprocessing step, often necessary for methods that
-        assume stationary data. The method updates the instance's data attribute.
-
-        Parameters
-        ----------
-        axis : int, optional
-            The axis along which to detrend the data. Default is 0.
-        **kwargs : dict, optional
-            Additional keyword arguments for the scipy.signal.detrend function:
-            type : {'linear', 'constant'}, optional
-                The type of detrending: 'linear' for linear detrend, or 'constant' for just
-                subtracting the mean. Default is 'linear'.
-            bp : int or numpy.ndarray of int, optional
-                Breakpoints where the data is split for piecewise detrending. Default is 0.
-
-        Raises
-        ------
-        ValueError
-            If invalid parameters are provided.
-
-        See Also
-        --------
-        For further information, see `scipy.signal.detrend
-        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
-        """
-        self.data = detrend(self.data, axis=0, **kwargs)
-
-    # method to detrend data
-    def filter_data(
-        self,
-        Wn: float | tuple,
-        order: int = 8,
-        btype: str = "lowpass",
-    ):
-        """
-        Apply a Butterworth filter to the input data and return the filtered signal.
-
-        This function designs and applies a Butterworth filter with the specified parameters to the input
-        data. It can be used to apply lowpass, highpass, bandpass, or bandstop filters.
-
-        Parameters
-        ----------
-        data : ndarray
-            The input signal data to be filtered. The filter is applied along the first axis
-            (i.e., each column is filtered independently).
-        fs : float
-            The sampling frequency of the input data.
-        Wn : array_like
-            The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar;
-            for bandpass and bandstop filters, Wn is a length-2 sequence.
-        order : int, optional
-            The order of the filter. A higher order leads to a sharper frequency cutoff but can also
-            lead to instability and significant phase delay. Default is 8.
-        btype : str, optional
-            The type of filter to apply. Options are "lowpass", "highpass", "bandpass", or "bandstop".
-            Default is "lowpass".
-
-        Returns
-        -------
-        filt_data : ndarray
-            The filtered signal, with the same shape as the input data.
-
-        Notes
-        -----
-        For more information, see the scipy documentation for `signal.butter`
-        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
-        and `signal.sosfiltfilt`
-        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html).
-        """
-        self.data = filter_data(
-            self.data,
-            self.fs,
-            Wn=Wn,
-            order=order,
-            btype=btype,
-        )
-
     # metodo per definire geometria 1
     def def_geo1(
         self,
@@ -873,10 +916,16 @@ class SingleSetup(BaseSetup):
         # Checks on input
         nr_s = len(sens_names)
         # check that nr_s == to data.shape[1]
-        assert nr_s == self.data.shape[1]
+        assert (
+            nr_s == self.data.shape[1]
+        ), "Number of sensors must match the number of data channels"
         # check that nr_s == sens_coord.shape[0] and == sens_dir.shape[0]
-        assert nr_s == sens_coord.to_numpy().shape[0]
-        assert nr_s == sens_dir.shape[0]
+        assert (
+            nr_s == sens_coord.to_numpy().shape[0]
+        ), "Number of sensors must match the number of sensor coordinates"
+        assert (
+            nr_s == sens_dir.shape[0]
+        ), "Number of sensors must match the number of sensor directions"
         # Altri controlli ???
         # ---------------------------------------------------------------------
         # adapt to 0 indexing
@@ -954,18 +1003,32 @@ class SingleSetup(BaseSetup):
         """
         # ---------------------------------------------------------------------
         # Checks on input
-        if order_red == "xy" or order_red == "xz" or order_red == "yz":
+        if order_red in ["xy", "xz", "yz"]:
             nc = 2
-            assert sens_map.to_numpy()[:, 1:].shape[1] == nc
-            assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
-        elif order_red == "x" or order_red == "y" or order_red == "z":
+            assert (
+                sens_map.to_numpy()[:, 1:].shape[1] == nc
+            ), "Mapping data must have 2 columns for order reduction"
+            assert (
+                sens_sign.to_numpy()[:, 1:].shape[1] == nc
+            ), "Sign data must have 2 columns for order reduction"
+        elif order_red in ["x", "y", "z"]:
             nc = 1
-            assert sens_map.to_numpy()[:, 1:].shape[1] == nc
-            assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
+            assert (
+                sens_map.to_numpy()[:, 1:].shape[1] == nc
+            ), "Mapping data must have 1 column for order reduction"
+            assert (
+                sens_sign.to_numpy()[:, 1:].shape[1] == nc
+            ), "Sign data must have 1 column for order reduction"
         elif order_red is None:
             nc = 3
-            assert sens_map.to_numpy()[:, 1:].shape[1] == nc
-            assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
+            assert (
+                sens_map.to_numpy()[:, 1:].shape[1] == nc
+            ), "Mapping data must have 3 columns for order reduction"
+            assert (
+                sens_sign.to_numpy()[:, 1:].shape[1] == nc
+            ), "Sign data must have 3 columns for order reduction"
+        else:
+            raise ValueError("Invalid order reduction specified.")
         # altri controlli??
         # ---------------------------------------------------------------------
         # adapt to 0 indexed lines
@@ -986,24 +1049,159 @@ class SingleSetup(BaseSetup):
             bg_surf=bg_surf,
         )
 
-    def __getitem__(self, name: str) -> BaseAlgorithm:
+    def decimate_data(
+        self, q: int, inplace: bool = False, **kwargs
+    ) -> typing.Optional[tuple]:
         """
-        Retrieve an algorithm from the set by its name.
-        Raises a KeyError if the algorithm does not exist.
-        """
-        if name in self.algorithms:
-            return self.algorithms[name]
-        else:
-            raise KeyError(f"No algorithm named '{name}' exists.")
+        Decimates the data using the scipy.signal.decimate function.
 
-    def get(
-        self, name: str, default: typing.Optional[BaseAlgorithm] = None
-    ) -> typing.Optional[BaseAlgorithm]:
+        This method reduces the sampling rate of the data by a factor of 'q'.
+        The decimation process includes low-pass filtering to reduce aliasing.
+        The method updates the instance's data and sampling frequency attributes.
+
+        Parameters
+        ----------
+        q : int
+            The decimation factor. Must be greater than 1.
+        inplace : bool, optional
+            If True, the data is decimated in place. If False, a copy of the decimated data is returned.
+            Default is False.
+        **kwargs : dict, optional
+            Additional keyword arguments for the scipy.signal.decimate function:
+            n : int, optional
+                The order of the filter (if 'ftype' is 'fir') or the number of times
+                to apply the filter (if 'ftype' is 'iir'). If None, a default value is used.
+            ftype : {'iir', 'fir'}, optional
+                The type of filter to use for decimation: 'iir' for an IIR filter
+                or 'fir' for an FIR filter. Default is 'iir'.
+            zero_phase : bool, optional
+                If True, applies a zero-phase filter, which has no phase distortion.
+                If False, uses a causal filter with some phase distortion. Default is True.
+
+        Raises
+        ------
+        ValueError
+            If the decimation factor 'q' is not greater than 1.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the decimated data, updated sampling frequency, sampling interval,
+            number of data points, and total time period.
+            If 'inplace' is True, returns None.
         """
-        Retrieve an algorithm from the set by its name.
-        Returns the default value if the algorithm does not exist.
+        axis = kwargs.pop("axis", 0)
+        data = self.data
+        if not inplace:
+            data = copy.deepcopy(self.data)
+        decimated_data, fs, dt, Ndat, T = super()._decimate_data(
+            data=data, fs=self.fs, q=q, axis=axis, **kwargs
+        )
+        if inplace:
+            self.data = decimated_data
+            self.fs = fs
+            self.dt = dt
+            self.Ndat = Ndat
+            self.T = T
+            return None
+        return decimated_data, fs, dt, Ndat, T
+
+    def detrend_data(
+        self, inplace: bool = False, **kwargs
+    ) -> typing.Optional[np.ndarray]:
         """
-        return self.algorithms.get(name, default)
+        Detrends the data using the scipy.signal.detrend function.
+
+        This method removes a linear or constant trend from the data, commonly used to remove drifts
+        or offsets in time series data. It's a preprocessing step, often necessary for methods that
+        assume stationary data. The method updates the instance's data attribute.
+
+        Parameters
+        ----------
+        in_place : bool, optional
+            If True, the data is detrended in place. If False, a copy of the detrended data is returned.
+            Default is False.
+        **kwargs : dict, optional
+            Additional keyword arguments for the scipy.signal.detrend function:
+            type : {'linear', 'constant'}, optional
+                The type of detrending: 'linear' for linear detrend, or 'constant' for just
+                subtracting the mean. Default is 'linear'.
+            bp : int or numpy.ndarray of int, optional
+                Breakpoints where the data is split for piecewise detrending. Default is 0.
+
+        Raises
+        ------
+        ValueError
+            If invalid parameters are provided.
+
+        Returns
+        -------
+        detrended_data : np.ndarray
+            The detrended data if 'inplace' is False, otherwise None.
+        """
+        data = self.data
+        if not inplace:
+            data = copy.deepcopy(self.data)
+        detrended_data = super()._detrend_data(data=data, **kwargs)
+        if inplace:
+            self.data = detrended_data
+            return None
+        return detrended_data
+
+    def filter_data(
+        self,
+        Wn: float | tuple,
+        order: int = 8,
+        btype: str = "lowpass",
+        inplace: bool = False,
+    ) -> typing.Optional[np.ndarray]:
+        """
+        Apply a Butterworth filter to the input data and return the filtered signal.
+
+        This function designs and applies a Butterworth filter with the specified parameters to the input
+        data. It can be used to apply lowpass, highpass, bandpass, or bandstop filters.
+
+        Parameters
+        ----------
+        Wn : float or tuple of float
+            The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar;
+            for bandpass and bandstop filters, Wn is a length-2 sequence.
+        order : int, optional
+            The order of the filter. A higher order leads to a sharper frequency cutoff but can also
+            lead to instability and significant phase delay. Default is 8.
+        btype : str, optional
+            The type of filter to apply. Options are "lowpass", "highpass", "bandpass", or "bandstop".
+            Default is "lowpass".
+        inplace: bool, optional
+            If True, the data is filtered in place. If False, a copy of the filtered data is returned.
+            Default is False.
+
+        Returns
+        -------
+        filt_data : ndarray
+            The filtered signal, with the same shape as the input data. If 'inplace' is True, returns None.
+
+        Notes
+        -----
+        For more information, see the scipy documentation for `signal.butter`
+        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
+        and `signal.sosfiltfilt`
+        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html).
+        """
+        data = self.data
+        if not inplace:
+            data = copy.deepcopy(self.data)
+        filt_data = super()._filter_data(
+            data=data,
+            fs=self.fs,
+            Wn=Wn,
+            order=order,
+            btype=btype,
+        )
+        if inplace:
+            self.data = filt_data
+            return None
+        return filt_data
 
 
 # =============================================================================
@@ -2147,11 +2345,9 @@ class MultiSetup_PreGER(BaseSetup):
     def decimate_data(
         self,
         q: int,
-        n: int | None = None,
-        ftype: typing.Literal["iir", "fir"] = "iir",
-        axis: int = 0,
-        zero_phase: bool = True,
-    ):
+        inplace: bool = False,
+        **kwargs,
+    ) -> typing.Optional[tuple]:
         """
         Applies decimation to the data using the scipy.signal.decimate function.
 
@@ -2163,9 +2359,9 @@ class MultiSetup_PreGER(BaseSetup):
         ----------
         q : int
             The decimation factor. Must be greater than 1.
-        axis : int, optional
-            The axis along which to decimate the data. Default is 0.
-        **kwargs : dict, optional
+        inplace : bool, optional
+            If True, updates the instance's data attribute with the decimated data.
+        **kwargs : dict, optional, will be passed to scipy.signal.decimate
             Additional keyword arguments for the scipy.signal.decimate function:
             n : int, optional
                 The order of the filter (if 'ftype' is 'fir') or the number of times
@@ -2183,27 +2379,55 @@ class MultiSetup_PreGER(BaseSetup):
         ValueError
             If the decimation factor 'q' is not greater than 1.
 
+        Returns
+        -------
+        tuple
+            A tuple containing the new datasets, the number of data points for each dataset,
+            and the total duration of each dataset.
+            If 'inplace' is True, returns None.
+
         See Also
         --------
         For further information, see `scipy.signal.decimate
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
+        n = kwargs.get("n")
+        ftype = kwargs.get("ftype", "iir")
+        axis = kwargs.get("axis", 0)
+        zero_phase = kwargs.get("zero_phase", True)
         datasets = self.datasets
+        if not inplace:
+            datasets = copy.deepcopy(self.datasets)
         newdatasets = []
         Ndats = []
         Ts = []
         for data in datasets:
-            newdata = decimate(data, q, n, ftype, axis, zero_phase)
+            newdata, _, _, Ndat, T = super()._decimate_data(
+                data=data,
+                fs=self.fs,
+                q=q,
+                n=n,
+                ftype=ftype,
+                axis=axis,
+                zero_phase=zero_phase,
+                **kwargs,
+            )
             newdatasets.append(newdata)
-            Ndats.append(newdata.shape[0])
-            Ts.append(1 / self.fs / q * newdata.shape[0])
+            Ndats.append(Ndat)
+            Ts.append(T)
 
         Y = PRE_MultiSetup(newdatasets, self.ref_ind)
-        self.data = Y
-        self.fs = self.fs / q
-        self.dt = 1 / self.fs
-        self.Ndats = Ndats
-        self.Ts = Ts
+        fs = self.fs / q
+        dt = 1 / self.fs
+
+        if inplace:
+            self.data = Y
+            self.fs = fs
+            self.dt = dt
+            self.Ndats = Ndats
+            self.Ts = Ts
+            return None
+        return newdatasets, Y, fs, dt, Ndats, Ts
 
     # method to detrend data
     def filter_data(
@@ -2211,14 +2435,54 @@ class MultiSetup_PreGER(BaseSetup):
         Wn: float | tuple,
         order: int = 8,
         btype: str = "lowpass",
-    ):
-        """ """
+        inplace: bool = False,
+    ) -> typing.Optional[np.ndarray]:
+        """
+        Applies a Butterworth filter to the input data based on specified parameters.
+
+        This method filters the data using a Butterworth filter with the specified parameters.
+        The method updates the instance's data attribute.
+
+        Parameters
+        ----------
+        Wn : float | tuple
+            The critical frequency or frequencies for the filter. For lowpass and highpass filters,
+            Wn is a scalar; for bandpass and bandstop filters, Wn is a tuple.
+        order : int, optional
+            The order of the filter. Default is 8.
+        btype : str, optional
+            The type of filter to apply: 'lowpass', 'highpass
+            'bandpass', or 'bandstop'. Default is 'lowpass'.
+        inplace : bool, optional
+            If True, updates the instance's data attribute with the filtered data.
+            default is False.
+
+        Raises
+        ------
+        ValueError
+            If the order of the filter is not an integer greater than 0.
+
+        Returns
+        -------
+        np.ndarray
+            The filtered data.
+            If 'inplace' is True, returns None.
+
+        Notes
+        -----
+        For more information, see the scipy documentation for `signal.butter`
+        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
+        and `signal.sosfiltfilt`
+        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html).
+        """
         datasets = self.datasets
+        if not inplace:
+            datasets = copy.deepcopy(self.datasets)
         newdatasets = []
         for data in datasets:
-            newdata = filter_data(
-                data,
-                self.fs,
+            newdata = super()._filter_data(
+                data=data,
+                fs=self.fs,
                 Wn=Wn,
                 order=order,
                 btype=btype,
@@ -2226,38 +2490,42 @@ class MultiSetup_PreGER(BaseSetup):
             newdatasets.append(newdata)
 
         Y = PRE_MultiSetup(newdatasets, self.ref_ind)
-        self.data = Y
+        if inplace:
+            self.data = Y
+            return None
+        return newdatasets
 
     # method to detrend data
     def detrend_data(
         self,
-        axis: int = 0,
-        type: typing.Literal["linear", "constant"] = "linear",
-        bp: int | npt.NDArray[np.int64] = 0,
-    ):
+        inplace: bool = False,
+        **kwargs,
+    ) -> typing.Optional[np.ndarray]:
         """
         Applies detrending to the data using the scipy.signal.detrend function.
 
-        This method removes a linear or constant trend from the data, commonly used to remove drifts
-        or offsets in time series data. It's a preprocessing step, often necessary for methods that
-        assume stationary data. The method updates the instance's data attribute.
+        This method removes the linear trend from the data by fitting a least-squares
+        polynomial to the data and subtracting it.
+        The method updates the instance's data attribute.
 
         Parameters
         ----------
-        axis : int, optional
-            The axis along which to detrend the data. Default is 0.
+        inplace : bool, optional
+            If True, updates the instance's data attribute with the detrended data.
+            Default is False.
         **kwargs : dict, optional
             Additional keyword arguments for the scipy.signal.detrend function:
+            axis : int, optional
+                The axis along which to detrend the data. Default is 0.
             type : {'linear', 'constant'}, optional
-                The type of detrending: 'linear' for linear detrend, or 'constant' for just
-                subtracting the mean. Default is 'linear'.
-            bp : int or numpy.ndarray of int, optional
-                Breakpoints where the data is split for piecewise detrending. Default is 0.
+                The type of detrending to apply: 'linear' for linear detrending
+                or 'constant' for mean removal. Default is 'linear'.
 
-        Raises
-        ------
-        ValueError
-            If invalid parameters are provided.
+        Returns
+        -------
+        np.ndarray
+            The detrended data.
+            If 'inplace' is True, returns None.
 
         See Also
         --------
@@ -2265,13 +2533,19 @@ class MultiSetup_PreGER(BaseSetup):
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
         """
         datasets = self.datasets
+        if not inplace:
+            datasets = copy.deepcopy(self.datasets)
+
         newdatasets = []
         for data in datasets:
-            newdata = detrend(data, axis, type, bp)
+            newdata = super()._detrend_data(data=data, **kwargs)
             newdatasets.append(newdata)
 
         Y = PRE_MultiSetup(newdatasets, self.ref_ind)
-        self.data = Y
+        if inplace:
+            self.data = Y
+            return None
+        return newdatasets
 
     # metodo per definire geometria 1
     def def_geo1(
