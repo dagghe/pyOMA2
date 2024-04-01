@@ -5,6 +5,7 @@ Authors:
 Dag Pasca
 Diego Margoni
 """
+
 from __future__ import annotations
 
 import logging
@@ -138,11 +139,15 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
 
         self.run_params.sel_freq = sel_freq
         self.run_params.DF = DF
-        Sy = self.result.Sy
+        # Sy = self.result.Sy
+        S_val = self.result.S_val
+        S_vec = self.result.S_vec
         freq = self.result.freq
 
         # Get Modal Parameters
-        Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(Sy, freq, sel_freq, DF=DF)
+        Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(
+            Sval=S_val, Svec=S_vec, freq=freq, sel_freq=sel_freq, DF=DF
+        )
 
         # Save results
         self.result.Fn = Fn_FDD
@@ -171,7 +176,9 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         """
         super().mpe_fromPlot(freqlim=freqlim)
 
-        Sy = self.result.Sy
+        # Sy = self.result.Sy
+        S_val = self.result.S_val
+        S_vec = self.result.S_vec
         freq = self.result.freq
 
         self.run_params.DF = DF
@@ -181,7 +188,9 @@ class FDD_algo(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         sel_freq = SFP.result[0]
 
         # e poi estrarre risultati
-        Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(Sy, freq, sel_freq, DF=DF)
+        Fn_FDD, Phi_FDD = FDD_funct.FDD_MPE(
+            Sval=S_val, Svec=S_vec, freq=freq, sel_freq=sel_freq, DF=DF
+        )
 
         # Save results
         self.result.Fn = Fn_FDD
