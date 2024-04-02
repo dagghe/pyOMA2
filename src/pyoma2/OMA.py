@@ -2493,7 +2493,7 @@ class MultiSetup_PreGER(BaseSetup):
         if inplace:
             self.data = Y
             return None
-        return newdatasets
+        return Y
 
     # method to detrend data
     def detrend_data(
@@ -2545,7 +2545,7 @@ class MultiSetup_PreGER(BaseSetup):
         if inplace:
             self.data = Y
             return None
-        return newdatasets
+        return Y
 
     # metodo per definire geometria 1
     def def_geo1(
