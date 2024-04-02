@@ -3,7 +3,7 @@ import typing
 import numpy as np
 import pandas as pd
 import pytest
-from pyoma2.OMA import BaseSetup, MultiSetup_PoSER, SingleSetup
+from pyoma2.OMA import BaseSetup, MultiSetup_PoSER, MultiSetup_PreGER, SingleSetup
 
 from .factory import FakeAlgorithm, FakeAlgorithm2, FakeResult, FakeRunParams
 
@@ -199,7 +199,7 @@ def multi_setup_data_fixture():
     )
 
 
-@pytest.fixture(scope="session", name="ms_poser")
+@pytest.fixture(scope="function", name="ms_poser")
 def multi_setup_poser_fixture(
     multi_setup_data_fixture,
 ) -> typing.Generator[MultiSetup_PoSER, None, None]:
@@ -212,4 +212,17 @@ def multi_setup_poser_fixture(
     ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
     # Creating Multi setup
     msp = MultiSetup_PoSER(ref_ind=ref_ind, single_setups=[ss1, ss2, ss3])
+    yield msp
+
+
+@pytest.fixture(scope="function", name="ms_preger")
+def multi_setup_preger_fixture(
+    multi_setup_data_fixture,
+) -> typing.Generator[MultiSetup_PreGER, None, None]:
+    """Fixture for MultiSetup Poser with parameters."""
+    set1, set2, set3, *_ = multi_setup_data_fixture
+    data = [set1, set2, set3]
+    ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
+    # Creating Multi setup
+    msp = MultiSetup_PreGER(fs=100, ref_ind=ref_ind, datasets=data)
     yield msp

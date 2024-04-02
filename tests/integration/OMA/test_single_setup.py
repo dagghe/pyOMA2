@@ -101,13 +101,13 @@ def test_base_setup(single_setup_data_fixture, bs: BaseSetup) -> None:
     )  # Use scipy's lfilter function for expected result
 
 
-def test_single_setup_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
+def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
     """
     Test the first geometry definition and plotting of the SingleSetup.
     """
     _, Names, Bg_nodes, Bg_lines, sens_coord, sens_dir, *_ = single_setup_data_fixture
 
-    # Test the initialization of the SingleSetup
+    # Test that the geometry is not defined
     assert ss.Geo1 is None
 
     # plot without defining the geometry
@@ -295,7 +295,7 @@ def test_single_setup_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
         ),
     ),
 )
-def test_single_setup_geo2(
+def test_geo2(
     single_setup_data_fixture,
     ss: SingleSetup,
     input_order_red: typing.Optional[str],
@@ -370,7 +370,7 @@ def test_single_setup_geo2(
         assert False, f"plot_geo2 with bg_surf raised an exception: {e}"
 
 
-def test_single_setup_plot_data(
+def test_plot_data(
     ss: SingleSetup,
 ) -> None:
     """
@@ -435,7 +435,7 @@ def test_single_setup_plot_data(
         assert False, f"plot_ch_info raised an exception {e}"
 
 
-def test_single_setup_run(single_setup_data_fixture, ss: SingleSetup) -> None:
+def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
     """
     Test the running of the algorithms in the SingleSetup.
     """
