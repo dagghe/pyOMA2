@@ -1259,6 +1259,8 @@ class MultiSetup_PoSER:
 
     __result: typing.Optional[typing.Dict[str, MsPoserResult]] = None
     __alg_ref: typing.Optional[typing.Dict[type[BaseAlgorithm], str]] = None
+    Geo1: typing.Optional[Geometry1] = None
+    Geo2: typing.Optional[Geometry2] = None
 
     def __init__(
         self,
