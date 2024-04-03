@@ -3,6 +3,7 @@ import typing
 import numpy as np
 import pandas as pd
 import pytest
+from pyoma2.algorithm import SSIcov_algo
 from pyoma2.OMA import BaseSetup, MultiSetup_PoSER, MultiSetup_PreGER, SingleSetup
 
 from .factory import FakeAlgorithm, FakeAlgorithm2, FakeResult, FakeRunParams
@@ -208,6 +209,26 @@ def multi_setup_poser_fixture(
     ss1 = SingleSetup(set1, fs=100)
     ss2 = SingleSetup(set2, fs=100)
     ss3 = SingleSetup(set3, fs=100)
+    # Detrend and decimate
+    ss1.decimate_data(q=2, inplace=True)
+    ss2.decimate_data(q=2, inplace=True)
+    ss3.decimate_data(q=2, inplace=True)
+
+    # Initialise the algorithms for setup 1
+    ssicov1 = SSIcov_algo(name="SSIcov1", method="cov_mm", br=50, ordmax=80)
+    # Add algorithms to the class
+    ss1.add_algorithms(ssicov1)
+    ss1.run_all()
+
+    # Initialise the algorithms for setup 2
+    ssicov2 = SSIcov_algo(name="SSIcov2", method="cov_mm", br=50, ordmax=80)
+    ss2.add_algorithms(ssicov2)
+    ss2.run_all()
+
+    # Initialise the algorithms for setup 2
+    ssicov3 = SSIcov_algo(name="SSIcov3", method="cov_mm", br=50, ordmax=80)
+    ss3.add_algorithms(ssicov3)
+    ss3.run_all()
     # reference indices
     ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
     # Creating Multi setup
