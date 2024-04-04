@@ -5,6 +5,7 @@ Authors:
 Dag Pasca
 Diego Margoni
 """
+
 from __future__ import annotations
 
 import logging
@@ -97,7 +98,7 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         Fn_pol, Xi_pol, Ms_pol = pLSCF_funct.pLSCF_Poles(
             Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
         )
-        Lab = Gen_funct.Lab_stab(
+        Lab = Gen_funct.lab_stab(
             Fn_pol,
             Xi_pol,
             Ms_pol,
@@ -602,7 +603,7 @@ class pLSCF_algo_MS(pLSCF_algo[pLSCFRunParams, pLSCFResult, typing.Iterable[dict
         Fn_pol, Xi_pol, Ms_pol = pLSCF_funct.pLSCF_Poles(
             Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
         )
-        Lab = Gen_funct.Lab_stab(
+        Lab = Gen_funct.lab_stab(
             Fn_pol,
             Xi_pol,
             Ms_pol,

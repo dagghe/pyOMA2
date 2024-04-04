@@ -4,6 +4,7 @@ Part of the pyOMA2 package.
 Author:
 Dag Pasca
 """
+
 import logging
 import typing
 
@@ -17,7 +18,18 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-def Lab_stab(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_xi):
+def lab_stab(
+    Fn: np.ndarray,
+    Sm: np.ndarray,
+    Ms: np.ndarray,
+    ordmin: int,
+    ordmax: int,
+    step: int,
+    err_fn: float,
+    err_xi: float,
+    err_ms: float,
+    max_xi: float,
+):
     """
     Construct a Stability Chart for modal analysis.
 
@@ -51,7 +63,8 @@ def Lab_stab(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_xi):
     Returns
     -------
     numpy.ndarray
-        Stability label matrix (Lab), where each element represents the stability
+        Stability label matrix (Lab),
+            where each element represents the stability
         category of a mode at a specific model order.
 
     Notes
@@ -197,7 +210,7 @@ def merge_mode_shapes(
 # -----------------------------------------------------------------------------
 
 
-def MPC(phi):
+def MPC(phi: np.ndarray) -> float:
     """
     Modal phase collinearity
     """
@@ -207,7 +220,7 @@ def MPC(phi):
     return MPC
 
 
-def MPD(phi):
+def MPD(phi: np.ndarray) -> float:
     """
     Mean phase deviation
     """
@@ -221,7 +234,7 @@ def MPD(phi):
     return MPD
 
 
-def MSF(phi_1, phi_2):
+def MSF(phi_1: np.ndarray, phi_2: np.ndarray) -> np.ndarray:
     """
     Calculates the Modal Scale Factor (MSF) between two sets of mode shapes.
 
@@ -266,7 +279,7 @@ def MSF(phi_1, phi_2):
 # -----------------------------------------------------------------------------
 
 
-def MCF(phi):
+def MCF(phi: np.ndarray) -> np.ndarray:
     """
     Calculates the Modal Complexity Factor (MCF) for mode shapes.
 
@@ -298,7 +311,7 @@ def MCF(phi):
 # -----------------------------------------------------------------------------
 
 
-def MAC(phi_X, phi_A):
+def MAC(phi_X: np.ndarray, phi_A: np.ndarray) -> np.ndarray:
     """
     Calculates the Modal Assurance Criterion (MAC) between two sets of mode shapes.
 
@@ -358,8 +371,8 @@ def MAC(phi_X, phi_A):
 # -----------------------------------------------------------------------------
 
 
-def PRE_MultiSetup(
-    DataList: typing.List[np.ndarray], reflist: typing.List[typing.List[int]]
+def pre_MultiSetup(
+    dataList: typing.List[np.ndarray], reflist: typing.List[typing.List[int]]
 ) -> typing.List[typing.Dict[str, np.ndarray]]:
     """
     Preprocesses data from multiple setups by separating reference and moving sensor data.
@@ -377,10 +390,10 @@ def PRE_MultiSetup(
         A list of dictionaries, each containing the data for a setup.
         Each dictionary has keys 'ref' and 'mov' corresponding to reference and moving sensor data.
     """
-    n_setup = len(DataList)  # number of setup
+    n_setup = len(dataList)  # number of setup
     Y = []
     for i in range(n_setup):
-        y = DataList[i]
+        y = dataList[i]
         n_ref = len(reflist[i])
         n_sens = y.shape[1]
         ref_id = reflist[i]
@@ -409,7 +422,7 @@ def PRE_MultiSetup(
 # -----------------------------------------------------------------------------
 
 
-def invperm(p):
+def invperm(p: np.ndarray) -> np.ndarray:
     """
     Compute the inverse permutation of a given array.
 
@@ -436,7 +449,7 @@ def invperm(p):
 # -----------------------------------------------------------------------------
 
 
-def find_map(arr1, arr2):
+def find_map(arr1: np.ndarray, arr2: np.ndarray) -> np.ndarray:
     """
     Maps the elements of one array to another based on sorting order.
 
@@ -465,7 +478,13 @@ def find_map(arr1, arr2):
 # -----------------------------------------------------------------------------
 
 
-def filter_data(data, fs, Wn, order=4, btype="lowpass"):
+def filter_data(
+    data: np.ndarray,
+    fs: float,
+    Wn: float,
+    order: int = 4,
+    btype: str = "lowpass",
+):
     """
     Apply a Butterworth filter to the input data.
 

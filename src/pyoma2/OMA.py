@@ -21,10 +21,10 @@ from scipy.signal import decimate, detrend
 from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
 from pyoma2.algorithm.data.result import MsPoserResult
 from pyoma2.functions.Gen_funct import (
-    PRE_MultiSetup,
     filter_data,
     find_map,
     merge_mode_shapes,
+    pre_MultiSetup,
 )
 from pyoma2.functions.plot_funct import (
     STFT,
@@ -2207,7 +2207,7 @@ class MultiSetup_PreGER(BaseSetup):
         self.ref_ind = ref_ind  # list of (list of) reference indices
         self.Nsetup = len(ref_ind)
         # Pre-process the data so to be multi-setup compatible
-        Y = PRE_MultiSetup(datasets, ref_ind)
+        Y = pre_MultiSetup(datasets, ref_ind)
         self.data = Y
         self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
         self.datasets = datasets
@@ -2418,7 +2418,7 @@ class MultiSetup_PreGER(BaseSetup):
             Ndats.append(Ndat)
             Ts.append(T)
 
-        Y = PRE_MultiSetup(newdatasets, self.ref_ind)
+        Y = pre_MultiSetup(newdatasets, self.ref_ind)
         fs = self.fs / q
         dt = 1 / self.fs
 
@@ -2491,7 +2491,7 @@ class MultiSetup_PreGER(BaseSetup):
             )
             newdatasets.append(newdata)
 
-        Y = PRE_MultiSetup(newdatasets, self.ref_ind)
+        Y = pre_MultiSetup(newdatasets, self.ref_ind)
         if inplace:
             self.data = Y
             return None
@@ -2543,7 +2543,7 @@ class MultiSetup_PreGER(BaseSetup):
             newdata = super()._detrend_data(data=data, **kwargs)
             newdatasets.append(newdata)
 
-        Y = PRE_MultiSetup(newdatasets, self.ref_ind)
+        Y = pre_MultiSetup(newdatasets, self.ref_ind)
         if inplace:
             self.data = Y
             return None

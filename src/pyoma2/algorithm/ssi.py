@@ -5,6 +5,7 @@ Authors:
 Dag Pasca
 Diego Margoni
 """
+
 from __future__ import annotations
 
 import logging
@@ -122,7 +123,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         # Get frequency poles (and damping and mode shapes)
         Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
         # Get the labels of the poles
-        Lab = Gen_funct.Lab_stab(
+        Lab = Gen_funct.lab_stab(
             Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
         )
 
@@ -642,7 +643,7 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
         # Get frequency poles (and damping and mode shapes)
         Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
         # Get the labels of the poles
-        Lab = Gen_funct.Lab_stab(
+        Lab = Gen_funct.lab_stab(
             Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
         )
 
