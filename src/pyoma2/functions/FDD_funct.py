@@ -4,7 +4,9 @@ Part of the pyOMA2 package.
 Author:
 Dag Pasca
 """
+
 import logging
+import typing
 
 import numpy as np
 from scipy import signal
@@ -20,7 +22,13 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-def SD_PreGER(Y, fs, nxseg=1024, pov=0.5, method="per"):
+def SD_PreGER(
+    Y: list[dict[str, np.ndarray]],
+    fs: float,
+    nxseg: int = 1024,
+    pov: float = 0.5,
+    method: typing.Literal["per", "cor"] = "per",
+):
     """
     Estimate the PSD matrix for a multi-setup experiment using either the correlogram
     method or the periodogram method.
@@ -359,44 +367,25 @@ def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF
 
     for csm in range(cm):  # Loop through close mode (if any, default 1)
         # Frequency Spatial Domain Decomposition variation (defaulf)
-        if method == "FSDD":
-            # Save values that satisfy MAC > MAClim condition
-            SDOFbell += np.array(
-                [
-                    np.dot(
-                        np.dot(phi_FDD.conj().T, Sy[:, :, el]), phi_FDD
-                    )  # Enhanced PSD matrix (frequency filtered)
-                    if GF.MAC(phi_FDD, Svec[csm, :, el]) > MAClim
-                    else 0
-                    for el in range(int(idxlim[0]), int(idxlim[1]))
-                ]
-            )
-            # Do the same for mode shapes
-            SDOFms += np.array(
-                [
-                    Svec[csm, :, el]
-                    if GF.MAC(phi_FDD, Svec[csm, :, el]) > MAClim
-                    else np.zeros(Nch)
-                    for el in range(int(idxlim[0]), int(idxlim[1]))
-                ]
-            )
-        elif method == "EFDD":
-            SDOFbell += np.array(
-                [
-                    Sval[csm, csm, l_]
-                    if GF.MAC(phi_FDD, Svec[csm, :, l_]) > MAClim
-                    else 0
-                    for l_ in range(int(idxlim[0]), int(idxlim[1]))
-                ]
-            )
-            SDOFms += np.array(
-                [
-                    Svec[csm, :, l_]
-                    if GF.MAC(phi_FDD, Svec[csm, :, l_]) > MAClim
-                    else np.zeros(Nch)
-                    for l_ in range(int(idxlim[0]), int(idxlim[1]))
-                ]
-            )
+        SDOFbell += np.array(
+            [
+                np.dot(
+                    np.dot(phi_FDD.conj().T, Sy[:, :, el]), phi_FDD
+                )  # Enhanced PSD matrix (frequency filtered)
+                if GF.MAC(phi_FDD, Svec[csm, :, el]) > MAClim
+                else 0
+                for el in range(int(idxlim[0]), int(idxlim[1]))
+            ]
+        )
+        # Do the same for mode shapes
+        SDOFms += np.array(
+            [
+                Svec[csm, :, el]
+                if GF.MAC(phi_FDD, Svec[csm, :, el]) > MAClim
+                else np.zeros(Nch)
+                for el in range(int(idxlim[0]), int(idxlim[1]))
+            ]
+        )
 
     SDOFbell1 = np.zeros((nxseg), dtype=complex)
     SDOFms1 = np.zeros((nxseg, Nch), dtype=complex)
@@ -409,18 +398,18 @@ def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF
 
 
 def EFDD_MPE(
-    Sy,
-    freq,
-    dt,
-    sel_freq,
-    methodSy,
-    method="FSDD",
-    DF1=0.1,
-    DF2=1.0,
-    cm=1,
-    MAClim=0.85,
-    sppk=3,
-    npmax=20,
+    Sy: np.ndarray,
+    freq: np.ndarray,
+    dt: float,
+    sel_freq: list,
+    methodSy: str,
+    method: str = "FSDD",
+    DF1: float = 0.1,
+    DF2: float = 1.0,
+    cm: int = 1,
+    MAClim: float = 0.85,
+    sppk: int = 3,
+    npmax: int = 20,
 ):
     """
     Extracts modal parameters using the Enhanced Frequency Domain Decomposition (EFDD) and
