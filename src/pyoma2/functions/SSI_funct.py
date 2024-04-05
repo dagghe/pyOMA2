@@ -5,7 +5,9 @@ Authors:
 Dag Pasca
 Angelo Aloisio
 """
+
 import logging
+import typing
 
 import numpy as np
 from tqdm import tqdm, trange
@@ -20,7 +22,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-def BuildHank(Y, Yref, br, fs, method):
+def BuildHank(Y: np.ndarray, Yref: np.ndarray, br: int, fs: float, method: str):
     """
     Construct a Hankel matrix using various methods based on input data for System Identification.
 
@@ -63,9 +65,7 @@ def BuildHank(Y, Yref, br, fs, method):
     N = Ndat - p - q  # lenght of the Hankel matrix
     if method == "cov_mm":
         # Future and past Output
-        Yf = np.vstack(
-            [(1 / N**0.5) * Y[:, q + 1 + i : N + q + i] for i in range(p + 1)]
-        )
+        Yf = np.vstack([(1 / N**0.5) * Y[:, q + 1 + i : N + q + i] for i in range(p + 1)])
         Yp = np.vstack(
             [(1 / N**0.5) * Yref[:, q + i : N + q - 1 + i] for i in range(0, -q, -1)]
         )
@@ -106,9 +106,7 @@ def BuildHank(Y, Yref, br, fs, method):
     elif method == "dat":
         # Efficient method for assembling the Hankel matrix for data driven SSI
         # see [1]
-        Yf = np.vstack(
-            [(1 / N**0.5) * Y[:, q + 1 + i : N + q + i] for i in range(p + 1)]
-        )
+        Yf = np.vstack([(1 / N**0.5) * Y[:, q + 1 + i : N + q + i] for i in range(p + 1)])
         n_ref = Yref.shape[0]
         Yp = np.vstack(
             [(1 / N**0.5) * Yref[:, q + i : N + q - 1 + i] for i in range(0, -q, -1)]
@@ -120,9 +118,7 @@ def BuildHank(Y, Yref, br, fs, method):
         return Hank
 
     elif method == "YfYp":
-        Yf = np.vstack(
-            [(1 / N**0.5) * Y[:, q + 1 + i : N + q + i] for i in range(p + 1)]
-        )
+        Yf = np.vstack([(1 / N**0.5) * Y[:, q + 1 + i : N + q + i] for i in range(p + 1)])
         Yp = np.vstack(
             [(1 / N**0.5) * Yref[:, q + i : N + q - 1 + i] for i in range(0, -q, -1)]
         )
@@ -139,7 +135,7 @@ def BuildHank(Y, Yref, br, fs, method):
 # -----------------------------------------------------------------------------
 
 
-def AC2MP(A, C, dt):
+def AC2MP(A: np.ndarray, C: np.ndarray, dt: float):
     """
     Convert state-space representation (A, C matrices) to modal parameters.
 
@@ -179,7 +175,7 @@ def AC2MP(A, C, dt):
 # -----------------------------------------------------------------------------
 
 
-def SSI(H, br, ordmax, step=1):
+def SSI(H: np.ndarray, br: int, ordmax: int, step: int = 1):
     """
     Perform System Identification using Stochastic Subspace Identification (SSI) method.
 
@@ -233,7 +229,7 @@ def SSI(H, br, ordmax, step=1):
 # -----------------------------------------------------------------------------
 
 
-def SSI_FAST(H, br, ordmax, step=1):
+def SSI_FAST(H: np.ndarray, br: int, ordmax: int, step: int = 1):
     """
     Perform efficient System Identification using the Stochastic Subspace Identification (SSI) method.
 
@@ -288,7 +284,7 @@ def SSI_FAST(H, br, ordmax, step=1):
 # -----------------------------------------------------------------------------
 
 
-def SSI_Poles(AA, CC, ordmax, dt, step=1):
+def SSI_Poles(AA: list, CC: list, ordmax: int, dt: float, step: int = 1):
     """
     Compute modal parameters from state-space models identified by Stochastic Subspace Identification (SSI).
 
@@ -342,7 +338,15 @@ def SSI_Poles(AA, CC, ordmax, dt, step=1):
 # -----------------------------------------------------------------------------
 
 
-def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
+def SSI_MulSet(
+    Y: list,
+    fs: float,
+    br: int,
+    ordmax: int,
+    methodHank: str,
+    step: int = 1,
+    method: str = "FAST",
+):
     """
     Perform Subspace System Identification SSI for multiple setup measurements.
 
@@ -454,13 +458,27 @@ def SSI_MulSet(Y, fs, br, ordmax, methodHank, step=1, method="FAST"):
             A.append(np.dot(np.linalg.pinv(Obs_all[:-n_DOF, :i]), Obs_all[n_DOF:, :i]))
             C.append(Obs_all[:n_DOF, :i])
 
+    else:
+        raise ValueError("method must be either 'FAST' or 'SLOW'")
+
     return A, C
 
 
 # -----------------------------------------------------------------------------
 
 
-def Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_xi):
+def Lab_stab_SSI(
+    Fn: np.ndarray,
+    Sm: np.ndarray,
+    Ms: np.ndarray,
+    ordmin: int,
+    ordmax: int,
+    step: int,
+    err_fn: float,
+    err_xi: float,
+    err_ms: float,
+    max_xi: float,
+):
     """
     Construct a Stability Chart for the Stochastic Subspace Identification (SSI) method.
 
@@ -573,7 +591,16 @@ def Lab_stab_SSI(Fn, Sm, Ms, ordmin, ordmax, step, err_fn, err_xi, err_ms, max_x
 # -----------------------------------------------------------------------------
 
 
-def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol=1e-2):
+def SSI_MPE(
+    sel_freq: list,
+    Fn_pol: np.ndarray,
+    Sm_pol: np.ndarray,
+    Ms_pol: np.ndarray,
+    order: int,
+    Lab: typing.Optional[np.ndarray] = None,
+    deltaf: float = 0.05,
+    rtol: float = 1e-2,
+):
     """
     Extract modal parameters using Stochastic Subspace Identification (SSI) method for selected frequencies.
 
@@ -697,7 +724,7 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
         # =============================================================================
         # OPZIONE 2 order = int
         # -----------------------------------------------------------------------------
-        elif type(order) == int:
+        elif isinstance(order, int):
             sel = np.nanargmin(np.abs(Fn_pol[:, order] - fj))
             fns_at_ord_ii = Fn_pol[:, order][sel]
             check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)
@@ -712,7 +739,7 @@ def SSI_MPE(sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=0.05, rtol
         # =============================================================================
         # OPZIONE 3 order = list[int]
         # -----------------------------------------------------------------------------
-        elif type(order) == list:
+        elif isinstance(order, list):
             sel = np.nanargmin(np.abs(Fn_pol[:, order[ii]] - fj))
             fns_at_ord_ii = Fn_pol[:, order[ii]][sel]
             check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)

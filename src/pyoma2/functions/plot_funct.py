@@ -6,6 +6,7 @@ Dag Pasca
 """
 
 import logging
+import typing
 
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
@@ -20,7 +21,14 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-def CMIF_plot(S_val, freq, freqlim=None, nSv="all", fig=None, ax=None):
+def CMIF_plot(
+    S_val: np.ndarray,
+    freq: np.ndarray,
+    freqlim: typing.Optional[typing.Tuple] = None,
+    nSv: str = "all",
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
+):
     """
     Plots the Complex Mode Indicator Function (CMIF) based on given singular values and frequencies.
 
@@ -63,7 +71,7 @@ def CMIF_plot(S_val, freq, freqlim=None, nSv="all", fig=None, ax=None):
     # number of singular values
     else:
         try:
-            int(nSv) < S_val.shape[1]
+            assert int(nSv) < S_val.shape[1]
         except Exception as e:
             # DA SISTEMARE!!!
             raise ValueError("ERROR") from e
@@ -96,7 +104,12 @@ def CMIF_plot(S_val, freq, freqlim=None, nSv="all", fig=None, ax=None):
 # -----------------------------------------------------------------------------
 
 
-def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
+def EFDD_FIT_plot(
+    Fn: np.ndarray,
+    Xi: np.ndarray,
+    PerPlot: typing.List[typing.Tuple],
+    freqlim: typing.Optional[typing.Tuple] = None,
+):
     """
     Plot detailed results for the Enhanced Frequency Domain Decomposition (EFDD) and
     the Frequency Spatial Domain Decomposition (FSDD) algorithms.
@@ -213,17 +226,18 @@ def EFDD_FIT_plot(Fn, Xi, PerPlot, freqlim=None):
 
 # -----------------------------------------------------------------------------
 
+
 # COMMENT
 def Stab_plot(
-    Fn,
-    Lab,
-    step,
-    ordmax,
-    ordmin=0,
-    freqlim=None,
-    hide_poles=True,
-    fig=None,
-    ax=None,
+    Fn: np.ndarray,
+    Lab: np.ndarray,
+    step: int,
+    ordmax: int,
+    ordmin: int = 0,
+    freqlim: typing.Optional[typing.Tuple] = None,
+    hide_poles: bool = True,
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
 ):
     """
     Plot the stabilization chart for modal analysis.
@@ -355,12 +369,12 @@ def Stab_plot(
 
 
 def Cluster_plot(
-    Fn,
-    Sm,
-    Lab,
-    ordmin=0,
-    freqlim=None,
-    hide_poles=True,
+    Fn: np.ndarray,
+    Sm: np.ndarray,
+    Lab: np.ndarray,
+    ordmin: int = 0,
+    freqlim: typing.Optional[typing.Tuple] = None,
+    hide_poles: bool = True,
 ):
     """
     Plots the frequency-damping clusters of the identified poles using the Stochastic Subspace Identification
@@ -489,7 +503,9 @@ def Cluster_plot(
 # =============================================================================
 
 
-def plt_nodes(ax, nodes_coord, alpha=1, color="k"):
+def plt_nodes(
+    ax: plt.Axes, nodes_coord: np.ndarray, alpha: float = 1.0, color: str = "k"
+):
     """
     Plots nodes coordinates in a 3D scatter plot on the provided axes.
 
@@ -522,7 +538,13 @@ def plt_nodes(ax, nodes_coord, alpha=1, color="k"):
 # -----------------------------------------------------------------------------
 
 
-def plt_lines(ax, nodes_coord, lines, alpha=1, color="k"):
+def plt_lines(
+    ax: plt.Axes,
+    nodes_coord: np.ndarray,
+    lines: np.ndarray,
+    alpha: float = 1.0,
+    color: str = "k",
+):
     """
     Plots lines between specified nodes in a 3D plot on the provided axes.
 
@@ -564,7 +586,13 @@ def plt_lines(ax, nodes_coord, lines, alpha=1, color="k"):
 # -----------------------------------------------------------------------------
 
 
-def plt_surf(ax, nodes_coord, surf, alpha=0.5, color="cyan"):
+def plt_surf(
+    ax: plt.Axes,
+    nodes_coord: np.ndarray,
+    surf: np.ndarray,
+    alpha: float = 0.5,
+    color: str = "cyan",
+):
     """
     Plots a 3D surface defined by nodes and surface triangulation on the provided axes.
 
@@ -603,13 +631,13 @@ def plt_surf(ax, nodes_coord, surf, alpha=0.5, color="cyan"):
 
 
 def plt_quiver(
-    ax,
-    nodes_coord,
-    directions,
-    scaleF=2,
-    color="red",
-    names=None,
-    color_text="red",
+    ax: plt.Axes,
+    nodes_coord: np.ndarray,
+    directions: np.ndarray,
+    scaleF: float = 2,
+    color: str = "red",
+    names: typing.Optional[typing.List[str]] = None,
+    color_text: str = "red",
 ):
     """
     Plots vectors (arrows) on a 3D plot to represent directions and magnitudes at given node coordinates.
@@ -652,12 +680,10 @@ def plt_quiver(
         xs0, ys0, zs0, (xs1 - xs0), (ys1 - ys0), (zs1 - zs0), length=scaleF, color=color
     )
     if names is not None:
-        ii = 0
-        for nam in names:
+        for ii, nam in enumerate(names):
             ax.text(
                 Points_f[ii, 0], Points_f[ii, 1], Points_f[ii, 2], f"{nam}", color="red"
             )
-            ii += 1
     return ax
 
 
@@ -665,7 +691,12 @@ def plt_quiver(
 
 
 def set_ax_options(
-    ax, bg_color="w", remove_fill=True, remove_grid=True, remove_axis=True, add_orig=True
+    ax: plt.Axes,
+    bg_color: str = "w",
+    remove_fill: bool = True,
+    remove_grid: bool = True,
+    remove_axis: bool = True,
+    add_orig: bool = True,
 ):
     """
     Configures various display options for a given matplotlib 3D axes object.
@@ -736,7 +767,7 @@ def set_ax_options(
 # -----------------------------------------------------------------------------
 
 
-def set_view(ax, view):
+def set_view(ax: plt.Axes, view: str):
     """
     Sets the viewing angle of a 3D matplotlib axes object based on a predefined view option.
 
@@ -789,7 +820,14 @@ def set_view(ax, view):
 # =============================================================================
 
 
-def plt_data(data, fs, nc=1, names=None, unit="unit", show_rms=False):
+def plt_data(
+    data: np.ndarray,
+    fs: float,
+    nc: int = 1,
+    names: typing.Optional[typing.List[str]] = None,
+    unit: str = "unit",
+    show_rms: bool = False,
+):
     """
     Plots time series data for multiple channels, with an option to include the Root Mean Square (RMS)
       of each signal.
@@ -898,7 +936,13 @@ def plt_data(data, fs, nc=1, names=None, unit="unit", show_rms=False):
 
 
 def plt_ch_info(
-    data, fs, nxseg=1024, freqlim=None, logscale=False, ch_idx="all", unit="unit"
+    data: np.ndarray,
+    fs: float,
+    nxseg: int = 1024,
+    freqlim: typing.Optional[typing.Tuple] = None,
+    logscale: bool = False,
+    ch_idx: typing.Union[int, typing.List[int], str] = "all",
+    unit: str = "unit",
 ):
     """
     Plot channel information including time history, normalised auto-correlation,
@@ -939,7 +983,6 @@ def plt_ch_info(
     density function, and a normal probability plot for each specified channel.
     """
     if ch_idx != "all":
-
         data = data[:, ch_idx]
 
     ndat, nch = data.shape
@@ -1057,7 +1100,15 @@ def plt_ch_info(
 
 # -----------------------------------------------------------------------------
 # Short time Fourier transform - SPECTROGRAM
-def STFT(data, fs, nxseg=512, pov=0.9, win="hann", freqlim=None, ch_idx="all"):
+def STFT(
+    data: np.ndarray,
+    fs: float,
+    nxseg: int = 512,
+    pov: float = 0.9,
+    win: str = "hann",
+    freqlim: typing.Optional[typing.Tuple] = None,
+    ch_idx: typing.Union[int, typing.List[int], str] = "all",
+):
     """
     Perform the Short Time Fourier Transform (STFT) to generate spectrograms for given signal data.
 
