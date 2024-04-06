@@ -4,8 +4,10 @@ Part of the pyOMA2 package.
 Authors:
 Dag Pasca
 """
+
 import itertools
 import logging
+import typing
 
 import numpy as np
 
@@ -20,7 +22,9 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-def pLSCF(Sy, dt, ordmax, sgn_basf=-1):
+def pLSCF(
+    Sy: np.ndarray, dt: float, ordmax: int, sgn_basf: int = -1.0
+) -> typing.Tuple[typing.List[np.ndarray], typing.List[np.ndarray]]:
     """
     Perform the poly-reference Least Square Complex Frequency (pLSCF) algorithm.
 
@@ -37,7 +41,7 @@ def pLSCF(Sy, dt, ordmax, sgn_basf=-1):
 
     Returns
     -------
-    tuple of numpy.ndarray
+    tuple of list numpy.ndarray
         - Ad : The denominator polynomial coefficients of the transfer function.
         - Bn : The numerator polynomial coefficients of the transfer function.
     """
@@ -99,7 +103,9 @@ def pLSCF(Sy, dt, ordmax, sgn_basf=-1):
     return Ad, Bn
 
 
-def pLSCF_Poles(Ad, Bn, dt, methodSy, nxseg):
+def pLSCF_Poles(
+    Ad: np.ndarray, Bn: np.ndarray, dt: float, methodSy: str, nxseg: int
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Extract poles from the pLSCF algorithm results.
 
@@ -128,7 +134,6 @@ def pLSCF_Poles(Ad, Bn, dt, methodSy, nxseg):
     for ii in range(len(Ad)):
         A_den = Ad[ii]
         B_num = Bn[ii]
-
         A, C = rmfd2AC(A_den, B_num)
 
         fn, xi, phi = AC2MP_poly(A, C, dt, methodSy, nxseg)
@@ -155,7 +160,7 @@ def pLSCF_Poles(Ad, Bn, dt, methodSy, nxseg):
     return Fns, Xis, Phi1
 
 
-def rmfd2AC(A_den, B_num):
+def rmfd2AC(A_den: np.ndarray, B_num: np.ndarray) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
     Convert Right Matrix Fraction Description (RMFD) to state-space representation.
 
@@ -172,10 +177,10 @@ def rmfd2AC(A_den, B_num):
         - A : State matrix of the system.
         - C : Output matrix of the system.
     """
-    n, l, m = B_num.shape
+    n, l_, m = B_num.shape
     A = np.zeros((n * m, n * m))
     A[m:, :-m] = np.eye((n - 1) * m)
-    C = np.zeros((l, n * m))
+    C = np.zeros((l_, n * m))
     Bn_last = B_num[-1]
     Ad_last = A_den[-1]
     for i, (Adi, Bni) in enumerate(zip(A_den[:-1][::-1], B_num[:-1][::-1])):
@@ -185,7 +190,9 @@ def rmfd2AC(A_den, B_num):
     return A, C
 
 
-def AC2MP_poly(A, C, dt, methodSy, nxseg):
+def AC2MP_poly(
+    A: np.ndarray, C: np.ndarray, dt: float, methodSy: str, nxseg: int
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Convert state-space representation to modal parameters.
 
@@ -241,7 +248,16 @@ def AC2MP_poly(A, C, dt, methodSy, nxseg):
 # -----------------------------------------------------------------------------
 
 
-def pLSCF_MPE(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab=None, deltaf=0.05, rtol=1e-2):
+def pLSCF_MPE(
+    sel_freq: typing.List[float],
+    Fn_pol: np.ndarray,
+    Xi_pol: np.ndarray,
+    Phi_pol: np.ndarray,
+    order: typing.Union[int, typing.List[int], str] = "find_min",
+    Lab: np.ndarray = None,
+    deltaf: float = 0.05,
+    rtol: float = 1e-2,
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Extract modal parameters using the pLSCF method for selected frequencies.
 
@@ -353,7 +369,7 @@ def pLSCF_MPE(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab=None, deltaf=0.05, r
         # =============================================================================
         # OPZIONE 2 order = int
         # -----------------------------------------------------------------------------
-        elif type(order) == int:
+        elif isinstance(order, int):
             sel = np.nanargmin(np.abs(Fn_pol[:, order] - fj))
             fns_at_ord_ii = Fn_pol[:, order][sel]
             check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)
@@ -368,7 +384,7 @@ def pLSCF_MPE(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab=None, deltaf=0.05, r
         # =============================================================================
         # OPZIONE 3 order = list[int]
         # -----------------------------------------------------------------------------
-        elif type(order) == list:
+        elif isinstance(order, list):
             sel = np.nanargmin(np.abs(Fn_pol[:, order[ii]] - fj))
             fns_at_ord_ii = Fn_pol[:, order[ii]][sel]
             check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)
