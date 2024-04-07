@@ -100,6 +100,12 @@ skip-magic-trailing-comma = false
 # Automatically detect and use the appropriate line ending style.
 line-ending = "auto"
 
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+    "E402",  # import violations
+    "F401",   # imported but unused
+]
+
 [tool.pdm.dev-dependencies]
 docs = [
     "sphinx>=7.1.2",
@@ -114,4 +120,5 @@ qa = [
     "pytest>=7.4.4",
     "pytest-cov>=4.1.0",
     "notebook>=7.1.2",
+    "tox>=4.14.2",
 ]

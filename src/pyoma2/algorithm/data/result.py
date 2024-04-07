@@ -187,6 +187,7 @@ class MsPoserResult(BaseModel):
     Xi_cov : numpy.typing.NDArray
         Covariance of damping ratios.
     """
+
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     Phi: npt.NDArray[np.float64]
     Fn: npt.NDArray[np.float64]

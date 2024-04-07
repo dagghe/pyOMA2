@@ -4,6 +4,7 @@ Part of the pyOMA2 package.
 Authors:
 Diego Margoni
 """
+
 import logging
 import os
 

@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def SD_PreGER(
-    Y: list[dict[str, np.ndarray]],
+    Y: typing.List[typing.Dict[str, np.ndarray]],
     fs: float,
     nxseg: int = 1024,
     pov: float = 0.5,

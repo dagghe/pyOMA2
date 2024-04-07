@@ -3,6 +3,7 @@ This module provides classes for handling geometry-related data, specifically de
 to store and manipulate sensor and background geometry information. It includes two main
 classes: Geometry1 and Geometry2, each tailored for different types of geometric data.
 """
+
 from __future__ import annotations
 
 import typing
