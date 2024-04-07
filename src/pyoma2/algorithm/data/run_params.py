@@ -2,6 +2,7 @@
 This module provides classes for storing run parameters for various modal analysis
 algorithms included in the pyOMA2 module.
 """
+
 from __future__ import annotations
 
 import typing
