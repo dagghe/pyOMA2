@@ -1,11 +1,8 @@
 import typing
-import unittest.mock
 
 import numpy as np
 import pandas as pd
 import pytest
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 from scipy.signal import decimate, detrend
 
 from src.pyoma2.algorithm import FDD_algo, FSDD_algo, SSIcov_algo
@@ -183,13 +180,6 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
     except Exception as e:
         assert False, f"plot_geo1 raised an exception {e}"
 
-    # Check the title of the plot
-    assert ax.get_title() == "Plot of the geometry and sensors' placement and direction"
-
-    # Check the number of lines in the plot
-    expected_number_of_lines = 11
-    assert len(ax.lines) == expected_number_of_lines
-
     # PLOT GEOMETRY WITH bg_surf
     # Define the bg_surf
     bg_surf = np.array([[0, 1, 2], [2, 3, 0]])
@@ -216,8 +206,6 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
         ss.add_algorithms(f_al)
         ss.run_all()
         fig, ax = ss["fake1"].plot_mode_g1(Geo1=ss.Geo1, mode_numb=2, view="3D", scaleF=2)
-        assert isinstance(fig, Figure)
-        assert isinstance(ax, Axes)
     except Exception as e:
         assert False, f"plot_mode_geo1 raised an exception {e}"
 
@@ -420,17 +408,13 @@ def test_plot_data(
     # test PLOT_DATA method
     try:
         fig, ax = ss.plot_data()
-        assert isinstance(fig, Figure)
-        assert isinstance(ax, Axes)
     except Exception as e:
         assert False, f"plot_data raised an exception {e}"
 
     # test PLOT_CH_INFO method
     try:
         fig, ax = ss.plot_ch_info(ch_idx=[-1])
-        assert isinstance(fig, Figure)
         assert isinstance(ax, list)
-        assert isinstance(ax[0], Axes)
     except Exception as e:
         assert False, f"plot_ch_info raised an exception {e}"
 
@@ -506,46 +490,36 @@ def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
     # plot SINGULAR VALUES
     try:
         fig, ax = fsdd.plot_CMIF(freqlim=(1, 4))
-        assert isinstance(fig, Figure)
-        assert isinstance(ax, Axes)
     except Exception as e:
         assert False, f"plot_CMIF raised an exception {e}"
 
     # plot STABILISATION CHART for SSI
     try:
         fig4, ax4 = ssicov.plot_STDiag(freqlim=(1, 4), hide_poles=False)
-        assert isinstance(fig4, Figure)
-        assert isinstance(ax4, Axes)
     except Exception as e:
         assert False, f"plot_STDiag raised an exception {e}"
 
     # plot FREQUECY-DAMPING CLUSTERS for SSI
     try:
         fig4, ax4 = ssicov.plot_cluster(freqlim=(1, 4))
-        assert isinstance(fig4, Figure)
-        assert isinstance(ax4, Axes)
     except Exception as e:
         assert False, f"plot_cluster raised an exception {e}"
 
     # run MPE_FROMPLOT for algorithms
-    # Mocking the tkinter.Tk.mainloop and tkinter.Tk.protocol methods
-    with unittest.mock.patch("tkinter.Tk.mainloop"), unittest.mock.patch(
-        "tkinter.Tk.protocol"
-    ):
-        try:
-            ss.MPE_fromPlot("SSIcov", freqlim=(1, 4))
-        except Exception as e:
-            assert False, f"MPE_fromPlot raised an exception {e} for SSIcov"
+    try:
+        ss.MPE_fromPlot("SSIcov", freqlim=(1, 4))
+    except Exception as e:
+        assert False, f"MPE_fromPlot raised an exception {e} for SSIcov"
 
-        try:
-            ss.MPE_fromPlot("FSDD", freqlim=(1, 4))
-        except Exception as e:
-            assert False, f"MPE_fromPlot raised an exception {e} for FSDD"
+    try:
+        ss.MPE_fromPlot("FSDD", freqlim=(1, 4))
+    except Exception as e:
+        assert False, f"MPE_fromPlot raised an exception {e} for FSDD"
 
-        try:
-            ss.MPE_fromPlot("FDD", freqlim=(1, 4))
-        except Exception as e:
-            assert False, f"MPE_fromPlot raised an exception {e} for FDD"
+    try:
+        ss.MPE_fromPlot("FDD", freqlim=(1, 4))
+    except Exception as e:
+        assert False, f"MPE_fromPlot raised an exception {e} for FDD"
 
     # run MPE for algorithms
     try:
@@ -574,15 +548,11 @@ def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
     # PLOTE_MODE_G1
     try:
         fig, ax = ss["FDD"].plot_mode_g1(Geo1=ss.Geo1, mode_numb=2, view="3D", scaleF=2)
-        assert isinstance(fig, Figure)
-        assert isinstance(ax, Axes)
     except Exception as e:
         assert False, f"plot_mode_g1 raised an exception {e} for FDD"
 
     # PLOTE_MODE_G2
     try:
         fig, ax = ss["FSDD"].plot_mode_g2(Geo2=ss.Geo2, mode_numb=2, view="3D", scaleF=2)
-        assert isinstance(fig, Figure)
-        assert isinstance(ax, Axes)
     except Exception as e:
         assert False, f"plot_mode_g2 raised an exception {e} for FSDD"

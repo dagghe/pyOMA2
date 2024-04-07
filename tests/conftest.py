@@ -1,4 +1,6 @@
 import typing
+import unittest.mock
+from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
@@ -247,3 +249,53 @@ def multi_setup_preger_fixture(
     # Creating Multi setup
     msp = MultiSetup_PreGER(fs=100, ref_ind=ref_ind, datasets=data)
     yield msp
+
+
+@pytest.fixture(autouse=True)
+def mock_imports():
+    with unittest.mock.patch(
+        "matplotlib.pyplot.figure"
+    ) as mock_figure, unittest.mock.patch(
+        "matplotlib.pyplot.show"
+    ) as mock_show, unittest.mock.patch(
+        "matplotlib.pyplot.subplots"
+    ) as subplots, unittest.mock.patch(
+        "pyoma2.plot.Sel_from_plot.NavigationToolbar2Tk"
+    ), unittest.mock.patch(
+        "pyoma2.plot.Sel_from_plot.FigureCanvasTkAgg"
+    ), unittest.mock.patch(
+        "src.pyoma2.functions.plot_funct.plt.tight_layout"
+    ), unittest.mock.patch("tkinter.Tk"), unittest.mock.patch("tkinter.Menu"):
+        """
+        Mocks the imports for the tests.
+        All mocked imports area bout GUI and plotting.
+        """
+
+        def subplots_side_effect(nrows=1, ncols=1, *args, **kwargs):
+            """
+            Mock for matplotlib.pyplot.subplots.
+            Returns a tuple with a MagicMock for the figure and a 2-dimensional
+            array of MagicMocks for the axes.
+            """
+            if nrows == 1 and ncols == 1:
+                return (MagicMock(), MagicMock())
+            else:
+                if nrows == 1 or ncols == 1:
+                    size = max(
+                        nrows, ncols
+                    )  # Determine the size of the 1-dimensional array
+                    mock_array = np.empty(
+                        size, dtype=object
+                    )  # Create a 1-dimensional array
+                    for i in range(size):
+                        mock_array[i] = MagicMock()
+                else:
+                    mock_array = np.empty((nrows, ncols), dtype=object)
+                    for i in range(nrows):
+                        for j in range(ncols):
+                            mock_array[i, j] = MagicMock()
+
+                return (MagicMock(), mock_array)
+
+        subplots.side_effect = subplots_side_effect
+        yield mock_figure, mock_show, subplots
