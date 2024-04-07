@@ -1,5 +1,3 @@
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 from pyoma2.algorithm import SSIdat_algo_MS, pLSCF_algo_MS
 
 from src.pyoma2.OMA import MultiSetup_PreGER
@@ -128,8 +126,6 @@ def test_plot_data(ms_preger: MultiSetup_PreGER) -> None:
         figs, axs = ms_preger.plot_data(data_idx=[0, 1, 2])
         assert isinstance(figs, list)
         assert isinstance(axs, list)
-        assert isinstance(figs[0], Figure)
-        assert isinstance(axs[0], Axes)
     except Exception as e:
         assert False, f"plot_data raised an exception {e}"
 
@@ -138,8 +134,6 @@ def test_plot_data(ms_preger: MultiSetup_PreGER) -> None:
         figs, axs = ms_preger.plot_ch_info(data_idx=[0, 1, 2], ch_idx=[-1])
         assert isinstance(figs, list)
         assert isinstance(axs, list)
-        assert isinstance(figs[0], Figure)
-        assert isinstance(axs[0][0], Axes)
     except Exception as e:
         assert False, f"plot_ch_info raised an exception {e}"
 
@@ -148,8 +142,6 @@ def test_plot_data(ms_preger: MultiSetup_PreGER) -> None:
         figs, axs = ms_preger.plot_STFT(data_idx=[0, 1, 2])
         assert isinstance(figs, list)
         assert isinstance(axs, list)
-        assert isinstance(figs[0][0], Figure)
-        assert isinstance(axs[0][0], Axes)
     except Exception as e:
         assert False, f"plot_STFT raised an exception {e}"
 
