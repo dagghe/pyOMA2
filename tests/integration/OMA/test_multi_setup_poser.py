@@ -106,7 +106,7 @@ def test_plot_data(ms_poser: MultiSetup_PoSER) -> None:
     Test the plotting and data manipulation methods of the MultiSetup_PoSER class.
     """
     # test DECIMATE_DATA method not inplace
-    assert ms_poser.data[0]["ref"][0][0] == -3.249758486587817e-05
+    assert math.isclose(ms_poser.data[0]["ref"][0][0], -3.249758486587817e-05)
     assert ms_poser.fs == 100.0
     assert ms_poser.dt == 0.01
     decimation_factor = 4
@@ -118,7 +118,7 @@ def test_plot_data(ms_poser: MultiSetup_PoSER) -> None:
     assert dt == 0.01
 
     # initial class data has not changed
-    assert ms_poser.data[0]["ref"][0][0] == -3.249758486587817e-05
+    assert math.isclose(ms_poser.data[0]["ref"][0][0], -3.249758486587817e-05)
     assert ms_poser.fs == 100.0
     assert ms_poser.dt == 0.01
 
@@ -141,14 +141,14 @@ def test_plot_data(ms_poser: MultiSetup_PoSER) -> None:
 
     # test FILTER_DATA method not inplace
     new_data = ms_poser.filter_data(Wn=1, order=1, btype="lowpass", inplace=False)
-    assert new_data[0]["ref"][0][0] == -3.28116336523655e-05
+    assert math.isclose(new_data[0]["ref"][0][0], -3.28116336523655e-05)
 
     # initial class data has not changed
-    assert ms_poser.data[0]["ref"][0][0] == -3.238227274628828e-05
+    assert math.isclose(ms_poser.data[0]["ref"][0][0], -3.238227274628828e-05)
 
     # test FILTER_DATA method inplace
     ms_poser.filter_data(Wn=1, order=1, btype="lowpass", inplace=True)
-    assert ms_poser.data[0]["ref"][0][0] == -3.28116336523655e-05
+    assert math.isclose(ms_poser.data[0]["ref"][0][0], -3.28116336523655e-05)
 
     # test PLOT_DATA method
     try:
