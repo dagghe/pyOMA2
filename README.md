@@ -8,6 +8,8 @@
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
+[![Test Pyoma2](https://github.com/dagghe/pyOMA2/actions/workflows/main.yml/badge.svg?branch=main&event=push)](https://github.com/dagghe/pyOMA2/actions/workflows/main.yml)
+
 
 _______________________
 
