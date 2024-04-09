@@ -1,3 +1,4 @@
+import math
 import typing
 
 import numpy as np
@@ -379,30 +380,30 @@ def test_plot_data(
 
     # test DETREND_DATA method not inplace
     initial_shape = ss.data.shape
-    assert ss.data[0][0] == 0.002033720017696059
+    assert math.isclose(ss.data[0][0], 0.002033720017696059)
     new_data = ss.detrend_data(inplace=False)
-    assert new_data[0][0] == 0.002687724196559849
+    assert math.isclose(new_data[0][0], 0.002687724196559849)
     assert new_data.shape == initial_shape
 
     # test DETREND_DATA method inplace
     initial_shape = ss.data.shape
-    assert ss.data[0][0] == 0.002033720017696059
+    assert math.isclose(ss.data[0][0], 0.002033720017696059)
     ss.detrend_data(inplace=True)
-    assert ss.data[0][0] == 0.002687724196559849
+    assert math.isclose(ss.data[0][0], 0.002687724196559849)
     assert ss.data.shape == initial_shape
 
     # test FILTER_DATA method not inplace
     initial_shape = ss.data.shape
-    assert ss.data[0][0] == 0.002687724196559849
+    assert math.isclose(ss.data[0][0], 0.002687724196559849)
     new_data = ss.filter_data(Wn=1, order=1, btype="lowpass", inplace=False)
-    assert new_data[0][0] == 0.002649116058096131
+    assert math.isclose(new_data[0][0], 0.002649116058096131)
     assert new_data.shape == initial_shape
 
     # test FILTER_DATA method inplace
     initial_shape = ss.data.shape
-    assert ss.data[0][0] == 0.002687724196559849
+    assert math.isclose(ss.data[0][0], 0.002687724196559849)
     ss.filter_data(Wn=1, order=1, btype="lowpass", inplace=True)
-    assert ss.data[0][0] == 0.002649116058096131
+    assert math.isclose(ss.data[0][0], 0.002649116058096131)
     assert ss.data.shape == initial_shape
 
     # test PLOT_DATA method

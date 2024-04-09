@@ -156,8 +156,8 @@ class pLSCFResult(BaseResult):
 
     freq: typing.Optional[npt.NDArray[np.float64]] = None
     Sy: typing.Optional[npt.NDArray[np.float64]] = None
-    Ad: typing.Optional[list[npt.NDArray[np.float64]]] = None
-    Bn: typing.Optional[list[npt.NDArray[np.float64]]] = None
+    Ad: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
+    Bn: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
     Fn_poles: typing.Optional[npt.NDArray[np.float64]] = None
     xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
     Phi_poles: typing.Optional[npt.NDArray[np.float64]] = None
