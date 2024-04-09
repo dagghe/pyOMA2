@@ -1,3 +1,5 @@
+import math
+
 import pytest
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -111,7 +113,7 @@ def test_plot_data(ms_poser: MultiSetup_PoSER) -> None:
     newdatasets, Y, fs, dt, Ndats, Ts = ms_poser.decimate_data(
         q=decimation_factor, inplace=False
     )
-    assert Y[0]["ref"][0][0] == -3.27248603574735e-05
+    assert math.isclose(Y[0]["ref"][0][0], -3.27248603574735e-05)
     assert fs == 25.0
     assert dt == 0.01
 
@@ -122,20 +124,20 @@ def test_plot_data(ms_poser: MultiSetup_PoSER) -> None:
 
     # test DECIMATE_DATA method inplace
     ms_poser.decimate_data(q=decimation_factor, inplace=True)
-    assert ms_poser.data[0]["ref"][0][0] == -3.27248603574735e-05
+    assert math.isclose(ms_poser.data[0]["ref"][0][0], -3.27248603574735e-05)
     assert ms_poser.fs == 25.0
     assert ms_poser.dt == 0.01
 
     # test DETREND_DATA method not inplace
     new_data = ms_poser.detrend_data(inplace=False)
-    assert new_data[0]["ref"][0][0] == -3.238227274628828e-05
+    assert math.isclose(new_data[0]["ref"][0][0], -3.238227274628828e-05)
 
     # initial class data has not changed
-    assert ms_poser.data[0]["ref"][0][0] == -3.27248603574735e-05
+    assert math.isclose(ms_poser.data[0]["ref"][0][0], -3.27248603574735e-05)
 
     # test DETREND_DATA method inplace
     ms_poser.detrend_data(inplace=True)
-    assert ms_poser.data[0]["ref"][0][0] == -3.238227274628828e-05
+    assert math.isclose(ms_poser.data[0]["ref"][0][0], -3.238227274628828e-05)
 
     # test FILTER_DATA method not inplace
     new_data = ms_poser.filter_data(Wn=1, order=1, btype="lowpass", inplace=False)

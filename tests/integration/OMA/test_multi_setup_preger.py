@@ -1,3 +1,5 @@
+import math
+
 from pyoma2.algorithm import SSIdat_algo_MS, pLSCF_algo_MS
 
 from src.pyoma2.OMA import MultiSetup_PreGER
@@ -77,49 +79,49 @@ def test_plot_data(ms_preger: MultiSetup_PreGER) -> None:
     Test the plotting and data manipulation methods of the MultiSetup_PreGER class.
     """
     # test DECIMATE_DATA method not inplace
-    assert ms_preger.data[0]["ref"][0][0] == -3.249758486587817e-05
+    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.249758486587817e-05)
     assert ms_preger.fs == 100.0
     assert ms_preger.dt == 0.01
     decimation_factor = 4
     newdatasets, Y, fs, dt, Ndats, Ts = ms_preger.decimate_data(
         q=decimation_factor, inplace=False
     )
-    assert Y[0]["ref"][0][0] == -3.27248603574735e-05
+    assert math.isclose(Y[0]["ref"][0][0], -3.27248603574735e-05)
     assert fs == 25.0
     assert dt == 0.01
 
     # initial class data has not changed
-    assert ms_preger.data[0]["ref"][0][0] == -3.249758486587817e-05
+    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.249758486587817e-05)
     assert ms_preger.fs == 100.0
     assert ms_preger.dt == 0.01
 
     # test DECIMATE_DATA method inplace
     ms_preger.decimate_data(q=decimation_factor, inplace=True)
-    assert ms_preger.data[0]["ref"][0][0] == -3.27248603574735e-05
+    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.27248603574735e-05)
     assert ms_preger.fs == 25.0
     assert ms_preger.dt == 0.01
 
     # test DETREND_DATA method not inplace
     new_data = ms_preger.detrend_data(inplace=False)
-    assert new_data[0]["ref"][0][0] == -3.238227274628828e-05
+    assert math.isclose(new_data[0]["ref"][0][0], -3.238227274628828e-05)
 
     # initial class data has not changed
-    assert ms_preger.data[0]["ref"][0][0] == -3.27248603574735e-05
+    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.27248603574735e-05)
 
     # test DETREND_DATA method inplace
     ms_preger.detrend_data(inplace=True)
-    assert ms_preger.data[0]["ref"][0][0] == -3.238227274628828e-05
+    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.238227274628828e-05)
 
     # test FILTER_DATA method not inplace
     new_data = ms_preger.filter_data(Wn=1, order=1, btype="lowpass", inplace=False)
-    assert new_data[0]["ref"][0][0] == -3.28116336523655e-05
+    assert math.isclose(new_data[0]["ref"][0][0], -3.28116336523655e-05)
 
     # initial class data has not changed
     assert ms_preger.data[0]["ref"][0][0] == -3.238227274628828e-05
 
     # test FILTER_DATA method inplace
     ms_preger.filter_data(Wn=1, order=1, btype="lowpass", inplace=True)
-    assert ms_preger.data[0]["ref"][0][0] == -3.28116336523655e-05
+    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.28116336523655e-05)
 
     # test PLOT_DATA method
     try:
