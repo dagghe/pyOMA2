@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2024-04-09
+
 ### Added
 - issue, feature, question templates
 
@@ -19,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - tests
+- workflow for tests on push and pull request
 
 ## [0.4.1] - 2024-03-05
 
