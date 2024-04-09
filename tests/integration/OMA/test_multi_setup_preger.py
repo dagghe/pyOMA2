@@ -117,7 +117,7 @@ def test_plot_data(ms_preger: MultiSetup_PreGER) -> None:
     assert math.isclose(new_data[0]["ref"][0][0], -3.28116336523655e-05)
 
     # initial class data has not changed
-    assert ms_preger.data[0]["ref"][0][0] == -3.238227274628828e-05
+    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.238227274628828e-05)
 
     # test FILTER_DATA method inplace
     ms_preger.filter_data(Wn=1, order=1, btype="lowpass", inplace=True)
