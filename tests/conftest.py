@@ -231,6 +231,23 @@ def multi_setup_poser_fixture(
     ssicov3 = SSIcov_algo(name="SSIcov3", method="cov_mm", br=50, ordmax=80)
     ss3.add_algorithms(ssicov3)
     ss3.run_all()
+
+    # run MPE
+    ss1.MPE(
+        "SSIcov1",
+        sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
+        order=50,
+    )
+    ss2.MPE(
+        "SSIcov2",
+        sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
+        order=40,
+    )
+    ss3.MPE(
+        "SSIcov3",
+        sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
+        order=40,
+    )
     # reference indices
     ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
     # Creating Multi setup

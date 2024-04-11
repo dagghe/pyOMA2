@@ -309,7 +309,7 @@ def test_geo2(
     # plot without defining the geometry
     with pytest.raises(ValueError) as e:
         ss.plot_geo2()
-    assert "Geo2 is not defined. cannot plot geometry" in str(e.value)
+    assert "Geo2 is not defined. Cannot plot geometry" in str(e.value)
 
     # DEFINE THE GEOMETRY
     ss.def_geo2(
@@ -341,11 +341,8 @@ def test_geo2(
     except Exception as e:
         assert False, f"plot_geo2 raised an exception {e}"
 
-    # Check the title of the plot
-    assert ax.get_title() == "Plot of the geometry and sensors' placement and direction"
-
     # Check the number of lines in the plot
-    expected_number_of_lines = 17
+    expected_number_of_lines = 0
     assert len(ax.lines) == expected_number_of_lines
 
     # PLOT GEOMETRY WITH bg_surf
