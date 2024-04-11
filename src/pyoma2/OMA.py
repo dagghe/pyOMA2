@@ -403,6 +403,7 @@ class BaseSetup:
         # order_red="xy/xz/yz" size(npts,2);
         # order_red="x/y/z" size(npts,1)
         # (same for ch_names)
+        s_sign = s_sign.astype(float)
         ord_red = self.Geo2.order_red
         zero1 = np.zeros(s_sign.shape[0]).reshape(-1, 1)
         zero2 = np.zeros((s_sign.shape[0], 2))
@@ -1382,6 +1383,7 @@ class MultiSetup_PoSER:
                 if not alg.result or alg.result.Fn is None:
                     raise ValueError(
                         "You must pass Single setups that have already been run"
+                        " and the Modal Parameters have to be extracted (call MPE method on SingleSetup)"
                     )
             yield setup
 
@@ -1564,6 +1566,10 @@ class MultiSetup_PoSER:
         tuple
             A tuple containing the figure and axis objects of the plot for further customization.
         """
+        if self.Geo1 is None:
+            raise ValueError(
+                f"Geo1 is not defined. cannot plot geometry on {self}. Call def_geo1 first."
+            )
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
@@ -1748,6 +1754,10 @@ class MultiSetup_PoSER:
         tuple
             A tuple containing the figure and axis objects of the matplotlib plot.
         """
+        if self.Geo2 is None:
+            raise ValueError(
+                f"Geo2 is not defined. cannot plot geometry on {self}. Call def_geo2 first."
+            )
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
