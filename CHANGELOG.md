@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Fixed
 - `multi_setup_poser` tests
 
+## Added
+- python 3.12 support
+
 
 ## [0.5.0] - 2024-04-09
 

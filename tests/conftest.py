@@ -281,6 +281,10 @@ def mock_imports():
     ), unittest.mock.patch(
         "pyoma2.plot.Sel_from_plot.FigureCanvasTkAgg"
     ), unittest.mock.patch(
+        "pyoma2.plot.anim_mode.NavigationToolbar2Tk"
+    ), unittest.mock.patch(
+        "pyoma2.plot.anim_mode.FigureCanvasTkAgg"
+    ), unittest.mock.patch(
         "src.pyoma2.functions.plot_funct.plt.tight_layout"
     ), unittest.mock.patch("tkinter.Tk"), unittest.mock.patch("tkinter.Menu"):
         """
