@@ -211,7 +211,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
         assert False, f"plot_mode_geo1 raised an exception {e}"
 
 
-@pytest.mark.xfail(reason="Issue #8")
+# @pytest.mark.xfail(reason="Issue #8")
 @pytest.mark.parametrize(
     "input_order_red, input_sens_map, input_sens_sign",
     (
@@ -235,7 +235,9 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
             ),
         ),
         ("xy", None, None),  # use default sens map and sens sign
-        ("xz", None, None),  # use default sens map and sens sign
+        pytest.param(
+            "xz", None, None, marks=pytest.mark.xfail
+        ),  # use default sens map and sens sign
         ("yz", None, None),  # use default sens map and sens sign
         (
             "x",
@@ -252,7 +254,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
                 }
             ),
         ),
-        (
+        pytest.param(
             "y",
             pd.DataFrame(
                 {
@@ -266,6 +268,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
                     "x": [-1, -1, -1, 0, 0, 0],
                 }
             ),
+            marks=pytest.mark.xfail,
         ),
         (
             "z",
