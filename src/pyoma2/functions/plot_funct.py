@@ -170,7 +170,7 @@ def EFDD_FIT_plot(
         # PLOT 1 - Plotting the SDOF bell function extracted
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2)
         ax1.plot(
-            freq, 10 * np.log10(Sval[0, 0] / Sval[0, 0][np.argmax(Sval[0, 0])]), c="b"
+            freq, 10 * np.log10(Sval[0, 0] / Sval[0, 0][np.argmax(Sval[0, 0])]), c="k"
         )
         ax1.plot(
             fsval,
@@ -180,28 +180,36 @@ def EFDD_FIT_plot(
         )
         ax1.set_title("SDOF Bell function")
         ax1.set_xlabel("Frequency [Hz]")
-        ax1.set_ylabel(r"dB $[V^2/Hz]$")
+        ax1.set_ylabel(r"dB rel to unit.$")
+        ax1.grid()
+
         if freqlim is not None:
             ax1.set_xlim(freqlim[0], freqlim[1])
 
         ax1.legend()
 
         # Plot 2
-        ax2.plot(time[:], normSDOFcorr)
+        ax2.plot(time[:], normSDOFcorr, c="k")
         ax2.set_title("Auto-correlation Function")
         ax2.set_xlabel("Time lag[s]")
         ax2.set_ylabel("Normalized correlation")
+        ax2.grid()
 
         # PLOT 3 (PORTION for FIT)
-        ax3.plot(time[: minmax_fit_idx[-1]], normSDOFcorr[: minmax_fit_idx[-1]])
-        ax3.scatter(time[minmax_fit_idx], normSDOFcorr[minmax_fit_idx])
+        ax3.plot(time[: minmax_fit_idx[-1]], normSDOFcorr[: minmax_fit_idx[-1]], c="k")
+        ax3.scatter(time[minmax_fit_idx], normSDOFcorr[minmax_fit_idx], c="r", marker="x")
         ax3.set_title("Portion for fit")
         ax3.set_xlabel("Time lag[s]")
         ax3.set_ylabel("Normalized correlation")
+        ax3.grid()
 
         # PLOT 4 (FIT)
-        ax4.scatter(np.arange(len(minmax_fit_idx)), delta)
-        ax4.plot(np.arange(len(minmax_fit_idx)), lam / 2 * np.arange(len(minmax_fit_idx)))
+        ax4.scatter(np.arange(len(minmax_fit_idx)), delta, c="k", marker="x")
+        ax4.plot(
+            np.arange(len(minmax_fit_idx)),
+            lam / 2 * np.arange(len(minmax_fit_idx)),
+            c="r",
+        )
 
         ax4.text(
             left,
@@ -215,6 +223,7 @@ def EFDD_FIT_plot(
         ax4.set_title("Fit - Frequency and Damping")
         ax4.set_xlabel(r"counter $k^{th}$ extreme")
         ax4.set_ylabel(r"$2ln\left(r_0/|r_k|\right)$")
+        ax4.grid()
 
         plt.tight_layout()
 

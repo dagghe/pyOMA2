@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 General Utility Functions module.
 Part of the pyOMA2 package.
@@ -29,6 +30,8 @@ def lab_stab(
     err_xi: float,
     err_ms: float,
     max_xi: float,
+    mpc_lim: None | float,
+    mpd_lim: None | float,
 ):
     """
     Construct a Stability Chart for modal analysis.
@@ -91,9 +94,38 @@ def lab_stab(
     Ms1 = Ms * MaskMS
     Ms1[Ms1 == 0] = np.nan
     # -----------------------------------------------------------------------------
+    # Checking MPC AND MPD
+    if mpc_lim is not None:
+        Mask1 = []
+        for o in range(Fn1.shape[0]):
+            for i in range(Fn1.shape[1]):
+                try:
+                    Mask1.append((MPC(Ms1[o, i, :]) >= mpc_lim).astype(int))
+                except Exception:
+                    Mask1.append(0)
+        Mask1 = np.array(Mask1).reshape(Fn1.shape)
+        Fn1 = Fn1 * Mask1
+        Fn1[Fn1 == 0] = np.nan
+        Sm1 = Sm1 * Mask1
+        Sm1[Sm1 == 0] = np.nan
+
+    if mpd_lim is not None:
+        Mask2 = []
+        for o in range(Fn1.shape[0]):
+            for i in range(Fn1.shape[1]):
+                try:
+                    Mask2.append((MPD(Ms1[o, i, :]) <= mpd_lim).astype(int))
+                except Exception:
+                    Mask2.append(0)
+        Mask2 = np.array(Mask2).reshape(Fn1.shape)
+        Fn1 = Fn1 * Mask2
+        Fn1[Fn1 == 0] = np.nan
+        Sm1 = Sm1 * Mask2
+        Sm1[Sm1 == 0] = np.nan
+    # -----------------------------------------------------------------------------
     # STABILITY BETWEEN CONSECUTIVE ORDERS
-    for i in range(ordmin, ordmax, step):
-        ii = int((i - ordmin) / step)
+    for o in range(ordmin, ordmax, step):
+        ii = int((o - ordmin) / step)
 
         f_n = Fn1[:, ii].reshape(-1, 1)
         xi_n = Sm1[:, ii].reshape(-1, 1)

@@ -16,32 +16,43 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
-
-# from matplotlib.cm import get_cmap
 from mpl_toolkits.mplot3d.art3d import Line3D
 from pyoma2.algorithm.data.geometry import Geometry2
 from pyoma2.algorithm.data.result import BaseResult, MsPoserResult
 from pyoma2.functions import Gen_funct, plot_funct
 
 
-def animate_scatters(iteration, Data, scatters, lines=None, sens_lines=None):
+def animate_scatters(
+    iteration, Data, scatters, lines=None, sens_lines=None, colormap="plasma"
+):
     """
-    Update the data held by the scatter plot and the lines connecting them.
+    Update the data held by the scatter plot and the lines connecting them, with colors based on their distance from the starting position.
     """
+    # Prepare colormap
+    cmap = plt.get_cmap(colormap)
+    norm_fn = Normalize(vmin=0, vmax=1)
+
+    # Calculate distances from starting positions using numpy.linalg.norm
+    distances = np.linalg.norm(Data[:, :, iteration] - Data[:, :, 0], axis=1)
+    distances_normalized = norm_fn(distances)
+
     # Update scatter points
-    if Data.shape[1] == 3:
-        for i in range(Data.shape[0]):
-            scatters[i]._offsets3d = (
+    for i, scatter in enumerate(scatters):
+        if Data.shape[1] == 3:
+            scatter._offsets3d = (
                 Data[i, 0:1, iteration],
                 Data[i, 1:2, iteration],
                 Data[i, 2:, iteration],
             )
-    else:
-        for i in range(Data.shape[0]):
-            scatters[i].set_offsets((Data[i, 0, iteration], Data[i, 1, iteration]))
+        else:
+            scatter.set_offsets((Data[i, 0, iteration], Data[i, 1, iteration]))
 
-    # Update lines
+        # Set color based on normalized distance
+        scatter.set_color(cmap(distances_normalized[i]))
+
+    # Update lines if applicable
     if lines is not None and sens_lines is not None:
         for line, (idx1, idx2) in zip(lines, sens_lines):
             line.set_data(
@@ -49,10 +60,13 @@ def animate_scatters(iteration, Data, scatters, lines=None, sens_lines=None):
             )
             line.set_3d_properties(Data[[idx1, idx2], 2, iteration])
 
-            line.set_color("r")
-        return scatters + lines
-    else:
-        return scatters
+            # Set line color based on the average normalized distance of the two points
+            avg_distance = np.mean(
+                [distances_normalized[idx1], distances_normalized[idx2]]
+            )
+            line.set_color(cmap(avg_distance))
+
+    return scatters + lines if lines is not None else scatters
 
 
 # =============================================================================
@@ -171,7 +185,7 @@ class AniMode:
         according to the specified parameters. It uses the geometry and mode shape data to
         animate the mode shape over time.
         """
-        nr_iter = 100
+        nr_iter = 40
 
         # create mode shape dataframe
         df_phi = pd.DataFrame(
@@ -259,9 +273,10 @@ class AniMode:
                 animate_scatters,
                 nr_iter,
                 fargs=(Data, scatters, lines, self.Geo.sens_lines),
-                interval=20,
+                interval=1,
                 blit=False,
                 repeat=True,
+                # frames=len(scatters)//20
             )
 
         else:
@@ -270,9 +285,10 @@ class AniMode:
                 animate_scatters,
                 nr_iter,
                 fargs=(Data, scatters),
-                interval=20,
+                interval=1,
                 blit=False,
                 repeat=True,
+                # frames=len(scatters)//20
             )
 
         plt.show()

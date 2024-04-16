@@ -91,6 +91,8 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         err_xi = self.run_params.err_xi
         err_phi = self.run_params.err_phi
         xi_max = self.run_params.xi_max
+        mpc_lim = self.run_params.mpc_lim
+        mpd_lim = self.run_params.mpd_lim
 
         freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, method=method, pov=pov)
 
@@ -109,6 +111,8 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
             err_xi=err_xi,
             err_ms=err_phi,
             max_xi=xi_max,
+            mpc_lim=mpc_lim,
+            mpd_lim=mpd_lim,
         )
 
         # Return results
@@ -596,6 +600,8 @@ class pLSCF_algo_MS(pLSCF_algo[pLSCFRunParams, pLSCFResult, typing.Iterable[dict
         err_xi = self.run_params.err_xi
         err_phi = self.run_params.err_phi
         xi_max = self.run_params.xi_max
+        mpc_lim = self.run_params.mpc_lim
+        mpd_lim = self.run_params.mpd_lim
         # self.run_params.df = 1 / dt / nxseg
 
         freq, Sy = FDD_funct.SD_PreGER(Y, self.fs, nxseg=nxseg, method=method, pov=pov)
@@ -614,6 +620,8 @@ class pLSCF_algo_MS(pLSCF_algo[pLSCFRunParams, pLSCFResult, typing.Iterable[dict
             err_xi=err_xi,
             err_ms=err_phi,
             max_xi=xi_max,
+            mpc_lim=mpc_lim,
+            mpd_lim=mpd_lim,
         )
 
         # Return results

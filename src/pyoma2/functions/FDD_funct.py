@@ -534,7 +534,7 @@ def EFDD_MPE(
         # Log decrement
         delta = np.array(
             [
-                2 * np.log(np.abs(minmax[0]) / np.abs(minmax[ii]))
+                1 * np.log(np.abs(minmax[0]) / np.abs(minmax[ii]))
                 for ii in range(len(minmax_fit))
             ]
         )
