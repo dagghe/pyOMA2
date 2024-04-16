@@ -109,6 +109,8 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         err_xi = self.run_params.err_xi
         err_phi = self.run_params.err_phi
         xi_max = self.run_params.xi_max
+        mpc_lim = self.run_params.mpc_lim
+        mpd_lim = self.run_params.mpd_lim
 
         if self.run_params.ref_ind is not None:
             ref_ind = self.run_params.ref_ind
@@ -119,12 +121,23 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         # Build Hankel matrix
         H = SSI_funct.BuildHank(Y, Yref, br, self.fs, method=method)
         # Get state matrix and output matrix
-        A, C = SSI_funct.SSI_FAST(H, br, ordmax)
+        A, C = SSI_funct.SSI_FAST(H, br, ordmax, step)
         # Get frequency poles (and damping and mode shapes)
         Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
         # Get the labels of the poles
         Lab = Gen_funct.lab_stab(
-            Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
+            Fn_pol,
+            Sm_pol,
+            Ms_pol,
+            ordmin,
+            ordmax,
+            step,
+            err_fn,
+            err_xi,
+            err_phi,
+            xi_max,
+            mpc_lim,
+            mpd_lim,
         )
 
         # Return results
@@ -634,6 +647,8 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
         err_xi = self.run_params.err_xi
         err_phi = self.run_params.err_phi
         xi_max = self.run_params.xi_max
+        mpc_lim = self.run_params.mpc_lim
+        mpd_lim = self.run_params.mpd_lim
 
         # Build Hankel matrix and Get state matrix and output matrix
         A, C = SSI_funct.SSI_MulSet(
@@ -644,7 +659,18 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
         Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
         # Get the labels of the poles
         Lab = Gen_funct.lab_stab(
-            Fn_pol, Sm_pol, Ms_pol, ordmin, ordmax, step, err_fn, err_xi, err_phi, xi_max
+            Fn_pol,
+            Sm_pol,
+            Ms_pol,
+            ordmin,
+            ordmax,
+            step,
+            err_fn,
+            err_xi,
+            err_phi,
+            xi_max,
+            mpc_lim,
+            mpd_lim,
         )
 
         # Return results

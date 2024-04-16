@@ -129,6 +129,10 @@ class SSIRunParams(BaseRunParams):
         Threshold for Modal Assurance Criterion (MAC), default is 0.03.
     xi_max : float
         Maximum allowed damping ratio, default is 0.1.
+    mpc_lim : float
+        xxx, default is 0.7.
+    mpd_lim : float
+        xxx, default is 0.3.
     sel_freq : list of float or None
         List of selected frequencies for modal parameter extraction.
     order_in : int or str
@@ -153,6 +157,8 @@ class SSIRunParams(BaseRunParams):
     err_xi: float = 0.05
     err_phi: float = 0.03
     xi_max: float = 0.1
+    mpc_lim: None | float = 0.7
+    mpd_lim: None | float = 0.3
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"
@@ -188,6 +194,10 @@ class pLSCFRunParams(BaseRunParams):
         Threshold for Modal Assurance Criterion (MAC), default is 0.03.
     xi_max : float
         Maximum allowed damping ratio, default is 0.1.
+    mpc_lim : float
+        xxx, default is 0.7.
+    mpd_lim : float
+        xxx, default is 0.3.
     sel_freq : list of float or None
         List of selected frequencies for modal parameter extraction.
     order_in : int or str
@@ -213,6 +223,8 @@ class pLSCFRunParams(BaseRunParams):
     err_xi: float = 0.05
     err_phi: float = 0.03
     xi_max: float = 0.1
+    mpc_lim: None | float = 0.7
+    mpd_lim: None | float = 0.3
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"

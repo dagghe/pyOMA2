@@ -7,11 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2024-04-16
+
 ## Fixed
 - `multi_setup_poser` tests
+- bug "SSI_Poles orders issue #11"
+- various minor fixes
 
 ## Added
 - python 3.12 support
+- MPC and MPD criteria on stabilisation diagram for ssi and plscf
+- colormap to mode shape animation
+- method to save class to file
 
 
 ## [0.5.0] - 2024-04-09
@@ -43,8 +50,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `plscf.py` module name https://github.com/dagghe/pyOMA2/issues/5
-
-
 
 ## [0.4.0] - 2024-02-29
 

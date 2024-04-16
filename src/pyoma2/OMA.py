@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import copy
 import logging
+import pickle
 import typing
 
 import matplotlib.pyplot as plt
@@ -388,7 +389,7 @@ class BaseSetup:
             raise ValueError(
                 f"Geo2 is not defined. Cannot plot geometry on {self}. Call def_geo2 first."
             )
-        fig = plt.figure(figsize=(8, 8))
+        fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
         # plot sensors'
@@ -435,27 +436,27 @@ class BaseSetup:
             s_sign2 = np.insert(zero2, 1, s_sign[:, 1], axis=1)
             s_sign3 = np.hstack((zero2, s_sign[:, 2].reshape(-1, 1)))
 
-            plt_quiver(
-                ax,
-                pts,
-                s_sign1,
-                scaleF=scaleF,
-                names=ch_names[:, 0],
-            )
-            plt_quiver(
-                ax,
-                pts,
-                s_sign2,
-                scaleF=scaleF,
-                names=ch_names[:, 1],
-            )
-            plt_quiver(
-                ax,
-                pts,
-                s_sign3,
-                scaleF=scaleF,
-                names=ch_names[:, 2],
-            )
+        plt_quiver(
+            ax,
+            pts,
+            s_sign1,
+            scaleF=scaleF,
+            names=ch_names[:, 0],
+        )
+        plt_quiver(
+            ax,
+            pts,
+            s_sign2,
+            scaleF=scaleF,
+            names=ch_names[:, 1],
+        )
+        plt_quiver(
+            ax,
+            pts,
+            s_sign3,
+            scaleF=scaleF,
+            names=ch_names[:, 2],
+        )
 
         # Check that BG nodes are defined
         if self.Geo2.bg_nodes is not None:
@@ -489,6 +490,18 @@ class BaseSetup:
         set_view(ax, view=view)
 
         return fig, ax
+
+    def save_to_file(self, file_name):
+        """ """
+        with open(file_name, "wb") as f:
+            pickle.dump(self, f)
+
+    @classmethod
+    def load_from_file(cls, file_name):
+        """ """
+        with open(file_name, "rb") as f:
+            instance = pickle.load(f)  # noqa S301
+        return instance
 
     # method to decimate data
     @staticmethod
