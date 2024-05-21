@@ -157,8 +157,8 @@ class SSIRunParams(BaseRunParams):
     err_xi: float = 0.05
     err_phi: float = 0.03
     xi_max: float = 0.1
-    mpc_lim: None | float = 0.7
-    mpd_lim: None | float = 0.3
+    mpc_lim: typing.Optional[typing.Tuple] = 0.7
+    mpd_lim: typing.Optional[typing.Tuple] = 0.3
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"
@@ -223,8 +223,8 @@ class pLSCFRunParams(BaseRunParams):
     err_xi: float = 0.05
     err_phi: float = 0.03
     xi_max: float = 0.1
-    mpc_lim: None | float = 0.7
-    mpd_lim: None | float = 0.3
+    mpc_lim: typing.Optional[typing.Tuple] = 0.7
+    mpd_lim: typing.Optional[typing.Tuple] = 0.3
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"

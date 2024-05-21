@@ -603,7 +603,7 @@ class BaseSetup:
     def _filter_data(
         data: np.ndarray,
         fs: float,
-        Wn: float | tuple,
+        Wn: typing.Union[float, typing.Tuple[float, float]],
         order: int = 8,
         btype: str = "lowpass",
     ) -> np.ndarray:
@@ -767,8 +767,8 @@ class SingleSetup(BaseSetup):
     def plot_ch_info(
         self,
         nxseg: float = 1024,
-        ch_idx: str | list[int] = "all",
-        freqlim: tuple[float, float] | None = None,
+        ch_idx: typing.Union[str, typing.List[int]] = "all",
+        freqlim: typing.Optional[tuple[float, float]] = None,
         logscale: bool = True,
         unit: str = "unit",
     ):
@@ -826,8 +826,8 @@ class SingleSetup(BaseSetup):
         self,
         nxseg: float = 512,
         pov: float = 0.9,
-        ch_idx: str | list[int] = "all",
-        freqlim: tuple[float, float] | None = None,
+        ch_idx: typing.Union[str, typing.List[int]] = "all",
+        freqlim: typing.Optional[tuple[float, float]] = None,
         win: str = "hann",
     ):
         """
@@ -1164,7 +1164,7 @@ class SingleSetup(BaseSetup):
 
     def filter_data(
         self,
-        Wn: float | tuple,
+        Wn: typing.Union[float, typing.Tuple[float, float]],
         order: int = 8,
         btype: str = "lowpass",
         inplace: bool = False,
@@ -1279,7 +1279,7 @@ class MultiSetup_PoSER:
     def __init__(
         self,
         ref_ind: typing.List[typing.List[int]],
-        single_setups: typing.List[SingleSetup],  # | None = None,
+        single_setups: typing.List[SingleSetup],
     ):
         """
         Initializes the MultiSetup_PoSER instance with reference indices and a list of SingleSetup instances.
@@ -2251,7 +2251,7 @@ class MultiSetup_PreGER(BaseSetup):
     # method to plot the time histories of the data channels.
     def plot_data(
         self,
-        data_idx: str | list[int] = "all",
+        data_idx: typing.Union[str, typing.List[int]] = "all",
         nc: int = 1,
         names: typing.Optional[typing.List[str]] = None,
         # names: list[list[str]] = None,
@@ -2307,10 +2307,10 @@ class MultiSetup_PreGER(BaseSetup):
     # method to plot TH, PSD and KDE for each channel
     def plot_ch_info(
         self,
-        data_idx: str | list[int] = "all",
+        data_idx: typing.Union[str, typing.List[int]] = "all",
         nxseg: float = 1024,
-        ch_idx: str | list[int] = "all",
-        freqlim: tuple[float, float] | None = None,
+        ch_idx: typing.Union[str, typing.List[int]] = "all",
+        freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         logscale: bool = True,
         unit: str = "unit",
     ):
@@ -2338,11 +2338,11 @@ class MultiSetup_PreGER(BaseSetup):
     # method to plot TH, PSD and KDE for each channel
     def plot_STFT(
         self,
-        data_idx: str | list[int] = "all",
+        data_idx: typing.Union[str, typing.List[int]] = "all",
         nxseg: float = 256,
         pov: float = 0.9,
-        ch_idx: str | list[int] = "all",
-        freqlim: tuple[float, float] | None = None,
+        ch_idx: typing.Union[str, typing.List[int]] = "all",
+        freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         win: str = "hann",
     ):
         """ """
@@ -2457,7 +2457,7 @@ class MultiSetup_PreGER(BaseSetup):
     # method to detrend data
     def filter_data(
         self,
-        Wn: float | tuple,
+        Wn: typing.Union[float, typing.Tuple[float, float]],
         order: int = 8,
         btype: str = "lowpass",
         inplace: bool = False,

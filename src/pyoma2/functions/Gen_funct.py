@@ -30,8 +30,8 @@ def lab_stab(
     err_xi: float,
     err_ms: float,
     max_xi: float,
-    mpc_lim: None | float,
-    mpd_lim: None | float,
+    mpc_lim: typing.Optional[float] = None,
+    mpd_lim: typing.Optional[float] = None,
 ):
     """
     Construct a Stability Chart for modal analysis.
