@@ -8,6 +8,7 @@ Dag Pasca
 import logging
 import typing
 
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 import numpy as np
@@ -321,12 +322,12 @@ def Stab_plot(
     ax.set_xlabel("Frequency [Hz]")
     if hide_poles:
         x = a.flatten(order="f")
-        y = np.array([i // len(a) for i in range(len(x))]) * step + ordmin
+        y = np.array([i // len(a) for i in range(len(x))]) * step
         ax.plot(x, y, "go", markersize=7, label="Stable pole")
 
     else:
         x = a.flatten(order="f")
-        y = np.array([i // len(a) for i in range(len(x))]) * step + ordmin
+        y = np.array([i // len(a) for i in range(len(x))]) * step
 
         x1 = b.flatten(order="f")
         y1 = np.array([i // len(a) for i in range(len(x))]) * step
@@ -507,13 +508,48 @@ def Cluster_plot(
 # -----------------------------------------------------------------------------
 
 
+def Sval_plot(
+    H: np.ndarray,
+    br: int,
+    iter_n: int = None,
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
+):
+    """ """
+    if fig is None and ax is None:
+        fig, ax = plt.subplots(tight_layout=True)
+
+    # SINGULAR VALUE DECOMPOSITION
+    U1, S1, V1_t = np.linalg.svd(H)
+    S1rad = np.sqrt(S1)
+
+    ax.stem(S1rad, linefmt="k-")
+
+    ax.set_title(f"Singular values plot, for block-rows(time shift) = {br}")
+    ax.set_ylabel("Singular values")
+    ax.set_xlabel("Index number")
+    if iter_n is not None:
+        ax.set_xlim(-1, iter_n)
+
+    ax.grid()
+
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
 # =============================================================================
 # PLOT GEO
 # =============================================================================
 
 
 def plt_nodes(
-    ax: plt.Axes, nodes_coord: np.ndarray, alpha: float = 1.0, color: str = "k"
+    ax: plt.Axes,
+    nodes_coord: np.ndarray,
+    alpha: float = 1.0,
+    color: str = "k",
+    initial_coord: np.ndarray = None,
 ):
     """
     Plots nodes coordinates in a 3D scatter plot on the provided axes.
@@ -527,7 +563,10 @@ def plt_nodes(
     alpha : float, optional
         The alpha blending value, between 0 (transparent) and 1 (opaque). Default is 1.
     color : str or list of str, optional
-        Color or list of colors for the nodes. Default is "k" (black).
+        Color or list of colors for the nodes. Default is "k" (black). If 'cmap' is provided, initial_coord must be specified.
+    initial_coord : ndarray, optional
+        A 2D array with dimensions [number of nodes, 3], representing the initial coordinates (x, y, z) of each node.
+        Required if color is 'cmap'.
 
     Returns
     -------
@@ -538,13 +577,39 @@ def plt_nodes(
     -----
     This function is designed to work with 3D plots and adds node representations to an existing 3D plot.
     """
-    ax.scatter(
-        nodes_coord[:, 0], nodes_coord[:, 1], nodes_coord[:, 2], alpha=alpha, color=color
-    )
+    if color == "cmap":
+        if initial_coord is None:
+            raise ValueError("initial_coord must be specified when color is 'cmap'")
+
+        # Calculate distances from initial positions
+        distances = np.linalg.norm(nodes_coord - initial_coord, axis=1)
+
+        # Normalize distances to the range [0, 1]
+        norm = plt.Normalize(vmin=np.min(distances), vmax=np.max(distances))
+        cmap = plt.cm.plasma
+
+        # Map distances to colors
+        colors = cmap(norm(distances))
+    else:
+        colors = color
+    if isinstance(colors, np.ndarray) and colors.ndim > 1:
+        for iter in range(nodes_coord.shape[0]):
+            ax.scatter(
+                nodes_coord[iter, 0],
+                nodes_coord[iter, 1],
+                nodes_coord[iter, 2],
+                alpha=0.5,
+                color=matplotlib.colors.to_rgba(colors[iter, :]),
+            )
+    else:
+        ax.scatter(
+            nodes_coord[:, 0],
+            nodes_coord[:, 1],
+            nodes_coord[:, 2],
+            alpha=alpha,
+            color=colors,
+        )
     return ax
-
-
-# -----------------------------------------------------------------------------
 
 
 def plt_lines(
@@ -553,6 +618,7 @@ def plt_lines(
     lines: np.ndarray,
     alpha: float = 1.0,
     color: str = "k",
+    initial_coord: np.ndarray = None,
 ):
     """
     Plots lines between specified nodes in a 3D plot on the provided axes.
@@ -572,7 +638,10 @@ def plt_lines(
         The alpha blending value for the lines, between 0 (transparent) and 1 (opaque).
         Default is 1.
     color : str or list of str, optional
-        Color or list of colors for the lines. Default is "k" (black).
+        Color or list of colors for the lines. Default is "k" (black). If 'cmap' is provided, initial_coord must be specified.
+    initial_coord : ndarray, optional
+        A 2D array with dimensions [number of nodes, 3], representing the initial coordinates (x, y, z) of each node.
+        Required if color is 'cmap'.
 
     Returns
     -------
@@ -584,11 +653,42 @@ def plt_lines(
     This function is designed to work with 3D plots and adds line representations between
     nodes in an existing 3D plot.
     """
+    if color == "cmap":
+        if initial_coord is None:
+            raise ValueError("initial_coord must be specified when color is 'cmap'")
+
+        # Calculate distances from initial positions
+        distances_start = np.linalg.norm(
+            nodes_coord[lines[:, 0]] - initial_coord[lines[:, 0]], axis=1
+        )
+        distances_end = np.linalg.norm(
+            nodes_coord[lines[:, 1]] - initial_coord[lines[:, 1]], axis=1
+        )
+
+        # Calculate average distances
+        avg_distances = (distances_start + distances_end) / 2
+
+        # Normalize distances to the range [0, 1]
+        norm = plt.Normalize(vmin=np.min(avg_distances), vmax=np.max(avg_distances))
+        cmap = plt.cm.plasma
+
+        # Map average distances to colors
+        line_colors = cmap(norm(avg_distances))
+    else:
+        line_colors = [color] * lines.shape[0]
+
     for ii in range(lines.shape[0]):
         StartX, EndX = nodes_coord[lines[ii, 0]][0], nodes_coord[lines[ii, 1]][0]
         StartY, EndY = nodes_coord[lines[ii, 0]][1], nodes_coord[lines[ii, 1]][1]
         StartZ, EndZ = nodes_coord[lines[ii, 0]][2], nodes_coord[lines[ii, 1]][2]
-        ax.plot([StartX, EndX], [StartY, EndY], [StartZ, EndZ], alpha=alpha, color=color)
+        ax.plot(
+            [StartX, EndX],
+            [StartY, EndY],
+            [StartZ, EndZ],
+            alpha=alpha,
+            color=line_colors[ii],
+        )
+
     return ax
 
 
@@ -706,6 +806,7 @@ def set_ax_options(
     remove_grid: bool = True,
     remove_axis: bool = True,
     add_orig: bool = True,
+    scaleF: float = 1,
 ):
     """
     Configures various display options for a given matplotlib 3D axes object.
@@ -754,7 +855,9 @@ def set_ax_options(
         ax.set_axis_off()
     if add_orig:
         Or = (0, 0, 0)
-        CS = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        CS = np.asarray(
+            [[0.2 * scaleF, 0, 0], [0, 0.2 * scaleF, 0], [0, 0, 0.2 * scaleF]]
+        )
         _colours = ["r", "g", "b"]
         _axname = ["x", "y", "z"]
         for ii, _col in enumerate(_colours):

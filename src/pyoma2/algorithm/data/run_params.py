@@ -162,8 +162,7 @@ class SSIRunParams(BaseRunParams):
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"
-    deltaf: float = 0.05
-    rtol: float = 1e-2
+    rtol: float = 5e-2
 
 
 class pLSCFRunParams(BaseRunParams):
@@ -228,5 +227,4 @@ class pLSCFRunParams(BaseRunParams):
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"
-    deltaf: float = 0.05
-    rtol: float = 1e-2
+    rtol: float = 5e-2

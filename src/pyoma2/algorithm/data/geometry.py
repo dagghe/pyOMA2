@@ -22,9 +22,7 @@ class Geometry1(BaseModel):
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # MANDATORY
     sens_names: typing.List[str]
-    sens_coord: typing.Union[
-        pd.DataFrame, npt.NDArray[np.float64]
-    ]  # sensors' coordinates
+    sens_coord: pd.DataFrame  # sensors' coordinates
     sens_dir: npt.NDArray[np.float64]  # sensors' directions
     # OPTIONAL
     sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines connecting sensors
@@ -39,14 +37,11 @@ class Geometry2(BaseModel):
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # MANDATORY
     sens_names: typing.List[str]  # sensors' names
-    pts_coord: typing.Union[pd.DataFrame, npt.NDArray[np.float64]]  # points' coordinates
-    sens_map: typing.Union[pd.DataFrame, npt.NDArray[np.float64]]  # mapping
-    sens_sign: typing.Union[pd.DataFrame, npt.NDArray[np.float64]]  # sign
-
-    # # OPTIONAL
-    # FIXME x DIEGO si puo fare cosi qui?
-    # order_red: typing.Literal["xy","xz","yz","x","y","z"] = None
-    order_red: typing.Optional[str] = None  # string to reduce the n* of DOF per point
+    pts_coord: pd.DataFrame  # points' coordinates
+    sens_map: pd.DataFrame  # mapping
+    # OPTIONAL
+    cstrn: typing.Optional[pd.DataFrame] = None
+    sens_sign: typing.Optional[pd.DataFrame] = None  # sign
     sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines connection sensors
     bg_nodes: typing.Optional[npt.NDArray[np.float64]] = None  # Background nodes
     bg_lines: typing.Optional[npt.NDArray[np.int64]] = None  # Background lines

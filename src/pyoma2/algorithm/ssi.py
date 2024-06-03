@@ -12,6 +12,7 @@ import logging
 import typing
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 from pyoma2.algorithm.data.geometry import Geometry1, Geometry2
@@ -155,8 +156,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         self,
         sel_freq: typing.List[float],
         order: typing.Union[int, str] = "find_min",
-        deltaf: float = 0.05,
-        rtol: float = 1e-2,
+        rtol: float = 5e-2,
     ) -> typing.Any:
         """
         Extracts the modal parameters at the selected frequencies.
@@ -168,22 +168,19 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         order : int or str, optional
             Model order for extraction, or 'find_min' to auto-determine the minimum stable order.
             Default is 'find_min'.
-        deltaf : float, optional
-            Frequency bandwidth for searching poles. Default is 0.05.
         rtol : float, optional
-            Relative tolerance for comparing frequencies. Default is 1e-2.
+            Relative tolerance for comparing frequencies. Default is 5e-2.
 
         Returns
         -------
         typing.Any
             The extracted modal parameters. The format and content depend on the algorithm's implementation.
         """
-        super().mpe(sel_freq=sel_freq, order=order, deltaf=deltaf, rtol=rtol)
+        super().mpe(sel_freq=sel_freq, order=order, rtol=rtol)
 
         # Save run parameters
         self.run_params.sel_freq = sel_freq
         self.run_params.order_in = order
-        self.run_params.deltaf = deltaf
         self.run_params.rtol = rtol
 
         # Get poles
@@ -194,7 +191,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 
         # Extract modal results
         Fn_SSI, Xi_SSI, Phi_SSI, order_out = SSI_funct.SSI_MPE(
-            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, deltaf=deltaf, rtol=rtol
+            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, rtol=rtol
         )
 
         # Save results
@@ -206,7 +203,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
     def mpe_fromPlot(
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
-        deltaf: float = 0.05,
         rtol: float = 1e-2,
     ) -> typing.Any:
         """
@@ -216,8 +212,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         ----------
         freqlim : tuple of float, optional
             Frequency limits for the plot. If None, limits are determined automatically. Default is None.
-        deltaf : float, optional
-            Frequency bandwidth for searching poles. Default is 0.05.
         rtol : float, optional
             Relative tolerance for comparing frequencies. Default is 1e-2.
 
@@ -227,10 +221,9 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
             The extracted modal parameters after interactive selection. Format depends on algorithm's
             implementation.
         """
-        super().mpe_fromPlot(freqlim=freqlim, deltaf=deltaf, rtol=rtol)
+        super().mpe_fromPlot(freqlim=freqlim, rtol=rtol)
 
         # Save run parameters
-        self.run_params.deltaf = deltaf
         self.run_params.rtol = rtol
 
         # Get poles
@@ -245,7 +238,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
 
         # e poi estrarre risultati
         Fn_SSI, Xi_SSI, Phi_SSI, order_out = SSI_funct.SSI_MPE(
-            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=deltaf, rtol=rtol
+            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, rtol=rtol
         )
 
         # Save results
@@ -405,6 +398,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
             remove_fill=remove_fill,
             remove_grid=remove_grid,
             remove_axis=remove_axis,
+            scaleF=scaleF,
         )
 
         # Set view
@@ -420,6 +414,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         remove_fill: bool = True,
         remove_grid: bool = True,
         remove_axis: bool = True,
+        color: str = "cmap",
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -460,13 +455,30 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         df_phi = pd.DataFrame(
             {"sName": Geo2.sens_names, "Phi": phi},
         )
-        mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
+
+        if Geo2.cstrn is not None:
+            aa = Geo2.cstrn.to_numpy(na_value=0)[:, :]
+            aa = np.nan_to_num(aa, copy=True, nan=0.0)
+            val = aa @ phi
+            ctn_df = pd.DataFrame(
+                {"cName": Geo2.cstrn.index, "val": val},
+            )
+
+            mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
+            mapping1 = dict(zip(ctn_df["cName"], ctn_df["val"]))
+            mapp = dict(mapping, **mapping1)
+        else:
+            mapp = dict(zip(df_phi["sName"], df_phi["Phi"]))
+
         # reshape the mode shape dataframe to fit the pts coord
-        df_phi_map = Geo2.sens_map.replace(mapping).astype(float)
+        df_phi_map = Geo2.sens_map.replace(mapp).astype(float)
         # add together coordinates and mode shape displacement
-        newpoints = Geo2.pts_coord.add(df_phi_map * Geo2.sens_sign, fill_value=0)
+        # newpoints = Geo2.pts_coord.add(df_phi_map * Geo2.sens_sign, fill_value=0)
+        newpoints = (
+            Geo2.pts_coord.to_numpy() + df_phi_map.to_numpy() * Geo2.sens_sign.to_numpy()
+        )
         # extract only the displacement array
-        newpoints = newpoints.to_numpy()[:, 1:]
+        # newpoints = newpoints.to_numpy()[:, :]
 
         # create fig and ax
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
@@ -488,11 +500,20 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
                 # if True plot
                 plot_funct.plt_surf(ax, Geo2.bg_nodes, Geo2.bg_surf, alpha=0.1)
         # PLOT MODE SHAPE
-        plot_funct.plt_nodes(ax, newpoints, color="red")
+        if color == "cmap":
+            oldpoints = Geo2.pts_coord.to_numpy()[:, :]
+            plot_funct.plt_nodes(ax, newpoints, color="cmap", initial_coord=oldpoints)
+
+        else:
+            plot_funct.plt_nodes(ax, newpoints, color="red")
         # check for sens_lines
         if Geo2.sens_lines is not None:
-            # if True plot
-            plot_funct.plt_lines(ax, newpoints, Geo2.sens_lines, color="red")
+            if color == "cmap":
+                plot_funct.plt_lines(
+                    ax, newpoints, Geo2.sens_lines, color="cmap", initial_coord=oldpoints
+                )
+            else:
+                plot_funct.plt_lines(ax, newpoints, Geo2.sens_lines, color="red")
 
         # Set ax options
         plot_funct.set_ax_options(
@@ -501,6 +522,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
             remove_fill=remove_fill,
             remove_grid=remove_grid,
             remove_axis=remove_axis,
+            scaleF=scaleF,
         )
 
         # Set view

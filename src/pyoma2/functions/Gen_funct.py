@@ -10,13 +10,169 @@ import logging
 import typing
 
 import numpy as np
-from scipy import signal
+from scipy import linalg, signal
 
 logger = logging.getLogger(__name__)
+
 
 # =============================================================================
 # FUNZIONI GENERALI
 # =============================================================================
+def Exdata():
+    """
+    This function generates a time history of acceleration for a 5 DOF
+    system.
+
+    The function returns a (360001,5) array and a tuple containing: the
+    natural frequencies of the system (fn = (5,) array); the unity
+    displacement normalised mode shapes matrix (FI_1 = (5,5) array); and the
+    damping ratios (xi = float)
+
+    -------
+    Returns
+    -------
+    acc : 2D array
+        Time histories of the 5 DOF of the system.
+    (fn, FI_1, xi) : tuple
+        Tuple containing the natural frequencies (fn), the mode shape
+        matrix (FI_1), and the damping ratio (xi) of the system.
+
+    """
+
+    rng = np.random.RandomState(12345)  # Set the seed
+    fs = 200  # [Hz] Sampling freqiency
+    T = 900  # [sec] Period of the time series
+
+    dt = 1 / fs  # [sec] time resolution
+    df = 1 / T  # [Hz] frequency resolution
+    N = int(T / dt)  # number of data points
+    fmax = fs / 2  # Nyquist frequency
+
+    t = np.arange(0, T + dt, dt)  # time instants array
+    t = np.linspace(0, T + dt, N)
+
+    fs = np.arange(0, fmax + df, df)  # spectral lines array
+    fs = np.linspace(0, fmax + df, N // 2)  # spectral lines array
+
+    # =========================================================================
+    # SYSTEM DEFINITION
+
+    m = 25.91  # mass
+    k = 10000.0  # stiffness
+
+    # Mass matrix
+    M = np.eye(5) * m
+    _ndof = M.shape[0]  # number of DOF (5)
+
+    # Stiffness matrix
+    K = (
+        np.array(
+            [
+                [2, -1, 0, 0, 0],
+                [-1, 2, -1, 0, 0],
+                [0, -1, 2, -1, 0],
+                [0, 0, -1, 2, -1],
+                [0, 0, 0, -1, 1],
+            ]
+        )
+        * k
+    )
+
+    lam, FI = linalg.eigh(K, b=M)  # Solving eigen value problem
+
+    fn = np.sqrt(lam) / (2 * np.pi)  # Natural frequencies
+
+    # Unity displacement normalised mode shapes
+    FI_1 = np.array([FI[:, k] / max(abs(FI[:, k])) for k in range(_ndof)]).T
+    # Ordering from smallest to largest
+    FI_1 = FI_1[:, np.argsort(fn)]
+    fn = np.sort(fn)
+
+    # K_M = FI_M.T @ K @ FI_M # Modal stiffness
+    M_M = FI_1.T @ M @ FI_1  # Modal mass
+
+    xi = 0.02  # damping ratio for all modes (2%)
+    # Modal damping
+    C_M = np.diag(
+        np.array([2 * M_M[i, i] * xi * fn[i] * (2 * np.pi) for i in range(_ndof)])
+    )
+
+    C = linalg.inv(FI_1.T) @ C_M @ linalg.inv(FI_1)  # Damping matrix
+
+    # n = _ndof*2 # order of the system
+
+    # =========================================================================
+    # STATE-SPACE FORMULATION
+
+    a1 = np.zeros((_ndof, _ndof))  # Zeros (ndof x ndof)
+    a2 = np.eye(_ndof)  # Identity (ndof x ndof)
+    A1 = np.hstack((a1, a2))  # horizontal stacking (ndof x 2*ndof)
+    a3 = -linalg.inv(M) @ K  # M^-1 @ K (ndof x ndof)
+    a4 = -linalg.inv(M) @ C  # M^-1 @ C (ndof x ndof)
+    A2 = np.hstack((a3, a4))  # horizontal stacking(ndof x 2*ndof)
+    # vertical stacking of A1 e A2
+    Ac = np.vstack((A1, A2))  # State Matrix A (2*ndof x 2*ndof))
+
+    b2 = -linalg.inv(M)
+    # Input Influence Matrix B (2*ndof x n°input=ndof)
+    Bc = np.vstack((a1, b2))
+
+    # N.B. number of rows = n°output*ndof
+    # n°output may be 1, 2 o 3 (displacements, velocities, accelerations)
+    # the Cc matrix has to be defined accordingly
+    c1 = np.hstack((a2, a1))  # displacements row
+    c2 = np.hstack((a1, a2))  # velocities row
+    c3 = np.hstack((a3, a4))  # accelerations row
+    # Output Influence Matrix C (n°output*ndof x 2*ndof)
+    Cc = np.vstack((c1, c2, c3))
+
+    # Direct Transmission Matrix D (n°output*ndof x n°input=ndof)
+    Dc = np.vstack((a1, a1, b2))
+
+    # =========================================================================
+    # Using SciPy's LTI to solve the system
+
+    # Defining the system
+    sys = signal.lti(Ac, Bc, Cc, Dc)
+
+    # Defining the amplitute of the force
+    af = 1
+
+    # Assembling the forcing vectors (N x ndof) (random white noise!)
+    # N.B. N=number of data points; ndof=number of DOF
+    u = np.array([rng.randn(N) * af for r in range(_ndof)]).T
+
+    # Solving the system
+    tout, yout, xout = signal.lsim(sys, U=u, T=t)
+
+    # d = yout[:,:5] # displacement
+    # v = yout[:,5:10] # velocity
+    a = yout[:, 10:]  # acceleration
+
+    # =========================================================================
+    # Adding noise
+    # SNR = 10*np.log10(_af/_ar)
+    SNR = 10  # Signal-to-Noise ratio
+    ar = af / (10 ** (SNR / 10))  # Noise amplitude
+
+    # Initialize the arrays (copy of accelerations)
+    acc = a.copy()
+    for _ind in range(_ndof):
+        # Measurments POLLUTED BY NOISE
+        acc[:, _ind] = a[:, _ind] + ar * rng.randn(N)
+
+    # # Subplot of the accelerations
+    # fig, axs = plt.subplots(5,1,sharex=True)
+    # for _nr in range(_ndof):
+    #     axs[_nr].plot(t, a[:,_nr], alpha=1, linewidth=1, label=f'story{_nr+1}')
+    #     axs[_nr].legend(loc=1, shadow=True, framealpha=1)
+    #     axs[_nr].grid(alpha=0.3)
+    #     axs[_nr].set_ylabel('$mm/s^2$')
+    # axs[_nr].set_xlabel('t [sec]')
+    # fig.suptitle('Accelerations plot', fontsize=12)
+    # plt.show()
+
+    return acc, (fn, FI_1, xi)
 
 
 def lab_stab(
@@ -124,18 +280,18 @@ def lab_stab(
         Sm1[Sm1 == 0] = np.nan
     # -----------------------------------------------------------------------------
     # STABILITY BETWEEN CONSECUTIVE ORDERS
-    for o in range(ordmin, ordmax, step):
-        ii = int((o - ordmin) / step)
+    for oo in range(ordmin, ordmax + 1, step):
+        o = int(oo / step)
 
-        f_n = Fn1[:, ii].reshape(-1, 1)
-        xi_n = Sm1[:, ii].reshape(-1, 1)
-        phi_n = Ms1[:, ii, :]
+        f_n = Fn1[:, o].reshape(-1, 1)
+        xi_n = Sm1[:, o].reshape(-1, 1)
+        phi_n = Ms1[:, o, :]
 
-        f_n1 = Fn1[:, ii - 1].reshape(-1, 1)
-        xi_n1 = Sm1[:, ii - 1].reshape(-1, 1)
-        phi_n1 = Ms1[:, ii - 1, :]
+        f_n1 = Fn1[:, o - 1].reshape(-1, 1)
+        xi_n1 = Sm1[:, o - 1].reshape(-1, 1)
+        phi_n1 = Ms1[:, o - 1, :]
 
-        if ii != 0 and ii != 1:
+        if o != 0 and o != 1:
             for i in range(len(f_n)):
                 try:
                     idx = np.nanargmin(np.abs(f_n1 - f_n[i]))
@@ -144,29 +300,29 @@ def lab_stab(
                     cond2 = np.abs(xi_n[i] - xi_n1[idx]) / xi_n[i]
                     cond3 = 1 - MAC(phi_n[i, :], phi_n1[idx, :])
                     if cond1 < err_fn and cond2 < err_xi and cond3 < err_ms:
-                        Lab[i, ii] = 7  # Stable
+                        Lab[i, o] = 7  # Stable
 
                     elif cond1 < err_fn and cond3 < err_ms:
                         # Stable frequency, stable mode shape
-                        Lab[i, ii] = 6
+                        Lab[i, o] = 6
 
                     elif cond1 < err_fn and cond2 < err_xi:
-                        Lab[i, ii] = 5  # Stable frequency, stable damping
+                        Lab[i, o] = 5  # Stable frequency, stable damping
 
                     elif cond2 < err_xi and cond3 < err_ms:
-                        Lab[i, ii] = 4  # Stable damping, stable mode shape
+                        Lab[i, o] = 4  # Stable damping, stable mode shape
 
                     elif cond2 < err_xi:
-                        Lab[i, ii] = 3  # Stable damping
+                        Lab[i, o] = 3  # Stable damping
 
                     elif cond3 < err_ms:
-                        Lab[i, ii] = 2  # Stable mode shape
+                        Lab[i, o] = 2  # Stable mode shape
 
                     elif cond1 < err_fn:
-                        Lab[i, ii] = 1  # Stable frequency
+                        Lab[i, o] = 1  # Stable frequency
 
                     else:
-                        Lab[i, ii] = 0  # Nuovo polo o polo instabile
+                        Lab[i, o] = 0  # Nuovo polo o polo instabile
                 except Exception as e:
                     # If f_n[i] is nan, do nothin, n.b. the lab stays 0
                     logger.debug(e)
