@@ -12,8 +12,6 @@ import typing
 import numpy as np
 from tqdm import tqdm, trange
 
-from . import Gen_funct as GF
-
 np.seterr(divide="ignore", invalid="ignore")
 logger = logging.getLogger(__name__)
 
@@ -55,8 +53,7 @@ def BuildHank(Y: np.ndarray, Yref: np.ndarray, br: int, fs: float, method: str):
     -----
       "dat": Efficient method for assembling the Hankel matrix for data driven SSI.
       "cov_mm": Builds Hankel matrix using future and past output data with matrix multiplication.
-      "cov_unb": Builds Hankel matrix using correlations with unbiased estimator.
-      "cov_bias": Builds Hankel matrix using correlations with biased estimator.
+      "cov_R": Builds Hankel matrix using correlations.
       "YfYp": Returns the future and past output data matrices Yf and Yp.
     """
     Ndat = Y.shape[1]
@@ -72,27 +69,13 @@ def BuildHank(Y: np.ndarray, Yref: np.ndarray, br: int, fs: float, method: str):
         Hank = np.dot(Yf, Yp.T)
         return Hank
 
-    elif method == "cov_unb":
+    elif method == "cov_R":
         # Correlations
         Ri = np.array(
             [
                 1 / (Ndat - k) * np.dot(Y[:, : Ndat - k], Yref[:, k:].T)
                 for k in trange(p + q)
             ]
-        )
-        # Assembling the Toepliz matrix
-        Hank = np.vstack(
-            [
-                np.hstack([Ri[k, :, :] for k in range(p + l_, l_ - 1, -1)])
-                for l_ in range(q)
-            ]
-        )
-        return Hank
-
-    elif method == "cov_bias":
-        # Correlations
-        Ri = np.array(
-            [1 / (Ndat) * np.dot(Y[:, : Ndat - k], Yref[:, k:].T) for k in trange(p + q)]
         )
         # Assembling the Toepliz matrix
         Hank = np.vstack(
@@ -127,7 +110,7 @@ def BuildHank(Y: np.ndarray, Yref: np.ndarray, br: int, fs: float, method: str):
     else:
         raise ValueError(
             f'{method} is not a valid argument. "method" must be \
-                         one of: "cov_mm", "cov_unb", "cov_bias", "dat", \
+                         one of: "cov_mm", "cov_R", "dat", \
                          "YfYp"'
         )
 
@@ -467,152 +450,27 @@ def SSI_MulSet(
 # -----------------------------------------------------------------------------
 
 
-def Lab_stab_SSI(
-    Fn: np.ndarray,
-    Sm: np.ndarray,
-    Ms: np.ndarray,
-    ordmin: int,
-    ordmax: int,
-    step: int,
-    err_fn: float,
-    err_xi: float,
-    err_ms: float,
-    max_xi: float,
-):
-    """
-    Construct a Stability Chart for the Stochastic Subspace Identification (SSI) method.
-
-    Parameters
-    ----------
-    Fn : numpy.ndarray
-        Frequency poles, shape: (ordmax, ordmax/step+1).
-    Sm : numpy.ndarray
-        Damping poles, shape: (ordmax, ordmax/step+1).
-    Ms : numpy.ndarray
-        Mode shape array, shape: (ordmax, ordmax/step+1, nch(n_DOF)).
-    ordmin : int
-        Minimum order of model.
-    ordmax : int
-        Maximum order of model.
-    step : int
-        Step when iterating through model orders.
-    err_fn : float
-        Threshold for relative frequency difference for stability checks.
-    err_xi : float
-        Threshold for relative damping ratio difference for stability checks.
-    err_ms : float
-        Threshold for Modal Assurance Criterion (MAC) for stability checks.
-    max_xi : float
-        Threshold for max allowed damping.
-
-    Returns
-    -------
-    numpy.ndarray
-        Stability label matrix (Lab), shape: (ordmax, ordmax/step+1).
-
-    Note
-    -----
-    This function categorizes modes based on their stability in terms of frequency, damping, and mode shape.
-    """
-    Lab = np.zeros(Fn.shape, dtype="int")
-
-    # -----------------------------------------------------------------------------
-    # REMOVING HARD CONDITIONS
-    # Create Mask array to pick only damping xi, which are xi> 0 and xi<max_xi
-    Mask = np.logical_and(Sm < max_xi, Sm > 0).astype(int)
-    # Mask Damping Array
-    Sm1 = Sm * Mask
-    Sm1[Sm1 == 0] = np.nan
-    # Mask Frequency Array
-    Fn1 = Fn * Mask
-    Fn1[Fn1 == 0] = np.nan
-    # Mask ModeShape array (N.B. modify mask to fit the MS dimension)
-    nDOF = Ms.shape[2]
-    MaskMS = np.repeat(Mask[:, :, np.newaxis], nDOF, axis=2)
-    Ms1 = Ms * MaskMS
-    Ms1[Ms1 == 0] = np.nan
-    # -----------------------------------------------------------------------------
-    # STABILITY BETWEEN CONSECUTIVE ORDERS
-    for i in range(ordmin, ordmax + 1, step):
-        ii = int((i - ordmin) / step)
-
-        f_n = Fn1[:, ii].reshape(-1, 1)
-        xi_n = Sm1[:, ii].reshape(-1, 1)
-        phi_n = Ms1[:, ii, :]
-
-        f_n1 = Fn1[:, ii - 1].reshape(-1, 1)
-        xi_n1 = Sm1[:, ii - 1].reshape(-1, 1)
-        phi_n1 = Ms1[:, ii - 1, :]
-
-        if ii != 0 and ii != 1:
-            for i in range(len(f_n)):
-                if np.isnan(f_n1[i]):
-                    # If at the iteration i-1 the elements are all nan, do nothing
-                    # n.b the lab stays 0
-                    pass
-                else:
-                    try:
-                        idx = np.nanargmin(np.abs(f_n1 - f_n[i]))
-
-                        cond1 = np.abs(f_n[i] - f_n1[idx]) / f_n[i]
-                        cond2 = np.abs(xi_n[i] - xi_n1[idx]) / xi_n[i]
-                        cond3 = 1 - GF.MAC(phi_n[i, :], phi_n1[idx, :])
-                        # cond3 = 1 - MAC(phi_n[i, :], phi_n1[idx, :])
-                        if cond1 < err_fn and cond2 < err_xi and cond3 < err_ms:
-                            Lab[i, ii] = 7  # Stable
-
-                        elif cond1 < err_fn and cond3 < err_ms:
-                            # Stable frequency, stable mode shape
-                            Lab[i, ii] = 6
-
-                        elif cond1 < err_fn and cond2 < err_xi:
-                            Lab[i, ii] = 5  # Stable frequency, stable damping
-
-                        elif cond2 < err_xi and cond3 < err_ms:
-                            Lab[i, ii] = 4  # Stable damping, stable mode shape
-
-                        elif cond2 < err_xi:
-                            Lab[i, ii] = 3  # Stable damping
-
-                        elif cond3 < err_ms:
-                            Lab[i, ii] = 2  # Stable mode shape
-
-                        elif cond1 < err_fn:
-                            Lab[i, ii] = 1  # Stable frequency
-
-                        else:
-                            Lab[i, ii] = 0  # Nuovo polo o polo instabile
-                    except Exception as e:
-                        # If f_n[i] is nan, do nothin, n.b. the lab stays 0
-                        logger.debug(e)
-    return Lab
-
-
-# -----------------------------------------------------------------------------
-
-
 def SSI_MPE(
-    sel_freq: list,
+    freq_ref: list,
     Fn_pol: np.ndarray,
-    Sm_pol: np.ndarray,
-    Ms_pol: np.ndarray,
+    Xi_pol: np.ndarray,
+    Phi_pol: np.ndarray,
     order: int,
     Lab: typing.Optional[np.ndarray] = None,
-    deltaf: float = 0.05,
-    rtol: float = 1e-2,
+    rtol: float = 5e-2,
 ):
     """
     Extract modal parameters using Stochastic Subspace Identification (SSI) method for selected frequencies.
 
     Parameters
     ----------
-    sel_freq : list
+    freq_ref : list
         List of selected frequencies for modal parameter extraction.
     Fn_pol : numpy.ndarray
         Array of natural frequencies obtained from SSI for each model order.
-    Sm_pol : numpy.ndarray
+    Xi_pol : numpy.ndarray
         Array of damping ratios obtained from SSI for each model order.
-    Ms_pol : numpy.ndarray
+    Phi_pol : numpy.ndarray
         3D array of mode shapes obtained from SSI for each model order.
     order : int, list of int, or 'find_min'
         Specifies the model order(s) for which the modal parameters are to be extracted.
@@ -620,10 +478,8 @@ def SSI_MPE(
         stable poles for each mode of interest.
     Lab : numpy.ndarray, optional
         Array of labels identifying stable poles. Required if order='find_min'.
-    deltaf : float, optional
-        Frequency bandwidth around each selected frequency for searching poles. Default is 0.05.
     rtol : float, optional
-        Relative tolerance for comparing frequencies. Default is 1e-2.
+        Relative tolerance for comparing frequencies. Default is 5e-2.
 
     Returns
     -------
@@ -654,108 +510,86 @@ def SSI_MPE(
         )
     sel_xi = []
     sel_phi = []
-    sel_freq1 = []
+    sel_freq = []
     # Loop through the frequencies given in the input list
     logger.info("Extracting SSI modal parameters")
-    order_out = np.empty(len(sel_freq))
-    for ii, fj in enumerate(tqdm(sel_freq)):
-        # =============================================================================
-        # OPZIONE order = "find_min"
-        # here we find the minimum model order so to get a stable pole for every mode of interest
-        # -----------------------------------------------------------------------------
-        if order == "find_min":
-            # keep only Stable pole
-            a = np.where(Lab == 7, Fn_pol, np.nan)
-            # find the limits for the search
-            limits = [(fj - deltaf, fj + deltaf) for fj in sel_freq]
-            # find poles between limits and append them to list
-            aas = [
-                np.where(((a < limits[ii][1]) & (a > limits[ii][0])), a, np.nan)
-                for ii in range(len(sel_freq))
-            ]
-            # =============================================================================
-            # N.B if deltaf is too big and a +- limits includes also another frequency from
-            # sel_freq, then the method of adding the matrices together in the next loop
-            # wont work.
-            # DOVREI ESCLUDERE LE FREQUENZE CHE HANNO FORME MODALI DIVERSE (MAC<0.85?)
-            # RISPETTO AD UNA FORMA DI RIFERIMENTO FORNITA
-            # =============================================================================
-            # then loop through list
-            aa = 0
-            for bb in aas:
-                # transform nan into 0 (so to be able to add the matrices together)
-                bb = np.nan_to_num(bb, copy=True, nan=0.0)
-                aa += bb
-            # convert back 0s to nans
-            aa = np.where(aa == 0, np.nan, aa)
+    # =============================================================================
+    # OPZIONE order = "find_min"
+    # here we find the minimum model order so to get a stable pole for every mode of interest
+    # -----------------------------------------------------------------------------
+    if order == "find_min":
+        # Find stable poles
+        stable_poles = np.where(Lab == 7, Fn_pol, np.nan)
+        limits = [(f - rtol, f + rtol) for f in freq_ref]
 
-            ii = 0
-            check = np.array([False, False])
-            while check.any() == False:  # noqa: E712
-                # try:
-                fn_at_ord_ii = aa[:, ii]
-                fn_at_ord_ii = np.unique(fn_at_ord_ii)
-                # remove nans
-                fn_at_ord_ii = fn_at_ord_ii[~np.isnan(fn_at_ord_ii)]
+        # Accumulate frequencies within the tolerance limits
+        aggregated_poles = np.zeros_like(stable_poles)
+        for lower, upper in limits:
+            within_limits = np.where(
+                (stable_poles >= lower) & (stable_poles <= upper), stable_poles, 0
+            )
+            aggregated_poles += within_limits
 
-                if fn_at_ord_ii.shape[0] == len(sel_freq):
-                    check = np.isclose(fn_at_ord_ii, sel_freq, rtol=rtol)
-                else:
-                    pass
-                if ii == aa.shape[1] - 1:
-                    logger.warning("Could not find any values")
-                    break
-                ii += 1
-                # except:
-                #     pass
-            ii -= 1  # remove last iteration to find the correct index
+        aggregated_poles = np.where(aggregated_poles == 0, np.nan, aggregated_poles)
 
-            sel_freq1 = fn_at_ord_ii
-            sel_xi = []
-            sel_phi = []
-            b = aa[:, ii]
-            c = b[~np.isnan(b)]
-            if c.any():
-                for fj in sel_freq1:
-                    r_ind = np.nanargmin(np.abs(b - fj))
-                    sel_xi.append(Sm_pol[r_ind, ii])
-                    sel_phi.append(Ms_pol[r_ind, ii, :])
-            order_out = ii
-        # =============================================================================
-        # OPZIONE 2 order = int
-        # -----------------------------------------------------------------------------
-        elif isinstance(order, int):
+        found = False
+        for i in range(aggregated_poles.shape[1]):
+            current_order_poles = aggregated_poles[:, i]
+            unique_poles = np.unique(current_order_poles[~np.isnan(current_order_poles)])
+
+            if len(unique_poles) == len(freq_ref) and np.allclose(
+                unique_poles, freq_ref, rtol=rtol
+            ):
+                found = True
+                sel_freq.append(unique_poles)
+                for freq in unique_poles:
+                    index = np.nanargmin(np.abs(current_order_poles - freq))
+                    sel_xi.append(Xi_pol[index, i])
+                    sel_phi.append(Phi_pol[index, i, :])
+                order_out = i
+                break
+
+        if not found:
+            logger.warning("Could not find any values")
+            order_out = None
+    # =============================================================================
+    # OPZIONE 2 order = int
+    # -----------------------------------------------------------------------------
+    elif isinstance(order, int):
+        for fj in tqdm(freq_ref):
             sel = np.nanargmin(np.abs(Fn_pol[:, order] - fj))
             fns_at_ord_ii = Fn_pol[:, order][sel]
-            check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)
+            check = np.isclose(fns_at_ord_ii, freq_ref, rtol=rtol)
             if not check.any():
                 logger.warning("Could not find any values")
                 order_out = order
             else:
-                sel_freq1.append(Fn_pol[:, order][sel])
-                sel_xi.append(Sm_pol[:, order][sel])
-                sel_phi.append(Ms_pol[:, order][sel, :])
+                sel_freq.append(Fn_pol[:, order][sel])
+                sel_xi.append(Xi_pol[:, order][sel])
+                sel_phi.append(Phi_pol[:, order][sel, :])
                 order_out = order
-        # =============================================================================
-        # OPZIONE 3 order = list[int]
-        # -----------------------------------------------------------------------------
-        elif isinstance(order, list):
+    # =============================================================================
+    # OPZIONE 3 order = list[int]
+    # -----------------------------------------------------------------------------
+    elif isinstance(order, list):
+        order_out = np.array(order)
+        for ii, fj in enumerate(tqdm(freq_ref)):
             sel = np.nanargmin(np.abs(Fn_pol[:, order[ii]] - fj))
             fns_at_ord_ii = Fn_pol[:, order[ii]][sel]
-            check = np.isclose(fns_at_ord_ii, sel_freq, rtol=rtol)
+            check = np.isclose(fns_at_ord_ii, freq_ref, rtol=rtol)
             if not check.any():
                 logger.warning("Could not find any values")
                 order_out[ii] = order[ii]
             else:
-                sel_freq1.append(Fn_pol[:, order[ii]][sel])
-                sel_xi.append(Sm_pol[:, order[ii]][sel])
-                sel_phi.append(Ms_pol[:, order[ii]][sel, :])
+                sel_freq.append(Fn_pol[:, order[ii]][sel])
+                sel_xi.append(Xi_pol[:, order[ii]][sel])
+                sel_phi.append(Phi_pol[:, order[ii]][sel, :])
                 order_out[ii] = order[ii]
-        else:
-            raise ValueError('order must be either of type(int) or "find_min"')
+    else:
+        raise ValueError('order must be either of type(int) or "find_min"')
     logger.debug("Done!")
 
-    Fn = np.array(sel_freq1)
+    Fn = np.array(sel_freq).reshape(-1)
     Phi = np.array(sel_phi).T
     Xi = np.array(sel_xi)
     return Fn, Xi, Phi, order_out

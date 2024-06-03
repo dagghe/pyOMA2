@@ -25,14 +25,14 @@ from pyoma2.functions import Gen_funct, plot_funct
 
 
 def animate_scatters(
-    iteration, Data, scatters, lines=None, sens_lines=None, colormap="plasma"
+    iteration, Data, scatters, lines=None, sens_lines=None, colormap="plasma", scaleF=1
 ):
     """
     Update the data held by the scatter plot and the lines connecting them, with colors based on their distance from the starting position.
     """
     # Prepare colormap
     cmap = plt.get_cmap(colormap)
-    norm_fn = Normalize(vmin=0, vmax=1)
+    norm_fn = Normalize(vmin=0, vmax=scaleF)
 
     # Calculate distances from starting positions using numpy.linalg.norm
     distances = np.linalg.norm(Data[:, :, iteration] - Data[:, :, 0], axis=1)
@@ -191,19 +191,39 @@ class AniMode:
         df_phi = pd.DataFrame(
             {"sName": self.sens_names, "Phi": self.phi.real * self.scaleF},
         )
-        mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
+        if self.Geo.cstrn is not None:
+            aa = self.Geo.cstrn.to_numpy(na_value=0)[:, :]
+            aa = np.nan_to_num(aa, copy=True, nan=0.0)
+            val = aa @ self.phi.real
+            ctn_df = pd.DataFrame(
+                {"cName": self.Geo.cstrn.index, "val": val},
+            )
+
+            mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
+            mapping1 = dict(zip(ctn_df["cName"], ctn_df["val"]))
+            mapp = dict(mapping, **mapping1)
+        else:
+            mapp = dict(zip(df_phi["sName"], df_phi["Phi"]))
         # reshape the mode shape dataframe to fit the pts coord
         sens_map = self.Geo.sens_map
-        df_phi_map = sens_map.replace(mapping).astype(float)
+        df_phi_map = sens_map.replace(mapp).astype(float)
         # add together coordinates and mode shape displacement
-        newpoints = self.nodes_coord.add(df_phi_map * self.Geo.sens_sign, fill_value=0)
-        newpoints1 = self.nodes_coord.add(
-            df_phi_map * self.Geo.sens_sign * (-1), fill_value=0
+        # newpoints = self.nodes_coord.add(df_phi_map * self.Geo.sens_sign, fill_value=0)
+        # newpoints1 = self.nodes_coord.add(
+        #     df_phi_map * self.Geo.sens_sign * (-1), fill_value=0
+        # )
+        newpoints = (
+            self.Geo.pts_coord.to_numpy()
+            + df_phi_map.to_numpy() * self.Geo.sens_sign.to_numpy()
+        )
+        newpoints1 = (
+            self.Geo.pts_coord.to_numpy()
+            + df_phi_map.to_numpy() * self.Geo.sens_sign.to_numpy() * (-1)
         )
         # extract only the displacement array
-        newpoints = newpoints.to_numpy()[:, 1:]
-        newpoints1 = newpoints1.to_numpy()[:, 1:]
-        oldpoints = self.nodes_coord.to_numpy()[:, 1:]
+        # newpoints = newpoints.to_numpy()[:, 1:]
+        # newpoints1 = newpoints1.to_numpy()[:, 1:]
+        oldpoints = self.nodes_coord.to_numpy()[:, :]
         # Create trajectories (first quarter than reverse and concatenate)
         traj1 = np.linspace(oldpoints, newpoints, int(nr_iter / 4))
         traj2 = np.concatenate([traj1, traj1[::-1]])
@@ -235,6 +255,7 @@ class AniMode:
             remove_fill=self.remove_fill,
             remove_grid=self.remove_grid,
             remove_axis=self.remove_axis,
+            scaleF=self.scaleF,
         )
 
         # Set view
@@ -272,7 +293,7 @@ class AniMode:
                 self.fig,
                 animate_scatters,
                 nr_iter,
-                fargs=(Data, scatters, lines, self.Geo.sens_lines),
+                fargs=(Data, scatters, lines, self.Geo.sens_lines, "plasma", self.scaleF),
                 interval=1,
                 blit=False,
                 repeat=True,
@@ -284,7 +305,7 @@ class AniMode:
                 self.fig,
                 animate_scatters,
                 nr_iter,
-                fargs=(Data, scatters),
+                fargs=(Data, scatters, None, None, "plasma", self.scaleF),
                 interval=1,
                 blit=False,
                 repeat=True,

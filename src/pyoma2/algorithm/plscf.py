@@ -131,8 +131,7 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         self,
         sel_freq: typing.List[float],
         order: typing.Union[int, str] = "find_min",
-        deltaf: float = 0.05,
-        rtol: float = 1e-2,
+        rtol: float = 5e-2,
     ) -> typing.Any:
         """
         Extract the modal parameters at the selected frequencies and order.
@@ -155,12 +154,11 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
             The results of the modal parameter estimation, typically including estimated frequencies, damping
             ratios, and mode shapes.
         """
-        super().mpe(sel_freq=sel_freq, order=order, deltaf=deltaf, rtol=rtol)
+        super().mpe(sel_freq=sel_freq, order=order, rtol=rtol)
 
         # Save run parameters
         self.run_params.sel_freq = sel_freq
         self.run_params.order_in = order
-        self.run_params.deltaf = deltaf
         self.run_params.rtol = rtol
 
         # Get poles
@@ -171,7 +169,7 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
 
         # Extract modal results
         Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = pLSCF_funct.pLSCF_MPE(
-            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, deltaf=deltaf, rtol=rtol
+            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, rtol=rtol
         )
 
         # Save results
@@ -183,8 +181,7 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
     def mpe_fromPlot(
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
-        deltaf: float = 0.05,
-        rtol: float = 1e-2,
+        rtol: float = 5e-2,
     ) -> typing.Any:
         """
         Extract the modal parameters directly from the stabilisation chart.
@@ -204,10 +201,9 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         Any
             The results of the modal parameter estimation based on user selection from the plot.
         """
-        super().mpe_fromPlot(freqlim=freqlim, deltaf=deltaf, rtol=rtol)
+        super().mpe_fromPlot(freqlim=freqlim, rtol=rtol)
 
         # Save run parameters
-        self.run_params.deltaf = deltaf
         self.run_params.rtol = rtol
 
         # Get poles
@@ -222,7 +218,7 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
 
         # e poi estrarre risultati
         Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = pLSCF_funct.pLSCF_MPE(
-            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, deltaf=deltaf, rtol=rtol
+            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, rtol=rtol
         )
 
         # Save results

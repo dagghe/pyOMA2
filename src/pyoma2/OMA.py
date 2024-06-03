@@ -335,6 +335,7 @@ class BaseSetup:
             remove_fill=remove_fill,
             remove_grid=remove_grid,
             remove_axis=remove_axis,
+            scaleF=scaleF,
         )
 
         # Set view
@@ -342,7 +343,6 @@ class BaseSetup:
 
         return fig, ax
 
-    # metodo per plottare geometria 2
     def plot_geo2(
         self,
         scaleF: int = 1,
@@ -393,70 +393,49 @@ class BaseSetup:
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
         # plot sensors'
-        pts = self.Geo2.pts_coord.to_numpy()[:, 1:]
+        pts = self.Geo2.pts_coord.to_numpy()[:, :]
         plt_nodes(ax, pts, color="red")
 
         # plot sensors' directions
-        ch_names = self.Geo2.sens_map.to_numpy()[:, 1:]
-        s_sign = self.Geo2.sens_sign.to_numpy()[:, 1:]  # array of signs
-        # N.B. the size of s_sign will vary depending on the order_red
-        # parameter. order_red="None" size(npts,3);
-        # order_red="xy/xz/yz" size(npts,2);
-        # order_red="x/y/z" size(npts,1)
-        # (same for ch_names)
-        s_sign = s_sign.astype(float)
-        ord_red = self.Geo2.order_red
-        zero1 = np.zeros(s_sign.shape[0]).reshape(-1, 1)
+        ch_names = self.Geo2.sens_map.to_numpy()
+        s_sign = self.Geo2.sens_sign.to_numpy().astype(float)  # array of signs
+
         zero2 = np.zeros((s_sign.shape[0], 2))
-        if ord_red is None:
-            pass
-        elif ord_red == "xy":
-            s_sign = np.hstack((s_sign, zero1))
-            ch_names = np.hstack((ch_names, zero1))
-        elif ord_red == "xz":
-            s_sign = np.insert(s_sign, 1, 0)
-            ch_names = np.insert(ch_names, 1, 0)
-        elif ord_red == "yz":
-            s_sign = np.hstack((zero1, s_sign))
-            ch_names = np.hstack((zero1, ch_names))
-        elif ord_red == "x":
-            s_sign = np.hstack((s_sign, zero2))
-            ch_names = np.hstack((ch_names, zero2))
-        elif ord_red == "y":
-            s_sign = np.insert(zero2, 1, s_sign)
-            ch_names = np.insert(zero2, 1, ch_names)
-        elif ord_red == "z":
-            s_sign = np.hstack((zero2, s_sign))
-            ch_names = np.hstack((zero2, ch_names))
 
         s_sign[s_sign == 0] = np.nan
-        ch_names[ch_names == 0] = np.nan
-        for _ in range(3):
-            s_sign1 = np.hstack((s_sign[:, 0].reshape(-1, 1), zero2))
-            s_sign2 = np.insert(zero2, 1, s_sign[:, 1], axis=1)
-            s_sign3 = np.hstack((zero2, s_sign[:, 2].reshape(-1, 1)))
 
-        plt_quiver(
-            ax,
-            pts,
-            s_sign1,
-            scaleF=scaleF,
-            names=ch_names[:, 0],
-        )
-        plt_quiver(
-            ax,
-            pts,
-            s_sign2,
-            scaleF=scaleF,
-            names=ch_names[:, 1],
-        )
-        plt_quiver(
-            ax,
-            pts,
-            s_sign3,
-            scaleF=scaleF,
-            names=ch_names[:, 2],
-        )
+        s_sign1 = np.hstack((s_sign[:, 0].reshape(-1, 1), zero2))
+        s_sign2 = np.insert(zero2, 1, s_sign[:, 1], axis=1)
+        s_sign3 = np.hstack((zero2, s_sign[:, 2].reshape(-1, 1)))
+
+        valid_indices1 = ch_names[:, 0] != 0
+        valid_indices2 = ch_names[:, 1] != 0
+        valid_indices3 = ch_names[:, 2] != 0
+
+        if np.any(valid_indices1):
+            plt_quiver(
+                ax,
+                pts[valid_indices1],
+                s_sign1[valid_indices1],
+                scaleF=scaleF,
+                names=ch_names[valid_indices1, 0],
+            )
+        if np.any(valid_indices2):
+            plt_quiver(
+                ax,
+                pts[valid_indices2],
+                s_sign2[valid_indices2],
+                scaleF=scaleF,
+                names=ch_names[valid_indices2, 1],
+            )
+        if np.any(valid_indices3):
+            plt_quiver(
+                ax,
+                pts[valid_indices3],
+                s_sign3[valid_indices3],
+                scaleF=scaleF,
+                names=ch_names[valid_indices3, 2],
+            )
 
         # Check that BG nodes are defined
         if self.Geo2.bg_nodes is not None:
@@ -484,12 +463,77 @@ class BaseSetup:
             remove_fill=remove_fill,
             remove_grid=remove_grid,
             remove_axis=remove_axis,
+            scaleF=scaleF,
         )
 
         # Set view
         set_view(ax, view=view)
-
         return fig, ax
+
+    def def_geo2_byFILE(self, path: str):
+        file = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
+        required_sheets = ["sns_names", "pts_crd", "snsTOpts_map"]
+
+        # Ensure required sheets exist
+        if not all(sheet in file for sheet in required_sheets):
+            raise Warning(
+                "At least ['sns_names', 'pts_crd', 'snsTOpts_map'] must be defined!"
+            )
+
+        # Process each sheet
+        for sheet, df in file.items():
+            if sheet == "sns_sign" and df.empty:
+                file["sns_sign"] = pd.DataFrame(
+                    np.ones(file["snsTOpts_map"].to_numpy().shape)
+                )
+            elif sheet != "sns_sign" and df.empty:
+                file[sheet] = None
+
+            if sheet == "sns_names" and df.shape[0] > 1:
+                sens_names = [
+                    [item for item in row if not pd.isna(item)]
+                    for row in df.values.tolist()
+                ]
+                ref_ind = self.ref_ind
+                k = len(ref_ind[0])  # number of reference sensors (from the first setup)
+
+                # Create reference strings and flatten the list
+                sens_name_fl = [f"REF{i+1}" for i in range(k)]
+                sens_name_fl += [
+                    item
+                    for i, row in enumerate(sens_names)
+                    for j, item in enumerate(row)
+                    if j not in ref_ind[i]
+                ]
+                file[sheet] = sens_name_fl
+            elif sheet == "sns_names":
+                file[sheet] = df.values.tolist()[0]
+
+            if (
+                sheet in ["sns_lines", "BG_nodes", "BG_lines", "BG_Surf"]
+                and file[sheet] is not None
+            ):
+                file[sheet] = file[sheet].to_numpy()
+
+        # Adjust to 0 indexed lines
+        if file["BG_lines"] is not None:
+            file["BG_lines"] = np.subtract(file["BG_lines"], 1)
+        if file["sns_lines"] is not None:
+            file["sns_lines"] = np.subtract(file["sns_lines"], 1)
+        if file["BG_Surf"] is not None:
+            file["BG_Surf"] = np.subtract(file["BG_Surf"], 1)
+
+        self.Geo2 = Geometry2(
+            sens_names=file["sns_names"],
+            pts_coord=file["pts_crd"],
+            sens_map=file["snsTOpts_map"],
+            cstrn=file.get("snsTOpts_cstrn"),
+            sens_sign=file["sns_sign"],
+            sens_lines=file["sns_lines"],
+            bg_nodes=file["BG_nodes"],
+            bg_lines=file["BG_lines"],
+            bg_surf=file["BG_Surf"],
+        )
 
     def save_to_file(self, file_name):
         """ """
@@ -973,9 +1017,9 @@ class SingleSetup(BaseSetup):
         ],  # sensors' names
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
-        sens_sign: pd.DataFrame,
         # # OPTIONAL
-        order_red: typing.Optiona[typing.Literal["xy", "xz", "yz", "x", "y", "z"]] = None,
+        cstrn: pd.DataFrame = None,
+        sens_sign: pd.DataFrame = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
@@ -998,8 +1042,6 @@ class SingleSetup(BaseSetup):
             A DataFrame containing the mapping data for sensors.
         sens_sign : pandas.DataFrame
             A DataFrame containing sign data for the sensors.
-        order_red : {'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
-            Specifies the order reduction if any. Default is None.
         sens_lines : numpy.ndarray of int64, optional
             An array defining lines connecting sensors. Default is None.
         bg_nodes : numpy.ndarray of float64, optional
@@ -1016,47 +1058,26 @@ class SingleSetup(BaseSetup):
             dimensions based on the order reduction.
         """
         # ---------------------------------------------------------------------
-        # Checks on input
-        if order_red in ["xy", "xz", "yz"]:
-            nc = 2
-            assert (
-                sens_map.to_numpy()[:, 1:].shape[1] == nc
-            ), "Mapping data must have 2 columns for order reduction"
-            assert (
-                sens_sign.to_numpy()[:, 1:].shape[1] == nc
-            ), "Sign data must have 2 columns for order reduction"
-        elif order_red in ["x", "y", "z"]:
-            nc = 1
-            assert (
-                sens_map.to_numpy()[:, 1:].shape[1] == nc
-            ), "Mapping data must have 1 column for order reduction"
-            assert (
-                sens_sign.to_numpy()[:, 1:].shape[1] == nc
-            ), "Sign data must have 1 column for order reduction"
-        elif order_red is None:
-            nc = 3
-            assert (
-                sens_map.to_numpy()[:, 1:].shape[1] == nc
-            ), "Mapping data must have 3 columns for order reduction"
-            assert (
-                sens_sign.to_numpy()[:, 1:].shape[1] == nc
-            ), "Sign data must have 3 columns for order reduction"
-        else:
-            raise ValueError("Invalid order reduction specified.")
-        # altri controlli??
+        if sens_sign is None:
+            sens_sign = pd.DataFrame(
+                np.ones(sens_map.to_numpy()[:, :].shape), columns=sens_map.columns
+            )
+
         # ---------------------------------------------------------------------
         # adapt to 0 indexed lines
         if bg_lines is not None:
             bg_lines = np.subtract(bg_lines, 1)
         if sens_lines is not None:
             sens_lines = np.subtract(sens_lines, 1)
+        if bg_surf is not None:
+            bg_surf = np.subtract(bg_surf, 1)
 
         self.Geo2 = Geometry2(
             sens_names=sens_names,
             pts_coord=pts_coord,
             sens_map=sens_map,
+            cstrn=cstrn,
             sens_sign=sens_sign,
-            order_red=order_red,
             sens_lines=sens_lines,
             bg_nodes=bg_nodes,
             bg_lines=bg_lines,
@@ -1625,6 +1646,7 @@ class MultiSetup_PoSER:
             remove_fill=remove_fill,
             remove_grid=remove_grid,
             remove_axis=remove_axis,
+            scaleF=scaleF,
         )
 
         # Set view
@@ -1636,14 +1658,14 @@ class MultiSetup_PoSER:
     def def_geo2(
         self,
         # # MANDATORY
-        sens_names: typing.List[typing.List[str]],  # sensors' names MS
+        sens_names: typing.Union[
+            typing.List[typing.List[str]], pd.DataFrame
+        ],  # sensors' names MS
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
-        sens_sign: pd.DataFrame,
         # # OPTIONAL
-        order_red: typing.Optional[
-            typing.Literal["xy", "xz", "yz", "x", "y", "z"]
-        ] = None,
+        cstrn: pd.DataFrame = None,
+        sens_sign: pd.DataFrame = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
@@ -1664,8 +1686,6 @@ class MultiSetup_PoSER:
             A DataFrame containing the mapping data for sensors.
         sens_sign : pd.DataFrame
             A DataFrame containing sign data for the sensors.
-        order_red : Optional[Literal["xy", "xz", "yz", "x", "y", "z"]], optional
-            Specifies the order reduction if any, by default None.
         sens_lines : Optional[np.ndarray], optional
             An array defining lines connecting sensors, by default None.
         bg_nodes : Optional[np.ndarray], optional
@@ -1686,55 +1706,117 @@ class MultiSetup_PoSER:
         Adapts to zero-indexing for sensor and background lines if provided.
         """
         # ---------------------------------------------------------------------
-        sens_names_c = copy.deepcopy(sens_names)
+        if isinstance(sens_names, pd.DataFrame):
+            sens_names = [
+                [item for item in row if not pd.isna(item)]
+                for row in sens_names.values.tolist()
+            ]
+        n = len(sens_names)
         ref_ind = self.ref_ind
-        ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
+        k = len(ref_ind[0])  # number of reference sensor (from the first setup)
 
-        # Iterate and remove indices
-        for string_list, index_list in zip(sens_names_c, ref_ind):
-            for index in sorted(index_list, reverse=True):
-                if 0 <= index < len(string_list):
-                    string_list.pop(index)
+        sens_name_fl = []
+        # Create the reference strings
+        for i in range(k):
+            sens_name_fl.append(f"REF{i+1}")
 
-        # flatten (reduced) sens_name list
-        fr_sens_names = [x for xs in sens_names_c for x in xs]
-        sens_names_final = ini + fr_sens_names
+        # Flatten the list of strings and exclude the reference indices
+        for i in range(n):
+            for j in range(len(sens_names[i])):
+                if j not in ref_ind[i]:
+                    sens_name_fl.append(sens_names[i][j])
 
-        # Check that length of sens_names_final == len(result.Phi[:,i])
+        # ---------------------------------------------------------------------
+        if sens_sign is None:
+            sens_sign = pd.DataFrame(
+                np.ones(sens_map.to_numpy()[:, :].shape), columns=sens_map.columns
+            )
 
-        # Checks on input
-        if order_red == "xy" or order_red == "xz" or order_red == "yz":
-            nc = 2
-            assert sens_map.to_numpy()[:, 1:].shape[1] == nc
-            assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
-        elif order_red == "x" or order_red == "y" or order_red == "z":
-            nc = 1
-            assert sens_map.to_numpy()[:, 1:].shape[1] == nc
-            assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
-        elif order_red is None:
-            nc = 3
-            assert sens_map.to_numpy()[:, 1:].shape[1] == nc
-            assert sens_sign.to_numpy()[:, 1:].shape[1] == nc
         # ---------------------------------------------------------------------
         # adapt to 0 indexed lines
         if bg_lines is not None:
             bg_lines = np.subtract(bg_lines, 1)
         if sens_lines is not None:
             sens_lines = np.subtract(sens_lines, 1)
+        if bg_surf is not None:
+            bg_surf = np.subtract(bg_surf, 1)
 
         self.Geo2 = Geometry2(
-            sens_names=sens_names_final,
+            sens_names=sens_name_fl,
             pts_coord=pts_coord,
             sens_map=sens_map,
+            cstrn=cstrn,
             sens_sign=sens_sign,
-            order_red=order_red,
             sens_lines=sens_lines,
             bg_nodes=bg_nodes,
             bg_lines=bg_lines,
             bg_surf=bg_surf,
         )
 
-    # metodo per plottare geometria 2
+    # metodo per definire geometria 2 da file
+    def def_geo2_byFILE(self, path: str):
+        file = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
+        required_sheets = ["sns_names", "pts_crd", "snsTOpts_map"]
+
+        # Ensure required sheets exist
+        if not all(sheet in file for sheet in required_sheets):
+            raise Warning(
+                "At least ['sns_names', 'pts_crd', 'snsTOpts_map'] must be defined!"
+            )
+
+        # Process each sheet
+        for sheet, df in file.items():
+            if sheet == "sns_sign" and df.empty:
+                file["sns_sign"] = pd.DataFrame(
+                    np.ones(file["snsTOpts_map"].to_numpy().shape)
+                )
+            elif sheet != "sns_sign" and df.empty:
+                file[sheet] = None
+
+            if sheet == "sns_names" and df.shape[0] > 1:
+                sens_names = [
+                    [item for item in row if not pd.isna(item)]
+                    for row in df.values.tolist()
+                ]
+                ref_ind = self.ref_ind
+                k = len(ref_ind[0])  # number of reference sensors (from the first setup)
+
+                # Create reference strings and flatten the list
+                sens_name_fl = [f"REF{i+1}" for i in range(k)]
+                sens_name_fl += [
+                    item
+                    for i, row in enumerate(sens_names)
+                    for j, item in enumerate(row)
+                    if j not in ref_ind[i]
+                ]
+                file[sheet] = sens_name_fl
+            elif sheet == "sns_names":
+                file[sheet] = df.values.tolist()[0]
+
+            if (
+                sheet in ["sns_lines", "BG_nodes", "BG_lines", "BG_Surf"]
+                and file[sheet] is not None
+            ):
+                file[sheet] = file[sheet].to_numpy()
+
+        # Adjust to 0 indexed lines
+        if file["BG_lines"] is not None:
+            file["BG_lines"] -= 1
+        if file["sns_lines"] is not None:
+            file["sns_lines"] -= 1
+
+        self.Geo2 = Geometry2(
+            sens_names=file["sns_names"],
+            pts_coord=file["pts_crd"],
+            sens_map=file["snsTOpts_map"],
+            cstrn=file.get("snsTOpts_cstrn"),
+            sens_sign=file["sns_sign"],
+            sens_lines=file["sns_lines"],
+            bg_nodes=file["BG_nodes"],
+            bg_lines=file["BG_lines"],
+            bg_surf=file["BG_Surf"],
+        )
+
     def plot_geo2(
         self,
         scaleF: int = 1,
@@ -1744,99 +1826,89 @@ class MultiSetup_PoSER:
         remove_axis: bool = True,
     ):
         """
-        Plots the geometry of the tested structure based on the second geometry setup (Geo2).
+        Plots the geometry (type 2) of tested structure.
 
-        This method allows for visualization of a more complex geometric configuration of the
-        structure, with customizable plot parameters.
+        This method creates a 3D or 2D plot of a specific geometric configuration (Geo2) with
+        customizable features such as scaling factor, view type, and visibility options for
+        fill, grid, and axes. It involves plotting sensor points, directions, and additional
+        geometric elements if available.
 
         Parameters
         ----------
         scaleF : int, optional
-            Scaling factor for quiver plots representing sensors' directions, by default 1.
-        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
-            Type of view for the plot (3D or 2D projections), by default "3D".
+            Scaling factor for the quiver plots representing sensors' directions. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            Specifies the type of view for the plot. Can be a 3D view or 2D projections on
+            various planes. Default is "3D".
         remove_fill : bool, optional
-            If True, removes the plot's fill, by default True.
+            If True, the plot's fill is removed. Default is True.
         remove_grid : bool, optional
-            If True, removes the plot's grid, by default True.
+            If True, the plot's grid is removed. Default is True.
         remove_axis : bool, optional
-            If True, removes the plot's axes, by default True.
+            If True, the plot's axes are removed. Default is True.
+
+        Raises
+        ------
+        ValueError
+            If Geo2 is not defined in the setup.
 
         Returns
         -------
         tuple
-            A tuple containing the figure and axis objects of the matplotlib plot.
+            Returns a tuple containing the figure and axis objects of the matplotlib plot.
+            This allows for further customization or saving outside the method.
+
         """
         if self.Geo2 is None:
             raise ValueError(
-                f"Geo2 is not defined. cannot plot geometry on {self}. Call def_geo2 first."
+                f"Geo2 is not defined. Cannot plot geometry on {self}. Call def_geo2 first."
             )
-        fig = plt.figure(figsize=(8, 8))
+        fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
         # plot sensors'
-        pts = self.Geo2.pts_coord.to_numpy()[:, 1:]
+        pts = self.Geo2.pts_coord.to_numpy()[:, :]
         plt_nodes(ax, pts, color="red")
 
         # plot sensors' directions
-        ch_names = self.Geo2.sens_map.to_numpy()[:, 1:]
-        s_sign = self.Geo2.sens_sign.to_numpy()[:, 1:]  # array of signs
-        # N.B. the size of s_sign will vary depending on the order_red
-        # parameter. order_red="None" size(npts,3);
-        # order_red="xy/xz/yz" size(npts,2);
-        # order_red="x/y/z" size(npts,1)
-        # (same for ch_names)
-        ord_red = self.Geo2.order_red
-        zero1 = np.zeros(s_sign.shape[0]).reshape(-1, 1)
+        ch_names = self.Geo2.sens_map.to_numpy()
+        s_sign = self.Geo2.sens_sign.to_numpy().astype(float)  # array of signs
+
         zero2 = np.zeros((s_sign.shape[0], 2))
-        if ord_red is None:
-            pass
-        elif ord_red == "xy":
-            s_sign = np.hstack((s_sign, zero1))
-            ch_names = np.hstack((ch_names, zero1))
-        elif ord_red == "xz":
-            s_sign = np.insert(s_sign, 1, 0)
-            ch_names = np.insert(ch_names, 1, 0)
-        elif ord_red == "yz":
-            s_sign = np.hstack((zero1, s_sign))
-            ch_names = np.hstack((zero1, ch_names))
-        elif ord_red == "x":
-            s_sign = np.hstack((s_sign, zero2))
-            ch_names = np.hstack((ch_names, zero2))
-        elif ord_red == "y":
-            s_sign = np.insert(zero2, 1, s_sign)
-            ch_names = np.insert(zero2, 1, ch_names)
-        elif ord_red == "z":
-            s_sign = np.hstack((zero2, s_sign))
-            ch_names = np.hstack((zero2, ch_names))
 
         s_sign[s_sign == 0] = np.nan
-        ch_names[ch_names == 0] = np.nan
-        for _ in range(3):
-            s_sign1 = np.hstack((s_sign[:, 0].reshape(-1, 1), zero2))
-            s_sign2 = np.insert(zero2, 1, s_sign[:, 1], axis=1)
-            s_sign3 = np.hstack((zero2, s_sign[:, 2].reshape(-1, 1)))
 
+        s_sign1 = np.hstack((s_sign[:, 0].reshape(-1, 1), zero2))
+        s_sign2 = np.insert(zero2, 1, s_sign[:, 1], axis=1)
+        s_sign3 = np.hstack((zero2, s_sign[:, 2].reshape(-1, 1)))
+
+        valid_indices1 = ch_names[:, 0] != 0
+        valid_indices2 = ch_names[:, 1] != 0
+        valid_indices3 = ch_names[:, 2] != 0
+
+        if np.any(valid_indices1):
             plt_quiver(
                 ax,
-                pts,
-                s_sign1,
+                pts[valid_indices1],
+                s_sign1[valid_indices1],
                 scaleF=scaleF,
-                names=ch_names[:, 0],
+                names=ch_names[valid_indices1, 0],
             )
+        if np.any(valid_indices2):
             plt_quiver(
                 ax,
-                pts,
-                s_sign2,
+                pts[valid_indices2],
+                s_sign2[valid_indices2],
                 scaleF=scaleF,
-                names=ch_names[:, 1],
+                names=ch_names[valid_indices2, 1],
             )
+        if np.any(valid_indices3):
             plt_quiver(
                 ax,
-                pts,
-                s_sign3,
+                pts[valid_indices3],
+                s_sign3[valid_indices3],
                 scaleF=scaleF,
-                names=ch_names[:, 2],
+                names=ch_names[valid_indices3, 2],
             )
 
         # Check that BG nodes are defined
@@ -1865,11 +1937,11 @@ class MultiSetup_PoSER:
             remove_fill=remove_fill,
             remove_grid=remove_grid,
             remove_axis=remove_axis,
+            scaleF=scaleF,
         )
 
         # Set view
         set_view(ax, view=view)
-
         return fig, ax
 
     def plot_mode_g1(
@@ -1961,6 +2033,7 @@ class MultiSetup_PoSER:
             remove_fill=remove_fill,
             remove_grid=remove_grid,
             remove_axis=remove_axis,
+            scaleF=scaleF,
         )
 
         # Set view
@@ -2018,13 +2091,30 @@ class MultiSetup_PoSER:
         df_phi = pd.DataFrame(
             {"sName": Geo2.sens_names, "Phi": phi},
         )
-        mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
+
+        if Geo2.cstrn is not None:
+            aa = Geo2.cstrn.to_numpy(na_value=0)[:, 1:]
+            aa = np.nan_to_num(aa, copy=True, nan=0.0)
+            val = aa @ phi
+            ctn_df = pd.DataFrame(
+                {"cName": Geo2.cstrn.to_numpy()[:, 0], "val": val},
+            )
+
+            mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
+            mapping1 = dict(zip(ctn_df["cName"], ctn_df["val"]))
+            mapp = dict(mapping, **mapping1)
+        else:
+            mapp = dict(zip(df_phi["sName"], df_phi["Phi"]))
+
         # reshape the mode shape dataframe to fit the pts coord
-        df_phi_map = Geo2.sens_map.replace(mapping).astype(float)
+        df_phi_map = Geo2.sens_map.replace(mapp).astype(float)
         # add together coordinates and mode shape displacement
-        newpoints = Geo2.pts_coord.add(df_phi_map * Geo2.sens_sign, fill_value=0)
+        # newpoints = Geo2.pts_coord.add(df_phi_map * Geo2.sens_sign, fill_value=0)
+        newpoints = (
+            Geo2.pts_coord.to_numpy() + df_phi_map.to_numpy() * Geo2.sens_sign.to_numpy()
+        )
         # extract only the displacement array
-        newpoints = newpoints.to_numpy()[:, 1:]
+        # newpoints = newpoints.to_numpy()[:, 1:]
 
         # create fig and ax
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
@@ -2058,6 +2148,7 @@ class MultiSetup_PoSER:
             remove_fill=remove_fill,
             remove_grid=remove_grid,
             remove_axis=remove_axis,
+            scaleF=scaleF,
         )
 
         # Set view
@@ -2660,13 +2751,13 @@ class MultiSetup_PreGER(BaseSetup):
         self,
         # # MANDATORY
         sens_names: typing.Union[
-            npt.NDArray[np.string], typing.List[str]
-        ],  # sensors' names
+            typing.List[typing.List[str]], pd.DataFrame
+        ],  # sensors' names MS
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
-        sens_sign: pd.DataFrame,
         # # OPTIONAL
-        order_red: typing.Literal["xy", "xz", "yz", "x", "y", "z"] = None,
+        cstrn: pd.DataFrame = None,
+        sens_sign: pd.DataFrame = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
@@ -2689,8 +2780,6 @@ class MultiSetup_PreGER(BaseSetup):
             A DataFrame containing the mapping data for sensors.
         sens_sign : pd.DataFrame
             A DataFrame containing sign data for the sensors.
-        order_red : typing.Optional[typing.Literal["xy", "xz", "yz", "x", "y", "z"]], optional
-            Specifies the order reduction if any. Default is None.
         sens_lines : npt.NDArray[np.int64], optional
             An array defining lines connecting sensors. Default is None.
         bg_nodes : npt.NDArray[np.float64], optional
@@ -2711,34 +2800,49 @@ class MultiSetup_PreGER(BaseSetup):
         Adapts to zero-indexing for sensor and background lines if provided.
         """
         # ---------------------------------------------------------------------
-        sens_names_c = copy.deepcopy(sens_names)
+        if isinstance(sens_names, pd.DataFrame):
+            sens_names = [
+                [item for item in row if not pd.isna(item)]
+                for row in sens_names.values.tolist()
+            ]
+        n = len(sens_names)  # number of setup
         ref_ind = self.ref_ind
-        ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
+        k = len(ref_ind[0])  # number of reference sensor (from the first setup)
 
-        # Iterate and remove indices
-        for string_list, index_list in zip(sens_names_c, ref_ind):
-            for index in sorted(index_list, reverse=True):
-                if 0 <= index < len(string_list):
-                    string_list.pop(index)
+        sens_name_fl = []
+        # Create the reference strings
+        for i in range(k):
+            sens_name_fl.append(f"REF{i+1}")
 
-        # flatten (reduced) sens_name list
-        fr_sens_names = [x for xs in sens_names_c for x in xs]
-        sens_names_final = ini + fr_sens_names
+        # Flatten the list of strings and exclude the reference indices
+        for i in range(n):
+            for j in range(len(sens_names[i])):
+                if j not in ref_ind[i]:
+                    sens_name_fl.append(sens_names[i][j])
+
+        # ---------------------------------------------------------------------
+        if sens_sign is None:
+            sens_sign = pd.DataFrame(
+                np.ones(sens_map.to_numpy()[:, :].shape), columns=sens_map.columns
+            )
+
         # ---------------------------------------------------------------------
         # adapt to 0 indexed lines
         if bg_lines is not None:
             bg_lines = np.subtract(bg_lines, 1)
         if sens_lines is not None:
             sens_lines = np.subtract(sens_lines, 1)
+        if bg_surf is not None:
+            bg_surf = np.subtract(bg_surf, 1)
 
         self.Geo2 = Geometry2(
-            sens_names=sens_names_final,
+            sens_names=sens_name_fl,
             pts_coord=pts_coord,
             sens_map=sens_map,
             sens_sign=sens_sign,
-            order_red=order_red,
             sens_lines=sens_lines,
             bg_nodes=bg_nodes,
             bg_lines=bg_lines,
             bg_surf=bg_surf,
+            cstrn=cstrn,
         )
