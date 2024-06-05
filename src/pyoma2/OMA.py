@@ -24,6 +24,9 @@ from pyoma2.algorithm.data.result import MsPoserResult
 from pyoma2.functions.Gen_funct import (
     filter_data,
     find_map,
+    flatten_sns_names,
+    import_excel_GEO1,
+    import_excel_GEO2,
     merge_mode_shapes,
     pre_MultiSetup,
 )
@@ -251,9 +254,12 @@ class BaseSetup:
         self,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: bool = True,
-        remove_grid: bool = True,
-        remove_axis: bool = True,
+        colsns: str = "red",
+        colsns_lines: str = "red",
+        colBG_nodes: str = "gray",
+        colBG_lines: str = "gray",
+        colBG_surf: str = "gray",
+        col_txt: str = "red",
     ):
         """
         Plots the geometry (type 1) of tested structure.
@@ -298,7 +304,7 @@ class BaseSetup:
         ax.set_title("Plot of the geometry and sensors' placement and direction")
         # plot sensors' nodes
         sens_coord = self.Geo1.sens_coord[["x", "y", "z"]].to_numpy()
-        plt_nodes(ax, sens_coord, color="red")
+        plt_nodes(ax, sens_coord, color=colsns)
 
         # plot sensors' directions
         plt_quiver(
@@ -307,34 +313,43 @@ class BaseSetup:
             self.Geo1.sens_dir,
             scaleF=scaleF,
             names=self.Geo1.sens_names,
+            color=colsns,
+            color_text=col_txt,
+            method="2",
         )
 
         # Check that BG nodes are defined
         if self.Geo1.bg_nodes is not None:
             # if True plot
-            plt_nodes(ax, self.Geo1.bg_nodes, color="gray", alpha=0.5)
+            plt_nodes(ax, self.Geo1.bg_nodes, color=colBG_nodes, alpha=0.5)
             # Check that BG lines are defined
             if self.Geo1.bg_lines is not None:
                 # if True plot
                 plt_lines(
-                    ax, self.Geo1.bg_nodes, self.Geo1.bg_lines, color="gray", alpha=0.5
+                    ax,
+                    self.Geo1.bg_nodes,
+                    self.Geo1.bg_lines,
+                    color=colBG_lines,
+                    alpha=0.5,
                 )
             if self.Geo1.bg_surf is not None:
                 # if True plot
-                plt_surf(ax, self.Geo1.bg_nodes, self.Geo1.bg_surf, alpha=0.1)
+                plt_surf(
+                    ax, self.Geo1.bg_nodes, self.Geo1.bg_surf, alpha=0.1, color=colBG_surf
+                )
 
         # check for sens_lines
         if self.Geo1.sens_lines is not None:
             # if True plot
-            plt_lines(ax, sens_coord, self.Geo1.sens_lines, color="red")
+            plt_lines(ax, sens_coord, self.Geo1.sens_lines, color=colsns_lines)
 
         # Set ax options
         set_ax_options(
             ax,
             bg_color="w",
-            remove_fill=remove_fill,
-            remove_grid=remove_grid,
-            remove_axis=remove_axis,
+            remove_fill=True,
+            remove_grid=True,
+            remove_axis=True,
             scaleF=scaleF,
         )
 
@@ -347,9 +362,13 @@ class BaseSetup:
         self,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: bool = True,
-        remove_grid: bool = True,
-        remove_axis: bool = True,
+        colsns: str = "red",
+        colsns_lines: str = "red",
+        colsns_surf: str = "red",
+        colBG_nodes: str = "gray",
+        colBG_lines: str = "gray",
+        colBG_surf: str = "gray",
+        col_txt: str = "red",
     ):
         """
         Plots the geometry (type 2) of tested structure.
@@ -419,6 +438,9 @@ class BaseSetup:
                 s_sign1[valid_indices1],
                 scaleF=scaleF,
                 names=ch_names[valid_indices1, 0],
+                color=colsns,
+                color_text=col_txt,
+                method="2",
             )
         if np.any(valid_indices2):
             plt_quiver(
@@ -427,6 +449,9 @@ class BaseSetup:
                 s_sign2[valid_indices2],
                 scaleF=scaleF,
                 names=ch_names[valid_indices2, 1],
+                color=colsns,
+                color_text=col_txt,
+                method="2",
             )
         if np.any(valid_indices3):
             plt_quiver(
@@ -435,34 +460,53 @@ class BaseSetup:
                 s_sign3[valid_indices3],
                 scaleF=scaleF,
                 names=ch_names[valid_indices3, 2],
+                color=colsns,
+                color_text=col_txt,
+                method="2",
             )
 
         # Check that BG nodes are defined
         if self.Geo2.bg_nodes is not None:
             # if True plot
-            plt_nodes(ax, self.Geo2.bg_nodes, color="gray", alpha=0.5)
+            plt_nodes(ax, self.Geo2.bg_nodes, color=colBG_nodes, alpha=0.5)
             # Check that BG lines are defined
             if self.Geo2.bg_lines is not None:
                 # if True plot
                 plt_lines(
-                    ax, self.Geo2.bg_nodes, self.Geo2.bg_lines, color="gray", alpha=0.5
+                    ax,
+                    self.Geo2.bg_nodes,
+                    self.Geo2.bg_lines,
+                    color=colBG_lines,
+                    alpha=0.5,
                 )
             if self.Geo2.bg_surf is not None:
                 # if True plot
-                plt_surf(ax, self.Geo2.bg_nodes, self.Geo2.bg_surf, alpha=0.1)
+                plt_surf(
+                    ax, self.Geo2.bg_nodes, self.Geo2.bg_surf, color=colBG_surf, alpha=0.1
+                )
 
         # check for sens_lines
         if self.Geo2.sens_lines is not None:
             # if True plot
-            plt_lines(ax, pts, self.Geo2.sens_lines, color="red")
+            plt_lines(ax, pts, self.Geo2.sens_lines, color=colsns_lines)
+
+        if self.Geo2.sens_surf is not None:
+            # if True plot
+            plt_surf(
+                ax,
+                self.Geo2.pts_coord.values,
+                self.Geo2.sens_surf,
+                color=colsns_surf,
+                alpha=0.3,
+            )
 
         # Set ax options
         set_ax_options(
             ax,
             bg_color="w",
-            remove_fill=remove_fill,
-            remove_grid=remove_grid,
-            remove_axis=remove_axis,
+            remove_fill=True,
+            remove_grid=True,
+            remove_axis=True,
             scaleF=scaleF,
         )
 
@@ -470,69 +514,192 @@ class BaseSetup:
         set_view(ax, view=view)
         return fig, ax
 
-    def def_geo2_byFILE(self, path: str):
-        file = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
-        required_sheets = ["sns_names", "pts_crd", "snsTOpts_map"]
+    # metodo per definire geometria 1
+    def def_geo1(
+        self,
+        # # MANDATORY
+        sens_names: typing.Union[
+            typing.List[str],
+            typing.List[typing.List[str]],
+            pd.DataFrame,
+            npt.NDArray[np.str_],
+        ],  # sensors' names
+        sens_coord: pd.DataFrame,  # sensors' coordinates
+        sens_dir: npt.NDArray[np.int64],  # sensors' directions
+        # # OPTIONAL
+        sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
+        bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
+        bg_lines: npt.NDArray[np.int64] = None,  # Background lines
+        bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
+    ):
+        """
+        Defines the first geometry setup (Geo1) for the instance.
 
-        # Ensure required sheets exist
-        if not all(sheet in file for sheet in required_sheets):
-            raise Warning(
-                "At least ['sns_names', 'pts_crd', 'snsTOpts_map'] must be defined!"
+        This method sets up the geometry involving sensors' names, coordinates, directions,
+        and optional elements like sensor lines, background nodes, lines, and surfaces.
+
+        Parameters
+        ----------
+        sens_names : Union[numpy.ndarray of string, List of string]
+            An array or list containing the names of the sensors.
+        sens_coord : pandas.DataFrame
+            A DataFrame containing the coordinates of the sensors.
+        sens_dir : numpy.ndarray of int64
+            An array defining the directions of the sensors.
+        sens_lines : numpy.ndarray of int64, optional
+            An array defining lines connecting sensors. Default is None.
+        bg_nodes : numpy.ndarray of float64, optional
+            An array defining background nodes. Default is None.
+        bg_lines : numpy.ndarray of int64, optional
+            An array defining background lines. Default is None.
+        bg_surf : numpy.ndarray of float64, optional
+            An array defining background surfaces. Default is None.
+        """
+        # TODO
+        # assert dimensions
+
+        # ---------------------------------------------------------------------
+        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        sens_names = flatten_sns_names(sens_names, ref_ind=ref_ind)
+        # ---------------------------------------------------------------------
+        # Find the indices that rearrange sens_coord to sens_names
+        newIDX = find_map(sens_names, sens_coord.index.to_numpy())
+        # reorder if necessary
+        sens_coord = sens_coord.reindex(labels=newIDX)
+        sens_dir = sens_dir[newIDX, :]
+
+        self.Geo1 = Geometry1(
+            sens_names=sens_names,
+            sens_coord=sens_coord,
+            sens_dir=sens_dir,
+            sens_lines=sens_lines,
+            bg_nodes=bg_nodes,
+            bg_lines=bg_lines,
+            bg_surf=bg_surf,
+        )
+
+    # metodo per definire geometria 1 da file
+    def def_geo1_byFILE(self, path: str):
+        """ """
+        ref_ind = self.ref_ind if self.ref_ind is not None else None
+
+        data = import_excel_GEO1(path, ref_ind=ref_ind)
+
+        self.Geo1 = Geometry1(
+            sens_names=data[0],
+            sens_coord=data[1],
+            sens_dir=data[2].values,
+            sens_lines=data[3],
+            bg_nodes=data[4],
+            bg_lines=data[5],
+            bg_surf=data[6],
+        )
+
+    # metodo per definire geometria 2
+    def def_geo2(
+        self,
+        # MANDATORY
+        sens_names: typing.Union[
+            typing.List[str],
+            typing.List[typing.List[str]],
+            pd.DataFrame,
+            npt.NDArray[np.str_],
+        ],  # sensors' names
+        pts_coord: pd.DataFrame,  # points' coordinates
+        sens_map: pd.DataFrame,  # mapping
+        # OPTIONAL
+        cstrn: pd.DataFrame = None,
+        sens_sign: pd.DataFrame = None,
+        sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
+        sens_surf: npt.NDArray[np.int64] = None,  # surf connecting sensors
+        bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
+        bg_lines: npt.NDArray[np.float64] = None,  # Background lines
+        bg_surf: npt.NDArray[np.float64] = None,  # Background lines
+    ):
+        """
+        Defines the second geometry setup (Geo2) for the instance.
+
+        This method sets up an alternative geometry configuration, including sensors' names,
+        points' coordinates, mapping, sign data, and optional elements like constraints,
+        sensor lines, background nodes, lines, and surfaces.
+
+        Parameters
+        ----------
+        sens_names : Union[list of str, list of list of str, pandas.DataFrame, numpy.ndarray of str]
+            Sensors' names. It can be a list of strings, a list of lists of strings, a DataFrame, or a NumPy array.
+        pts_coord : pandas.DataFrame
+            A DataFrame containing the coordinates of the points.
+        sens_map : pandas.DataFrame
+            A DataFrame containing the mapping data for sensors.
+        cstrn : pandas.DataFrame, optional
+            A DataFrame containing constraints. Default is None.
+        sens_sign : pandas.DataFrame, optional
+            A DataFrame containing sign data for the sensors. Default is None.
+        sens_lines : numpy.ndarray of int64, optional
+            An array defining lines connecting sensors. Default is None.
+        bg_nodes : numpy.ndarray of float64, optional
+            An array defining background nodes. Default is None.
+        bg_lines : numpy.ndarray of float64, optional
+            An array defining background lines. Default is None.
+        bg_surf : numpy.ndarray of float64, optional
+            An array defining background surfaces. Default is None.
+
+        Notes
+        -----
+        This method adapts indices for 0-indexed lines in `bg_lines`, `sens_lines`, and `bg_surf`.
+        """
+        # ---------------------------------------------------------------------
+        # Check if sens_names is a DataFrame with more than one row or a list of lists
+        # FOR MULTI-SETUP GEOMETRIES
+
+        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        sens_names = flatten_sns_names(sens_names, ref_ind=ref_ind)
+
+        # ---------------------------------------------------------------------
+        if sens_sign is None:
+            sens_sign = pd.DataFrame(
+                np.ones(sens_map.to_numpy()[:, :].shape), columns=sens_map.columns
             )
-
-        # Process each sheet
-        for sheet, df in file.items():
-            if sheet == "sns_sign" and df.empty:
-                file["sns_sign"] = pd.DataFrame(
-                    np.ones(file["snsTOpts_map"].to_numpy().shape)
-                )
-            elif sheet != "sns_sign" and df.empty:
-                file[sheet] = None
-
-            if sheet == "sns_names" and df.shape[0] > 1:
-                sens_names = [
-                    [item for item in row if not pd.isna(item)]
-                    for row in df.values.tolist()
-                ]
-                ref_ind = self.ref_ind
-                k = len(ref_ind[0])  # number of reference sensors (from the first setup)
-
-                # Create reference strings and flatten the list
-                sens_name_fl = [f"REF{i+1}" for i in range(k)]
-                sens_name_fl += [
-                    item
-                    for i, row in enumerate(sens_names)
-                    for j, item in enumerate(row)
-                    if j not in ref_ind[i]
-                ]
-                file[sheet] = sens_name_fl
-            elif sheet == "sns_names":
-                file[sheet] = df.values.tolist()[0]
-
-            if (
-                sheet in ["sns_lines", "BG_nodes", "BG_lines", "BG_Surf"]
-                and file[sheet] is not None
-            ):
-                file[sheet] = file[sheet].to_numpy()
-
-        # Adjust to 0 indexed lines
-        if file["BG_lines"] is not None:
-            file["BG_lines"] = np.subtract(file["BG_lines"], 1)
-        if file["sns_lines"] is not None:
-            file["sns_lines"] = np.subtract(file["sns_lines"], 1)
-        if file["BG_Surf"] is not None:
-            file["BG_Surf"] = np.subtract(file["BG_Surf"], 1)
+        # ---------------------------------------------------------------------
+        # adapt to 0 indexed lines
+        if bg_lines is not None:
+            bg_lines = np.subtract(bg_lines, 1)
+        if sens_lines is not None:
+            sens_lines = np.subtract(sens_lines, 1)
+        if bg_surf is not None:
+            bg_surf = np.subtract(bg_surf, 1)
+        if sens_surf is not None:
+            sens_surf = np.subtract(sens_surf, 1)
 
         self.Geo2 = Geometry2(
-            sens_names=file["sns_names"],
-            pts_coord=file["pts_crd"],
-            sens_map=file["snsTOpts_map"],
-            cstrn=file.get("snsTOpts_cstrn"),
-            sens_sign=file["sns_sign"],
-            sens_lines=file["sns_lines"],
-            bg_nodes=file["BG_nodes"],
-            bg_lines=file["BG_lines"],
-            bg_surf=file["BG_Surf"],
+            sens_names=sens_names,
+            pts_coord=pts_coord,
+            sens_map=sens_map,
+            cstrn=cstrn,
+            sens_sign=sens_sign,
+            sens_lines=sens_lines,
+            sens_surf=sens_surf,
+            bg_nodes=bg_nodes,
+            bg_lines=bg_lines,
+            bg_surf=bg_surf,
+        )
+
+    def def_geo2_byFILE(self, path: str):
+        ref_ind = self.ref_ind if self.ref_ind is not None else None
+
+        data = import_excel_GEO2(path, ref_ind=ref_ind)
+
+        self.Geo2 = Geometry2(
+            sens_names=data[0],
+            pts_coord=data[1],
+            sens_map=data[2],
+            cstrn=data[3],
+            sens_sign=data[4],
+            sens_lines=data[5],
+            sens_surf=data[6],
+            bg_nodes=data[7],
+            bg_lines=data[8],
+            bg_surf=data[9],
         )
 
     def save_to_file(self, file_name):
@@ -926,163 +1093,6 @@ class SingleSetup(BaseSetup):
             freqlim=freqlim,
         )
         return fig, ax
-
-    # metodo per definire geometria 1
-    def def_geo1(
-        self,
-        # # MANDATORY
-        sens_names: typing.Union[
-            npt.NDArray[np.string], typing.List[str]
-        ],  # sensors' names
-        sens_coord: pd.DataFrame,  # sensors' coordinates
-        sens_dir: npt.NDArray[np.int64],  # sensors' directions
-        # # OPTIONAL
-        sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
-        bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
-        bg_lines: npt.NDArray[np.int64] = None,  # Background lines
-        bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
-    ):
-        """
-        Defines the first geometry setup (Geo1) for the instance.
-
-        This method sets up the geometry involving sensors' names, coordinates, directions,
-        and optional elements like sensor lines, background nodes, lines, and surfaces.
-
-        Parameters
-        ----------
-        sens_names : Union[numpy.ndarray of string, List of string]
-            An array or list containing the names of the sensors.
-        sens_coord : pandas.DataFrame
-            A DataFrame containing the coordinates of the sensors.
-        sens_dir : numpy.ndarray of int64
-            An array defining the directions of the sensors.
-        sens_lines : numpy.ndarray of int64, optional
-            An array defining lines connecting sensors. Default is None.
-        bg_nodes : numpy.ndarray of float64, optional
-            An array defining background nodes. Default is None.
-        bg_lines : numpy.ndarray of int64, optional
-            An array defining background lines. Default is None.
-        bg_surf : numpy.ndarray of float64, optional
-            An array defining background surfaces. Default is None.
-
-        Raises
-        ------
-        AssertionError
-            If the number of sensors does not match between data, coordinates, and directions.
-        """
-        # ---------------------------------------------------------------------
-        # Checks on input
-        nr_s = len(sens_names)
-        # check that nr_s == to data.shape[1]
-        assert (
-            nr_s == self.data.shape[1]
-        ), "Number of sensors must match the number of data channels"
-        # check that nr_s == sens_coord.shape[0] and == sens_dir.shape[0]
-        assert (
-            nr_s == sens_coord.to_numpy().shape[0]
-        ), "Number of sensors must match the number of sensor coordinates"
-        assert (
-            nr_s == sens_dir.shape[0]
-        ), "Number of sensors must match the number of sensor directions"
-        # Altri controlli ???
-        # ---------------------------------------------------------------------
-        # adapt to 0 indexing
-        if bg_lines is not None:
-            bg_lines = np.subtract(bg_lines, 1)
-
-        # Find the indices that rearrange sens_coord to sens_names
-        newIDX = find_map(sens_names, sens_coord["sName"].to_numpy())
-        # reorder if necessary
-        sens_coord = sens_coord.reindex(labels=newIDX)
-        sens_dir = sens_dir[newIDX, :]
-        # # Transform into numpy array
-        # sens_coord= sens_coord[["x","y","z"]].to_numpy()
-
-        self.Geo1 = Geometry1(
-            sens_names=sens_names,
-            sens_coord=sens_coord,
-            sens_dir=sens_dir,
-            sens_lines=sens_lines,
-            bg_nodes=bg_nodes,
-            bg_lines=bg_lines,
-            bg_surf=bg_surf,
-        )
-
-    # metodo per definire geometria 2
-    def def_geo2(
-        self,
-        # # MANDATORY
-        sens_names: typing.Union[
-            npt.NDArray[np.string], typing.List[str]
-        ],  # sensors' names
-        pts_coord: pd.DataFrame,  # points' coordinates
-        sens_map: pd.DataFrame,  # mapping
-        # # OPTIONAL
-        cstrn: pd.DataFrame = None,
-        sens_sign: pd.DataFrame = None,
-        sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
-        bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
-        bg_lines: npt.NDArray[np.float64] = None,  # Background lines
-        bg_surf: npt.NDArray[np.float64] = None,  # Background lines
-    ):
-        """
-        Defines the second geometry setup (Geo2) for the instance.
-
-        This method sets up an alternative geometry configuration, including sensors' names,
-        points' coordinates, mapping, sign data, and optional elements like order reduction,
-        sensor lines, background nodes, lines, and surfaces.
-
-        Parameters
-        ----------
-        sens_names : Union[numpy.ndarray of string, List of string]
-            An array or list containing the names of the sensors.
-        pts_coord : pandas.DataFrame
-            A DataFrame containing the coordinates of the points.
-        sens_map : pandas.DataFrame
-            A DataFrame containing the mapping data for sensors.
-        sens_sign : pandas.DataFrame
-            A DataFrame containing sign data for the sensors.
-        sens_lines : numpy.ndarray of int64, optional
-            An array defining lines connecting sensors. Default is None.
-        bg_nodes : numpy.ndarray of float64, optional
-            An array defining background nodes. Default is None.
-        bg_lines : numpy.ndarray of float64, optional
-            An array defining background lines. Default is None.
-        bg_surf : numpy.ndarray of float64, optional
-            An array defining background surfaces. Default is None.
-
-        Raises
-        ------
-        AssertionError
-            If the number of columns in mapping and sign data does not match the expected
-            dimensions based on the order reduction.
-        """
-        # ---------------------------------------------------------------------
-        if sens_sign is None:
-            sens_sign = pd.DataFrame(
-                np.ones(sens_map.to_numpy()[:, :].shape), columns=sens_map.columns
-            )
-
-        # ---------------------------------------------------------------------
-        # adapt to 0 indexed lines
-        if bg_lines is not None:
-            bg_lines = np.subtract(bg_lines, 1)
-        if sens_lines is not None:
-            sens_lines = np.subtract(sens_lines, 1)
-        if bg_surf is not None:
-            bg_surf = np.subtract(bg_surf, 1)
-
-        self.Geo2 = Geometry2(
-            sens_names=sens_names,
-            pts_coord=pts_coord,
-            sens_map=sens_map,
-            cstrn=cstrn,
-            sens_sign=sens_sign,
-            sens_lines=sens_lines,
-            bg_nodes=bg_nodes,
-            bg_lines=bg_lines,
-            bg_surf=bg_surf,
-        )
 
     def decimate_data(
         self, q: int, inplace: bool = False, **kwargs
@@ -1485,7 +1495,12 @@ class MultiSetup_PoSER:
     def def_geo1(
         self,
         # # MANDATORY
-        sens_names: typing.List[typing.List[str]],  # sensors' names MS
+        sens_names: typing.Union[
+            typing.List[str],
+            typing.List[typing.List[str]],
+            pd.DataFrame,
+            npt.NDArray[np.str_],
+        ],  # sensors' names
         sens_coord: pd.DataFrame,  # sensors' coordinates
         sens_dir: npt.NDArray[np.int64],  # sensors' directions
         # # OPTIONAL
@@ -1495,69 +1510,43 @@ class MultiSetup_PoSER:
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
         """
-        Defines the first geometry setup (Geo1) for the instance, integrating sensors' names,
-        coordinates, and directions, along with optional elements like sensor lines, background
-        nodes, lines, and surfaces.
+        Defines the first geometry setup (Geo1) for the instance.
+
+        This method sets up the geometry involving sensors' names, coordinates, directions,
+        and optional elements like sensor lines, background nodes, lines, and surfaces.
 
         Parameters
         ----------
-        sens_names : List[List[str]]
-            A nested list containing the names of the sensors for each setup.
-        sens_coord : pd.DataFrame
-            A DataFrame containing the coordinates of the sensors. Columns should include 'x', 'y', and 'z'.
-        sens_dir : np.ndarray
-            A NumPy array defining the directions of the sensors. Shape: (number of sensors, 3).
-        sens_lines : Optional[np.ndarray], optional
-            An array defining lines connecting sensors, by default None.
-        bg_nodes : Optional[np.ndarray], optional
-            An array defining background nodes for additional context, by default None.
-        bg_lines : Optional[np.ndarray], optional
-            An array defining background lines to connect nodes, by default None.
-        bg_surf : Optional[np.ndarray], optional
-            An array defining background surfaces, useful for visual context, by default None.
-
-        Raises
-        ------
-        AssertionError
-            If the number of sensors does not match between data, coordinates, and directions.
-
-        Notes
-        -----
-        Adapts to zero-indexing for background lines if provided.
+        sens_names : Union[numpy.ndarray of string, List of string]
+            An array or list containing the names of the sensors.
+        sens_coord : pandas.DataFrame
+            A DataFrame containing the coordinates of the sensors.
+        sens_dir : numpy.ndarray of int64
+            An array defining the directions of the sensors.
+        sens_lines : numpy.ndarray of int64, optional
+            An array defining lines connecting sensors. Default is None.
+        bg_nodes : numpy.ndarray of float64, optional
+            An array defining background nodes. Default is None.
+        bg_lines : numpy.ndarray of int64, optional
+            An array defining background lines. Default is None.
+        bg_surf : numpy.ndarray of float64, optional
+            An array defining background surfaces. Default is None.
         """
+        # TODO
+        # assert dimensions
 
         # ---------------------------------------------------------------------
-        sens_names_c = copy.deepcopy(sens_names)
-        ref_ind = self.ref_ind
-        ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
-
-        # Iterate and remove indices
-        for string_list, index_list in zip(sens_names_c, ref_ind):
-            for index in sorted(index_list, reverse=True):
-                if 0 <= index < len(string_list):
-                    string_list.pop(index)
-
-        # flatten (reduced) sens_name list
-        fr_sens_names = [x for xs in sens_names_c for x in xs]
-        sens_names_final = ini + fr_sens_names
-
-        # Checks on input
-        # Altri controlli ???
+        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        sens_names = flatten_sns_names(sens_names, ref_ind=ref_ind)
         # ---------------------------------------------------------------------
-        # adapt to 0 indexing
-        if bg_lines is not None:
-            bg_lines = np.subtract(bg_lines, 1)
-
         # Find the indices that rearrange sens_coord to sens_names
-        newIDX = find_map(sens_names_final, sens_coord["sName"].to_numpy())
+        newIDX = find_map(sens_names, sens_coord.index.to_numpy())
         # reorder if necessary
         sens_coord = sens_coord.reindex(labels=newIDX)
         sens_dir = sens_dir[newIDX, :]
-        # # Transform into numpy array
-        # sens_coord= sens_coord[["x","y","z"]].to_numpy()
 
         self.Geo1 = Geometry1(
-            sens_names=sens_names_final,
+            sens_names=sens_names,
             sens_coord=sens_coord,
             sens_dir=sens_dir,
             sens_lines=sens_lines,
@@ -1566,39 +1555,68 @@ class MultiSetup_PoSER:
             bg_surf=bg_surf,
         )
 
-    # metodo per plottare geometria 1 - OK
+    # metodo per definire geometria 1 da file
+    def def_geo1_byFILE(self, path: str):
+        """ """
+        ref_ind = self.ref_ind if self.ref_ind is not None else None
+
+        data = import_excel_GEO1(path, ref_ind=ref_ind)
+
+        self.Geo1 = Geometry1(
+            sens_names=data[0],
+            sens_coord=data[1],
+            sens_dir=data[2].values,
+            sens_lines=data[3],
+            bg_nodes=data[4],
+            bg_lines=data[5],
+            bg_surf=data[6],
+        )
+
+    # metodo per plottare geometria 1
     def plot_geo1(
         self,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: bool = True,
-        remove_grid: bool = True,
-        remove_axis: bool = True,
+        colsns: str = "red",
+        colsns_lines: str = "red",
+        colBG_nodes: str = "gray",
+        colBG_lines: str = "gray",
+        colBG_surf: str = "gray",
+        col_txt: str = "red",
     ):
         """
-        Plots the geometry of the tested structure based on the first geometry setup (Geo1).
+        Plots the geometry (type 1) of tested structure.
 
-        This method visualizes the geometry including sensor placements and directions, offering
-        customizable plot parameters such as scaling factor, view type, and options to remove
-        fill, grid, and axis from the plot.
+        This method visualizes the geometry of a structure, including sensor placements and directions.
+        It allows customization of the plot through various parameters such as scaling factor,
+        view type, and options to remove fill, grid, and axis from the plot.
 
         Parameters
         ----------
         scaleF : int, optional
-            The scaling factor for the sensor direction quivers, by default 1.
-        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
-            The type of view for plotting the geometry (3D or 2D projections), by default "3D".
+            The scaling factor for the sensor direction quivers. A higher value results in
+            longer quivers. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            The type of view for plotting the geometry. Options include 3D and 2D projections
+            on various planes. Default is "3D".
         remove_fill : bool, optional
-            If True, removes the fill from the plot, by default True.
+            If True, removes the fill from the plot. Default is True.
         remove_grid : bool, optional
-            If True, removes the grid from the plot, by default True.
+            If True, removes the grid from the plot. Default is True.
         remove_axis : bool, optional
-            If True, removes the axis labels and ticks from the plot, by default True.
+            If True, removes the axis labels and ticks from the plot. Default is True.
+
+        Raises
+        ------
+        ValueError
+            If Geo1 is not defined in the setup.
 
         Returns
         -------
         tuple
-            A tuple containing the figure and axis objects of the plot for further customization.
+            A tuple containing the figure and axis objects of the plot. This can be used for
+            further customization or saving the plot externally.
+
         """
         if self.Geo1 is None:
             raise ValueError(
@@ -1609,7 +1627,7 @@ class MultiSetup_PoSER:
         ax.set_title("Plot of the geometry and sensors' placement and direction")
         # plot sensors' nodes
         sens_coord = self.Geo1.sens_coord[["x", "y", "z"]].to_numpy()
-        plt_nodes(ax, sens_coord, color="red")
+        plt_nodes(ax, sens_coord, color=colsns)
 
         # plot sensors' directions
         plt_quiver(
@@ -1618,34 +1636,43 @@ class MultiSetup_PoSER:
             self.Geo1.sens_dir,
             scaleF=scaleF,
             names=self.Geo1.sens_names,
+            color=colsns,
+            color_text=col_txt,
+            method="2",
         )
 
         # Check that BG nodes are defined
         if self.Geo1.bg_nodes is not None:
             # if True plot
-            plt_nodes(ax, self.Geo1.bg_nodes, color="gray", alpha=0.5)
+            plt_nodes(ax, self.Geo1.bg_nodes, color=colBG_nodes, alpha=0.5)
             # Check that BG lines are defined
             if self.Geo1.bg_lines is not None:
                 # if True plot
                 plt_lines(
-                    ax, self.Geo1.bg_nodes, self.Geo1.bg_lines, color="gray", alpha=0.5
+                    ax,
+                    self.Geo1.bg_nodes,
+                    self.Geo1.bg_lines,
+                    color=colBG_lines,
+                    alpha=0.5,
                 )
             if self.Geo1.bg_surf is not None:
                 # if True plot
-                plt_surf(ax, self.Geo1.bg_nodes, self.Geo1.bg_surf, alpha=0.1)
+                plt_surf(
+                    ax, self.Geo1.bg_nodes, self.Geo1.bg_surf, alpha=0.1, color=colBG_surf
+                )
 
         # check for sens_lines
         if self.Geo1.sens_lines is not None:
             # if True plot
-            plt_lines(ax, sens_coord, self.Geo1.sens_lines, color="red")
+            plt_lines(ax, sens_coord, self.Geo1.sens_lines, color=colsns_lines)
 
         # Set ax options
         set_ax_options(
             ax,
             bg_color="w",
-            remove_fill=remove_fill,
-            remove_grid=remove_grid,
-            remove_axis=remove_axis,
+            remove_fill=True,
+            remove_grid=True,
+            remove_axis=True,
             scaleF=scaleF,
         )
 
@@ -1667,6 +1694,7 @@ class MultiSetup_PoSER:
         cstrn: pd.DataFrame = None,
         sens_sign: pd.DataFrame = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
+        sens_surf: npt.NDArray[np.int64] = None,  # surf connecting sensors
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
@@ -1706,31 +1734,9 @@ class MultiSetup_PoSER:
         Adapts to zero-indexing for sensor and background lines if provided.
         """
         # ---------------------------------------------------------------------
-        if isinstance(sens_names, pd.DataFrame):
-            sens_names = [
-                [item for item in row if not pd.isna(item)]
-                for row in sens_names.values.tolist()
-            ]
-        n = len(sens_names)
-        ref_ind = self.ref_ind
-        k = len(ref_ind[0])  # number of reference sensor (from the first setup)
 
-        sens_name_fl = []
-        # Create the reference strings
-        for i in range(k):
-            sens_name_fl.append(f"REF{i+1}")
-
-        # Flatten the list of strings and exclude the reference indices
-        for i in range(n):
-            for j in range(len(sens_names[i])):
-                if j not in ref_ind[i]:
-                    sens_name_fl.append(sens_names[i][j])
-
-        # ---------------------------------------------------------------------
-        if sens_sign is None:
-            sens_sign = pd.DataFrame(
-                np.ones(sens_map.to_numpy()[:, :].shape), columns=sens_map.columns
-            )
+        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        sens_names = flatten_sns_names(sens_names, ref_ind=ref_ind)
 
         # ---------------------------------------------------------------------
         # adapt to 0 indexed lines
@@ -1740,14 +1746,17 @@ class MultiSetup_PoSER:
             sens_lines = np.subtract(sens_lines, 1)
         if bg_surf is not None:
             bg_surf = np.subtract(bg_surf, 1)
+        if sens_surf is not None:
+            sens_surf = np.subtract(sens_surf, 1)
 
         self.Geo2 = Geometry2(
-            sens_names=sens_name_fl,
+            sens_names=sens_names,
             pts_coord=pts_coord,
             sens_map=sens_map,
             cstrn=cstrn,
             sens_sign=sens_sign,
             sens_lines=sens_lines,
+            sens_surf=sens_surf,
             bg_nodes=bg_nodes,
             bg_lines=bg_lines,
             bg_surf=bg_surf,
@@ -1755,75 +1764,35 @@ class MultiSetup_PoSER:
 
     # metodo per definire geometria 2 da file
     def def_geo2_byFILE(self, path: str):
-        file = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
-        required_sheets = ["sns_names", "pts_crd", "snsTOpts_map"]
+        """ """
+        ref_ind = self.ref_ind if self.ref_ind is not None else None
 
-        # Ensure required sheets exist
-        if not all(sheet in file for sheet in required_sheets):
-            raise Warning(
-                "At least ['sns_names', 'pts_crd', 'snsTOpts_map'] must be defined!"
-            )
-
-        # Process each sheet
-        for sheet, df in file.items():
-            if sheet == "sns_sign" and df.empty:
-                file["sns_sign"] = pd.DataFrame(
-                    np.ones(file["snsTOpts_map"].to_numpy().shape)
-                )
-            elif sheet != "sns_sign" and df.empty:
-                file[sheet] = None
-
-            if sheet == "sns_names" and df.shape[0] > 1:
-                sens_names = [
-                    [item for item in row if not pd.isna(item)]
-                    for row in df.values.tolist()
-                ]
-                ref_ind = self.ref_ind
-                k = len(ref_ind[0])  # number of reference sensors (from the first setup)
-
-                # Create reference strings and flatten the list
-                sens_name_fl = [f"REF{i+1}" for i in range(k)]
-                sens_name_fl += [
-                    item
-                    for i, row in enumerate(sens_names)
-                    for j, item in enumerate(row)
-                    if j not in ref_ind[i]
-                ]
-                file[sheet] = sens_name_fl
-            elif sheet == "sns_names":
-                file[sheet] = df.values.tolist()[0]
-
-            if (
-                sheet in ["sns_lines", "BG_nodes", "BG_lines", "BG_Surf"]
-                and file[sheet] is not None
-            ):
-                file[sheet] = file[sheet].to_numpy()
-
-        # Adjust to 0 indexed lines
-        if file["BG_lines"] is not None:
-            file["BG_lines"] -= 1
-        if file["sns_lines"] is not None:
-            file["sns_lines"] -= 1
+        data = import_excel_GEO2(path, ref_ind=ref_ind)
 
         self.Geo2 = Geometry2(
-            sens_names=file["sns_names"],
-            pts_coord=file["pts_crd"],
-            sens_map=file["snsTOpts_map"],
-            cstrn=file.get("snsTOpts_cstrn"),
-            sens_sign=file["sns_sign"],
-            sens_lines=file["sns_lines"],
-            bg_nodes=file["BG_nodes"],
-            bg_lines=file["BG_lines"],
-            bg_surf=file["BG_Surf"],
+            sens_names=data[0],
+            pts_coord=data[1],
+            sens_map=data[2],
+            cstrn=data[3],
+            sens_sign=data[4],
+            sens_lines=data[5],
+            sens_surf=data[6],
+            bg_nodes=data[7],
+            bg_lines=data[8],
+            bg_surf=data[9],
         )
 
     def plot_geo2(
         self,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: bool = True,
-        remove_grid: bool = True,
-        remove_axis: bool = True,
+        colsns: str = "red",
+        colsns_lines: str = "red",
+        colsns_surf: str = "red",
+        colBG_nodes: str = "gray",
+        colBG_lines: str = "gray",
+        colBG_surf: str = "gray",
+        col_txt: str = "red",
     ):
         """
         Plots the geometry (type 2) of tested structure.
@@ -1893,6 +1862,9 @@ class MultiSetup_PoSER:
                 s_sign1[valid_indices1],
                 scaleF=scaleF,
                 names=ch_names[valid_indices1, 0],
+                color=colsns,
+                color_text=col_txt,
+                method="2",
             )
         if np.any(valid_indices2):
             plt_quiver(
@@ -1901,6 +1873,9 @@ class MultiSetup_PoSER:
                 s_sign2[valid_indices2],
                 scaleF=scaleF,
                 names=ch_names[valid_indices2, 1],
+                color=colsns,
+                color_text=col_txt,
+                method="2",
             )
         if np.any(valid_indices3):
             plt_quiver(
@@ -1909,34 +1884,52 @@ class MultiSetup_PoSER:
                 s_sign3[valid_indices3],
                 scaleF=scaleF,
                 names=ch_names[valid_indices3, 2],
+                color=colsns,
+                color_text=col_txt,
+                method="2",
             )
-
         # Check that BG nodes are defined
         if self.Geo2.bg_nodes is not None:
             # if True plot
-            plt_nodes(ax, self.Geo2.bg_nodes, color="gray", alpha=0.5)
+            plt_nodes(ax, self.Geo2.bg_nodes, color=colBG_nodes, alpha=0.5)
             # Check that BG lines are defined
             if self.Geo2.bg_lines is not None:
                 # if True plot
                 plt_lines(
-                    ax, self.Geo2.bg_nodes, self.Geo2.bg_lines, color="gray", alpha=0.5
+                    ax,
+                    self.Geo2.bg_nodes,
+                    self.Geo2.bg_lines,
+                    color=colBG_lines,
+                    alpha=0.5,
                 )
             if self.Geo2.bg_surf is not None:
                 # if True plot
-                plt_surf(ax, self.Geo2.bg_nodes, self.Geo2.bg_surf, alpha=0.1)
+                plt_surf(
+                    ax, self.Geo2.bg_nodes, self.Geo2.bg_surf, color=colBG_surf, alpha=0.1
+                )
 
         # check for sens_lines
         if self.Geo2.sens_lines is not None:
             # if True plot
-            plt_lines(ax, pts, self.Geo2.sens_lines, color="red")
+            plt_lines(ax, pts, self.Geo2.sens_lines, color=colsns_lines)
+
+        if self.Geo2.sens_surf is not None:
+            # if True plot
+            plt_surf(
+                ax,
+                self.Geo2.pts_coord.values,
+                self.Geo2.sens_surf,
+                color=colsns_surf,
+                alpha=0.5,
+            )
 
         # Set ax options
         set_ax_options(
             ax,
             bg_color="w",
-            remove_fill=remove_fill,
-            remove_grid=remove_grid,
-            remove_axis=remove_axis,
+            remove_fill=True,
+            remove_grid=True,
+            remove_axis=True,
             scaleF=scaleF,
         )
 
@@ -2047,9 +2040,7 @@ class MultiSetup_PoSER:
         mode_numb: typing.Optional[int],
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: bool = True,
-        remove_grid: bool = True,
-        remove_axis: bool = True,
+        color: str = "cmap",
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -2135,19 +2126,41 @@ class MultiSetup_PoSER:
                 # if True plot
                 plt_surf(ax, Geo2.bg_nodes, Geo2.bg_surf, alpha=0.1)
         # PLOT MODE SHAPE
-        plt_nodes(ax, newpoints, color="red")
+        if color == "cmap":
+            oldpoints = Geo2.pts_coord.to_numpy()[:, :]
+            plt_nodes(ax, newpoints, color="cmap", initial_coord=oldpoints)
+
+        else:
+            plt_nodes(ax, newpoints, color=color)
         # check for sens_lines
         if Geo2.sens_lines is not None:
-            # if True plot
-            plt_lines(ax, newpoints, Geo2.sens_lines, color="red")
+            if color == "cmap":
+                plt_lines(
+                    ax, newpoints, Geo2.sens_lines, color="cmap", initial_coord=oldpoints
+                )
+            else:
+                plt_lines(ax, newpoints, Geo2.sens_lines, color=color)
+
+        if Geo2.sens_surf is not None:
+            if color == "cmap":
+                plt_surf(
+                    ax,
+                    newpoints,
+                    Geo2.sens_surf,
+                    color="cmap",
+                    initial_coord=oldpoints,
+                    alpha=0.4,
+                )
+            else:
+                plt_surf(ax, newpoints, Geo2.sens_surf, color=color, alpha=0.4)
 
         # Set ax options
         set_ax_options(
             ax,
             bg_color="w",
-            remove_fill=remove_fill,
-            remove_grid=remove_grid,
-            remove_axis=remove_axis,
+            remove_fill=True,
+            remove_grid=True,
+            remove_axis=True,
             scaleF=scaleF,
         )
 
@@ -2662,187 +2675,3 @@ class MultiSetup_PreGER(BaseSetup):
             self.data = Y
             return None
         return Y
-
-    # metodo per definire geometria 1
-    def def_geo1(
-        self,
-        # # MANDATORY
-        sens_names: typing.List[typing.List[str]],  # sensors' names MS
-        sens_coord: pd.DataFrame,  # sensors' coordinates
-        sens_dir: npt.NDArray[np.int64],  # sensors' directions
-        # # OPTIONAL
-        sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
-        bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
-        bg_lines: npt.NDArray[np.int64] = None,  # Background lines
-        bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
-    ):
-        """
-        Defines the first geometry setup (Geo1) for the instance.
-
-        This method sets up the geometry involving sensors' names, coordinates, directions,
-        and optional elements like sensor lines, background nodes, lines, and surfaces.
-
-        Parameters
-        ----------
-        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
-            An array or list containing the names of the sensors.
-        sens_coord : pd.DataFrame
-            A pandas DataFrame containing the coordinates of the sensors.
-        sens_dir : npt.NDArray[np.int64]
-            An array defining the directions of the sensors.
-        sens_lines : npt.NDArray[np.int64], optional
-            An array defining lines connecting sensors. Default is None.
-        bg_nodes : npt.NDArray[np.float64], optional
-            An array defining background nodes. Default is None.
-        bg_lines : npt.NDArray[np.int64], optional
-            An array defining background lines. Default is None.
-        bg_surf : npt.NDArray[np.float64], optional
-            An array defining background surfaces. Default is None.
-
-        Raises
-        ------
-        AssertionError
-            If the number of sensors does not match between data, coordinates, and directions.
-
-        Notes
-        -----
-        Adapts to zero-indexing for background lines if provided.
-        """
-
-        # ---------------------------------------------------------------------
-        sens_names_c = copy.deepcopy(sens_names)
-        ref_ind = self.ref_ind
-        ini = [sens_names_c[0][ref_ind[0][ii]] for ii in range(len(ref_ind[0]))]
-
-        # Iterate and remove indices
-        for string_list, index_list in zip(sens_names_c, ref_ind):
-            for index in sorted(index_list, reverse=True):
-                if 0 <= index < len(string_list):
-                    string_list.pop(index)
-
-        # flatten (reduced) sens_name list
-        fr_sens_names = [x for xs in sens_names_c for x in xs]
-        sens_names_final = ini + fr_sens_names
-        # ---------------------------------------------------------------------
-        # adapt to 0 indexing
-        if bg_lines is not None:
-            bg_lines = np.subtract(bg_lines, 1)
-
-        # Find the indices that rearrange sens_coord to sens_names
-        newIDX = find_map(sens_names_final, sens_coord["sName"].to_numpy())
-        # reorder if necessary
-        sens_coord = sens_coord.reindex(labels=newIDX)
-        sens_dir = sens_dir[newIDX, :]
-        # # Transform into numpy array
-        # sens_coord= sens_coord[["x","y","z"]].to_numpy()
-
-        self.Geo1 = Geometry1(
-            sens_names=sens_names_final,
-            sens_coord=sens_coord,
-            sens_dir=sens_dir,
-            sens_lines=sens_lines,
-            bg_nodes=bg_nodes,
-            bg_lines=bg_lines,
-            bg_surf=bg_surf,
-        )
-
-    # metodo per definire geometria 2
-    def def_geo2(
-        self,
-        # # MANDATORY
-        sens_names: typing.Union[
-            typing.List[typing.List[str]], pd.DataFrame
-        ],  # sensors' names MS
-        pts_coord: pd.DataFrame,  # points' coordinates
-        sens_map: pd.DataFrame,  # mapping
-        # # OPTIONAL
-        cstrn: pd.DataFrame = None,
-        sens_sign: pd.DataFrame = None,
-        sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
-        bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
-        bg_lines: npt.NDArray[np.float64] = None,  # Background lines
-        bg_surf: npt.NDArray[np.float64] = None,  # Background lines
-    ):
-        """
-        Defines the second geometry setup (Geo2) for the instance.
-
-        This method sets up an alternative geometry configuration, including sensors' names,
-        points' coordinates, mapping, sign data, and optional elements like order reduction,
-        sensor lines, background nodes, lines, and surfaces.
-
-        Parameters
-        ----------
-        sens_names : typing.Union[npt.NDArray[np.string], typing.List[str]]
-            An array or list containing the names of the sensors.
-        pts_coord : pd.DataFrame
-            A DataFrame containing the coordinates of the points.
-        sens_map : pd.DataFrame
-            A DataFrame containing the mapping data for sensors.
-        sens_sign : pd.DataFrame
-            A DataFrame containing sign data for the sensors.
-        sens_lines : npt.NDArray[np.int64], optional
-            An array defining lines connecting sensors. Default is None.
-        bg_nodes : npt.NDArray[np.float64], optional
-            An array defining background nodes. Default is None.
-        bg_lines : npt.NDArray[np.float64], optional
-            An array defining background lines. Default is None.
-        bg_surf : npt.NDArray[np.float64], optional
-            An array defining background surfaces. Default is None.
-
-        Raises
-        ------
-        AssertionError
-            If the number of columns in mapping and sign data does not match the expected
-            dimensions based on the order reduction.
-
-        Notes
-        -----
-        Adapts to zero-indexing for sensor and background lines if provided.
-        """
-        # ---------------------------------------------------------------------
-        if isinstance(sens_names, pd.DataFrame):
-            sens_names = [
-                [item for item in row if not pd.isna(item)]
-                for row in sens_names.values.tolist()
-            ]
-        n = len(sens_names)  # number of setup
-        ref_ind = self.ref_ind
-        k = len(ref_ind[0])  # number of reference sensor (from the first setup)
-
-        sens_name_fl = []
-        # Create the reference strings
-        for i in range(k):
-            sens_name_fl.append(f"REF{i+1}")
-
-        # Flatten the list of strings and exclude the reference indices
-        for i in range(n):
-            for j in range(len(sens_names[i])):
-                if j not in ref_ind[i]:
-                    sens_name_fl.append(sens_names[i][j])
-
-        # ---------------------------------------------------------------------
-        if sens_sign is None:
-            sens_sign = pd.DataFrame(
-                np.ones(sens_map.to_numpy()[:, :].shape), columns=sens_map.columns
-            )
-
-        # ---------------------------------------------------------------------
-        # adapt to 0 indexed lines
-        if bg_lines is not None:
-            bg_lines = np.subtract(bg_lines, 1)
-        if sens_lines is not None:
-            sens_lines = np.subtract(sens_lines, 1)
-        if bg_surf is not None:
-            bg_surf = np.subtract(bg_surf, 1)
-
-        self.Geo2 = Geometry2(
-            sens_names=sens_name_fl,
-            pts_coord=pts_coord,
-            sens_map=sens_map,
-            sens_sign=sens_sign,
-            sens_lines=sens_lines,
-            bg_nodes=bg_nodes,
-            bg_lines=bg_lines,
-            bg_surf=bg_surf,
-            cstrn=cstrn,
-        )

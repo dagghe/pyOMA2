@@ -23,12 +23,12 @@ class Geometry1(BaseModel):
     # MANDATORY
     sens_names: typing.List[str]
     sens_coord: pd.DataFrame  # sensors' coordinates
-    sens_dir: npt.NDArray[np.float64]  # sensors' directions
+    sens_dir: npt.NDArray[np.int64]  # sensors' directions
     # OPTIONAL
-    sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines connecting sensors
+    sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines between sensors
     bg_nodes: typing.Optional[npt.NDArray[np.float64]] = None  # Background nodes
     bg_lines: typing.Optional[npt.NDArray[np.int64]] = None  # Background lines
-    bg_surf: typing.Optional[npt.NDArray[np.float64]] = None  # Background surfaces
+    bg_surf: typing.Optional[npt.NDArray[np.int64]] = None  # Background surfaces
 
 
 class Geometry2(BaseModel):
@@ -38,11 +38,12 @@ class Geometry2(BaseModel):
     # MANDATORY
     sens_names: typing.List[str]  # sensors' names
     pts_coord: pd.DataFrame  # points' coordinates
-    sens_map: pd.DataFrame  # mapping
+    sens_map: pd.DataFrame  # mapping sensors to points
     # OPTIONAL
     cstrn: typing.Optional[pd.DataFrame] = None
-    sens_sign: typing.Optional[pd.DataFrame] = None  # sign
-    sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines connection sensors
+    sens_sign: typing.Optional[pd.DataFrame] = None  # sensors sign
+    sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines between sensors
+    sens_surf: typing.Optional[npt.NDArray[np.int64]] = None  # surfaces between sensors
     bg_nodes: typing.Optional[npt.NDArray[np.float64]] = None  # Background nodes
     bg_lines: typing.Optional[npt.NDArray[np.int64]] = None  # Background lines
-    bg_surf: typing.Optional[npt.NDArray[np.float64]] = None  # Background surfaces
+    bg_surf: typing.Optional[npt.NDArray[np.int64]] = None  # Background surfaces

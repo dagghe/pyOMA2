@@ -508,7 +508,7 @@ def Cluster_plot(
 # -----------------------------------------------------------------------------
 
 
-def Sval_plot(
+def SvalH_plot(
     H: np.ndarray,
     br: int,
     iter_n: int = None,
@@ -701,6 +701,7 @@ def plt_surf(
     surf: np.ndarray,
     alpha: float = 0.5,
     color: str = "cyan",
+    initial_coord: np.ndarray = None,
 ):
     """
     Plots a 3D surface defined by nodes and surface triangulation on the provided axes.
@@ -732,7 +733,33 @@ def plt_surf(
     xy = nodes_coord[:, :2]
     z = nodes_coord[:, 2]
     triang = mtri.Triangulation(xy[:, 0], xy[:, 1], triangles=surf)
-    ax.plot_trisurf(triang, z, alpha=alpha, color=color)
+
+    if color == "cmap":
+        if initial_coord is None:
+            raise ValueError("initial_coord must be specified when color is 'cmap'")
+
+        # Calculate distances from initial positions
+        distances = np.linalg.norm(nodes_coord - initial_coord, axis=1)
+
+        # Normalize distances to the range [0, 1]
+        norm = plt.Normalize(vmin=np.min(distances), vmax=np.max(distances))
+        cmap = plt.cm.plasma
+
+        # Map distances to colors
+        colors = cmap(norm(distances))
+
+        # Loop through each triangle and plot
+        for triangle_indices in surf:
+            triangle_xy = xy[triangle_indices]
+            triangle_z = z[triangle_indices]
+            triangle_colors = colors[triangle_indices].mean(axis=0)
+            triangle = mtri.Triangulation(
+                triangle_xy[:, 0], triangle_xy[:, 1], triangles=[[0, 1, 2]]
+            )
+            ax.plot_trisurf(triangle, triangle_z, facecolor=triangle_colors, alpha=0.4)
+    else:
+        ax.plot_trisurf(triang, z, alpha=alpha, color=color)
+
     return ax
 
 
@@ -747,6 +774,7 @@ def plt_quiver(
     color: str = "red",
     names: typing.Optional[typing.List[str]] = None,
     color_text: str = "red",
+    method: str = "1",
 ):
     """
     Plots vectors (arrows) on a 3D plot to represent directions and magnitudes at given node coordinates.
@@ -785,13 +813,31 @@ def plt_quiver(
     Points_f = nodes_coord + directions * scaleF
     xs0, ys0, zs0 = nodes_coord[:, 0], nodes_coord[:, 1], nodes_coord[:, 2]
     xs1, ys1, zs1 = Points_f[:, 0], Points_f[:, 1], Points_f[:, 2]
-    ax.quiver(
-        xs0, ys0, zs0, (xs1 - xs0), (ys1 - ys0), (zs1 - zs0), length=scaleF, color=color
-    )
+    if method == "1":
+        ax.quiver(
+            xs0,
+            ys0,
+            zs0,
+            (xs1 - xs0),
+            (ys1 - ys0),
+            (zs1 - zs0),
+            length=scaleF,
+            color=color,
+        )
+    elif method == "2":
+        for ii in range(len(xs0)):
+            ax.plot([xs0[ii], xs1[ii]], [ys0[ii], ys1[ii]], [zs0[ii], zs1[ii]], c=color)
+    else:
+        raise AttributeError("method must be either '1' or '2'!")
+
     if names is not None:
         for ii, nam in enumerate(names):
             ax.text(
-                Points_f[ii, 0], Points_f[ii, 1], Points_f[ii, 2], f"{nam}", color="red"
+                Points_f[ii, 0],
+                Points_f[ii, 1],
+                Points_f[ii, 2],
+                f"{nam}",
+                color=color_text,
             )
     return ax
 
@@ -856,7 +902,7 @@ def set_ax_options(
     if add_orig:
         Or = (0, 0, 0)
         CS = np.asarray(
-            [[0.2 * scaleF, 0, 0], [0, 0.2 * scaleF, 0], [0, 0, 0.2 * scaleF]]
+            [[0.4 * scaleF, 0, 0], [0, 0.4 * scaleF, 0], [0, 0, 0.4 * scaleF]]
         )
         _colours = ["r", "g", "b"]
         _axname = ["x", "y", "z"]
