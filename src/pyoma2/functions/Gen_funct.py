@@ -10,6 +10,7 @@ import logging
 import typing
 
 import numpy as np
+import pandas as pd
 from scipy import linalg, signal
 
 logger = logging.getLogger(__name__)
@@ -18,6 +19,235 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # FUNZIONI GENERALI
 # =============================================================================
+def import_excel_GEO1(path, ref_ind=None):
+    file = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
+    # TODO
+    # dati di ["sns_lines", "BG_nodes", "BG_lines", "BG_Surf"]
+    # come stringhe per mappare con label dei dataframe
+
+    # Test1
+    required_sheets = ["sns_names", "sns_crd", "sns_dir"]
+    # Ensure required sheets exist
+    if not all(sheet in file for sheet in required_sheets):
+        raise Warning("At least [sns_names, sns_crd, sns_dir] must be defined!")
+
+    # TODO
+    # TEST SU TIPO DI DATI (str o float )
+    # TEST SU DIMENSIONI
+
+    # Process each sheet
+    for sheet, df in file.items():
+        if df.empty:
+            file[sheet] = None
+
+        if sheet == "sns_names" and df.shape[0] > 1:
+            sens_names = [
+                [item for item in row if not pd.isna(item)] for row in df.values.tolist()
+            ]
+            if ref_ind is None:
+                raise AttributeError(
+                    "You need to specify the reference indices for a Multi-setup test"
+                )
+            k = len(ref_ind[0])  # number of reference sensors (from the first setup)
+
+            # Create reference strings and flatten the list
+            sens_name_fl = [f"REF{i+1}" for i in range(k)]
+            sens_name_fl += [
+                item
+                for i, row in enumerate(sens_names)
+                for j, item in enumerate(row)
+                if j not in ref_ind[i]
+            ]
+            file[sheet] = sens_name_fl
+        elif sheet == "sns_names":  # and df.shape[0] == 1:
+            file[sheet] = df.values.tolist()[0]
+
+        if (
+            sheet in ["sns_lines", "BG_nodes", "BG_lines", "BG_Surf"]
+            and file[sheet] is not None
+        ):
+            file[sheet] = file[sheet].to_numpy()
+
+    # Adjust to 0 indexed lines
+    if file["BG_lines"] is not None:
+        file["BG_lines"] = np.subtract(file["BG_lines"], 1)
+    if file["sns_lines"] is not None:
+        file["sns_lines"] = np.subtract(file["sns_lines"], 1)
+    if file["BG_Surf"] is not None:
+        file["BG_Surf"] = np.subtract(file["BG_Surf"], 1)
+
+    # ---------------------------------------------------------------------
+    sens_names = (file["sns_names"],)
+    sens_coord = (file["sns_crd"],)
+    sens_dir = (file["sns_dir"],)
+    sens_lines = (file["sns_lines"],)
+    bg_nodes = (file["BG_nodes"],)
+    bg_lines = (file["BG_lines"],)
+    bg_surf = (file["BG_Surf"],)
+    # ---------------------------------------------------------------------
+    # # Find the indices that rearrange sens_coord to sens_names
+    index = np.array(sens_coord[0].index)
+    newIDX = find_map(sens_names[0], index)
+    # # reorder if necessary
+    sens_coord_new = pd.DataFrame(
+        sens_coord[0].values[newIDX, :],
+        index=sens_names[0],
+        columns=sens_coord[0].columns,
+    )
+    # sens_dir = sens_dir[newIDX, :]
+    sens_dir_new = pd.DataFrame(
+        sens_dir[0].values[newIDX, :], index=sens_names[0], columns=sens_coord[0].columns
+    )
+
+    return (
+        sens_names[0],
+        sens_coord_new,
+        sens_dir_new,
+        sens_lines[0],
+        bg_nodes[0],
+        bg_lines[0],
+        bg_surf[0],
+    )
+
+
+def import_excel_GEO2(path, ref_ind=None):
+    file = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
+    # TODO
+    # dati di ["sns_lines", "sns_surf", "BG_nodes", "BG_lines", "BG_Surf"]
+    # come stringhe per mappare con label dei dataframe
+
+    # Test1
+    required_sheets = ["sns_names", "pts_crd", "snsTOpts_map"]
+    # Ensure required sheets exist
+    if not all(sheet in file for sheet in required_sheets):
+        raise Warning(
+            "At least ['sns_names', 'pts_crd', 'snsTOpts_map'] must be defined!"
+        )
+
+    # TODO
+    # TEST SU TIPO DI DATI (str o float )
+    # TEST SU DIMENSIONI
+
+    # Process each sheet
+    for sheet, df in file.items():
+        if sheet == "sns_sign" and df.empty:
+            file["sns_sign"] = pd.DataFrame(
+                np.ones(file["snsTOpts_map"].to_numpy().shape)
+            )
+        elif sheet != "sns_sign" and df.empty:
+            file[sheet] = None
+
+        if sheet == "sns_names" and df.shape[0] > 1:
+            sens_names = [
+                [item for item in row if not pd.isna(item)] for row in df.values.tolist()
+            ]
+            if ref_ind is None:
+                raise AttributeError(
+                    "You need to specify the reference indices for a Multi-setup test"
+                )
+            k = len(ref_ind[0])  # number of reference sensors (from the first setup)
+
+            # Create reference strings and flatten the list
+            sens_name_fl = [f"REF{i+1}" for i in range(k)]
+            sens_name_fl += [
+                item
+                for i, row in enumerate(sens_names)
+                for j, item in enumerate(row)
+                if j not in ref_ind[i]
+            ]
+            file[sheet] = sens_name_fl
+        elif sheet == "sns_names":  # and df.shape[0] == 1:
+            file[sheet] = df.values.tolist()[0]
+
+        if (
+            sheet in ["sns_lines", "sns_surf", "BG_nodes", "BG_lines", "BG_Surf"]
+            and file[sheet] is not None
+        ):
+            file[sheet] = file[sheet].to_numpy()
+
+    # Adjust to 0 indexed lines
+    if file["BG_lines"] is not None:
+        file["BG_lines"] = np.subtract(file["BG_lines"], 1)
+    if file["sns_lines"] is not None:
+        file["sns_lines"] = np.subtract(file["sns_lines"], 1)
+    if file["BG_Surf"] is not None:
+        file["BG_Surf"] = np.subtract(file["BG_Surf"], 1)
+    if file["sns_surf"] is not None:
+        file["sns_surf"] = np.subtract(file["sns_surf"], 1)
+
+    sens_names = (file["sns_names"],)
+    pts_coord = (file["pts_crd"],)
+    sens_map = (file["snsTOpts_map"],)
+    cstrn = (file.get("snsTOpts_cstrn"),)
+    sens_sign = (file["sns_sign"],)
+    sens_lines = (file["sns_lines"],)
+    sens_surf = (file["sns_surf"],)
+    bg_nodes = (file["BG_nodes"],)
+    bg_lines = (file["BG_lines"],)
+    bg_surf = (file["BG_Surf"],)
+    return (
+        sens_names[0],
+        pts_coord[0],
+        sens_map[0],
+        cstrn[0],
+        sens_sign[0],
+        sens_lines[0],
+        sens_surf[0],
+        bg_nodes[0],
+        bg_lines[0],
+        bg_surf[0],
+    )
+
+
+def flatten_sns_names(sens_names, ref_ind=None):
+    # check if sens_names is a dataframe with one row and transform it to a list
+    # FOR SINGLE-SETUP GEOMETRIES
+    if isinstance(sens_names, pd.DataFrame) and sens_names.values.shape[0] == 1:
+        sns_names_fl = sens_names.values.tolist()[0]
+    # Check if sens_names is a DataFrame with more than one row or a list of lists
+    # FOR MULTI-SETUP GEOMETRIES
+    elif (isinstance(sens_names, pd.DataFrame) and sens_names.values.shape[0] > 1) or (
+        isinstance(sens_names, list)
+        and all(isinstance(elem, list) for elem in sens_names)
+    ):
+        # if sens_names is a dataframe, transform it to a list
+        if isinstance(sens_names, pd.DataFrame):
+            sens_names = [
+                [item for item in row if not pd.isna(item)]
+                for row in sens_names.values.tolist()
+            ]
+        n = len(sens_names)
+        if ref_ind is None:
+            raise AttributeError(
+                "You need to specify the reference indices for a Multi-setup test"
+            )
+        k = len(ref_ind[0])  # number of reference sensor (from the first setup)
+        sns_names_fl = []
+        # Create the reference strings
+        for i in range(k):
+            sns_names_fl.append(f"REF{i+1}")
+        # Flatten the list of strings and exclude the reference indices
+        for i in range(n):
+            for j in range(len(sens_names[i])):
+                if j not in ref_ind[i]:
+                    sns_names_fl.append(sens_names[i][j])
+
+    elif isinstance(sens_names, list) and all(
+        isinstance(elem, str) for elem in sens_names
+    ):
+        sns_names_fl = sens_names
+
+    elif isinstance(sens_names, np.ndarray) and sens_names.ndim == 1:
+        sns_names_fl = sens_names.tolist()
+
+    else:
+        raise ValueError(
+            "The input must of type: [list(str), list(list(str)), pd.DataFrame, NDArray(str)]"
+        )
+
+    return sns_names_fl
+
+
 def Exdata():
     """
     This function generates a time history of acceleration for a 5 DOF
@@ -44,15 +274,9 @@ def Exdata():
     T = 900  # [sec] Period of the time series
 
     dt = 1 / fs  # [sec] time resolution
-    df = 1 / T  # [Hz] frequency resolution
     N = int(T / dt)  # number of data points
-    fmax = fs / 2  # Nyquist frequency
 
-    t = np.arange(0, T + dt, dt)  # time instants array
     t = np.linspace(0, T + dt, N)
-
-    fs = np.arange(0, fmax + df, df)  # spectral lines array
-    fs = np.linspace(0, fmax + df, N // 2)  # spectral lines array
 
     # =========================================================================
     # SYSTEM DEFINITION
@@ -98,8 +322,6 @@ def Exdata():
     )
 
     C = linalg.inv(FI_1.T) @ C_M @ linalg.inv(FI_1)  # Damping matrix
-
-    # n = _ndof*2 # order of the system
 
     # =========================================================================
     # STATE-SPACE FORMULATION

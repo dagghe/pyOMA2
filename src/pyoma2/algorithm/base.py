@@ -13,7 +13,6 @@ import typing
 
 from pydantic import BaseModel
 
-from pyoma2.algorithm.data.geometry import Geometry1
 from pyoma2.algorithm.data.result import BaseResult
 from pyoma2.algorithm.data.run_params import BaseRunParams
 
@@ -273,45 +272,191 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         if not self.result:
             raise ValueError(f"{self.name}:Run algorithm first")
 
-    @abc.abstractmethod
-    def plot_mode_g1(
-        self,
-        Geo1: Geometry1,
-        mode_numb: int,
-        scaleF: int = 1,
-        view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: bool = True,
-        remove_grid: bool = True,
-        remove_axis: bool = True,
-    ) -> typing.Any:
-        """
-        Plots the mode shapes for a specified mode number from the results of an algorithm,
-        using Geometry 1 setup.
+    # def plot_mode_g2(
+    #     self,
+    #     Geo2: Geometry2,
+    #     mode_numb: typing.Optional[int],
+    #     scaleF: int = 1,
+    #     view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
+    #     remove_fill: bool = True,
+    #     remove_grid: bool = True,
+    #     remove_axis: bool = True,
+    #     color: str = "cmap",
+    #     *args,
+    #     **kwargs,
+    # ) -> typing.Any:
+    #     """
+    #     Plots a 3D mode shape for a specified mode number using the Geometry2 object.
 
-        Parameters
-        ----------
-        Algo_Res : MsPoserResult
-            The results from an algorithm, containing mode shapes and other modal properties.
-        Geo1 : Geometry1
-            The first geometry setup of the structure.
-        mode_numb : int
-            The mode number to be visualized.
-        scaleF : int, optional
-            Scaling factor for the mode shape visualization, by default 1.
-        view : Literal["3D", "xy", "xz", "yz", "x", "y", "z"], optional
-            The type of view for plotting the mode shape, by default "3D".
-        remove_fill : bool, optional
-            If True, removes the fill from the plot, by default True.
-        remove_grid : bool, optional
-            If True, removes the grid from the plot, by default True.
-        remove_axis : bool, optional
-            If True, removes the axis labels and ticks from the plot, by default True.
+    #     Parameters
+    #     ----------
+    #     Geo2 : Geometry2
+    #         Geometry object containing nodes, sensor information, and additional geometrical data.
+    #     mode_numb : int
+    #         Mode number to visualize.
+    #     scaleF : int, optional
+    #         Scale factor for mode shape visualization. Default is 1.
+    #     view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
+    #         View for the 3D plot. Default is '3D'.
+    #     remove_fill : bool, optional
+    #         Whether to remove fill from the plot. Default is True.
+    #     remove_grid : bool, optional
+    #         Whether to remove grid from the plot. Default is True.
+    #     remove_axis : bool, optional
+    #         Whether to remove axis from the plot. Default is True.
+    #     *args, **kwargs
+    #         Additional arguments for customizations.
 
-        Returns
-        -------
-        tuple
-            A tuple containing the figure and axis objects of the plot.
-        """
+    #     Returns
+    #     -------
+    #     typing.Any
+    #         A tuple containing the matplotlib figure and axes of the mode shape plot.
+    #     """
+    #     if self.result.Fn is None:
+    #         raise ValueError("Run algorithm first")
+
+    #     # Select the (real) mode shape
+    #     fn = self.result.Fn[int(mode_numb - 1)]
+    #     phi = self.result.Phi[:, int(mode_numb - 1)].real * scaleF
+    #     # create mode shape dataframe
+    #     df_phi = pd.DataFrame(
+    #         {"sName": Geo2.sens_names, "Phi": phi},
+    #     )
+
+    #     if Geo2.cstrn is not None:
+    #         aa = Geo2.cstrn.to_numpy(na_value=0)[:, :]
+    #         aa = np.nan_to_num(aa, copy=True, nan=0.0)
+    #         val = aa @ phi
+    #         ctn_df = pd.DataFrame(
+    #             {"cName": Geo2.cstrn.index, "val": val},
+    #         )
+
+    #         mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
+    #         mapping1 = dict(zip(ctn_df["cName"], ctn_df["val"]))
+    #         mapp = dict(mapping, **mapping1)
+    #     else:
+    #         mapp = dict(zip(df_phi["sName"], df_phi["Phi"]))
+
+    #     # reshape the mode shape dataframe to fit the pts coord
+    #     df_phi_map = Geo2.sens_map.replace(mapp).astype(float)
+    #     # add together coordinates and mode shape displacement
+    #     # newpoints = Geo2.pts_coord.add(df_phi_map * Geo2.sens_sign, fill_value=0)
+    #     newpoints = (
+    #         Geo2.pts_coord.to_numpy() + df_phi_map.to_numpy() * Geo2.sens_sign.to_numpy()
+    #     )
+    #     # extract only the displacement array
+    #     # newpoints = newpoints.to_numpy()[:, :]
+
+    #     # create fig and ax
+    #     fig = plt.figure(figsize=(8, 8), tight_layout=True)
+    #     ax = fig.add_subplot(111, projection="3d")
+
+    #     ax.set_title(f"Mode nr. {mode_numb}, $f_n$={fn:.3f}Hz")
+
+    #     # Check that BG nodes are defined
+    #     if Geo2.bg_nodes is not None:
+    #         # if True plot
+    #         plot_funct.plt_nodes(ax, Geo2.bg_nodes, color="gray", alpha=0.5)
+    #         # Check that BG lines are defined
+    #         if Geo2.bg_lines is not None:
+    #             # if True plot
+    #             plot_funct.plt_lines(
+    #                 ax, Geo2.bg_nodes, Geo2.bg_lines, color="gray", alpha=0.5
+    #             )
+    #         if Geo2.bg_surf is not None:
+    #             # if True plot
+    #             plot_funct.plt_surf(ax, Geo2.bg_nodes, Geo2.bg_surf, alpha=0.1)
+    #     # PLOT MODE SHAPE
+    #     if color == "cmap":
+    #         oldpoints = Geo2.pts_coord.to_numpy()[:, :]
+    #         plot_funct.plt_nodes(ax, newpoints, color="cmap", initial_coord=oldpoints)
+
+    #     else:
+    #         plot_funct.plt_nodes(ax, newpoints, color="red")
+    #     # check for sens_lines
+    #     if Geo2.sens_lines is not None:
+    #         if color == "cmap":
+    #             plot_funct.plt_lines(
+    #                 ax, newpoints, Geo2.sens_lines, color="cmap", initial_coord=oldpoints
+    #             )
+    #         else:
+    #             plot_funct.plt_lines(ax, newpoints, Geo2.sens_lines, color="red")
+
+    #     # Set ax options
+    #     plot_funct.set_ax_options(
+    #         ax,
+    #         bg_color="w",
+    #         remove_fill=remove_fill,
+    #         remove_grid=remove_grid,
+    #         remove_axis=remove_axis,
+    #         scaleF=scaleF,
+    #     )
+
+    #     # Set view
+    #     plot_funct.set_view(ax, view=view)
+
+    #     return fig, ax
+
+    # def anim_mode_g2(
+    #     self,
+    #     Geo2: Geometry2,
+    #     mode_numb: typing.Optional[int],
+    #     scaleF: int = 1,
+    #     view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
+    #     remove_fill: bool = True,
+    #     remove_grid: bool = True,
+    #     remove_axis: bool = True,
+    #     saveGIF: bool = False,
+    #     *args,
+    #     **kwargs,
+    # ) -> typing.Any:
+    #     """
+    #     Creates an animated visualization of a 3D mode shape for a specified mode number using Geometry2.
+
+    #     Parameters
+    #     ----------
+    #     Geo2 : Geometry2
+    #         Geometry object containing nodes, sensor information, and additional geometrical data.
+    #     mode_numb : int, optional
+    #         Mode number to visualize. If None, no mode is selected.
+    #     scaleF : int, optional
+    #         Scale factor for mode shape animation. Default is 1.
+    #     view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
+    #         View for the 3D animation. Default is '3D'.
+    #     remove_fill : bool, optional
+    #         Whether to remove fill from the animation. Default is True.
+    #     remove_grid : bool, optional
+    #         Whether to remove grid from the animation. Default is True.
+    #     remove_axis : bool, optional
+    #         Whether to remove axis from the animation. Default is True.
+    #     saveGIF : bool, optional
+    #         Whether to save the animation as a GIF file. Default is False.
+    #     *args, **kwargs
+    #         Additional arguments for customization.
+
+    #     Returns
+    #     -------
+    #     typing.Any
+    #         The animation object or any relevant output, depending on the implementation and provided
+    #         parameters.
+    #     """
+    #     if self.result.Fn is None:
+    #         raise ValueError("Run algorithm first")
+
+    #     Res = self.result
+    #     logger.debug("Running AniMode...")
+    #     AniMode(
+    #         Geo=Geo2,
+    #         Res=Res,
+    #         mode_numb=mode_numb,
+    #         scaleF=scaleF,
+    #         view=view,
+    #         remove_axis=remove_axis,
+    #         remove_fill=remove_fill,
+    #         remove_grid=remove_grid,
+    #         saveGIF=saveGIF,
+    #     )
+    #     logger.debug("...end AniMode!")
 
     def _set_data(self, data: T_Data, fs: float) -> "BaseAlgorithm":
         """

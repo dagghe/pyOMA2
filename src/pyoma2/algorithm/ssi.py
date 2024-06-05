@@ -313,6 +313,19 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         )
         return fig, ax
 
+    def SvalH_plot(
+        self,
+        iter_n: typing.Optional[int] = None,
+    ) -> typing.Any:
+        """ """
+        if not self.result:
+            raise ValueError("Run algorithm first")
+
+        fig, ax = plot_funct.SvalH_plot(
+            H=self.result.H, br=self.run_params.br, iter_n=iter_n
+        )
+        return fig, ax
+
     def plot_mode_g1(
         self,
         Geo1: Geometry1,
@@ -411,9 +424,6 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         mode_numb: typing.Optional[int],
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
-        remove_fill: bool = True,
-        remove_grid: bool = True,
-        remove_axis: bool = True,
         color: str = "cmap",
         *args,
         **kwargs,
@@ -505,7 +515,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
             plot_funct.plt_nodes(ax, newpoints, color="cmap", initial_coord=oldpoints)
 
         else:
-            plot_funct.plt_nodes(ax, newpoints, color="red")
+            plot_funct.plt_nodes(ax, newpoints, color=color)
         # check for sens_lines
         if Geo2.sens_lines is not None:
             if color == "cmap":
@@ -513,15 +523,28 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
                     ax, newpoints, Geo2.sens_lines, color="cmap", initial_coord=oldpoints
                 )
             else:
-                plot_funct.plt_lines(ax, newpoints, Geo2.sens_lines, color="red")
+                plot_funct.plt_lines(ax, newpoints, Geo2.sens_lines, color=color)
+
+        if Geo2.sens_surf is not None:
+            if color == "cmap":
+                plot_funct.plt_surf(
+                    ax,
+                    newpoints,
+                    Geo2.sens_surf,
+                    color="cmap",
+                    initial_coord=oldpoints,
+                    alpha=0.4,
+                )
+            else:
+                plot_funct.plt_surf(ax, newpoints, Geo2.sens_surf, color=color, alpha=0.4)
 
         # Set ax options
         plot_funct.set_ax_options(
             ax,
             bg_color="w",
-            remove_fill=remove_fill,
-            remove_grid=remove_grid,
-            remove_axis=remove_axis,
+            remove_fill=True,
+            remove_grid=True,
+            remove_axis=True,
             scaleF=scaleF,
         )
 
