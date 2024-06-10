@@ -267,7 +267,9 @@ def SSI_FAST(H: np.ndarray, br: int, ordmax: int, step: int = 1):
 # -----------------------------------------------------------------------------
 
 
-def SSI_Poles(AA: list, CC: list, ordmax: int, dt: float, step: int = 1):
+def SSI_Poles(
+    AA: list, CC: list, ordmax: int, dt: float, step: int = 1, return_lambdas=False
+):
     """
     Compute modal parameters from state-space models identified by Stochastic Subspace Identification (SSI).
 
@@ -308,6 +310,8 @@ def SSI_Poles(AA: list, CC: list, ordmax: int, dt: float, step: int = 1):
     Ms = np.full(
         (ordmax, int((ordmax) / step + 1), Nch), np.nan, dtype=complex
     )  # initialization of the matrix that contains the damping ratios
+    if return_lambdas:
+        Lambds = np.full((ordmax, int((ordmax) / step + 1)), np.nan, dtype=complex)
     for ii in range(NAC):
         A = AA[ii]
         C = CC[ii]
@@ -315,6 +319,12 @@ def SSI_Poles(AA: list, CC: list, ordmax: int, dt: float, step: int = 1):
         Fn[: len(fn), ii] = fn  # save the frequencies
         Sm[: len(fn), ii] = xi  # save the damping ratios
         Ms[: len(fn), ii, :] = phi
+        if return_lambdas:
+            AuVal, _ = np.linalg.eig(A)
+            lambd = (np.log(AuVal)) * (1 / dt)
+            Lambds[: len(fn), ii] = lambd
+    if return_lambdas:
+        return Fn, Sm, Ms, Lambds
     return Fn, Sm, Ms
 
 

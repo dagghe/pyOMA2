@@ -363,8 +363,8 @@ class BaseSetup:
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
         colsns: str = "red",
-        colsns_lines: str = "red",
-        colsns_surf: str = "red",
+        colsns_lines: str = "black",
+        colsns_surf: str = "lightcoral",
         colBG_nodes: str = "gray",
         colBG_lines: str = "gray",
         colBG_surf: str = "gray",
@@ -685,7 +685,7 @@ class BaseSetup:
         )
 
     def def_geo2_byFILE(self, path: str):
-        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        ref_ind = self.ref_ind if hasattr(self, "ref_ind") else None
 
         data = import_excel_GEO2(path, ref_ind=ref_ind)
 
@@ -1787,8 +1787,8 @@ class MultiSetup_PoSER:
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",
         colsns: str = "red",
-        colsns_lines: str = "red",
-        colsns_surf: str = "red",
+        colsns_lines: str = "black",
+        colsns_surf: str = "lightcoral",
         colBG_nodes: str = "gray",
         colBG_lines: str = "gray",
         colBG_surf: str = "gray",

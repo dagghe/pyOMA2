@@ -826,7 +826,13 @@ def plt_quiver(
         )
     elif method == "2":
         for ii in range(len(xs0)):
-            ax.plot([xs0[ii], xs1[ii]], [ys0[ii], ys1[ii]], [zs0[ii], zs1[ii]], c=color)
+            ax.plot(
+                [xs0[ii], xs1[ii]],
+                [ys0[ii], ys1[ii]],
+                [zs0[ii], zs1[ii]],
+                c=color,
+                linewidth=2,
+            )
     else:
         raise AttributeError("method must be either '1' or '2'!")
 
@@ -1317,7 +1323,7 @@ def STFT(
         ch = data[:, ii]
         fig = plt.figure(figsize=(8, 6))
         ax = fig.add_subplot()
-        ax.set_title("STFT Magnitude")
+        ax.set_title(f"STFT Magnitude for channel nr.{ii+1}")
         ax.set_xlabel("Time [sec]")
         ax.set_ylabel("Frequency [Hz]")
         # nxseg = w_T*fs
