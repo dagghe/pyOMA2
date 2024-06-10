@@ -19,6 +19,34 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # FUNZIONI GENERALI
 # =============================================================================
+def dfphi_map_func(phi, sens_names, sens_map, cstrn=None):
+    # create mode shape dataframe
+    df_phi = pd.DataFrame(
+        {"sName": sens_names, "Phi": phi},
+    )
+
+    # APPLY POINTS TO SENSOR MAPPING
+    # check for costraints
+    if cstrn is not None:
+        cstr = cstrn.to_numpy(na_value=0)[:, :]
+        val = cstr @ phi
+        ctn_df = pd.DataFrame(
+            {"cName": cstrn.index, "val": val},
+        )
+        # apply sensor mapping
+        mapping_sens = dict(zip(df_phi["sName"], df_phi["Phi"]))
+        # apply costraints mapping
+        mapping_cstrn = dict(zip(ctn_df["cName"], ctn_df["val"]))
+        mapping = dict(mapping_sens, **mapping_cstrn)
+    # else apply only sensor mapping
+    else:
+        mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
+
+    # mode shape mapped to points
+    df_phi_map = sens_map.replace(mapping).astype(float)
+    return df_phi_map
+
+
 def import_excel_GEO1(path, ref_ind=None):
     file = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
     # TODO
@@ -112,10 +140,6 @@ def import_excel_GEO1(path, ref_ind=None):
 
 def import_excel_GEO2(path, ref_ind=None):
     file = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
-    # TODO
-    # dati di ["sns_lines", "sns_surf", "BG_nodes", "BG_lines", "BG_Surf"]
-    # come stringhe per mappare con label dei dataframe
-
     # Test1
     required_sheets = ["sns_names", "pts_crd", "snsTOpts_map"]
     # Ensure required sheets exist
