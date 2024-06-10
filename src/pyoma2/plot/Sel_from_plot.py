@@ -4,6 +4,10 @@ Part of the pyOMA2 package.
 Authors:
 Dag Pasca
 Diego Margoni
+
+This module provides the SelFromPlot class for interactive selection of poles in
+operational modal analysis plots. It supports FDD, SSI, and pLSCF methods and
+integrates matplotlib plots into a Tkinter window for user interaction.
 """
 
 from __future__ import annotations
@@ -13,21 +17,16 @@ import logging
 import os
 import tkinter as tk
 import typing
+from typing import Literal, Tuple
 
 import numpy as np
-from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg,
-    NavigationToolbar2Tk,
-)
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
 if typing.TYPE_CHECKING:
     from pyoma2.algorithm import BaseAlgorithm
 
-from pyoma2.functions.plot_funct import (
-    CMIF_plot,
-    Stab_plot,
-)
+from pyoma2.functions.plot_funct import CMIF_plot, Stab_plot
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ class SelFromPlot:
 
     Methods
     -------
-    __init__(algo: BaseAlgorithm, freqlim=None, plot: typing.Literal["FDD", "SSI"] = "FDD"):
+    __init__(algo: BaseAlgorithm, freqlim=None, plot: Literal["FDD", "SSI", "pLSCF"] = "FDD"):
         Initializes the SelFromPlot class with the specified algorithm, frequency limit, and plot type.
     plot_svPSD(update_ticks=False):
         Plots the Singular Values of the Power Spectral Density matrix for FDD analysis.
@@ -107,8 +106,8 @@ class SelFromPlot:
     def __init__(
         self,
         algo: BaseAlgorithm,
-        freqlim=None,
-        plot: typing.Literal["FDD", "SSI", "pLSCF"] = "FDD",
+        freqlim: Tuple[float, float] = None,
+        plot: Literal["FDD", "SSI", "pLSCF"] = "FDD",
     ):
         """
         Initializes the SelFromPlot class with specified algorithm, frequency limit, and plot type.
@@ -121,59 +120,49 @@ class SelFromPlot:
             Upper frequency limit for the plot, defaults to half the Nyquist frequency if not provided.
         plot : str, optional
             Type of plot to be displayed. Supported values are "FDD", "SSI", and "pLSCF". Default is "FDD".
-
-        Attributes
-        ----------
-        sel_freq : list
-            List to store selected frequencies.
-        pole_ind : list
-            List to store indices of selected poles.
-        shift_is_held : bool
-            Flag indicating if the SHIFT key is held.
-        root : tkinter.Tk
-            Root of the Tkinter application.
-        fig : matplotlib.figure.Figure
-            Matplotlib figure for plotting.
-        ax2 : matplotlib.axes.Axes
-            Matplotlib axes for plotting.
         """
         self.algo = algo
         self.plot = plot
-
-        # Importare frequenza campionamento
         self.fs = self.algo.fs
-
-        if freqlim is not None:
-            self.freqlim = freqlim
-        else:
-            self.freqlim = (0.0, self.fs / 2)  # Nyquist frequency
-
-        # inizializzo TK e check su shift
+        self.freqlim = freqlim if freqlim is not None else (0.0, self.fs / 2)
         self.shift_is_held = False
-        self.root = tk.Tk()
-
         self.sel_freq = []
 
         if self.plot in ("SSI", "pLSCF"):
             self.show_legend = 0
             self.hide_poles = 1
-
             self.pole_ind = []
-
-            self.root.title("Stabilisation Chart")
-        # # per aggiungere plot di sottofondo
-        #     self.ax1 = self.ax2.twinx()
-
         elif self.plot == "FDD":
             self.freq_ind = []
-            self.root.title("Singular Values of PSD matrix")
 
-        # Create fig and ax
+        self._initialize_gui()
+
+        if self.plot in ("SSI", "pLSCF"):
+            self.plot_stab(self.plot)
+        elif self.plot == "FDD":
+            self.plot_svPSD()
+
+        self.root.mainloop()
+
+        if self.plot in ("SSI", "pLSCF"):
+            self.result = self.sel_freq, self.pole_ind
+        elif self.plot == "FDD":
+            self.result = self.sel_freq, None
+
+    def _initialize_gui(self):
+        """
+        Initializes the Tkinter GUI components.
+        """
+        self.root = tk.Tk()
+        self.root.title(
+            "Stabilisation Chart"
+            if self.plot in ("SSI", "pLSCF")
+            else "Singular Values of PSD matrix"
+        )
+
         self.fig = Figure(figsize=(12, 6), tight_layout=True)
         self.ax2 = self.fig.add_subplot(111)
-        # self.ax2.grid(True)
 
-        # Tkinter menu
         menubar = tk.Menu(self.root)
         filemenu = tk.Menu(menubar, tearoff=0)
         filemenu.add_command(label="Save figure", command=self.save_this_figure)
@@ -197,45 +186,23 @@ class SelFromPlot:
 
         self.root.config(menu=menubar)
 
-        # =============================================================================
-        #         # Program execution
-        if self.plot in ("SSI", "pLSCF"):
-            self.plot_stab(self.plot)
-        elif self.plot == "FDD":
-            self.plot_svPSD()
-        # =============================================================================
-
-        # Integrate matplotlib figure
         canvas = FigureCanvasTkAgg(self.fig, self.root)
         self.ax2.grid()
         canvas.get_tk_widget().pack(side="top", fill="both", expand=1)
         NavigationToolbar2Tk(canvas, self.root)
 
-        # Connecting functions to event manager
-        self.fig.canvas.mpl_connect("key_press_event", lambda x: self.on_key_press(x))
-        self.fig.canvas.mpl_connect("key_release_event", lambda x: self.on_key_release(x))
+        self.fig.canvas.mpl_connect("key_press_event", self.on_key_press)
+        self.fig.canvas.mpl_connect("key_release_event", self.on_key_release)
         if self.plot in ("SSI", "pLSCF"):
             self.fig.canvas.mpl_connect(
-                "button_press_event", lambda x: self.on_click_SSI(x, self.plot)
+                "button_press_event", lambda event: self.on_click_SSI(event, self.plot)
             )
-
         elif self.plot == "FDD":
-            self.fig.canvas.mpl_connect(
-                "button_press_event", lambda x: self.on_click_FDD(x)
-            )
+            self.fig.canvas.mpl_connect("button_press_event", self.on_click_FDD)
 
-        self.root.protocol("WM_DELETE_WINDOW", lambda: self.on_closing())
-        self.root.mainloop()
-        # ------------------------------------------------------------------------------
-        # SET RESULTS
-        if self.plot in ("SSI", "pLSCF"):
-            self.result = self.sel_freq, self.pole_ind
-        elif self.plot == "FDD":
-            self.result = self.sel_freq, None
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-    # =============================================================================
-
-    def plot_svPSD(self, update_ticks=False):
+    def plot_svPSD(self, update_ticks: bool = False):
         """
         Plots the Singular Values of the Power Spectral Density matrix for FDD analysis.
 
@@ -249,68 +216,43 @@ class SelFromPlot:
 
         if not update_ticks:
             self.ax2.clear()
-            # self.ax2.grid(True)
-            # NB nel plot INTERATTIVO chiama anche metodi del plot STATICI
-            CMIF_plot(
-                S_val,
-                freq,
-                freqlim=self.freqlim,  # come fare con nSv?
-                fig=self.fig,
-                ax=self.ax2,
-            )
-            # =============================================================================
-            # ATTENZIONE DA RIVEDERE
+            CMIF_plot(S_val, freq, freqlim=self.freqlim, fig=self.fig, ax=self.ax2)
+            # Compute the y-values for the selected frequencies
+            marker_y_values = [
+                10
+                * np.log10(
+                    (S_val[0, 0, i] / S_val[0, 0, np.argmax(S_val[0, 0, :])]) * 1.25
+                )
+                for i in self.freq_ind
+            ]
             (self.MARKER,) = self.ax2.plot(
-                self.sel_freq,  # ATTENZIONE
-                # [10 * np.log10(S_val[0, 0, i] * 1.05) for i in self.freq_ind],
-                [
-                    10
-                    * np.log10(
-                        (S_val[0, 0, :] / S_val[0, 0, :][np.argmax(S_val[0, 0, :])])
-                        * 1.25
-                    )[i]
-                    for i in self.freq_ind
-                ],
-                "kv",
-                markersize=8,
+                self.sel_freq, marker_y_values, "kv", markersize=8
             )
-
         else:
-            # ATTENZIONE DA RIVEDERE
-            self.MARKER.set_xdata(np.asarray(self.sel_freq))  # update data
-            self.MARKER.set_ydata(
-                # [10 * np.log10(S_val[0, 0, i] * 1.05) for i in self.freq_ind]
-                [
-                    10
-                    * np.log10(
-                        (S_val[0, 0, :] / S_val[0, 0, :][np.argmax(S_val[0, 0, :])])
-                        * 1.25
-                    )[i]
-                    for i in self.freq_ind
-                ],
-            )
+            marker_y_values = [
+                10
+                * np.log10(
+                    (S_val[0, 0, i] / S_val[0, 0, np.argmax(S_val[0, 0, :])]) * 1.25
+                )
+                for i in self.freq_ind
+            ]
+            self.MARKER.set_xdata(np.asarray(self.sel_freq))
+            self.MARKER.set_ydata(marker_y_values)
 
-        self.ax2.grid()
-        self.fig.canvas.draw()
-
-    # ------------------------------------------------------------------------------
+        self.ax2.grid(True)  # Ensure grid is always displayed
+        self.fig.canvas.draw_idle()  # Use draw_idle for better performance and interaction handling
 
     def get_closest_freq(self):
         """
         Selects the frequency closest to the mouse click location for FDD plots.
         """
-
         freq = self.algo.result.freq
-        # Find closest frequency
         sel = np.argmin(np.abs(freq - self.x_data_pole))
-
         self.freq_ind.append(sel)
         self.sel_freq.append(freq[sel])
         self.sort_selected_poles()
 
-    # ------------------------------------------------------------------------------
-
-    def plot_stab(self, plot, update_ticks=False):
+    def plot_stab(self, plot: Literal["SSI", "pLSCF"], update_ticks: bool = False):
         """
         Plots the stabilization chart for SSI or pLSCF methods.
 
@@ -321,7 +263,6 @@ class SelFromPlot:
         update_ticks : bool, optional
             Flag indicating whether to update tick marks for selected poles. Default is False.
         """
-
         freqlim = self.freqlim
         hide_poles = self.hide_poles
 
@@ -331,56 +272,31 @@ class SelFromPlot:
         step = self.algo.run_params.step
         ordmin = self.algo.run_params.ordmin
         ordmax = self.algo.run_params.ordmax
-        step = self.algo.run_params.step
 
         if not update_ticks:
-            # self.ax1.clear()
             self.ax2.clear()
-            # self.ax2.grid(True)
-
-            # -----------------------
-            if plot == "SSI" or plot == "pLSCF":
-                Stab_plot(
-                    Fn,
-                    Lab,
-                    step,
-                    ordmax,
-                    ordmin=ordmin,
-                    freqlim=freqlim,
-                    hide_poles=hide_poles,
-                    # DA FARE
-                    # Sval=None,
-                    # nSv=None,
-                    fig=self.fig,
-                    ax=self.ax2,
-                )
-
-                (self.MARKER,) = self.ax2.plot(
-                    self.sel_freq,
-                    [i for i in self.pole_ind],
-                    "kx",
-                    markersize=10,
-                )
-
-            if self.show_legend:
-                self.pole_legend = self.ax2.legend(
-                    loc="lower center", ncol=4, frameon=True
-                )
-                self.ax2.grid()
-                self.fig.canvas.draw()
-
+            Stab_plot(
+                Fn,
+                Lab,
+                step,
+                ordmax,
+                ordmin=ordmin,
+                freqlim=freqlim,
+                hide_poles=hide_poles,
+                fig=self.fig,
+                ax=self.ax2,
+            )
+            (self.MARKER,) = self.ax2.plot(
+                self.sel_freq, self.pole_ind, "kx", markersize=10
+            )
         else:
-            self.MARKER.set_xdata(np.asarray(self.sel_freq))  # update data
-            self.MARKER.set_ydata([i for i in self.pole_ind])
+            self.MARKER.set_xdata(np.asarray(self.sel_freq))
+            self.MARKER.set_ydata(self.pole_ind)
 
-            # self.fig.canvas.draw()
+        self.ax2.grid(True)  # Ensure grid is always displayed
+        self.fig.canvas.draw_idle()  # Use draw_idle for better performance and interaction handling
 
-        self.ax2.grid()
-        self.fig.canvas.draw()
-
-    # ------------------------------------------------------------------------------
-
-    def get_closest_pole(self, plot):
+    def get_closest_pole(self, plot: Literal["SSI", "pLSCF"]):
         """
         Selects the pole closest to the mouse click location for SSI or pLSCF plots.
 
@@ -389,23 +305,17 @@ class SelFromPlot:
         plot : str
             Type of plot ("SSI" or "pLSCF") for which the pole is being selected.
         """
-
-        if plot == "SSI" or plot == "pLSCF":
+        if plot in ("SSI", "pLSCF"):
             Fn_poles = self.algo.result.Fn_poles
 
-        y_ind = int(
-            np.argmin(np.abs(np.arange(Fn_poles.shape[1]) - self.y_data_pole))
-        )  # Find closest pole order index
+        y_ind = int(np.argmin(np.abs(np.arange(Fn_poles.shape[1]) - self.y_data_pole)))
         x = Fn_poles[:, y_ind]
-        # Find closest frequency index
         sel = np.nanargmin(np.abs(x - self.x_data_pole))
 
         self.pole_ind.append(y_ind)
         self.sel_freq.append(Fn_poles[sel, y_ind])
 
         self.sort_selected_poles()
-
-    # ------------------------------------------------------------------------------
 
     def on_click_FDD(self, event):
         """
@@ -416,41 +326,26 @@ class SelFromPlot:
         event : matplotlib.backend_bases.MouseEvent
             The mouse event triggered on the plot.
         """
-        # on button 1 press (left mouse button) + SHIFT is held
         if event.button == 1 and self.shift_is_held:
             self.y_data_pole = [event.ydata]
             self.x_data_pole = event.xdata
-
             self.get_closest_freq()
-
             self.plot_svPSD()
 
-        # On button 3 press (left mouse button)
         elif event.button == 3 and self.shift_is_held:
-            try:
-                del self.sel_freq[-1]  # delete last point
-                del self.freq_ind[-1]
-
+            if self.sel_freq and self.freq_ind:
+                self.sel_freq.pop()
+                self.freq_ind.pop()
                 self.plot_svPSD()
-            except Exception as e:
-                logger.exception(e)
 
         elif event.button == 2 and self.shift_is_held:
-            i = np.argmin(np.abs(self.sel_freq - event.xdata))
-            try:
-                del self.sel_freq[i]
-                del self.freq_ind[i]
-
+            if self.sel_freq and self.freq_ind:
+                i = np.argmin(np.abs(self.sel_freq - event.xdata))
+                self.sel_freq.pop(i)
+                self.freq_ind.pop(i)
                 self.plot_svPSD()
-            except Exception as e:
-                logger.exception(e)
 
-        if self.shift_is_held:
-            self.plot_svPSD(update_ticks=True)
-
-    # ------------------------------------------------------------------------------
-
-    def on_click_SSI(self, event, plot):
+    def on_click_SSI(self, event, plot: Literal["SSI", "pLSCF"]):
         """
         Handles mouse click events for SSI or pLSCF plots.
 
@@ -461,39 +356,24 @@ class SelFromPlot:
         plot : str
             Type of plot ("SSI" or "pLSCF") where the event occurred.
         """
-        # on button 1 press (left mouse button) + SHIFT is held
         if event.button == 1 and self.shift_is_held:
             self.y_data_pole = [event.ydata]
             self.x_data_pole = event.xdata
-
             self.get_closest_pole(plot)
-
             self.plot_stab(plot)
 
-        # On button 3 press (left mouse button)
         elif event.button == 3 and self.shift_is_held:
-            try:
-                del self.sel_freq[-1]  # delete last point
-                del self.pole_ind[-1]
-
+            if self.sel_freq and self.pole_ind:
+                self.sel_freq.pop()
+                self.pole_ind.pop()
                 self.plot_stab(plot)
-            except Exception as e:
-                logger.exception(e)
 
         elif event.button == 2 and self.shift_is_held:
-            i = np.argmin(np.abs(self.sel_freq - event.xdata))
-            try:
-                del self.sel_freq[i]
-                del self.pole_ind[i]
-
+            if self.sel_freq and self.pole_ind:
+                i = np.argmin(np.abs(self.sel_freq - event.xdata))
+                self.sel_freq.pop(i)
+                self.pole_ind.pop(i)
                 self.plot_stab(plot)
-            except Exception as e:
-                logger.exception(e)
-
-        if self.shift_is_held:
-            self.plot_stab(plot, update_ticks=True)
-
-    # ------------------------------------------------------------------------------
 
     def on_key_press(self, event):
         """
@@ -526,7 +406,7 @@ class SelFromPlot:
         self.root.quit()
         self.root.destroy()
 
-    def toggle_legend(self, x):
+    def toggle_legend(self, x: int):
         """
         Toggles the visibility of the legend in the plot.
 
@@ -535,14 +415,10 @@ class SelFromPlot:
         x : int
             Flag indicating whether to show (1) or hide (0) the legend.
         """
-        if x:
-            self.show_legend = 1
-        else:
-            self.show_legend = 0
-
+        self.show_legend = bool(x)
         self.plot_stab(self.plot)
 
-    def toggle_hide_poles(self, x):
+    def toggle_hide_poles(self, x: int):
         """
         Toggles the visibility of unstable poles in the plot.
 
@@ -551,19 +427,15 @@ class SelFromPlot:
         x : int
             Flag indicating whether to hide (1) or show (0) unstable poles.
         """
-        if x:
-            self.hide_poles = 1
-        else:
-            self.hide_poles = 0
-
+        self.hide_poles = bool(x)
         self.plot_stab(self.plot)
 
     def sort_selected_poles(self):
         """
         Sorts the selected poles based on their frequencies.
         """
-        _ = np.argsort(self.sel_freq)
-        self.sel_freq = list(np.array(self.sel_freq)[_])
+        sorted_indices = np.argsort(self.sel_freq)
+        self.sel_freq = list(np.array(self.sel_freq)[sorted_indices])
 
     def show_help(self):
         """
@@ -591,7 +463,7 @@ class SelFromPlot:
         files = glob.glob(directory + "/*.png")
         i = 1
         while True:
-            f = os.path.join(directory, filename + f"{i:0>3}.png")
+            f = os.path.join(directory, f"{filename}{i:03}.png")
             if f not in files:
                 break
             i += 1
