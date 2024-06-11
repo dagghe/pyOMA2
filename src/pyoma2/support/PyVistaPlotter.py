@@ -32,7 +32,9 @@ class PvGeoPlotter:
 
     def plot_geo(
         self,
+        scaleF=1,
         pl=None,
+        col_sens="red",
         plot_points=True,
         points_sett="default",
         plot_lines=True,
@@ -66,8 +68,10 @@ class PvGeoPlotter:
         lines = Geo.sens_lines
         surfs = Geo.sens_surf
         # geometry in pyvista format
-        lines = np.array([np.hstack([2, line]) for line in lines])
-        surfs = np.array([np.hstack([3, surf]) for surf in surfs])
+        if lines is not None:
+            lines = np.array([np.hstack([2, line]) for line in lines])
+        if surfs is not None:
+            surfs = np.array([np.hstack([3, surf]) for surf in surfs])
 
         # PLOTTING
         if plot_points:
@@ -83,13 +87,51 @@ class PvGeoPlotter:
         pl.add_axes(line_width=5, labels_off=False)
         pl.show()
 
-        # # TODO
-        # # add sensor points + arrows for direction
-        # sens_names = Geo.sens_names
-        # ch_names = Geo.sens_map.to_numpy()
-        # ch_names_1 = np.array(
-        #     [name if name in sens_names else np.nan for name in ch_names.flatten()]
-        #     ).reshape(ch_names.shape)
+        # add sensor points + arrows for direction
+        sens_names = Geo.sens_names
+        ch_names = Geo.sens_map.to_numpy()
+        ch_names = np.array(
+            [name if name in sens_names else "nan" for name in ch_names.flatten()]
+        ).reshape(ch_names.shape)
+
+        ch_names_fl = ch_names.flatten()[ch_names.flatten() != "nan"]
+        ch_names_fl = [str(ele) for ele in ch_names_fl]
+        # Plot points where ch_names_1 is not np.nan
+        valid_indices = ch_names != "nan"  # FIXME
+        valid_points = points[np.any(valid_indices, axis=1)]
+
+        pl.add_points(
+            valid_points,
+            render_points_as_spheres=True,
+            color=col_sens,
+            point_size=10,
+        )
+
+        points_new = []
+        directions = []
+        for row1, row2 in zip(ch_names, points):
+            for j, elem in enumerate(row1):
+                if elem != "nan":
+                    vector = [0, 0, 0]
+                    vector[j] = 1
+                    directions.append(vector)
+                    points_new.append(row2)
+
+        points_new = np.array(points_new)
+        directions = np.array(directions)
+        # Add arrow to plotter
+        pl.add_arrows(points_new, directions, mag=scaleF, color=col_sens)
+        pl.add_point_labels(
+            points_new + directions * scaleF,
+            ch_names_fl,
+            font_size=20,
+            always_visible=True,
+            shape_color="white",
+        )
+
+        # Add axes
+        pl.add_axes(line_width=5, labels_off=False)
+        pl.show()
 
         return pl
 
@@ -130,8 +172,10 @@ class PvGeoPlotter:
         lines = Geo.sens_lines
         surfs = Geo.sens_surf
         # geometry in pyvista format
-        lines = np.array([np.hstack([2, line]) for line in lines])
-        surfs = np.array([np.hstack([3, surf]) for surf in surfs])
+        if lines is not None:
+            lines = np.array([np.hstack([2, line]) for line in lines])
+        if surfs is not None:
+            surfs = np.array([np.hstack([3, surf]) for surf in surfs])
 
         # Mode shape
         if Res is not None:
@@ -168,7 +212,7 @@ class PvGeoPlotter:
             pl.add_mesh(face_mesh, scalars=df_phi_map.values, **def_sett)
 
         pl.add_text(
-            rf"Mode nr. {mode_nr-1}, fn = {Res.Fn[mode_nr-1]:.3f}Hz",
+            rf"Mode nr. {mode_nr}, fn = {Res.Fn[mode_nr-1]:.3f}Hz",
             position="upper_edge",
             color="black",
             # font_size=26,
@@ -203,8 +247,10 @@ class PvGeoPlotter:
         lines = Geo.sens_lines
         surfs = Geo.sens_surf
         # geometry in pyvista format
-        lines = np.array([np.hstack([2, line]) for line in lines])
-        surfs = np.array([np.hstack([3, surf]) for surf in surfs])
+        if lines is not None:
+            lines = np.array([np.hstack([2, line]) for line in lines])
+        if surfs is not None:
+            surfs = np.array([np.hstack([3, surf]) for surf in surfs])
 
         # Mode shape
         phi = Res.Phi[:, int(mode_nr - 1)].real * scaleF
@@ -232,7 +278,7 @@ class PvGeoPlotter:
         )
 
         pl.add_text(
-            rf"Mode nr. {mode_nr-1}, fn = {Res.Fn[mode_nr-1]:.3f}Hz",
+            rf"Mode nr. {mode_nr}, fn = {Res.Fn[mode_nr-1]:.3f}Hz",
             position="upper_edge",
             color="black",
             # font_size=26,

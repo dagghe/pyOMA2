@@ -15,7 +15,7 @@ import typing
 
 import numpy as np
 from pyoma2.functions import plot_funct
-from pyoma2.setup import BaseSetup
+from pyoma2.setup.Base_Setup import BaseSetup
 from pyoma2.support.geometry import Geometry1, Geometry2
 
 if typing.TYPE_CHECKING:
