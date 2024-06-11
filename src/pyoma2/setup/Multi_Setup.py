@@ -29,8 +29,8 @@ from pyoma2.functions.plot_funct import (
     plt_ch_info,
     plt_data,
 )
-from pyoma2.setup.BaseSetup import BaseSetup
-from pyoma2.setup.SingleSetup import SingleSetup
+from pyoma2.setup.Base_Setup import BaseSetup
+from pyoma2.setup.Single_Setup import SingleSetup
 from pyoma2.support.geometry import Geometry1, Geometry2
 from pyoma2.support.MplPlotter import MplGeoPlotter
 from pyoma2.support.PyVistaPlotter import PvGeoPlotter

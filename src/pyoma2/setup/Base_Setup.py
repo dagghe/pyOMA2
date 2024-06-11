@@ -489,11 +489,12 @@ class BaseSetup:
     def plot_geo2(
         self,
         scaleF: int = 1,
+        col_sens: str = "red",
         plot_points: bool = True,
-        points_sett: dict = "default",
         plot_lines: bool = True,
-        lines_sett: dict = "default",
         plot_surf: bool = True,
+        points_sett: dict = "default",
+        lines_sett: dict = "default",
         surf_sett: dict = "default",
     ):
         if self.Geo2 is None:
@@ -502,8 +503,15 @@ class BaseSetup:
         Plotter = PvGeoPlotter(self.Geo2)
 
         pl = Plotter.plot_geo(
-            plot_points,
-            points_sett,
+            scaleF=scaleF,
+            pl=None,
+            col_sens=col_sens,
+            plot_points=plot_points,
+            plot_lines=plot_lines,
+            plot_surf=plot_surf,
+            points_sett=points_sett,
+            lines_sett=lines_sett,
+            surf_sett=surf_sett,
         )
         return pl
 
