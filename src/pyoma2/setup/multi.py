@@ -16,7 +16,9 @@ import typing
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from pyoma2.functions.Gen_funct import (
+
+from pyoma2.algorithms.data.result import MsPoserResult
+from pyoma2.functions.gen import (
     find_map,
     flatten_sns_names,
     import_excel_GEO1,
@@ -24,17 +26,16 @@ from pyoma2.functions.Gen_funct import (
     merge_mode_shapes,
     pre_MultiSetup,
 )
-from pyoma2.functions.plot_funct import (
+from pyoma2.functions.plot import (
     STFT,
     plt_ch_info,
     plt_data,
 )
-from pyoma2.setup.Base_Setup import BaseSetup
-from pyoma2.setup.Single_Setup import SingleSetup
+from pyoma2.setup.base import BaseSetup
+from pyoma2.setup.single import SingleSetup
 from pyoma2.support.geometry import Geometry1, Geometry2
-from pyoma2.support.MplPlotter import MplGeoPlotter
-from pyoma2.support.PyVistaPlotter import PvGeoPlotter
-from pyoma2.support.result import MsPoserResult
+from pyoma2.support.mpl_plotter import MplGeoPlotter
+from pyoma2.support.pyvista_plotter import PvGeoPlotter
 
 if typing.TYPE_CHECKING:
     from pyoma2.algorithms import BaseAlgorithm
@@ -70,24 +71,24 @@ class MultiSetup_PoSER:
     merge_results()
         Merges the results from individual setups into a combined result for holistic analysis.
     plot_mode_g1(mode_number: int, scale_factor: int, view_type: str)
-        Plots mode shapes for a specified mode number using the first type of geometric setup (Geo1).
+        Plots mode shapes for a specified mode number using the first type of geometric setup (geo1).
     plot_mode_g2(mode_number: int, scale_factor: int, view_type: str)
-        Plots mode shapes for a specified mode number using the second type of geometric setup (Geo2).
+        Plots mode shapes for a specified mode number using the second type of geometric setup (geo2).
     anim_mode_g2(mode_number: int, scale_factor: int, view_type: str, save_as_gif: bool)
         Creates an animation of the mode shapes for a specified mode number using the second type
-        of geometric setup (Geo2). Option to save the animation as a GIF file.
+        of geometric setup (geo2). Option to save the animation as a GIF file.
     def_geo1(...)
-        Defines the first type of geometric setup (Geo1) for the instance, based on sensor placements
+        Defines the first type of geometric setup (geo1) for the instance, based on sensor placements
         and structural characteristics.
     def_geo2(...)
-        Defines the second type of geometric setup (Geo2) for the instance, typically involving more
+        Defines the second type of geometric setup (geo2) for the instance, typically involving more
         complex geometries or additional data.
 
     plot_geo1(...)
-        Plots the geometric configuration of the structure based on the Geo1 setup, including sensor
+        Plots the geometric configuration of the structure based on the geo1 setup, including sensor
         placements and structural details.
     plot_geo2(...)
-        Plots the geometric configuration of the structure based on the Geo2 setup, highlighting
+        Plots the geometric configuration of the structure based on the geo2 setup, highlighting
         more intricate details or alternative layouts.
 
     Warning
@@ -98,8 +99,8 @@ class MultiSetup_PoSER:
 
     __result: typing.Optional[typing.Dict[str, MsPoserResult]] = None
     __alg_ref: typing.Optional[typing.Dict[type[BaseAlgorithm], str]] = None
-    Geo1: typing.Optional[Geometry1] = None
-    Geo2: typing.Optional[Geometry2] = None
+    geo1: typing.Optional[Geometry1] = None
+    geo2: typing.Optional[Geometry2] = None
 
     def __init__(
         self,
@@ -304,7 +305,7 @@ class MultiSetup_PoSER:
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
         """
-        Defines the first geometry setup (Geo1) for the instance.
+        Defines the first geometry setup (geo1) for the instance.
 
         This method sets up the geometry involving sensors' names, coordinates, directions,
         and optional elements like sensor lines, background nodes, lines, and surfaces.
@@ -330,7 +331,7 @@ class MultiSetup_PoSER:
         # assert dimensions
 
         # ---------------------------------------------------------------------
-        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        ref_ind = getattr(self, "ref_ind", None)
         sens_names = flatten_sns_names(sens_names, ref_ind=ref_ind)
         # ---------------------------------------------------------------------
         # Find the indices that rearrange sens_coord to sens_names
@@ -339,7 +340,7 @@ class MultiSetup_PoSER:
         sens_coord = sens_coord.reindex(labels=newIDX)
         sens_dir = sens_dir[newIDX, :]
 
-        self.Geo1 = Geometry1(
+        self.geo1 = Geometry1(
             sens_names=sens_names,
             sens_coord=sens_coord,
             sens_dir=sens_dir,
@@ -352,11 +353,11 @@ class MultiSetup_PoSER:
     # metodo per definire geometria 1 da file
     def def_geo1_byFILE(self, path: str):
         """ """
-        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        ref_ind = getattr(self, "ref_ind", None)
 
         data = import_excel_GEO1(path, ref_ind=ref_ind)
 
-        self.Geo1 = Geometry1(
+        self.geo1 = Geometry1(
             sens_names=data[0],
             sens_coord=data[1],
             sens_dir=data[2].values,
@@ -385,7 +386,7 @@ class MultiSetup_PoSER:
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
         """
-        Defines the second geometry setup (Geo2) for the instance, incorporating sensors' names,
+        Defines the second geometry setup (geo2) for the instance, incorporating sensors' names,
         points' coordinates, mapping, sign data, and optional elements like order reduction,
         sensor lines, background nodes, lines, and surfaces.
 
@@ -420,7 +421,7 @@ class MultiSetup_PoSER:
         """
         # ---------------------------------------------------------------------
 
-        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        ref_ind = getattr(self, "ref_ind", None)
         sens_names = flatten_sns_names(sens_names, ref_ind=ref_ind)
 
         # ---------------------------------------------------------------------
@@ -434,7 +435,7 @@ class MultiSetup_PoSER:
         if sens_surf is not None:
             sens_surf = np.subtract(sens_surf, 1)
 
-        self.Geo2 = Geometry2(
+        self.geo2 = Geometry2(
             sens_names=sens_names,
             pts_coord=pts_coord,
             sens_map=sens_map,
@@ -450,11 +451,11 @@ class MultiSetup_PoSER:
     # metodo per definire geometria 2 da file
     def def_geo2_byFILE(self, path: str):
         """ """
-        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        ref_ind = getattr(self, "ref_ind", None)
 
         data = import_excel_GEO2(path, ref_ind=ref_ind)
 
-        self.Geo2 = Geometry2(
+        self.geo2 = Geometry2(
             sens_names=data[0],
             pts_coord=data[1],
             sens_map=data[2],
@@ -479,10 +480,10 @@ class MultiSetup_PoSER:
         col_BG_surf: str = "gray",
         col_txt: str = "red",
     ):
-        if self.Geo1 is None:
-            raise ValueError("Geo1 is not defined. Call def_geo1 first.")
+        if self.geo1 is None:
+            raise ValueError("geo1 is not defined. Call def_geo1 first.")
 
-        Plotter = MplGeoPlotter(self.Geo1)
+        Plotter = MplGeoPlotter(self.geo1)
 
         fig, ax = Plotter.plot_geo1(
             scaleF,
@@ -509,10 +510,10 @@ class MultiSetup_PoSER:
         col_BG_surf: str = "gray",
         col_txt: str = "red",
     ):
-        if self.Geo2 is None:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+        if self.geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
-        Plotter = MplGeoPlotter(self.Geo2)
+        Plotter = MplGeoPlotter(self.geo2)
 
         fig, ax = Plotter.plot_geo2(
             scaleF,
@@ -538,10 +539,10 @@ class MultiSetup_PoSER:
         plot_surf: bool = True,
         surf_sett: dict = "default",
     ):
-        if self.Geo2 is None:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+        if self.geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
-        Plotter = PvGeoPlotter(self.Geo2)
+        Plotter = PvGeoPlotter(self.geo2)
 
         pl = Plotter.plot_geo(
             plot_points,
@@ -563,13 +564,12 @@ class MultiSetup_PoSER:
         col_BG_surf: str = "gray",
     ) -> typing.Any:
         """ """
-        if self.Geo1 is None:
-            raise ValueError("Geo1 is not defined. Call def_geo1 first.")
+        if self.geo1 is None:
+            raise ValueError("geo1 is not defined. Call def_geo1 first.")
 
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
-
-        Plotter = MplGeoPlotter(self.Geo1, Algo_Res)
+        Plotter = MplGeoPlotter(self.geo1, Algo_Res)
 
         fig, ax = Plotter.plot_mode_g1(
             mode_nr,
@@ -595,13 +595,13 @@ class MultiSetup_PoSER:
         **kwargs,
     ) -> typing.Any:
         """ """
-        if self.Geo2 is None:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+        if self.geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Plotter = MplGeoPlotter(self.Geo2, Algo_Res)
+        Plotter = MplGeoPlotter(self.geo2, Algo_Res)
 
         fig, ax = Plotter.plot_mode_g2(mode_nr, scaleF, view, color)
         return fig, ax
@@ -622,13 +622,13 @@ class MultiSetup_PoSER:
         **kwargs,
     ) -> typing.Any:
         """ """
-        if self.Geo2 is None:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+        if self.geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Plotter = PvGeoPlotter(self.Geo2, Algo_Res)
+        Plotter = PvGeoPlotter(self.geo2, Algo_Res)
 
         pl = Plotter.plot_mode(
             mode_nr,
@@ -659,13 +659,13 @@ class MultiSetup_PoSER:
         **kwargs,
     ) -> typing.Any:
         """ """
-        if self.Geo2 is None:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+        if self.geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
         if Algo_Res.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Plotter = PvGeoPlotter(self.Geo2, Algo_Res)
+        Plotter = PvGeoPlotter(self.geo2, Algo_Res)
 
         pl = Plotter.animate_mode(
             mode_nr, scaleF, None, plot_points, plot_lines, plot_surf, def_sett, saveGIF
@@ -740,9 +740,9 @@ class MultiSetup_PreGER(BaseSetup):
     filter_data(...)
         Applies a Butterworth filter to the input data based on specified parameters.
     def_geo1(...)
-        Defines the first type of geometric setup (Geo1) for the instance.
+        Defines the first type of geometric setup (geo1) for the instance.
     def_geo2(...)
-        Defines the second type of geometric setup (Geo2) for the instance.
+        Defines the second type of geometric setup (geo2) for the instance.
 
     Warning
     -------

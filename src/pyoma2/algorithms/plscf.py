@@ -11,10 +11,10 @@ from __future__ import annotations
 import logging
 import typing
 
-from pyoma2.functions import FDD_funct, Gen_funct, plot_funct, pLSCF_funct
-from pyoma2.support.result import pLSCFResult
-from pyoma2.support.run_params import pLSCFRunParams
-from pyoma2.support.Sel_from_plot import SelFromPlot
+from pyoma2.algorithms.data.result import pLSCFResult
+from pyoma2.algorithms.data.run_params import pLSCFRunParams
+from pyoma2.functions import fdd, gen, plot, plscf
+from pyoma2.support.sel_from_plot import SelFromPlot
 
 from .base import BaseAlgorithm
 
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # SINGLE SETUP
 # =============================================================================
-class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
+class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
     """
     Implementation of the poly-reference Least Square Complex Frequency (pLSCF) algorithm for modal analysis.
 
@@ -77,13 +77,13 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         mpc_lim = self.run_params.mpc_lim
         mpd_lim = self.run_params.mpd_lim
 
-        freq, Sy = FDD_funct.SD_Est(Y, Y, self.dt, nxseg, method=method, pov=pov)
+        freq, Sy = fdd.SD_Est(Y, Y, self.dt, nxseg, method=method, pov=pov)
 
-        Ad, Bn = pLSCF_funct.pLSCF(Sy, self.dt, ordmax, sgn_basf=sgn_basf)
-        Fn_pol, Xi_pol, Ms_pol = pLSCF_funct.pLSCF_Poles(
+        Ad, Bn = plscf.pLSCF(Sy, self.dt, ordmax, sgn_basf=sgn_basf)
+        Fn_pol, Xi_pol, Ms_pol = plscf.pLSCF_Poles(
             Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
         )
-        Lab = Gen_funct.lab_stab(
+        Lab = gen.lab_stab(
             Fn_pol,
             Xi_pol,
             Ms_pol,
@@ -151,7 +151,7 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         Lab = self.result.Lab
 
         # Extract modal results
-        Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = pLSCF_funct.pLSCF_MPE(
+        Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = plscf.pLSCF_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, rtol=rtol
         )
 
@@ -200,7 +200,7 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         order = SFP.result[1]
 
         # e poi estrarre risultati
-        Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = pLSCF_funct.pLSCF_MPE(
+        Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = plscf.pLSCF_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, rtol=rtol
         )
 
@@ -231,7 +231,7 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         Any
             A tuple containing the matplotlib figure and axes objects for the stability diagram.
         """
-        fig, ax = plot_funct.Stab_plot(
+        fig, ax = plot.Stab_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,
             step=self.run_params.step,
@@ -267,7 +267,7 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
         if not self.result:
             raise ValueError("Run algorithm first")
 
-        fig, ax = plot_funct.Cluster_plot(
+        fig, ax = plot.Cluster_plot(
             Fn=self.result.Fn_poles,
             Sm=self.result.xi_poles,
             Lab=self.result.Lab,
@@ -281,16 +281,16 @@ class pLSCF_algo(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[floa
 # =============================================================================
 # MULTI SETUP
 # =============================================================================
-class pLSCF_algo_MS(pLSCF_algo[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
+class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
     """
-    A multi-setup extension of the pLSCF_algo class for the poly-reference Least Square Complex Frequency
+    A multi-setup extension of the pLSCF class for the poly-reference Least Square Complex Frequency
     (pLSCF) algorithm.
 
 
     Parameters
     ----------
-    pLSCF_algo : type
-        Inherits from the pLSCF_algo class with specified type parameters for pLSCFRunParams, pLSCFResult, and
+    pLSCF : type
+        Inherits from the pLSCF class with specified type parameters for pLSCFRunParams, pLSCFResult, and
         Iterable[dict].
 
     Attributes
@@ -334,12 +334,12 @@ class pLSCF_algo_MS(pLSCF_algo[pLSCFRunParams, pLSCFResult, typing.Iterable[dict
         mpd_lim = self.run_params.mpd_lim
         # self.run_params.df = 1 / dt / nxseg
 
-        freq, Sy = FDD_funct.SD_PreGER(Y, self.fs, nxseg=nxseg, method=method, pov=pov)
-        Ad, Bn = pLSCF_funct.pLSCF(Sy, self.dt, ordmax, sgn_basf=sgn_basf)
-        Fn_pol, Xi_pol, Ms_pol = pLSCF_funct.pLSCF_Poles(
+        freq, Sy = fdd.SD_PreGER(Y, self.fs, nxseg=nxseg, method=method, pov=pov)
+        Ad, Bn = plscf.pLSCF(Sy, self.dt, ordmax, sgn_basf=sgn_basf)
+        Fn_pol, Xi_pol, Ms_pol = plscf.pLSCF_Poles(
             Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
         )
-        Lab = Gen_funct.lab_stab(
+        Lab = gen.lab_stab(
             Fn_pol,
             Xi_pol,
             Ms_pol,

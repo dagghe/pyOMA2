@@ -7,12 +7,12 @@ Created on Sun Jun  9 12:48:34 2024
 
 import typing
 
-# import numpy.typing as npt
-# import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from pyoma2.functions.Gen_funct import dfphi_map_func
-from pyoma2.functions.plot_funct import (
+
+from pyoma2.algorithms.data.result import BaseResult, MsPoserResult
+from pyoma2.functions.gen import dfphi_map_func
+from pyoma2.functions.plot import (
     plt_lines,
     plt_nodes,
     plt_quiver,
@@ -21,7 +21,6 @@ from pyoma2.functions.plot_funct import (
     set_view,
 )
 from pyoma2.support.geometry import Geometry1, Geometry2
-from pyoma2.support.result import BaseResult, MsPoserResult
 
 
 class MplGeoPlotter:
@@ -29,7 +28,7 @@ class MplGeoPlotter:
 
     def __init__(
         self,
-        Geo: Geometry1 | Geometry2,
+        Geo: typing.Union[Geometry1, Geometry2],
         Res: typing.Union[BaseResult, MsPoserResult] = None,
     ) -> typing.Any:
         self.Geo = Geo
@@ -82,7 +81,7 @@ class MplGeoPlotter:
 
         """
         if type(self.Geo) != Geometry1:
-            raise ValueError("Geo1 is not defined. Call def_geo1 first.")
+            raise ValueError("geo1 is not defined. Call def_geo1 first.")
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
@@ -178,9 +177,9 @@ class MplGeoPlotter:
         typing.Any
             A tuple containing the matplotlib figure and axes of the mode shape plot.
         """
-        if type(self.Geo) != Geometry1:
+        if not isinstance(self.Geo, Geometry1):
             raise ValueError(
-                f"Geo1 is not defined. cannot plot geometry on {self}. Call def_geo1 first."
+                f"geo1 is not defined. cannot plot geometry on {self}. Call def_geo1 first."
             )
 
         if self.Res.Fn is None:
@@ -264,7 +263,7 @@ class MplGeoPlotter:
         """
         Plots the geometry (type 2) of tested structure.
 
-        This method creates a 3D or 2D plot of a specific geometric configuration (Geo2) with
+        This method creates a 3D or 2D plot of a specific geometric configuration (geo2) with
         customizable features such as scaling factor, view type, and visibility options for
         fill, grid, and axes. It involves plotting sensor points, directions, and additional
         geometric elements if available.
@@ -286,7 +285,7 @@ class MplGeoPlotter:
         Raises
         ------
         ValueError
-            If Geo2 is not defined in the setup.
+            If geo2 is not defined in the setup.
 
         Returns
         -------
@@ -296,7 +295,7 @@ class MplGeoPlotter:
 
         """
         if type(self.Geo) != Geometry2:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
@@ -417,7 +416,7 @@ class MplGeoPlotter:
 
         Parameters
         ----------
-        Geo2 : Geometry2
+        geo2 : Geometry2
             Geometry object containing nodes, sensor information, and additional geometrical data.
         mode_numb : int
             Mode number to visualize.
@@ -440,9 +439,9 @@ class MplGeoPlotter:
             A tuple containing the matplotlib figure and axes of the mode shape plot.
         """
         if type(self.Geo) != Geometry2:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
-        Geo2 = self.Geo
+        geo2 = self.Geo
 
         if self.Res.Fn is None:
             raise ValueError("Run algorithm first")
@@ -452,10 +451,10 @@ class MplGeoPlotter:
         phi = self.Res.Phi[:, int(mode_numb - 1)].real * scaleF
 
         # APPLY POINTS TO SENSOR MAPPING
-        df_phi_map = dfphi_map_func(phi, Geo2.sens_names, Geo2.sens_map, cstrn=Geo2.cstrn)
+        df_phi_map = dfphi_map_func(phi, geo2.sens_names, geo2.sens_map, cstrn=geo2.cstrn)
         # add together coordinates and mode shape displacement
         newpoints = (
-            Geo2.pts_coord.to_numpy() + df_phi_map.to_numpy() * Geo2.sens_sign.to_numpy()
+            geo2.pts_coord.to_numpy() + df_phi_map.to_numpy() * geo2.sens_sign.to_numpy()
         )
 
         # create fig and ax
@@ -465,44 +464,44 @@ class MplGeoPlotter:
         ax.set_title(f"Mode nr. {mode_numb}, $f_n$={fn:.3f}Hz")
 
         # Check that BG nodes are defined
-        if Geo2.bg_nodes is not None:
+        if geo2.bg_nodes is not None:
             # if True plot
-            plt_nodes(ax, Geo2.bg_nodes, color="gray", alpha=0.5)
+            plt_nodes(ax, geo2.bg_nodes, color="gray", alpha=0.5)
             # Check that BG lines are defined
-            if Geo2.bg_lines is not None:
+            if geo2.bg_lines is not None:
                 # if True plot
-                plt_lines(ax, Geo2.bg_nodes, Geo2.bg_lines, color="gray", alpha=0.5)
-            if Geo2.bg_surf is not None:
+                plt_lines(ax, geo2.bg_nodes, geo2.bg_lines, color="gray", alpha=0.5)
+            if geo2.bg_surf is not None:
                 # if True plot
-                plt_surf(ax, Geo2.bg_nodes, Geo2.bg_surf, alpha=0.1)
+                plt_surf(ax, geo2.bg_nodes, geo2.bg_surf, alpha=0.1)
         # PLOT MODE SHAPE
         if color == "cmap":
-            oldpoints = Geo2.pts_coord.to_numpy()[:, :]
+            oldpoints = geo2.pts_coord.to_numpy()[:, :]
             plt_nodes(ax, newpoints, color="cmap", initial_coord=oldpoints)
 
         else:
             plt_nodes(ax, newpoints, color=color)
         # check for sens_lines
-        if Geo2.sens_lines is not None:
+        if geo2.sens_lines is not None:
             if color == "cmap":
                 plt_lines(
-                    ax, newpoints, Geo2.sens_lines, color="cmap", initial_coord=oldpoints
+                    ax, newpoints, geo2.sens_lines, color="cmap", initial_coord=oldpoints
                 )
             else:
-                plt_lines(ax, newpoints, Geo2.sens_lines, color=color)
+                plt_lines(ax, newpoints, geo2.sens_lines, color=color)
 
-        if Geo2.sens_surf is not None:
+        if geo2.sens_surf is not None:
             if color == "cmap":
                 plt_surf(
                     ax,
                     newpoints,
-                    Geo2.sens_surf,
+                    geo2.sens_surf,
                     color="cmap",
                     initial_coord=oldpoints,
                     alpha=0.4,
                 )
             else:
-                plt_surf(ax, newpoints, Geo2.sens_surf, color=color, alpha=0.4)
+                plt_surf(ax, newpoints, geo2.sens_surf, color=color, alpha=0.4)
 
         # Set ax options
         set_ax_options(
@@ -527,7 +526,7 @@ class MplGeoPlotter:
 
 # # r"C:\Users\dpa\
 # # r"X:\
-# _geo1=r"C:\Users\dpa\OneDrive - Norsk Treteknisk Institutt\Dokumenter\Dev\pyomaTEST\HTC_geom\Geo1.xlsx"
+# _geo1=r"C:\Users\dpa\OneDrive - Norsk Treteknisk Institutt\Dokumenter\Dev\pyomaTEST\HTC_geom\geo1.xlsx"
 # _geo2=r"C:\Users\dpa\OneDrive - Norsk Treteknisk Institutt\Dokumenter\Dev\pyomaTEST\HTC_geom\Geo2_noBG.xlsx"
 # _file=r"C:\Users\dpa\OneDrive - Norsk Treteknisk Institutt\Dokumenter\Dev\pyomaTEST\HTC_geom\PHI.npy"
 # ref_ind = [[4, 5], [6, 7], [6, 7], [6, 7]]

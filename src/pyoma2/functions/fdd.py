@@ -13,7 +13,7 @@ from scipy import signal
 from scipy.optimize import curve_fit
 from tqdm import tqdm, trange
 
-from . import Gen_funct as GF
+from . import gen as GF
 
 logger = logging.getLogger(__name__)
 

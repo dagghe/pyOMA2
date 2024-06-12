@@ -3,8 +3,8 @@ import typing
 import numpy as np
 import pytest
 
-from src.pyoma2.algorithm import BaseAlgorithm
-from src.pyoma2.OMA import MultiSetup_PoSER, MultiSetup_PreGER, SingleSetup
+from src.pyoma2.algorithms import BaseAlgorithm
+from src.pyoma2.setup import MultiSetup_PoSER, MultiSetup_PreGER, SingleSetup
 
 from ..factory import FakeAlgorithm, FakeAlgorithm2
 

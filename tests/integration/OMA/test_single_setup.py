@@ -6,8 +6,8 @@ import pandas as pd
 import pytest
 from scipy.signal import decimate, detrend
 
-from src.pyoma2.algorithm import FDD_algo, FSDD_algo, SSIcov_algo
-from src.pyoma2.OMA import BaseSetup, SingleSetup
+from src.pyoma2.algorithms import FDD, FSDD, SSIcov
+from src.pyoma2.setup import BaseSetup, SingleSetup
 from tests.factory import FakeAlgorithm, FakeAlgorithm2
 
 
@@ -106,12 +106,12 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
     _, Names, Bg_nodes, Bg_lines, sens_coord, sens_dir, *_ = single_setup_data_fixture
 
     # Test that the geometry is not defined
-    assert ss.Geo1 is None
+    assert ss.geo1 is None
 
     # plot without defining the geometry
     with pytest.raises(ValueError) as e:
         ss.plot_geo1()
-    assert "Geo1 is not defined. cannot plot geometry" in str(e.value)
+    assert "geo1 is not defined. Call def_geo1 first." in str(e.value)
 
     assert np.array_equal(
         Bg_lines,
@@ -139,15 +139,15 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
     )
 
     # Test the initialization of the Geometry
-    assert ss.Geo1 is not None
-    assert ss.Geo1.sens_names == Names
+    assert ss.geo1 is not None
+    assert ss.geo1.sens_names == Names
     # bg_lines are different because the first column is 0-indexed
     assert np.array_equal(
-        ss.Geo1.bg_lines,
+        ss.geo1.bg_lines,
         np.array([[0, 4], [1, 5], [2, 6], [3, 7], [4, 5], [5, 6], [6, 7], [7, 4]]),
     )
     # sens_cord was reindexed
-    assert ss.Geo1.sens_coord.equals(
+    assert ss.geo1.sens_coord.equals(
         pd.DataFrame(
             {
                 "sName": ["ch1", "ch2", "ch3", "ch4", "ch5", "ch6"],
@@ -159,7 +159,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
         )
     )
     assert np.array_equal(
-        ss.Geo1.sens_dir,
+        ss.geo1.sens_dir,
         np.array(
             [
                 [-1.0, 0.0, 0.0],
@@ -171,8 +171,8 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
             ]
         ),
     )
-    assert np.array_equal(ss.Geo1.bg_nodes, Bg_nodes)
-    assert ss.Geo1.bg_surf is None
+    assert np.array_equal(ss.geo1.bg_nodes, Bg_nodes)
+    assert ss.geo1.bg_surf is None
 
     # PLOT THE GEOMETRY
     # Call the plot_geo1 method and check that it doesn't raise an exception
@@ -184,7 +184,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
     # PLOT GEOMETRY WITH bg_surf
     # Define the bg_surf
     bg_surf = np.array([[0, 1, 2], [2, 3, 0]])
-    ss.Geo1.bg_surf = bg_surf
+    ss.geo1.bg_surf = bg_surf
 
     try:
         fig, ax = ss.plot_geo1()
@@ -194,7 +194,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
     # PLOT GEOMETRY WITH sens_lines
     # Define the sens_lines
     sens_lines = np.array([[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]])
-    ss.Geo1.sens_lines = sens_lines
+    ss.geo1.sens_lines = sens_lines
 
     try:
         fig, ax = ss.plot_geo1()
@@ -206,17 +206,16 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
         f_al = FakeAlgorithm(name="fake1", run_params=FakeAlgorithm.RunParamCls())
         ss.add_algorithms(f_al)
         ss.run_all()
-        fig, ax = ss["fake1"].plot_mode_g1(Geo1=ss.Geo1, mode_numb=2, view="3D", scaleF=2)
+        fig, ax = ss["fake1"].plot_mode_g1(geo1=ss.geo1, mode_numb=2, view="3D", scaleF=2)
     except Exception as e:
         assert False, f"plot_mode_geo1 raised an exception {e}"
 
 
 # @pytest.mark.xfail(reason="Issue #8")
 @pytest.mark.parametrize(
-    "input_order_red, input_sens_map, input_sens_sign",
+    "input_sens_map, input_sens_sign",
     (
         (
-            None,
             pd.DataFrame(
                 {
                     "ptName": [1, 2, 3, 4, 5, 6],
@@ -234,13 +233,12 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
                 }
             ),
         ),
-        ("xy", None, None),  # use default sens map and sens sign
+        (None, None),  # use default sens map and sens sign
         pytest.param(
-            "xz", None, None, marks=pytest.mark.xfail
+            None, None, marks=pytest.mark.xfail
         ),  # use default sens map and sens sign
-        ("yz", None, None),  # use default sens map and sens sign
+        (None, None),  # use default sens map and sens sign
         (
-            "x",
             pd.DataFrame(
                 {
                     "ptName": [1, 2, 3, 4, 5, 6],
@@ -255,7 +253,6 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
             ),
         ),
         pytest.param(
-            "y",
             pd.DataFrame(
                 {
                     "ptName": [1, 2, 3, 4, 5, 6],
@@ -271,7 +268,6 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
             marks=pytest.mark.xfail,
         ),
         (
-            "z",
             pd.DataFrame(
                 {
                     "ptName": [1, 2, 3, 4, 5, 6],
@@ -290,7 +286,6 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
 def test_geo2(
     single_setup_data_fixture,
     ss: SingleSetup,
-    input_order_red: typing.Optional[str],
     input_sens_map: typing.Optional[pd.DataFrame],
     input_sens_sign: typing.Optional[pd.DataFrame],
 ) -> None:
@@ -307,19 +302,18 @@ def test_geo2(
         sens_sign = input_sens_sign
 
     # Test the initialization of the SingleSetup
-    assert ss.Geo2 is None
+    assert ss.geo2 is None
 
     # plot without defining the geometry
     with pytest.raises(ValueError) as e:
         ss.plot_geo2()
-    assert "Geo2 is not defined. Cannot plot geometry" in str(e.value)
+    assert "geo2 is not defined. Call def_geo2 first." in str(e.value)
 
     # DEFINE THE GEOMETRY
     ss.def_geo2(
         sens_names=Names,
         pts_coord=pts_coord,
         sens_map=sens_map,
-        order_red=input_order_red,
         sens_lines=sens_lines,
         sens_sign=sens_sign,
         bg_nodes=Bg_nodes,
@@ -327,15 +321,15 @@ def test_geo2(
     )
 
     # Test the initialization of the Geometry
-    assert ss.Geo2 is not None
+    assert ss.geo2 is not None
     assert np.array_equal(
-        ss.Geo2.bg_lines,
+        ss.geo2.bg_lines,
         np.array([[0, 4], [1, 5], [2, 6], [3, 7], [4, 5], [5, 6], [6, 7], [7, 4]]),
     )
     assert np.array_equal(
-        ss.Geo2.sens_lines, np.array([[3, 0], [4, 1], [5, 2], [0, 1], [1, 2], [2, 0]])
+        ss.geo2.sens_lines, np.array([[3, 0], [4, 1], [5, 2], [0, 1], [1, 2], [2, 0]])
     )
-    assert ss.Geo2.pts_coord.equals(pts_coord)
+    assert ss.geo2.pts_coord.equals(pts_coord)
 
     # PLOT THE GEOMETRY
     # Call the plot_geo2 method and check that it doesn't raise an exception
@@ -351,7 +345,7 @@ def test_geo2(
     # PLOT GEOMETRY WITH bg_surf
     # Define the bg_surf
     bg_surf = np.array([[0, 1, 2], [2, 3, 0]])
-    ss.Geo2.bg_surf = bg_surf
+    ss.geo2.bg_surf = bg_surf
 
     try:
         fig, ax = ss.plot_geo2()
@@ -452,7 +446,6 @@ def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
         Names,  # Names of the channels
         pts_coord,  # name and coordinates of the points
         sens_map,  # mapping between points and sensors
-        order_red="xy",  # argument to reduce the number of DOF per points
         sens_sign=sens_sign,  # sign of the sensor (respect to reference axis)
         sens_lines=sens_lines,  # lines connecting points
         bg_nodes=Bg_nodes,  # background nodes
@@ -460,12 +453,12 @@ def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
     )
 
     # Initialise the algorithms
-    fdd = FDD_algo(name="FDD")
-    fsdd = FSDD_algo(name="FSDD", nxseg=2048, method_SD="per", pov=0.5)
-    ssicov = SSIcov_algo(name="SSIcov", br=50, ordmax=80)
+    fdd = FDD(name="FDD")
+    fsdd = FSDD(name="FSDD", nxseg=2048, method_SD="per", pov=0.5)
+    ssicov = SSIcov(name="SSIcov", br=50, ordmax=80)
 
     # Overwrite/update run parameters for an algorithm
-    fdd.run_params = FDD_algo.RunParamCls(nxseg=512, method_SD="cor")
+    fdd.run_params = FDD.RunParamCls(nxseg=512, method_SD="cor")
     # Aggiungere esempio anche col metodo
 
     # Add algorithms to the single setup class
@@ -548,12 +541,12 @@ def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
 
     # PLOTE_MODE_G1
     try:
-        fig, ax = ss["FDD"].plot_mode_g1(Geo1=ss.Geo1, mode_numb=2, view="3D", scaleF=2)
+        fig, ax = ss["FDD"].plot_mode_g1(geo1=ss.geo1, mode_nr=2, view="3D", scaleF=2)
     except Exception as e:
         assert False, f"plot_mode_g1 raised an exception {e} for FDD"
 
     # PLOTE_MODE_G2
     try:
-        fig, ax = ss["FSDD"].plot_mode_g2(Geo2=ss.Geo2, mode_numb=2, view="3D", scaleF=2)
+        fig, ax = ss["FSDD"].plot_mode_g2(geo2=ss.geo2, mode_nr=2, view="3D", scaleF=2)
     except Exception as e:
         assert False, f"plot_mode_g2 raised an exception {e} for FSDD"

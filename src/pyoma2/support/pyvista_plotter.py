@@ -5,18 +5,31 @@ Created on Sat Jun  8 21:25:39 2024
 @author: dagpa
 """
 
-# from __future__ import annotations
-
 import typing
+import warnings
 
 import numpy as np
 
 # import numpy.typing as npt
-import pyvista as pv
-import pyvistaqt as pvqt
-from pyoma2.functions import Gen_funct
+try:
+    import pyvista as pv
+    import pyvistaqt as pvqt
+except ImportError:
+    warnings.warn(
+        "Optional package 'pyvista' is not installed. Some features may not be available.",
+        ImportWarning,
+        stacklevel=2,
+    )
+    warnings.warn(
+        "Install 'pyvista' with 'pip install pyvista' or 'pip install pyoma_2[pyvista]'",
+        ImportWarning,
+        stacklevel=2,
+    )
+    pv = None
+    pvqt = None
+from pyoma2.algorithms.data.result import BaseResult, MsPoserResult
+from pyoma2.functions import gen
 from pyoma2.support.geometry import Geometry2
-from pyoma2.support.result import BaseResult, MsPoserResult
 
 
 class PvGeoPlotter:
@@ -26,9 +39,15 @@ class PvGeoPlotter:
         self,
         Geo: Geometry2,
         Res: typing.Union[BaseResult, MsPoserResult] = None,
-    ) -> typing.Any:
+    ) -> None:
         self.Geo = Geo
         self.Res = Res
+
+        if pv is None or pvqt is None:
+            raise ImportError(
+                "Optional package 'pyvista' is not installed. Some features may not be available."
+                "Install 'pyvista' with 'pip install pyvista' or 'pip install pyoma_2[pyvista]'"
+            )
 
     def plot_geo(
         self,
@@ -184,7 +203,7 @@ class PvGeoPlotter:
             raise ValueError("You must pass the Res class to plot a mode shape!")
 
         # APPLY POINTS TO SENSOR MAPPING
-        df_phi_map = Gen_funct.dfphi_map_func(
+        df_phi_map = gen.dfphi_map_func(
             phi, Geo.sens_names, Geo.sens_map, cstrn=Geo.cstrn
         )
         # calculate deformed shape (NEW POINTS)
@@ -256,7 +275,7 @@ class PvGeoPlotter:
         phi = Res.Phi[:, int(mode_nr - 1)].real * scaleF
 
         # mode shape mapped to points
-        df_phi_map = Gen_funct.dfphi_map_func(
+        df_phi_map = gen.dfphi_map_func(
             phi, Geo.sens_names, Geo.sens_map, cstrn=Geo.cstrn
         )
         # add together coordinates and mode shape displacement
@@ -318,7 +337,7 @@ class PvGeoPlotter:
 # # =============================================================================
 # # TEST
 # # =============================================================================
-# _path=r"X:\OneDrive - Norsk Treteknisk Institutt\Dokumenter\Dev\pyomaTEST\HTC_geom\Geo2.xlsx"
+# _path=r"X:\OneDrive - Norsk Treteknisk Institutt\Dokumenter\Dev\pyomaTEST\HTC_geom\geo2.xlsx"
 # _file=r"X:\OneDrive - Norsk Treteknisk Institutt\Dokumenter\Dev\pyomaTEST\HTC_geom\PHI.npy"
 # ref_ind = [[4, 5], [6, 7], [6, 7], [6, 7]]
 # Phi=np.load(_file)

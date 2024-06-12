@@ -16,7 +16,9 @@ import typing
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from pyoma2.functions.Gen_funct import (
+from scipy.signal import decimate, detrend
+
+from pyoma2.functions.gen import (
     filter_data,
     find_map,
     flatten_sns_names,
@@ -24,9 +26,8 @@ from pyoma2.functions.Gen_funct import (
     import_excel_GEO2,
 )
 from pyoma2.support.geometry import Geometry1, Geometry2
-from pyoma2.support.MplPlotter import MplGeoPlotter
-from pyoma2.support.PyVistaPlotter import PvGeoPlotter
-from scipy.signal import decimate, detrend
+from pyoma2.support.mpl_plotter import MplGeoPlotter
+from pyoma2.support.pyvista_plotter import PvGeoPlotter
 
 if typing.TYPE_CHECKING:
     from pyoma2.algorithms import BaseAlgorithm
@@ -80,8 +81,8 @@ class BaseSetup:
     algorithms: typing.Dict[str, BaseAlgorithm]
     data: typing.Optional[np.ndarray] = None  # TODO use generic typing
     fs: typing.Optional[float] = None  # sampling frequency
-    Geo1: typing.Optional[Geometry1] = None
-    Geo2: typing.Optional[Geometry2] = None
+    geo1: typing.Optional[Geometry1] = None
+    geo2: typing.Optional[Geometry2] = None
 
     # add algorithm (method) to the set.
     def add_algorithms(self, *algorithms: BaseAlgorithm):
@@ -253,7 +254,7 @@ class BaseSetup:
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
     ):
         """
-        Defines the first geometry setup (Geo1) for the instance.
+        Defines the first geometry setup (geo1) for the instance.
 
         This method sets up the geometry involving sensors' names, coordinates, directions,
         and optional elements like sensor lines, background nodes, lines, and surfaces.
@@ -279,7 +280,7 @@ class BaseSetup:
         # assert dimensions
 
         # ---------------------------------------------------------------------
-        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        ref_ind = getattr(self, "ref_ind", None)
         sens_names = flatten_sns_names(sens_names, ref_ind=ref_ind)
         # ---------------------------------------------------------------------
         # Find the indices that rearrange sens_coord to sens_names
@@ -288,7 +289,7 @@ class BaseSetup:
         sens_coord = sens_coord.reindex(labels=newIDX)
         sens_dir = sens_dir[newIDX, :]
 
-        self.Geo1 = Geometry1(
+        self.geo1 = Geometry1(
             sens_names=sens_names,
             sens_coord=sens_coord,
             sens_dir=sens_dir,
@@ -301,11 +302,11 @@ class BaseSetup:
     # metodo per definire geometria 1 da file
     def def_geo1_byFILE(self, path: str):
         """ """
-        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        ref_ind = getattr(self, "ref_ind", None)
 
         data = import_excel_GEO1(path, ref_ind=ref_ind)
 
-        self.Geo1 = Geometry1(
+        self.geo1 = Geometry1(
             sens_names=data[0],
             sens_coord=data[1],
             sens_dir=data[2].values,
@@ -337,7 +338,7 @@ class BaseSetup:
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
     ):
         """
-        Defines the second geometry setup (Geo2) for the instance.
+        Defines the second geometry setup (geo2) for the instance.
 
         This method sets up an alternative geometry configuration, including sensors' names,
         points' coordinates, mapping, sign data, and optional elements like constraints,
@@ -375,7 +376,7 @@ class BaseSetup:
         # Check if sens_names is a DataFrame with more than one row or a list of lists
         # FOR MULTI-SETUP GEOMETRIES
 
-        ref_ind = self.ref_ind if self.ref_ind is not None else None
+        ref_ind = getattr(self, "ref_ind", None)
         sens_names = flatten_sns_names(sens_names, ref_ind=ref_ind)
 
         # ---------------------------------------------------------------------
@@ -394,7 +395,7 @@ class BaseSetup:
         if sens_surf is not None:
             sens_surf = np.subtract(sens_surf, 1)
 
-        self.Geo2 = Geometry2(
+        self.geo2 = Geometry2(
             sens_names=sens_names,
             pts_coord=pts_coord,
             sens_map=sens_map,
@@ -412,7 +413,7 @@ class BaseSetup:
 
         data = import_excel_GEO2(path, ref_ind=ref_ind)
 
-        self.Geo2 = Geometry2(
+        self.geo2 = Geometry2(
             sens_names=data[0],
             pts_coord=data[1],
             sens_map=data[2],
@@ -437,10 +438,10 @@ class BaseSetup:
         col_BG_surf: str = "gray",
         col_txt: str = "red",
     ):
-        if self.Geo1 is None:
-            raise ValueError("Geo1 is not defined. Call def_geo1 first.")
+        if self.geo1 is None:
+            raise ValueError("geo1 is not defined. Call def_geo1 first.")
 
-        Plotter = MplGeoPlotter(self.Geo1)
+        Plotter = MplGeoPlotter(self.geo1)
 
         fig, ax = Plotter.plot_geo1(
             scaleF,
@@ -467,10 +468,10 @@ class BaseSetup:
         col_BG_surf: str = "gray",
         col_txt: str = "red",
     ):
-        if self.Geo2 is None:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+        if self.geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
-        Plotter = MplGeoPlotter(self.Geo2)
+        Plotter = MplGeoPlotter(self.geo2)
 
         fig, ax = Plotter.plot_geo2(
             scaleF,
@@ -497,10 +498,10 @@ class BaseSetup:
         lines_sett: dict = "default",
         surf_sett: dict = "default",
     ):
-        if self.Geo2 is None:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+        if self.geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
-        Plotter = PvGeoPlotter(self.Geo2)
+        Plotter = PvGeoPlotter(self.geo2)
 
         pl = Plotter.plot_geo(
             scaleF=scaleF,

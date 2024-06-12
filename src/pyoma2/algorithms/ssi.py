@@ -11,10 +11,10 @@ from __future__ import annotations
 import logging
 import typing
 
-from pyoma2.functions import Gen_funct, SSI_funct, plot_funct
-from pyoma2.support.result import SSIResult
-from pyoma2.support.run_params import SSIRunParams
-from pyoma2.support.Sel_from_plot import SelFromPlot
+from pyoma2.algorithms.data.result import SSIResult
+from pyoma2.algorithms.data.run_params import SSIRunParams
+from pyoma2.functions import gen, plot, ssi
+from pyoma2.support.sel_from_plot import SelFromPlot
 
 from .base import BaseAlgorithm
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # SINGLE SETUP
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
+class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
     """
     Data-Driven Stochastic Subspace Identification (SSI) algorithm for single setup
     analysis.
@@ -98,13 +98,13 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
             Yref = Y
 
         # Build Hankel matrix
-        H = SSI_funct.BuildHank(Y, Yref, br, self.fs, method=method)
+        H = ssi.BuildHank(Y, Yref, br, self.fs, method=method)
         # Get state matrix and output matrix
-        A, C = SSI_funct.SSI_FAST(H, br, ordmax, step)
+        A, C = ssi.SSI_FAST(H, br, ordmax, step)
         # Get frequency poles (and damping and mode shapes)
-        Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
+        Fn_pol, Sm_pol, Ms_pol = ssi.SSI_Poles(A, C, ordmax, self.dt, step=step)
         # Get the labels of the poles
-        Lab = Gen_funct.lab_stab(
+        Lab = gen.lab_stab(
             Fn_pol,
             Sm_pol,
             Ms_pol,
@@ -168,7 +168,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         Lab = self.result.Lab
 
         # Extract modal results
-        Fn_SSI, Xi_SSI, Phi_SSI, order_out = SSI_funct.SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI, order_out = ssi.SSI_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, rtol=rtol
         )
 
@@ -215,7 +215,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         order = SFP.result[1]
 
         # e poi estrarre risultati
-        Fn_SSI, Xi_SSI, Phi_SSI, order_out = SSI_funct.SSI_MPE(
+        Fn_SSI, Xi_SSI, Phi_SSI, order_out = ssi.SSI_MPE(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, rtol=rtol
         )
 
@@ -245,7 +245,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         typing.Any
             A tuple containing the matplotlib figure and axes of the Stability Diagram plot.
         """
-        fig, ax = plot_funct.Stab_plot(
+        fig, ax = plot.Stab_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,
             step=self.run_params.step,
@@ -281,7 +281,7 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         if not self.result:
             raise ValueError("Run algorithm first")
 
-        fig, ax = plot_funct.Cluster_plot(
+        fig, ax = plot.Cluster_plot(
             Fn=self.result.Fn_poles,
             Sm=self.result.xi_poles,
             Lab=self.result.Lab,
@@ -299,25 +299,23 @@ class SSIdat_algo(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]
         if not self.result:
             raise ValueError("Run algorithm first")
 
-        fig, ax = plot_funct.SvalH_plot(
-            H=self.result.H, br=self.run_params.br, iter_n=iter_n
-        )
+        fig, ax = plot.SvalH_plot(H=self.result.H, br=self.run_params.br, iter_n=iter_n)
         return fig, ax
 
 
 # ------------------------------------------------------------------------------
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 # FIXME ADD REFERENCE
-class SSIcov_algo(SSIdat_algo):
+class SSIcov(SSIdat):
     """
     Implements the Covariance-driven Stochastic Subspace Identification (SSI) algorithm
     for single setup experiments.
 
-    This class is an extension of the SSIdat_algo class, adapted for covariance-driven analysis.
+    This class is an extension of the SSIdat class, adapted for covariance-driven analysis.
     It processes measurement data from a single setup to identify system dynamics and extract
     modal parameters using the SSIcov-ref method.
 
-    Inherits all attributes and methods from SSIdat_algo.
+    Inherits all attributes and methods from SSIdat.
 
     Attributes
     ----------
@@ -327,7 +325,7 @@ class SSIcov_algo(SSIdat_algo):
 
     Methods
     -------
-    Inherits all methods from SSIdat_algo with covariance-specific implementations.
+    Inherits all methods from SSIdat with covariance-specific implementations.
     """
 
     method: typing.Literal["cov_R", "cov_mm"] = "cov_mm"
@@ -337,25 +335,25 @@ class SSIcov_algo(SSIdat_algo):
 # MULTISETUP
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]):
+class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
     """
     Implements the Data-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup
     experiments.
 
-    This class extends the SSIdat_algo class to handle data from multiple experimental setups, with
+    This class extends the SSIdat class to handle data from multiple experimental setups, with
     moving and reference sensors.
 
-    Inherits all attributes and methods from SSIdat_algo, with focus on multi-setup data handling.
+    Inherits all attributes and methods from SSIdat, with focus on multi-setup data handling.
 
     Attributes
     ----------
-    Inherits all attributes from SSIdat_algo.
+    Inherits all attributes from SSIdat.
 
     Methods
     -------
     run() -> SSIResult
         Executes the algorithm for multiple setups and returns the identification results.
-    Inherits other methods from SSIdat_algo, applicable to multi-setup scenarios.
+    Inherits other methods from SSIdat, applicable to multi-setup scenarios.
     """
 
     def run(self) -> SSIResult:
@@ -386,14 +384,14 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
         mpd_lim = self.run_params.mpd_lim
 
         # Build Hankel matrix and Get state matrix and output matrix
-        A, C = SSI_funct.SSI_MulSet(
+        A, C = ssi.SSI_MulSet(
             Y, self.fs, br, ordmax, step=1, methodHank=method, method="FAST"
         )
 
         # Get frequency poles (and damping and mode shapes)
-        Fn_pol, Sm_pol, Ms_pol = SSI_funct.SSI_Poles(A, C, ordmax, self.dt, step=step)
+        Fn_pol, Sm_pol, Ms_pol = ssi.SSI_Poles(A, C, ordmax, self.dt, step=step)
         # Get the labels of the poles
-        Lab = Gen_funct.lab_stab(
+        Lab = gen.lab_stab(
             Fn_pol,
             Sm_pol,
             Ms_pol,
@@ -421,24 +419,24 @@ class SSIdat_algo_MS(SSIdat_algo[SSIRunParams, SSIResult, typing.Iterable[dict]]
 
 # ------------------------------------------------------------------------------
 # (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIcov_algo_MS(SSIdat_algo_MS):
+class SSIcov_MS(SSIdat_MS):
     """
     Implements the Covariance-Driven Stochastic Subspace Identification (SSI) algorithm
     for multi-setup experiments.
 
-    This class extends SSIdat_algo_MS, focusing on the covariance-driven approach to SSI
+    This class extends SSIdat_MS, focusing on the covariance-driven approach to SSI
     for multiple experimental setups.
 
-    Inherits all attributes and methods from SSIdat_algo_MS, adapted for covariance-driven
+    Inherits all attributes and methods from SSIdat_MS, adapted for covariance-driven
     analysis methods.
 
     Attributes
     ----------
-    Inherits all attributes from SSIdat_algo_MS.
+    Inherits all attributes from SSIdat_MS.
 
     Methods
     -------
-    Inherits all methods from SSIdat_algo_MS, adapted for covariance-based analysis.
+    Inherits all methods from SSIdat_MS, adapted for covariance-based analysis.
     """
 
     method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"

@@ -1,8 +1,8 @@
 import math
 
-from pyoma2.algorithm import SSIdat_algo_MS, pLSCF_algo_MS
+from pyoma2.algorithms import SSIdat_MS, pLSCF_MS
 
-from src.pyoma2.OMA import MultiSetup_PreGER
+from src.pyoma2.setup import MultiSetup_PreGER
 
 
 def test_geo1(multi_setup_data_fixture, ms_preger: MultiSetup_PreGER) -> None:
@@ -25,7 +25,7 @@ def test_geo1(multi_setup_data_fixture, ms_preger: MultiSetup_PreGER) -> None:
     ) = multi_setup_data_fixture
 
     # Test that the geometric is not defined
-    assert ms_preger.Geo1 is None
+    assert ms_preger.geo1 is None
 
     ms_preger.def_geo1(
         sens_names=Names,
@@ -35,7 +35,7 @@ def test_geo1(multi_setup_data_fixture, ms_preger: MultiSetup_PreGER) -> None:
         bg_lines=BG_lines,
     )
 
-    assert ms_preger.Geo1 is not None
+    assert ms_preger.geo1 is not None
 
 
 def test_geo2(multi_setup_data_fixture, ms_preger: MultiSetup_PreGER) -> None:
@@ -58,20 +58,19 @@ def test_geo2(multi_setup_data_fixture, ms_preger: MultiSetup_PreGER) -> None:
     ) = multi_setup_data_fixture
 
     # Test that the geometric is not defined
-    assert ms_preger.Geo2 is None
+    assert ms_preger.geo2 is None
 
     ms_preger.def_geo2(
         sens_names=Names,
         pts_coord=pts_coord,
         sens_map=sens_map,
-        order_red="xy",
         sens_sign=sens_sign,
         sens_lines=sens_lines,
         bg_nodes=BG_nodes,
         bg_lines=BG_lines,
     )
 
-    assert ms_preger.Geo2 is not None
+    assert ms_preger.geo2 is not None
 
 
 def test_plot_data(ms_preger: MultiSetup_PreGER) -> None:
@@ -181,7 +180,6 @@ def test_run(multi_setup_data_fixture, ms_preger: MultiSetup_PreGER) -> None:
         Names,  # Names of the channels
         pts_coord,
         sens_map,
-        order_red="xy",
         sens_sign=sens_sign,
         sens_lines=sens_lines,
         bg_nodes=BG_nodes,
@@ -189,8 +187,8 @@ def test_run(multi_setup_data_fixture, ms_preger: MultiSetup_PreGER) -> None:
     )
 
     # Initialise the algorithms
-    ssidat = SSIdat_algo_MS(name="SSIdat", br=5, ordmax=5)
-    plscf = pLSCF_algo_MS(name="pLSCF", ordmax=5, nxseg=64)
+    ssidat = SSIdat_MS(name="SSIdat", br=5, ordmax=5)
+    plscf = pLSCF_MS(name="pLSCF", ordmax=5, nxseg=64)
 
     ms_preger.decimate_data(q=50, inplace=True)
 

@@ -9,8 +9,8 @@ First of all we import the necessary modules.
    import pandas as pd
    import matplotlib.pyplot as plt
 
-   from pyoma2.algorithm import SSIdat_algo_MS
-   from pyoma2.OMA import MultiSetup_PreGER
+   from pyoma2.algorithms import SSIdat_MS
+   from pyoma2.setup import MultiSetup_PreGER
 
 
 For the **preGER** merging procedure, we adopt a strategy similar to that
@@ -100,13 +100,13 @@ need to define the geometry of the structure.
          bg_lines=BG_lines)
 
 Now we need to instantiate the multi-setup versions of the algorithms
-we wish to execute, such as ``SSIdat_algo``.
+we wish to execute, such as ``SSIdat``.
 
 
 .. code:: python
 
    # Initialise the algorithms
-   ssidat = SSIdat_algo_MS(name="SSIdat", br=80, ordmax=80)
+   ssidat = SSIdat_MS(name="SSIdat", br=80, ordmax=80)
 
    # Add algorithms to the class
    msp.add_algorithms(ssidat)
@@ -130,8 +130,8 @@ poles and plot the mode shapes.
          order=80)
 
    # plot mode shapes
-   ssidat.plot_mode_g1(Geo1=msp.Geo1, mode_numb=1, view="3D", scaleF=2)
-   ssidat.plot_mode_g2(Geo2=msp.Geo2, mode_numb=6, view="xy", scaleF=2)
+   ssidat.plot_mode_g1(geo1=msp.geo1, mode_numb=1, view="3D", scaleF=2)
+   ssidat.plot_mode_g2(geo2=msp.geo2, mode_numb=6, view="xy", scaleF=2)
 
 .. figure:: /img/Ex3_mode_4_g1.png
 
