@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
-
-from src.pyoma2.functions import pLSCF_funct
+from pyoma2.functions import plscf
 
 
 @pytest.mark.parametrize("input_sgn_basf", [-1, 1])
@@ -15,7 +14,7 @@ def test_pLSCF(input_sgn_basf: int):
     ordmax = 5  # Maximum model order
 
     # Call the function with test inputs
-    Ad, Bn = pLSCF_funct.pLSCF(Sy, dt, ordmax, input_sgn_basf)
+    Ad, Bn = plscf.pLSCF(Sy, dt, ordmax, input_sgn_basf)
 
     # Assert that the outputs have the expected shape
     assert [el.shape for el in Ad] == [
@@ -47,7 +46,7 @@ def test_pLSCF_Poles() -> None:
     dt = 0.01
     methodSy = "per"
     nxseg = 10
-    Fns, Xis, Phi1 = pLSCF_funct.pLSCF_Poles(Ad, Bn, dt, methodSy, nxseg)
+    Fns, Xis, Phi1 = plscf.pLSCF_Poles(Ad, Bn, dt, methodSy, nxseg)
 
     # Check if output types are correct
     assert isinstance(Fns, np.ndarray)
@@ -68,7 +67,7 @@ def test_rmfd2AC() -> None:
 
     # Call the function with test data
 
-    A, C = pLSCF_funct.rmfd2AC(A_den, B_num)
+    A, C = plscf.rmfd2AC(A_den, B_num)
 
     # Define expected output
     assert np.allclose(
@@ -97,7 +96,7 @@ def test_AC2MP_poly() -> None:
     nxseg = 100
 
     # Call the function with test inputs
-    fn, xi, phi = pLSCF_funct.AC2MP_poly(A, C, dt, methodSy, nxseg)
+    fn, xi, phi = plscf.AC2MP_poly(A, C, dt, methodSy, nxseg)
 
     assert fn.shape == (2,)
     assert xi.shape == (2,)
@@ -139,7 +138,7 @@ def test_pLSCF_MPE(input_order, expected_order) -> None:
     rtol = 1e-2
 
     # Call the function with test inputs
-    Fn, Xi, Phi, order_out = pLSCF_funct.pLSCF_MPE(
+    Fn, Xi, Phi, order_out = plscf.pLSCF_MPE(
         sel_freq, Fn_pol, Xi_pol, Phi_pol, input_order, Lab, deltaf, rtol
     )
 
@@ -161,4 +160,4 @@ def test_pLSCF_MPE_exc() -> None:
 
     with pytest.raises(ValueError):
         # Call the function with test inputs
-        pLSCF_funct.pLSCF_MPE(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab, deltaf, rtol)
+        plscf.pLSCF_MPE(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab, deltaf, rtol)

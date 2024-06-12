@@ -1,9 +1,9 @@
 from typing import Any
 
 import pytest
-from pyoma2.algorithm import BaseAlgorithm
-from pyoma2.algorithm.data.run_params import BaseRunParams
-from pyoma2.OMA import SingleSetup
+from pyoma2.algorithms import BaseAlgorithm
+from pyoma2.algorithms.data.run_params import BaseRunParams
+from pyoma2.setup import SingleSetup
 
 
 def test_child_algo_must_define_run_param_cls():

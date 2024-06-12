@@ -10,8 +10,8 @@ First of all we import the necessary modules.
    import pandas as pd
    import matplotlib.pyplot as plt
 
-   from pyoma2.algorithm import FDD_algo,FSDD_algo,SSIcov_algo
-   from pyoma2.OMA import MultiSetup_PoSER, SingleSetup
+   from pyoma2.algorithms import FDD,FSDD,SSIcov
+   from pyoma2.setup import MultiSetup_PoSER, SingleSetup
 
 For the **poSER** approach, after importing the necessary modules and
 data, we need to create as many single setup class instances as there
@@ -41,18 +41,18 @@ remains the same as described in the example for the single setup.
    print(ss1.fs, ss2.fs, ss3.fs)
 
    # Initialise the algorithms for setup 1
-   ssicov1 = SSIcov_algo(name="SSIcov1", method="cov_mm", br=50, ordmax=80)
+   ssicov1 = SSIcov(name="SSIcov1", method="cov_mm", br=50, ordmax=80)
    # Add algorithms to the class
    ss1.add_algorithms(ssicov1)
    ss1.run_all()
 
    # Initialise the algorithms for setup 2
-   ssicov2 = SSIcov_algo(name="SSIcov2", method="cov_mm", br=50, ordmax=80)
+   ssicov2 = SSIcov(name="SSIcov2", method="cov_mm", br=50, ordmax=80)
    ss2.add_algorithms(ssicov2)
    ss2.run_all()
 
    # Initialise the algorithms for setup 2
-   ssicov3 = SSIcov_algo(name="SSIcov3", method="cov_mm", br=50, ordmax=80)
+   ssicov3 = SSIcov(name="SSIcov3", method="cov_mm", br=50, ordmax=80)
    ss3.add_algorithms(ssicov3)
    ss3.run_all()
 
@@ -96,8 +96,8 @@ used to combine the results.
    result = msp.merge_results()
 
    # dictionary of merged results
-   res_ssicov = dict(result[SSIcov_algo.__name__])
-   result["SSIcov_algo"].Fn
+   res_ssicov = dict(result[SSIcov.__name__])
+   result["SSIcov"].Fn
    >>> array([ 2.63245926,  2.69030811,  3.4256547 ,  8.29328508,  8.42526299,
                10.60096486, 13.99307818, 14.09286017, 17.46931459])
 
@@ -156,14 +156,14 @@ geometry on it and then plot or animate the mode shapes
 .. code:: python
 
    # define results variable
-   algoRes = result[SSIcov_algo.__name__]
+   algoRes = result[SSIcov.__name__]
 
    # Plot mode 2 (geometry 1)
    msp.plot_mode_g1(
-         Algo_Res=algoRes, Geo1=msp.Geo1, mode_numb=2, view="3D", scaleF=2)
+         Algo_Res=algoRes, geo1=msp.geo1, mode_numb=2, view="3D", scaleF=2)
    # Animate mode 3 (geometry 2)
    msp.plot_mode_g2(
-         Algo_Res=algoRes, Geo2=msp.Geo2, mode_numb=1, view="xz", scaleF=3)
+         Algo_Res=algoRes, geo2=msp.geo2, mode_numb=1, view="xz", scaleF=3)
 
 
 .. figure:: /img/Ex2_mode_g1.png

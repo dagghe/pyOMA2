@@ -1,12 +1,17 @@
+from __future__ import annotations
+
+import sys
 import typing
 import unittest.mock
 from unittest.mock import MagicMock
 
+if typing.TYPE_CHECKING:
+    from pyoma2.setup import BaseSetup, MultiSetup_PoSER, MultiSetup_PreGER, SingleSetup
+
 import numpy as np
 import pandas as pd
 import pytest
-from pyoma2.algorithm import SSIcov_algo
-from pyoma2.OMA import BaseSetup, MultiSetup_PoSER, MultiSetup_PreGER, SingleSetup
+from pyoma2.algorithms import SSIcov
 
 from .factory import FakeAlgorithm, FakeAlgorithm2, FakeResult, FakeRunParams
 
@@ -50,6 +55,8 @@ def fake_algorithm_with_param_fixture() -> typing.Generator[FakeAlgorithm, None,
 @pytest.fixture(scope="session")
 def fake_single_setup_fixture_no_param() -> typing.Generator[SingleSetup, None, None]:
     """Fixture for SingleSetup without parameters."""
+    from pyoma2.setup import SingleSetup
+
     ss = SingleSetup(data=np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), fs=1000)
     ss.add_algorithms(FakeAlgorithm())
     yield ss
@@ -58,6 +65,8 @@ def fake_single_setup_fixture_no_param() -> typing.Generator[SingleSetup, None, 
 @pytest.fixture(scope="session")
 def fake_single_setup_fixture_with_param() -> typing.Generator[SingleSetup, None, None]:
     """Fixture for SingleSetup with parameters."""
+    from pyoma2.setup import SingleSetup
+
     ss = SingleSetup(data=np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), fs=1000)
     ss.add_algorithms(FakeAlgorithm(run_params=FakeRunParams()))
     yield ss
@@ -110,6 +119,8 @@ def base_setup_fixture(
         FakeAlgorithm with name "fake_1"
         FakeAlgorithm2 with name "fake_2"
     """
+    from pyoma2.setup import BaseSetup
+
     data, *_ = single_setup_data_fixture
     ss = BaseSetup()
     ss.data = data
@@ -122,6 +133,8 @@ def single_setup_fixture(
     single_setup_data_fixture,
 ) -> typing.Generator[SingleSetup, None, None]:
     """Fixture for SingleSetup with parameters."""
+    from pyoma2.setup import SingleSetup
+
     data, *_ = single_setup_data_fixture
     ss = SingleSetup(data=data, fs=100)
     yield ss
@@ -206,6 +219,8 @@ def multi_setup_data_fixture():
 def multi_setup_poser_fixture(
     multi_setup_data_fixture,
 ) -> typing.Generator[MultiSetup_PoSER, None, None]:
+    from pyoma2.setup import MultiSetup_PoSER, SingleSetup
+
     """Fixture for MultiSetup Poser with parameters."""
     set1, set2, set3, *_ = multi_setup_data_fixture
     ss1 = SingleSetup(set1, fs=100)
@@ -217,18 +232,18 @@ def multi_setup_poser_fixture(
     ss3.decimate_data(q=2, inplace=True)
 
     # Initialise the algorithms for setup 1
-    ssicov1 = SSIcov_algo(name="SSIcov1", method="cov_mm", br=50, ordmax=80)
+    ssicov1 = SSIcov(name="SSIcov1", method="cov_mm", br=50, ordmax=80)
     # Add algorithms to the class
     ss1.add_algorithms(ssicov1)
     ss1.run_all()
 
     # Initialise the algorithms for setup 2
-    ssicov2 = SSIcov_algo(name="SSIcov2", method="cov_mm", br=50, ordmax=80)
+    ssicov2 = SSIcov(name="SSIcov2", method="cov_mm", br=50, ordmax=80)
     ss2.add_algorithms(ssicov2)
     ss2.run_all()
 
     # Initialise the algorithms for setup 2
-    ssicov3 = SSIcov_algo(name="SSIcov3", method="cov_mm", br=50, ordmax=80)
+    ssicov3 = SSIcov(name="SSIcov3", method="cov_mm", br=50, ordmax=80)
     ss3.add_algorithms(ssicov3)
     ss3.run_all()
 
@@ -260,12 +275,20 @@ def multi_setup_preger_fixture(
     multi_setup_data_fixture,
 ) -> typing.Generator[MultiSetup_PreGER, None, None]:
     """Fixture for MultiSetup Poser with parameters."""
+    from pyoma2.setup import MultiSetup_PreGER
+
     set1, set2, set3, *_ = multi_setup_data_fixture
     data = [set1, set2, set3]
     ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
     # Creating Multi setup
     msp = MultiSetup_PreGER(fs=100, ref_ind=ref_ind, datasets=data)
     yield msp
+
+
+# Mock imports for GUI and plotting
+sys.modules["vtkmodules"] = unittest.mock.Mock()
+sys.modules["pyvista"] = unittest.mock.Mock()
+sys.modules["pyvistaqt"] = unittest.mock.Mock()
 
 
 @pytest.fixture(autouse=True)
@@ -277,15 +300,11 @@ def mock_imports():
     ) as mock_show, unittest.mock.patch(
         "matplotlib.pyplot.subplots"
     ) as subplots, unittest.mock.patch(
-        "pyoma2.plot.Sel_from_plot.NavigationToolbar2Tk"
+        "pyoma2.support.sel_from_plot.NavigationToolbar2Tk"
     ), unittest.mock.patch(
-        "pyoma2.plot.Sel_from_plot.FigureCanvasTkAgg"
+        "pyoma2.support.sel_from_plot.FigureCanvasTkAgg"
     ), unittest.mock.patch(
-        "pyoma2.plot.anim_mode.NavigationToolbar2Tk"
-    ), unittest.mock.patch(
-        "pyoma2.plot.anim_mode.FigureCanvasTkAgg"
-    ), unittest.mock.patch(
-        "src.pyoma2.functions.plot_funct.plt.tight_layout"
+        "src.pyoma2.functions.plot.plt.tight_layout"
     ), unittest.mock.patch("tkinter.Tk"), unittest.mock.patch("tkinter.Menu"):
         """
         Mocks the imports for the tests.
