@@ -13,11 +13,9 @@ import typing
 
 from pydantic import BaseModel
 
+from pyoma2.algorithms.data.result import BaseResult
+from pyoma2.algorithms.data.run_params import BaseRunParams
 from pyoma2.support.geometry import Geometry1, Geometry2
-from pyoma2.support.MplPlotter import MplGeoPlotter
-from pyoma2.support.PyVistaPlotter import PvGeoPlotter
-from pyoma2.support.result import BaseResult
-from pyoma2.support.run_params import BaseRunParams
 
 T_RunParams = typing.TypeVar("T_RunParams", bound=BaseRunParams)
 T_Result = typing.TypeVar("T_Result", bound=BaseResult)
@@ -373,7 +371,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     # PLOT MODI - Matplotlib plotter
     def plot_mode_g1(
         self,
-        Geo1: Geometry1,
+        geo1: Geometry1,
         mode_nr: int,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz"] = "3D",
@@ -384,13 +382,15 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         col_BG_surf: str = "gray",
     ) -> typing.Any:
         """ """
-        if Geo1 is None:
-            raise ValueError("Geo1 is not defined. Call def_geo1 first.")
+        from pyoma2.support.mpl_plotter import MplGeoPlotter
+
+        if geo1 is None:
+            raise ValueError("geo1 is not defined. Call def_geo1 first.")
 
         if self.result.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Plotter = MplGeoPlotter(Geo1, self.result)
+        Plotter = MplGeoPlotter(geo1, self.result)
 
         fig, ax = Plotter.plot_mode_g1(
             mode_nr,
@@ -407,7 +407,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     # PLOT MODI - Matplotlib plotter
     def plot_mode_g2_mpl(
         self,
-        Geo2: Geometry2,
+        geo2: Geometry2,
         mode_nr: typing.Optional[int],
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz"] = "3D",
@@ -416,13 +416,15 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         **kwargs,
     ) -> typing.Any:
         """ """
-        if Geo2 is None:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+        from pyoma2.support.mpl_plotter import MplGeoPlotter
+
+        if geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
         if self.result.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Plotter = MplGeoPlotter(Geo2, self.result)
+        Plotter = MplGeoPlotter(geo2, self.result)
 
         fig, ax = Plotter.plot_mode_g2(mode_nr, scaleF, view, color)
         return fig, ax
@@ -430,7 +432,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     # PLOT MODI - PyVista plotter
     def plot_mode_g2(
         self,
-        Geo2: Geometry2,
+        geo2: Geometry2,
         mode_nr: int = 1,
         scaleF: float = 1.0,
         plot_points: bool = True,
@@ -443,13 +445,15 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         **kwargs,
     ) -> typing.Any:
         """ """
-        if Geo2 is None:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+        from pyoma2.support.pyvista_plotter import PvGeoPlotter
+
+        if geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
         if self.result.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Plotter = PvGeoPlotter(Geo2, self.result)
+        Plotter = PvGeoPlotter(geo2, self.result)
 
         pl = Plotter.plot_mode(
             mode_nr,
@@ -467,7 +471,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     # PLOT MODI - PyVista plotter
     def anim_mode_g2(
         self,
-        Geo2: Geometry2,
+        geo2: Geometry2,
         mode_nr: int = 1,
         scaleF: float = 1.0,
         pl=None,
@@ -480,13 +484,15 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         **kwargs,
     ) -> typing.Any:
         """ """
-        if Geo2 is None:
-            raise ValueError("Geo2 is not defined. Call def_geo2 first.")
+        from pyoma2.support.pyvista_plotter import PvGeoPlotter
+
+        if geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
         if self.result.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Plotter = PvGeoPlotter(Geo2, self.result)
+        Plotter = PvGeoPlotter(geo2, self.result)
 
         pl = Plotter.animate_mode(
             mode_nr, scaleF, None, plot_points, plot_lines, plot_surf, def_sett, saveGIF

@@ -14,8 +14,9 @@ import logging
 import typing
 
 import numpy as np
-from pyoma2.functions import plot_funct
-from pyoma2.setup.Base_Setup import BaseSetup
+
+from pyoma2.functions import plot
+from pyoma2.setup.base import BaseSetup
 from pyoma2.support.geometry import Geometry1, Geometry2
 
 if typing.TYPE_CHECKING:
@@ -67,17 +68,17 @@ class SingleSetup(BaseSetup):
     filter_data(...)
         Applies a Butterworth filter to the input data based on specified parameters.
     def_geo1(...)
-        Defines the first geometry setup (Geo1) for the instances.
+        Defines the first geometry setup (geo1) for the instances.
     def_geo2(...)
-        Defines the second geometry setup (Geo2) for the instance..
+        Defines the second geometry setup (geo2) for the instance..
 
     Notes
     -----
     The ``algorithms`` dictionary is initialized empty and is meant to store various algorithms as needed.
     """
 
-    Geo1: typing.Optional[Geometry1] = None
-    Geo2: typing.Optional[Geometry2] = None
+    geo1: typing.Optional[Geometry1] = None
+    geo2: typing.Optional[Geometry2] = None
 
     def __init__(self, data: np.ndarray, fs: float):
         """
@@ -134,7 +135,7 @@ class SingleSetup(BaseSetup):
         names = names  # list of names (str) of the channnels
         unit = unit  # str label for the y-axis (unit of measurement)
         show_rms = show_rms  # wheter to show or not the rms acc in the plot
-        fig, ax = plot_funct.plt_data(data, fs, nc, names, unit, show_rms)
+        fig, ax = plot.plt_data(data, fs, nc, names, unit, show_rms)
         return fig, ax
 
     # Method to plot info on channel (TH,auto-corr,PSD,PDF,dataVSgauss)
@@ -184,7 +185,7 @@ class SingleSetup(BaseSetup):
         """
         data = self.data
         fs = self.fs
-        fig, ax = plot_funct.plt_ch_info(
+        fig, ax = plot.plt_ch_info(
             data,
             fs,
             ch_idx=ch_idx,
@@ -246,7 +247,7 @@ class SingleSetup(BaseSetup):
 
         data = self.data
         fs = self.fs
-        fig, ax = plot_funct.STFT(
+        fig, ax = plot.STFT(
             data,
             fs,
             nxseg=nxseg,

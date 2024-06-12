@@ -5,10 +5,10 @@ import numpy as np
 import numpy.typing as npt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from pyoma2.algorithm import BaseAlgorithm
-from pyoma2.algorithm.data.geometry import Geometry1
-from pyoma2.algorithm.data.result import BaseResult
-from pyoma2.algorithm.data.run_params import BaseRunParams
+from pyoma2.algorithms import BaseAlgorithm
+from pyoma2.algorithms.data.result import BaseResult
+from pyoma2.algorithms.data.run_params import BaseRunParams
+from pyoma2.support.geometry import Geometry1
 
 FakeFigure = unittest.mock.MagicMock(spec=Figure)
 FakeAxes = unittest.mock.MagicMock(spec=Axes)
@@ -46,7 +46,7 @@ class FakeAlgorithm(BaseAlgorithm[FakeRunParams, FakeResult, typing.Iterable[flo
 
     def plot_mode_g1(
         self,
-        Geo1: Geometry1,
+        geo1: Geometry1,
         mode_numb: int,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz", "x", "y", "z"] = "3D",

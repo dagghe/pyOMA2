@@ -30,6 +30,15 @@ Changelog = "https://github.com/dagghe/pyOMA2/blob/main/CHANGELOG.md"
 Contributing = "https://github.com/dagghe/pyOMA2/blob/main/CONTRIBUTING.md"
 
 
+[project.optional-dependencies]
+pyvista = [
+    "pyvista>=0.43.9",
+    "pyvistaqt>=0.11.0",
+]
+openpyxl = [
+    "openpyxl>=3.1.3",
+]
+
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"

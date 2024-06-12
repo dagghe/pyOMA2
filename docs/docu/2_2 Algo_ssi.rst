@@ -8,14 +8,14 @@ on structural analysis and system identification, providing tools to process mea
 modal parameters, and perform comprehensive system dynamics analysis.
 
 Classes:
-   :class:`.SSIdat_algo`
+   :class:`.SSIdat`
       Implements the Data-Driven SSI algorithm for single setup.
-   :class:`.SSIcov_algo`
+   :class:`.SSIcov`
       Implements the Covariance-Driven SSI algorithm for single setup.
-   :class:`.SSIdat_algo_MS`
-      Extends ``SSIdat_algo`` for multi-setup experiments.
-   :class:`.SSIcov_algo_MS`
-      Extends ``SSIdat_algo_MS`` for covariance-based analysis in multi-setup experiments.
+   :class:`.SSIdat_MS`
+      Extends ``SSIdat`` for multi-setup experiments.
+   :class:`.SSIcov_MS`
+      Extends ``SSIdat_MS`` for covariance-based analysis in multi-setup experiments.
 
 .. Important::
    Each class contains methods for executing the SSI algorithm, extracting modal parameters,
@@ -25,35 +25,35 @@ Classes:
    Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
 
 
-The ``SSIdat_algo`` class
+The ``SSIdat`` class
 -------------------------
 
-.. autoclass:: pyoma2.algorithm.ssi.SSIdat_algo
+.. autoclass:: pyoma2.algorithm.ssi.SSIdat
    :members:
    :inherited-members:
    :show-inheritance:
 
-The ``SSIcov_algo`` class
+The ``SSIcov`` class
 -------------------------
 
-.. autoclass:: pyoma2.algorithm.ssi.SSIcov_algo
+.. autoclass:: pyoma2.algorithm.ssi.SSIcov
    :members:
    :inherited-members:
    :show-inheritance:
 
-The ``SSIdat_algo_MS`` class
+The ``SSIdat_MS`` class
 ----------------------------
 
-.. autoclass:: pyoma2.algorithm.ssi.SSIdat_algo_MS
+.. autoclass:: pyoma2.algorithm.ssi.SSIdat_MS
    :members:
    :inherited-members:
    :show-inheritance:
 
 
-The ``SSIcov_algo_MS`` class
+The ``SSIcov_MS`` class
 ----------------------------
 
-.. autoclass:: pyoma2.algorithm.ssi.SSIcov_algo_MS
+.. autoclass:: pyoma2.algorithm.ssi.SSIcov_MS
    :members:
    :inherited-members:
    :show-inheritance:

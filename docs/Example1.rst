@@ -9,8 +9,8 @@ First of all we import the necessary modules.
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    from pyoma2.algorithm import FDD_algo,FSDD_algo,SSIcov_algo
-    from pyoma2.OMA import SingleSetup
+    from pyoma2.algorithms import FDD,FSDD,SSIcov
+    from pyoma2.setup import SingleSetup
 
 Then we import the dataset we want to analyse and assign it to a
 variable
@@ -130,7 +130,7 @@ channel calling the ``plot_ch_info()`` method
 
 
 Now we can instantiate the algorithms that we want to run, e.g.
-``EFDD_algo`` and ``SSIcov_algo``. The algorithms must then be added
+``EFDD`` and ``SSIcov``. The algorithms must then be added
 to the setup class using the ``add_algorithms()`` method. Thereafter,
 the algorithms can be executed either individually using the
 ``run_by_name()`` method or collectively with ``run_all()``.
@@ -139,12 +139,12 @@ the algorithms can be executed either individually using the
 .. code:: python
 
     # Initialise the algorithms
-    fdd = FDD_algo(name="FDD")
-    fsdd = FSDD_algo(name="FSDD", nxseg=2048, method_SD="per", pov=0.5)
-    ssicov = SSIcov_algo(name="SSIcov", method="cov_mm", br=50, ordmax=80)
+    fdd = FDD(name="FDD")
+    fsdd = FSDD(name="FSDD", nxseg=2048, method_SD="per", pov=0.5)
+    ssicov = SSIcov(name="SSIcov", method="cov_mm", br=50, ordmax=80)
 
     # Overwrite/update run parameters for an algorithm
-    fdd.run_params = FDD_algo.RunParamCls(nxseg=512, method_SD="cor")
+    fdd.run_params = FDD.RunParamCls(nxseg=512, method_SD="cor")
 
     # Add algorithms to the single setup class
     Pali_ss.add_algorithms(ssicov, fsdd, fdd)
@@ -254,7 +254,7 @@ the analysis
     # MODE SHAPES PLOT
     # Plot mode 2 (geometry 1)
     Pali_ss[fsdd.name].plot_mode_g1(
-        Geo1=Pali_ss.Geo1, mode_numb=2, view="3D", scaleF=2)
+        geo1=Pali_ss.geo1, mode_numb=2, view="3D", scaleF=2)
 
 
 .. figure:: /img/Ex1_plot_mode_g1.png
@@ -264,6 +264,6 @@ the analysis
 
     # Animate mode 1 (geometry 2)
     Pali_ss[ssicov.name].anim_mode_g2(
-        Geo2=Pali_ss.Geo2, mode_numb=1, view="3D", scaleF=3)
+        geo2=Pali_ss.geo2, mode_numb=1, view="3D", scaleF=3)
 
 .. image:: /img/Ex1_anim_mode_1.gif

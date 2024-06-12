@@ -1,4 +1,4 @@
-The ``plot_funct`` module
+The ``plot`` module
 -------------------------
 
 This module, part of the pyOMA2 package, offers a suite of plotting functions
@@ -17,5 +17,5 @@ Functions:
     - :func:`.plt_data`: Plots multi-channel time series data with RMS value inclusion.
     - :func:`.plt_ch_info`: Generates comprehensive channel information plots including PSD and KDE.
 
-.. automodule:: pyoma2.functions.plot_funct
+.. automodule:: pyoma2.functions.plot
    :members:
