@@ -435,12 +435,13 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         geo2: Geometry2,
         mode_nr: int = 1,
         scaleF: float = 1.0,
-        plot_points: bool = True,
         plot_lines: bool = True,
         plot_surf: bool = True,
         plot_undef: bool = True,
         def_sett: dict = "default",
         undef_sett: dict = "default",
+        bg_plotter: bool = True,
+        notebook: bool = False,
         *args,
         **kwargs,
     ) -> typing.Any:
@@ -456,15 +457,16 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         Plotter = PvGeoPlotter(geo2, self.result)
 
         pl = Plotter.plot_mode(
-            mode_nr,
-            scaleF,
-            None,
-            plot_points,
-            plot_lines,
-            plot_surf,
-            plot_undef,
-            def_sett,
-            undef_sett,
+            mode_nr=mode_nr,
+            scaleF=scaleF,
+            plot_lines=plot_lines,
+            plot_surf=plot_surf,
+            plot_undef=plot_undef,
+            def_sett=def_sett,
+            undef_sett=undef_sett,
+            pl=None,
+            bg_plotter=bg_plotter,
+            notebook=notebook,
         )
         return pl
 
@@ -495,6 +497,11 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         Plotter = PvGeoPlotter(geo2, self.result)
 
         pl = Plotter.animate_mode(
-            mode_nr, scaleF, None, plot_points, plot_lines, plot_surf, def_sett, saveGIF
+            mode_nr=mode_nr,
+            scaleF=scaleF,
+            plot_lines=plot_lines,
+            plot_surf=plot_surf,
+            def_sett=def_sett,
+            saveGIF=saveGIF,
         )
         return pl

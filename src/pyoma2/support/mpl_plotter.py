@@ -294,8 +294,8 @@ class MplGeoPlotter:
             This allows for further customization or saving outside the method.
 
         """
-        if type(self.Geo) != Geometry2:
-            raise ValueError("geo2 is not defined. Call def_geo2 first.")
+        # if type(self.Geo) != Geometry2:
+        #     raise ValueError("geo2 is not defined. Call def_geo2 first.")
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Plot of the geometry and sensors' placement and direction")
@@ -438,8 +438,8 @@ class MplGeoPlotter:
         typing.Any
             A tuple containing the matplotlib figure and axes of the mode shape plot.
         """
-        if type(self.Geo) != Geometry2:
-            raise ValueError("geo2 is not defined. Call def_geo2 first.")
+        # if type(self.Geo) != Geometry2:
+        #     raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
         geo2 = self.Geo
 

@@ -13,7 +13,7 @@ from scipy import signal
 from scipy.optimize import curve_fit
 from tqdm import tqdm, trange
 
-from . import gen as GF
+from .gen import MAC
 
 logger = logging.getLogger(__name__)
 
@@ -367,25 +367,42 @@ def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF
 
     for csm in range(cm):  # Loop through close mode (if any, default 1)
         # Frequency Spatial Domain Decomposition variation (defaulf)
-        SDOFbell += np.array(
-            [
-                np.dot(
-                    np.dot(phi_FDD.conj().T, Sy[:, :, el]), phi_FDD
-                )  # Enhanced PSD matrix (frequency filtered)
-                if GF.MAC(phi_FDD, Svec[csm, :, el]) > MAClim
-                else 0
-                for el in range(int(idxlim[0]), int(idxlim[1]))
-            ]
-        )
-        # Do the same for mode shapes
-        SDOFms += np.array(
-            [
-                Svec[csm, :, el]
-                if GF.MAC(phi_FDD, Svec[csm, :, el]) > MAClim
-                else np.zeros(Nch)
-                for el in range(int(idxlim[0]), int(idxlim[1]))
-            ]
-        )
+        if method == "FSDD":
+            # Save values that satisfy MAC > MAClim condition
+            SDOFbell += np.array(
+                [
+                    np.dot(
+                        np.dot(phi_FDD.conj().T, Sy[:, :, el]), phi_FDD
+                    )  # Enhanced PSD matrix (frequency filtered)
+                    if MAC(phi_FDD, Svec[csm, :, el]) > MAClim
+                    else 0
+                    for el in range(int(idxlim[0]), int(idxlim[1]))
+                ]
+            )
+            # Do the same for mode shapes
+            SDOFms += np.array(
+                [
+                    Svec[csm, :, el]
+                    if MAC(phi_FDD, Svec[csm, :, el]) > MAClim
+                    else np.zeros(Nch)
+                    for el in range(int(idxlim[0]), int(idxlim[1]))
+                ]
+            )
+        elif method == "EFDD":
+            SDOFbell += np.array(
+                [
+                    Sval[csm, csm, l_] if MAC(phi_FDD, Svec[csm, :, l_]) > MAClim else 0
+                    for l_ in range(int(idxlim[0]), int(idxlim[1]))
+                ]
+            )
+            SDOFms += np.array(
+                [
+                    Svec[csm, :, l_]
+                    if MAC(phi_FDD, Svec[csm, :, l_]) > MAClim
+                    else np.zeros(Nch)
+                    for l_ in range(int(idxlim[0]), int(idxlim[1]))
+                ]
+            )
 
     SDOFbell1 = np.zeros((nxseg), dtype=complex)
     SDOFms1 = np.zeros((nxseg, Nch), dtype=complex)

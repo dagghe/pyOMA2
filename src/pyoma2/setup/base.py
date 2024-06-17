@@ -19,11 +19,9 @@ import pandas as pd
 from scipy.signal import decimate, detrend
 
 from pyoma2.functions.gen import (
+    check_on_geo1,
+    check_on_geo2,
     filter_data,
-    find_map,
-    flatten_sns_names,
-    import_excel_GEO1,
-    import_excel_GEO2,
 )
 from pyoma2.support.geometry import Geometry1, Geometry2
 from pyoma2.support.mpl_plotter import MplGeoPlotter
@@ -276,44 +274,53 @@ class BaseSetup:
         bg_surf : numpy.ndarray of float64, optional
             An array defining background surfaces. Default is None.
         """
-        # TODO
-        # assert dimensions
-
-        # ---------------------------------------------------------------------
+        # Get reference index (if any)
         ref_ind = getattr(self, "ref_ind", None)
-        sens_names = flatten_sns_names(sens_names, ref_ind=ref_ind)
-        # ---------------------------------------------------------------------
-        # Find the indices that rearrange sens_coord to sens_names
-        newIDX = find_map(sens_names, sens_coord.index.to_numpy())
-        # reorder if necessary
-        sens_coord = sens_coord.reindex(labels=newIDX)
-        sens_dir = sens_dir[newIDX, :]
+
+        # Assemble dictionary for check function
+        file_dict = {
+            "sensors names": sens_names,
+            "sensors coordinates": sens_coord,
+            "sensors directions": sens_dir,
+            "sensors lines": sens_lines if sens_lines is not None else pd.DataFrame(),
+            "BG nodes": bg_nodes if bg_nodes is not None else pd.DataFrame(),
+            "BG lines": bg_lines if bg_lines is not None else pd.DataFrame(),
+            "BG surfaces": bg_surf if bg_surf is not None else pd.DataFrame(),
+        }
+
+        # check on input
+        res_ok = check_on_geo1(file_dict, ref_ind=ref_ind)
 
         self.geo1 = Geometry1(
-            sens_names=sens_names,
-            sens_coord=sens_coord,
-            sens_dir=sens_dir,
-            sens_lines=sens_lines,
-            bg_nodes=bg_nodes,
-            bg_lines=bg_lines,
-            bg_surf=bg_surf,
+            sens_names=res_ok[0],
+            sens_coord=res_ok[1],
+            sens_dir=res_ok[2],
+            sens_lines=res_ok[3],
+            bg_nodes=res_ok[4],
+            bg_lines=res_ok[5],
+            bg_surf=res_ok[6],
         )
 
     # metodo per definire geometria 1 da file
     def def_geo1_byFILE(self, path: str):
         """ """
+        # Get reference index (if any)
         ref_ind = getattr(self, "ref_ind", None)
 
-        data = import_excel_GEO1(path, ref_ind=ref_ind)
+        # Read the Excel file
+        file_dict = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
+
+        # check on input
+        res_ok = check_on_geo1(file_dict, ref_ind=ref_ind)
 
         self.geo1 = Geometry1(
-            sens_names=data[0],
-            sens_coord=data[1],
-            sens_dir=data[2].values,
-            sens_lines=data[3],
-            bg_nodes=data[4],
-            bg_lines=data[5],
-            bg_surf=data[6],
+            sens_names=res_ok[0],
+            sens_coord=res_ok[1],
+            sens_dir=res_ok[2],
+            sens_lines=res_ok[3],
+            bg_nodes=res_ok[4],
+            bg_lines=res_ok[5],
+            bg_surf=res_ok[6],
         )
 
     # metodo per definire geometria 2
@@ -329,7 +336,7 @@ class BaseSetup:
         pts_coord: pd.DataFrame,  # points' coordinates
         sens_map: pd.DataFrame,  # mapping
         # OPTIONAL
-        cstrn: pd.DataFrame = None,
+        cstr: pd.DataFrame = None,
         sens_sign: pd.DataFrame = None,
         sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
         sens_surf: npt.NDArray[np.int64] = None,  # surf connecting sensors
@@ -369,61 +376,63 @@ class BaseSetup:
         -----
         This method adapts indices for 0-indexed lines in `bg_lines`, `sens_lines`, and `bg_surf`.
         """
-        # TODO
-        # assert dimensions
-
-        # ---------------------------------------------------------------------
-        # Check if sens_names is a DataFrame with more than one row or a list of lists
-        # FOR MULTI-SETUP GEOMETRIES
-
+        # Get reference index
         ref_ind = getattr(self, "ref_ind", None)
-        sens_names = flatten_sns_names(sens_names, ref_ind=ref_ind)
 
-        # ---------------------------------------------------------------------
-        if sens_sign is None:
-            sens_sign = pd.DataFrame(
-                np.ones(sens_map.to_numpy()[:, :].shape), columns=sens_map.columns
-            )
-        # ---------------------------------------------------------------------
-        # adapt to 0 indexed lines
-        if bg_lines is not None:
-            bg_lines = np.subtract(bg_lines, 1)
-        if sens_lines is not None:
-            sens_lines = np.subtract(sens_lines, 1)
-        if bg_surf is not None:
-            bg_surf = np.subtract(bg_surf, 1)
-        if sens_surf is not None:
-            sens_surf = np.subtract(sens_surf, 1)
+        # Assemble dictionary for check function
+        file_dict = {
+            "sensors names": sens_names,
+            "points coordinates": pts_coord,
+            "mapping": sens_map,
+            "constraints": cstr if cstr is not None else pd.DataFrame(),
+            "sensors sign": sens_sign if sens_sign is not None else pd.DataFrame(),
+            "sensors lines": sens_lines if sens_lines is not None else pd.DataFrame(),
+            "sensors surfaces": sens_surf if sens_surf is not None else pd.DataFrame(),
+            "BG nodes": bg_nodes if bg_nodes is not None else pd.DataFrame(),
+            "BG lines": bg_lines if bg_lines is not None else pd.DataFrame(),
+            "BG surfaces": bg_surf if bg_surf is not None else pd.DataFrame(),
+        }
 
+        # check on input
+        res_ok = check_on_geo2(file_dict, ref_ind=ref_ind)
+
+        # Save to geometry
         self.geo2 = Geometry2(
-            sens_names=sens_names,
-            pts_coord=pts_coord,
-            sens_map=sens_map,
-            cstrn=cstrn,
-            sens_sign=sens_sign,
-            sens_lines=sens_lines,
-            sens_surf=sens_surf,
-            bg_nodes=bg_nodes,
-            bg_lines=bg_lines,
-            bg_surf=bg_surf,
+            sens_names=res_ok[0],
+            pts_coord=res_ok[1].astype(float),
+            sens_map=res_ok[2],
+            cstrn=res_ok[3],
+            sens_sign=res_ok[4],
+            sens_lines=res_ok[5],
+            sens_surf=res_ok[6],
+            bg_nodes=res_ok[7],
+            bg_lines=res_ok[8],
+            bg_surf=res_ok[9],
         )
 
     def def_geo2_byFILE(self, path: str):
+        """ """
+        # Get reference index
         ref_ind = self.ref_ind if hasattr(self, "ref_ind") else None
 
-        data = import_excel_GEO2(path, ref_ind=ref_ind)
+        # Read the Excel file
+        file_dict = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
 
+        # check on input
+        res_ok = check_on_geo2(file_dict, ref_ind=ref_ind)
+
+        # Save to geometry
         self.geo2 = Geometry2(
-            sens_names=data[0],
-            pts_coord=data[1],
-            sens_map=data[2],
-            cstrn=data[3],
-            sens_sign=data[4],
-            sens_lines=data[5],
-            sens_surf=data[6],
-            bg_nodes=data[7],
-            bg_lines=data[8],
-            bg_surf=data[9],
+            sens_names=res_ok[0],
+            pts_coord=res_ok[1].astype(float),
+            sens_map=res_ok[2],
+            cstrn=res_ok[3],
+            sens_sign=res_ok[4],
+            sens_lines=res_ok[5],
+            sens_surf=res_ok[6],
+            bg_nodes=res_ok[7],
+            bg_lines=res_ok[8],
+            bg_surf=res_ok[9],
         )
 
     # PLOT GEO1 - mpl plotter
@@ -491,12 +500,13 @@ class BaseSetup:
         self,
         scaleF: int = 1,
         col_sens: str = "red",
-        plot_points: bool = True,
         plot_lines: bool = True,
         plot_surf: bool = True,
         points_sett: dict = "default",
         lines_sett: dict = "default",
         surf_sett: dict = "default",
+        bg_plotter: bool = True,
+        notebook: bool = False,
     ):
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
@@ -505,14 +515,15 @@ class BaseSetup:
 
         pl = Plotter.plot_geo(
             scaleF=scaleF,
-            pl=None,
             col_sens=col_sens,
-            plot_points=plot_points,
             plot_lines=plot_lines,
             plot_surf=plot_surf,
             points_sett=points_sett,
             lines_sett=lines_sett,
             surf_sett=surf_sett,
+            pl=None,
+            bg_plotter=bg_plotter,
+            notebook=notebook,
         )
         return pl
 

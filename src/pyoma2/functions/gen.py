@@ -47,179 +47,351 @@ def dfphi_map_func(phi, sens_names, sens_map, cstrn=None):
     return df_phi_map
 
 
-def import_excel_GEO1(path, ref_ind=None):
-    file = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
-    # TODO
-    # dati di ["sns_lines", "BG_nodes", "BG_lines", "BG_Surf"]
-    # come stringhe per mappare con label dei dataframe
+def check_on_geo1(file_dict, ref_ind=None, fill_na="zero"):
+    # Remove INFO sheet from dict of dataframes
+    if "INFO" in file_dict:
+        del file_dict["INFO"]
 
-    # Test1
-    required_sheets = ["sns_names", "sns_crd", "sns_dir"]
+    # -----------------------------------------------------------------------------
+    required_sheets = ["sensors names", "sensors coordinates", "sensors directions"]
+    all_sheets = required_sheets + [
+        "sensors lines",
+        "BG nodes",
+        "BG lines",
+        "BG surfaces",
+    ]
+
     # Ensure required sheets exist
-    if not all(sheet in file for sheet in required_sheets):
-        raise Warning("At least [sns_names, sns_crd, sns_dir] must be defined!")
+    if not all(sheet in file_dict for sheet in required_sheets):
+        raise ValueError(f"At least the sheets {required_sheets} must be defined!")
 
-    # TODO
-    # TEST SU TIPO DI DATI (str o float )
-    # TEST SU DIMENSIONI
+    # Ensure all sheets are valid
+    for sheet in file_dict:
+        if sheet not in all_sheets:
+            raise ValueError(
+                f"'{sheet}' is not a valid name. Valid sheet names are: \n"
+                f"{all_sheets}"
+            )
 
-    # Process each sheet
-    for sheet, df in file.items():
-        if df.empty:
-            file[sheet] = None
-
-        if sheet == "sns_names" and df.shape[0] > 1:
-            sens_names = [
-                [item for item in row if not pd.isna(item)] for row in df.values.tolist()
-            ]
-            if ref_ind is None:
-                raise AttributeError(
-                    "You need to specify the reference indices for a Multi-setup test"
-                )
-            k = len(ref_ind[0])  # number of reference sensors (from the first setup)
-
-            # Create reference strings and flatten the list
-            sens_name_fl = [f"REF{i+1}" for i in range(k)]
-            sens_name_fl += [
-                item
-                for i, row in enumerate(sens_names)
-                for j, item in enumerate(row)
-                if j not in ref_ind[i]
-            ]
-            file[sheet] = sens_name_fl
-        elif sheet == "sns_names":  # and df.shape[0] == 1:
-            file[sheet] = df.values.tolist()[0]
-
-        if (
-            sheet in ["sns_lines", "BG_nodes", "BG_lines", "BG_Surf"]
-            and file[sheet] is not None
-        ):
-            file[sheet] = file[sheet].to_numpy()
-
-    # Adjust to 0 indexed lines
-    if file["BG_lines"] is not None:
-        file["BG_lines"] = np.subtract(file["BG_lines"], 1)
-    if file["sns_lines"] is not None:
-        file["sns_lines"] = np.subtract(file["sns_lines"], 1)
-    if file["BG_Surf"] is not None:
-        file["BG_Surf"] = np.subtract(file["BG_Surf"], 1)
-
-    # ---------------------------------------------------------------------
-    sens_names = (file["sns_names"],)
-    sens_coord = (file["sns_crd"],)
-    sens_dir = (file["sns_dir"],)
-    sens_lines = (file["sns_lines"],)
-    bg_nodes = (file["BG_nodes"],)
-    bg_lines = (file["BG_lines"],)
-    bg_surf = (file["BG_Surf"],)
-    # ---------------------------------------------------------------------
-    # # Find the indices that rearrange sens_coord to sens_names
-    index = np.array(sens_coord[0].index)
-    newIDX = find_map(sens_names[0], index)
-    # # reorder if necessary
-    sens_coord_new = pd.DataFrame(
-        sens_coord[0].values[newIDX, :],
-        index=sens_names[0],
-        columns=sens_coord[0].columns,
-    )
-    # sens_dir = sens_dir[newIDX, :]
-    sens_dir_new = pd.DataFrame(
-        sens_dir[0].values[newIDX, :], index=sens_names[0], columns=sens_coord[0].columns
-    )
-
-    return (
-        sens_names[0],
-        sens_coord_new,
-        sens_dir_new,
-        sens_lines[0],
-        bg_nodes[0],
-        bg_lines[0],
-        bg_surf[0],
-    )
-
-
-def import_excel_GEO2(path, ref_ind=None):
-    file = pd.read_excel(path, sheet_name=None, engine="openpyxl", index_col=0)
-    # Test1
-    required_sheets = ["sns_names", "pts_crd", "snsTOpts_map"]
-    # Ensure required sheets exist
-    if not all(sheet in file for sheet in required_sheets):
-        raise Warning(
-            "At least ['sns_names', 'pts_crd', 'snsTOpts_map'] must be defined!"
+    # -----------------------------------------------------------------------------
+    # Check 'sensors coordinates' shape
+    if file_dict["sensors coordinates"].values.shape[1] != 3:
+        raise ValueError(
+            "'sensors coordinates' should have 3 columns for the x,y and z coordinates."
+            f"'sensors coordinates' have {file_dict['sensors coordinates'].values.shape[1]} columns"
         )
 
-    # TODO
-    # TEST SU TIPO DI DATI (str o float )
-    # TEST SU DIMENSIONI
+    # Check on same shape 'sensors coordinates' and 'sensors directions'
+    if (
+        file_dict["sensors coordinates"].values.shape
+        != file_dict["sensors directions"].values.shape
+    ):
+        raise ValueError(
+            "'sensors coordinates' and 'sensors directions' must have the same shape.\n"
+            f"'sensors coordinates' shape is {file_dict['sensors coordinates'].values.shape} while 'sensors directions' shape is {file_dict['sensors directions'].values.shape}"
+        )
 
-    # Process each sheet
-    for sheet, df in file.items():
-        if sheet == "sns_sign" and df.empty:
-            file["sns_sign"] = pd.DataFrame(
-                np.ones(file["snsTOpts_map"].to_numpy().shape)
-            )
-        elif sheet != "sns_sign" and df.empty:
-            file[sheet] = None
+    # Check 'BG nodes' shape
+    if (
+        file_dict.get("BG nodes") is not None
+        and not file_dict["BG nodes"].empty
+        and file_dict["BG nodes"].values.shape[1] != 3
+    ):
+        raise ValueError(
+            "'BG nodes' should have 3 columns for the x,y and z coordinates."
+            f"'BG nodess' have {file_dict['BG nodes'].values.shape[1]} columns"
+        )
 
-        if sheet == "sns_names" and df.shape[0] > 1:
-            sens_names = [
-                [item for item in row if not pd.isna(item)] for row in df.values.tolist()
-            ]
-            if ref_ind is None:
-                raise AttributeError(
-                    "You need to specify the reference indices for a Multi-setup test"
-                )
-            k = len(ref_ind[0])  # number of reference sensors (from the first setup)
+    # Check 'BG lines' shape
+    if (
+        file_dict.get("BG lines") is not None
+        and not file_dict["BG lines"].empty
+        and file_dict["BG lines"].values.shape[1] != 2
+    ):
+        raise ValueError(
+            "'BG lines' should have 2 columns for the starting and ending node of the line."
+            f"'BG lines' have {file_dict['BG lines'].values.shape[1]} columns"
+        )
 
-            # Create reference strings and flatten the list
-            sens_name_fl = [f"REF{i+1}" for i in range(k)]
-            sens_name_fl += [
-                item
-                for i, row in enumerate(sens_names)
-                for j, item in enumerate(row)
-                if j not in ref_ind[i]
-            ]
-            file[sheet] = sens_name_fl
-        elif sheet == "sns_names":  # and df.shape[0] == 1:
-            file[sheet] = df.values.tolist()[0]
+    # Check 'BG surfaces' shape
+    if (
+        file_dict.get("BG surfaces") is not None
+        and not file_dict["BG surfaces"].empty
+        and file_dict["BG surfaces"].values.shape[1] != 3
+    ):
+        raise ValueError(
+            "'BG surfaces' should have 3 columns for the i,j and k node of the triangle."
+            f"'BG surfaces' have {file_dict['BG surfaces'].values.shape[1]} columns"
+        )
 
+    # Check on same index 'sensors coordinates' and 'sensors directions'
+    if (
+        file_dict["sensors coordinates"].index.to_list()
+        != file_dict["sensors directions"].index.to_list()
+    ):
+        raise ValueError(
+            "'sensors coordinates' and 'sensors directions' must have the same index.\n"
+            f"'sensors coordinates' index is {file_dict['sensors coordinates'].index} while 'sensors directions' index is {file_dict['sensors directions'].index}"
+        )
+
+    # Extract the relevant dataframes
+    sens_names = file_dict["sensors names"]
+    sens_names = flatten_sns_names(sens_names, ref_ind)
+
+    # Check for the presence of each string in the list
+    if not all(
+        item in file_dict["sensors coordinates"].index.to_list() for item in sens_names
+    ):
+        raise ValueError(
+            "All sensors names must be present as index of the sensors coordinates dataframe!"
+        )
+
+    # -----------------------------------------------------------------------------
+    # Find the indices that rearrange sens_coord to sens_names
+    # newIDX = find_map(sens_names, file_dict['sensors coordinates'].index.to_numpy())
+    # reorder if necessary
+    sens_coord = file_dict["sensors coordinates"].reindex(index=sens_names)
+    sens_dir = file_dict["sensors directions"].reindex(index=sens_names).values
+
+    # -----------------------------------------------------------------------------
+    # Adjust to 0 indexing
+    for key in ["sensors lines", "BG lines", "BG surfaces"]:
+        if key in file_dict and not file_dict[key].empty:
+            file_dict[key] = file_dict[key].sub(1)
+    # -----------------------------------------------------------------------------
+    # if there is no entry create an empty one
+    for key in all_sheets:
+        if key not in file_dict:
+            file_dict[key] = pd.DataFrame()
+
+    # Transform to None empty dataframes
+    for sheet, df in file_dict.items():
+        if df.empty:
+            file_dict[sheet] = None
+
+        # Transform to array relevant dataframes
         if (
-            sheet in ["sns_lines", "sns_surf", "BG_nodes", "BG_lines", "BG_Surf"]
-            and file[sheet] is not None
+            sheet in ["sensors lines", "BG nodes", "BG lines", "BG surfaces"]
+            and file_dict[sheet] is not None
         ):
-            file[sheet] = file[sheet].to_numpy()
+            file_dict[sheet] = file_dict[sheet].to_numpy()
 
-    # Adjust to 0 indexed lines
-    if file["BG_lines"] is not None:
-        file["BG_lines"] = np.subtract(file["BG_lines"], 1)
-    if file["sns_lines"] is not None:
-        file["sns_lines"] = np.subtract(file["sns_lines"], 1)
-    if file["BG_Surf"] is not None:
-        file["BG_Surf"] = np.subtract(file["BG_Surf"], 1)
-    if file["sns_surf"] is not None:
-        file["sns_surf"] = np.subtract(file["sns_surf"], 1)
+    sens_lines = file_dict["sensors lines"]
+    BG_nodes = file_dict["BG nodes"]
+    BG_lines = file_dict["BG lines"]
+    BG_surf = file_dict["BG surfaces"]
 
-    sens_names = (file["sns_names"],)
-    pts_coord = (file["pts_crd"],)
-    sens_map = (file["snsTOpts_map"],)
-    cstrn = (file.get("snsTOpts_cstrn"),)
-    sens_sign = (file["sns_sign"],)
-    sens_lines = (file["sns_lines"],)
-    sens_surf = (file["sns_surf"],)
-    bg_nodes = (file["BG_nodes"],)
-    bg_lines = (file["BG_lines"],)
-    bg_surf = (file["BG_Surf"],)
+    return (sens_names, sens_coord, sens_dir, sens_lines, BG_nodes, BG_lines, BG_surf)
+
+
+def check_on_geo2(file_dict, ref_ind=None, fill_na="zero"):
+    # Remove INFO sheet from dict of dataframes
+    if "INFO" in file_dict:
+        del file_dict["INFO"]
+
+    # -----------------------------------------------------------------------------
+    required_sheets = ["sensors names", "points coordinates", "mapping"]
+    all_sheets = required_sheets + [
+        "constraints",
+        "sensors sign",
+        "sensors lines",
+        "sensors surfaces",
+        "BG nodes",
+        "BG lines",
+        "BG surfaces",
+    ]
+
+    # Ensure required sheets exist
+    if not all(sheet in file_dict for sheet in required_sheets):
+        raise ValueError(f"At least the sheets {required_sheets} must be defined!")
+
+    # Ensure all sheets are valid
+    for sheet in file_dict:
+        if sheet not in all_sheets:
+            raise ValueError(
+                f"'{sheet}' is not a valid name. Valid sheet names are: \n"
+                f"{all_sheets}"
+            )
+
+    # -----------------------------------------------------------------------------
+    # Check 'points coordinates' shape
+    if file_dict["points coordinates"].values.shape[1] != 3:
+        raise ValueError(
+            "'points coordinates' should have 3 columns for the x,y and z coordinates."
+            f"'points coordinates' have {file_dict['points coordinates'].values.shape[1]} columns"
+        )
+
+    # Check on same shape 'points coordinates' and 'mapping'
+    if file_dict["points coordinates"].values.shape != file_dict["mapping"].values.shape:
+        raise ValueError(
+            "'points coordinates' and 'mapping' must have the same shape.\n"
+            f"'points coordinates' shape is {file_dict['points coordinates'].values.shape} while 'mapping' shape is {file_dict['mapping'].values.shape}"
+        )
+
+    # Check on shape for 'sensors sign'
+    if (
+        file_dict.get("sensors sign") is not None
+        and not file_dict["sensors sign"].empty
+        and file_dict["points coordinates"].values.shape
+        != file_dict["sensors sign"].values.shape
+    ):
+        raise ValueError(
+            "'points coordinates' and 'sensors sign' must have the same shape.\n"
+            f"'points coordinates' shape is {file_dict['points coordinates'].values.shape} while 'sensors sign' shape is {file_dict['sensors sign'].values.shape}"
+        )
+
+    # Check 'BG nodes' shape
+    if (
+        file_dict.get("BG nodes") is not None
+        and not file_dict["BG nodes"].empty
+        and file_dict["BG nodes"].values.shape[1] != 3
+    ):
+        raise ValueError(
+            "'BG nodes' should have 3 columns for the x,y and z coordinates."
+            f"'BG nodess' have {file_dict['BG nodes'].values.shape[1]} columns"
+        )
+
+    # Check 'BG lines' shape
+    if (
+        file_dict.get("BG lines") is not None
+        and not file_dict["BG lines"].empty
+        and file_dict["BG lines"].values.shape[1] != 2
+    ):
+        raise ValueError(
+            "'BG lines' should have 2 columns for the starting and ending node of the line."
+            f"'BG lines' have {file_dict['BG lines'].values.shape[1]} columns"
+        )
+
+    # Check 'BG surfaces' shape
+    if (
+        file_dict.get("BG surfaces") is not None
+        and not file_dict["BG surfaces"].empty
+        and file_dict["BG surfaces"].values.shape[1] != 3
+    ):
+        raise ValueError(
+            "'BG surfaces' should have 3 columns for the i,j and k node of the triangle."
+            f"'BG surfaces' have {file_dict['BG surfaces'].values.shape[1]} columns"
+        )
+
+    # if there is no 'sensors sign' create one
+    if file_dict.get("sensors sign") is None or file_dict["sensors sign"].empty:
+        sens_sign = pd.DataFrame(
+            np.ones(file_dict["points coordinates"].values.shape),
+            columns=file_dict["points coordinates"].columns,
+        )
+        file_dict["sensors sign"] = sens_sign
+
+    # -----------------------------------------------------------------------------
+    # Check that mapping contains all sensors name
+    # Extract the relevant dataframes
+    sens_names = file_dict["sensors names"]
+    sens_names = flatten_sns_names(sens_names, ref_ind)
+    df_map = file_dict["mapping"]
+    constraints = file_dict["constraints"].fillna(0)
+
+    if fill_na == "zero":
+        df_map = df_map.fillna(0.0)
+    elif fill_na == "interp":
+        df_map = df_map.fillna("interp")
+
+    file_dict["mapping"] = df_map
+
+    # Step 1: Flatten the DataFrame to a single list of values
+    map_fl = df_map.values.flatten()
+    # Step 2: Convert all values to strings
+    map_str_fl = [str(value) for value in map_fl]
+    # Step 3: Check for the presence of each string in the list
+    if not all(item in map_str_fl for item in sens_names):
+        raise ValueError("All sensors names must be present in the mapping dataframe!")
+
+    # -----------------------------------------------------------------------------
+    # Check that the constraints columns correspond to sensors names
+    columns = constraints.columns.to_list()
+    indices = constraints.index.to_list()
+    if not all(item in sens_names for item in columns):
+        raise ValueError(
+            "The constraints columns names must correspond to sensors names.\n"
+            f"constraints columns names: {columns}, \n"
+            f"sensors names: {sens_names}"
+        )
+
+    # -----------------------------------------------------------------------------
+    # Check that the constraints names are the same as those used in mapping
+    list_of_possible_constraints = ["0", "0.0", "interp"]
+    # remove values equal to sensors names and other possible values (should be left with only contraints)
+    map_str_cstr = [
+        value
+        for value in map_str_fl
+        if value not in sens_names and value not in list_of_possible_constraints
+    ]
+    if not all(item in map_str_cstr for item in indices):
+        raise ValueError(
+            "The constraints names (index column) must be the same as those used in mapping.\n"
+            f"constraints index column: {indices}, \n"
+            f"mapping : {map_str_cstr}"
+        )
+
+    # -----------------------------------------------------------------------------
+    # Add missing sensor names with all zeros to the constraints DataFrame
+    missing_sensors = [name for name in sens_names if name not in columns]
+    for name in missing_sensors:
+        constraints[name] = 0
+
+    # Reorder columns to match the order of sens_names if necessary
+    file_dict["constraints"] = constraints[sens_names]
+
+    # -----------------------------------------------------------------------------
+    # Adjust to 0 indexing
+    for key in ["sensors lines", "sensors surfaces", "BG lines", "BG surfaces"]:
+        if key in file_dict and not file_dict[key].empty:
+            file_dict[key] = file_dict[key].sub(1)
+    # -----------------------------------------------------------------------------
+    # if there is no entry create an empty one
+    for key in all_sheets:
+        if key not in file_dict:
+            file_dict[key] = pd.DataFrame()
+
+    # Transform to None empty dataframes
+    for sheet, df in file_dict.items():
+        if df.empty:
+            file_dict[sheet] = None
+
+        # Transform to array relevant dataframes
+        if (
+            sheet
+            in [
+                "sensors lines",
+                "sensors surfaces",
+                "BG nodes",
+                "BG lines",
+                "BG surfaces",
+            ]
+            and file_dict[sheet] is not None
+        ):
+            file_dict[sheet] = file_dict[sheet].to_numpy()
+
+    # sens_names = file_dict["sensors names"]
+    pts_coord = file_dict["points coordinates"]
+    sens_map = file_dict["mapping"]
+    cstr = file_dict["constraints"]
+    sens_sign = file_dict["sensors sign"]
+    sens_lines = file_dict["sensors lines"]
+    sens_surf = file_dict["sensors surfaces"]
+    BG_nodes = file_dict["BG nodes"]
+    BG_lines = file_dict["BG lines"]
+    BG_surf = file_dict["BG surfaces"]
+
     return (
-        sens_names[0],
-        pts_coord[0],
-        sens_map[0],
-        cstrn[0],
-        sens_sign[0],
-        sens_lines[0],
-        sens_surf[0],
-        bg_nodes[0],
-        bg_lines[0],
-        bg_surf[0],
+        sens_names,
+        pts_coord,
+        sens_map,
+        cstr,
+        sens_sign,
+        sens_lines,
+        sens_surf,
+        BG_nodes,
+        BG_lines,
+        BG_surf,
     )
 
 
@@ -272,7 +444,7 @@ def flatten_sns_names(sens_names, ref_ind=None):
     return sns_names_fl
 
 
-def Exdata():
+def example_data():
     """
     This function generates a time history of acceleration for a 5 DOF
     system.
@@ -298,9 +470,9 @@ def Exdata():
     T = 900  # [sec] Period of the time series
 
     dt = 1 / fs  # [sec] time resolution
-    N = int(T / dt)  # number of data points
+    Ndat = int(T / dt)  # number of data points
 
-    t = np.linspace(0, T + dt, N)
+    t = np.linspace(0, T + dt, Ndat)
 
     # =========================================================================
     # SYSTEM DEFINITION
@@ -386,7 +558,7 @@ def Exdata():
 
     # Assembling the forcing vectors (N x ndof) (random white noise!)
     # N.B. N=number of data points; ndof=number of DOF
-    u = np.array([rng.randn(N) * af for r in range(_ndof)]).T
+    u = np.array([rng.randn(Ndat) * af for r in range(_ndof)]).T
 
     # Solving the system
     tout, yout, xout = signal.lsim(sys, U=u, T=t)
@@ -405,7 +577,7 @@ def Exdata():
     acc = a.copy()
     for _ind in range(_ndof):
         # Measurments POLLUTED BY NOISE
-        acc[:, _ind] = a[:, _ind] + ar * rng.randn(N)
+        acc[:, _ind] = a[:, _ind] + ar * rng.randn(Ndat)
 
     # # Subplot of the accelerations
     # fig, axs = plt.subplots(5,1,sharex=True)
@@ -785,21 +957,22 @@ def MAC(phi_X: np.ndarray, phi_A: np.ndarray) -> np.ndarray:
         )
 
     # mine
-    MAC = np.abs(np.dot(phi_X.conj().T, phi_A)) ** 2 / (
-        (np.dot(phi_X.conj().T, phi_X)) * (np.dot(phi_A.conj().T, phi_A))
-    )
+    # MAC = np.abs(np.dot(phi_X.conj().T, phi_A)) ** 2 / (
+    #     (np.dot(phi_X.conj().T, phi_X)) * (np.dot(phi_A.conj().T, phi_A))
+    # )
     # original
-    # MAC = np.abs(np.conj(phi_X).T @ phi_A)**2
-    # for i in range(phi_X.shape[1]):
-    #     for j in range(phi_A.shape[1]):
-    #         MAC[i, j] = MAC[i, j] /\
-    #             (np.conj(phi_X[:, i]) @ phi_X[:, i] *
-    #              np.conj(phi_A[:, j]) @ phi_A[:, j])
+    MAC = np.abs(np.conj(phi_X).T @ phi_A) ** 2
+    MAC = MAC.astype(complex)
+    for i in range(phi_X.shape[1]):
+        for j in range(phi_A.shape[1]):
+            MAC[i, j] = MAC[i, j] / (
+                np.conj(phi_X[:, i]) @ phi_X[:, i] * np.conj(phi_A[:, j]) @ phi_A[:, j]
+            )
 
     if MAC.shape == (1, 1):
         MAC = MAC[0, 0]
 
-    return MAC
+    return MAC.real
 
 
 # -----------------------------------------------------------------------------
