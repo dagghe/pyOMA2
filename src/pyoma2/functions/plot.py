@@ -15,6 +15,8 @@ import numpy as np
 from scipy import signal
 from scipy.interpolate import interp1d
 
+from .gen import MAC
+
 logger = logging.getLogger(__name__)
 
 # =============================================================================
@@ -65,7 +67,7 @@ def CMIF_plot(
     """
     # COMPLEX MODE INDICATOR FUNCTION
     if fig is None and ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
     if nSv == "all":
         nSv = S_val.shape[1]
     # Check that the number of singular value to plot is lower thant the total
@@ -297,7 +299,7 @@ def Stab_plot(
     typically considered as indicators of physical modes.
     """
     if fig is None and ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
 
     # Stable pole
     a = np.where(Lab == 7, Fn, np.nan)
@@ -440,7 +442,7 @@ def Cluster_plot(
     h = np.where(Lab == 0, Fn, np.nan)
     hh = np.where(Lab == 0, Sm, np.nan)
 
-    fig, ax1 = plt.subplots()
+    fig, ax1 = plt.subplots(figsize=(8, 6), tight_layout=True)
     ax1.set_title("Frequency-damping clustering")
     ax1.set_ylabel("Damping")
     ax1.set_xlabel("Frequency [Hz]")
@@ -517,7 +519,7 @@ def SvalH_plot(
 ):
     """ """
     if fig is None and ax is None:
-        fig, ax = plt.subplots(tight_layout=True)
+        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
 
     # SINGULAR VALUE DECOMPOSITION
     U1, S1, V1_t = np.linalg.svd(H)
@@ -1041,7 +1043,9 @@ def plt_data(
     time = np.linspace(0, timef - 1 / fs, Ndat)  # time array
 
     nr = round(Nch / nc)  # number of rows in the subplot
-    fig, axs = plt.subplots(figsize=(8, 6), nrows=nr, ncols=nc, sharex=True, sharey=True)
+    fig, axs = plt.subplots(
+        figsize=(8, 6), nrows=nr, ncols=nc, sharex=True, sharey=True, tight_layout=True
+    )
     fig.suptitle("Time Histories of all channels")
 
     kk = 0  # iterator for the dataset
@@ -1342,3 +1346,39 @@ def STFT(
         figs.append(fig)
         axs.append(ax)
     return figs, axs
+
+
+def plot_mac_matrix(array1, array2, colormap="plasma", ax=None):
+    """
+    Compute and plot the MAC matrix between the columns of two 2D arrays.
+    """
+
+    # Check if there are more than 1 column vector in the input arrays
+    if array1.shape[1] < 2 or array2.shape[1] < 2:
+        raise ValueError("Each input array must have more than one column vector.")
+
+    mac_matr = MAC(array1, array2)
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
+    else:
+        fig = ax.figure
+
+    cax = ax.imshow(mac_matr, cmap=colormap, aspect="auto")
+    fig.colorbar(cax, ax=ax, label="MAC value")
+
+    n_cols1 = array1.shape[1]
+    n_cols2 = array2.shape[1]
+    x_labels = [f"mode nr. {i+1}" for i in range(n_cols1)]
+    y_labels = [f"mode nr. {i+1}" for i in range(n_cols2)]
+
+    ax.set_xticks(np.arange(n_cols1))
+    ax.set_xticklabels(x_labels, rotation=45)
+    ax.set_yticks(np.arange(n_cols2))
+    ax.set_yticklabels(y_labels)
+
+    ax.set_xlabel("Array 1")
+    ax.set_ylabel("Array 2")
+    ax.set_title("MAC Matrix")
+
+    return fig, ax

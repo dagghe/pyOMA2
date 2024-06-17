@@ -52,7 +52,6 @@ class PvGeoPlotter:
     def plot_geo(
         self,
         scaleF=1,
-        pl=None,
         col_sens="red",
         plot_points=True,
         points_sett="default",
@@ -60,12 +59,21 @@ class PvGeoPlotter:
         lines_sett="default",
         plot_surf=True,
         surf_sett="default",
+        pl=None,
+        bg_plotter: bool = True,
+        notebook: bool = False,
     ):
         # import geometry
         Geo = self.Geo
 
+        # define the plotter object type
         if pl is None:
-            pl = pvqt.BackgroundPlotter()
+            if notebook:
+                pl = pv.Plotter(notebook=True)
+            elif bg_plotter:
+                pl = pvqt.BackgroundPlotter()
+            else:
+                pl = pv.Plotter()
 
         # define default settings for plot
         undef_sett = dict(
@@ -102,9 +110,9 @@ class PvGeoPlotter:
             face_mesh = pv.PolyData(points, faces=surfs)
             pl.add_mesh(face_mesh, **surf_sett)
 
-        # Add axes
-        pl.add_axes(line_width=5, labels_off=False)
-        pl.show()
+        # # Add axes
+        # pl.add_axes(line_width=5, labels_off=False)
+        # pl.show()
 
         # add sensor points + arrows for direction
         sens_names = Geo.sens_names
@@ -128,11 +136,12 @@ class PvGeoPlotter:
 
         points_new = []
         directions = []
-        for row1, row2 in zip(ch_names, points):
+        for i, (row1, row2) in enumerate(zip(ch_names, points)):
             for j, elem in enumerate(row1):
                 if elem != "nan":
                     vector = [0, 0, 0]
-                    vector[j] = 1
+                    # vector[j] = 1
+                    vector[j] = Geo.sens_sign.values[i, j]
                     directions.append(vector)
                     points_new.append(row2)
 
@@ -158,33 +167,37 @@ class PvGeoPlotter:
         self,
         mode_nr: int = 1,
         scaleF: float = 1.0,
-        pl=None,
-        plot_points: bool = True,
         plot_lines: bool = True,
         plot_surf: bool = True,
         plot_undef: bool = True,
         def_sett: dict = "default",
         undef_sett: dict = "default",
+        pl=None,
+        bg_plotter: bool = True,
+        notebook: bool = False,
     ):
         # import geometry and results
         Geo = self.Geo
         Res = self.Res
 
+        # define the plotter object type
         if pl is None:
-            pl = pvqt.BackgroundPlotter()
+            if notebook:
+                pl = pv.Plotter(notebook=True)
+            elif bg_plotter:
+                pl = pvqt.BackgroundPlotter()
+            else:
+                pl = pv.Plotter()
 
         # define default settings for plot
-        def_set = dict(cmap="plasma", opacity=0.7, show_scalar_bar=False)
-        undef_set = dict(
-            color="gray",
-            opacity=0.3,
-        )
+        def_settings = dict(cmap="plasma", opacity=0.7, show_scalar_bar=False)
+        undef_settings = dict(color="gray", opacity=0.3)
 
         if def_sett == "default":
-            def_sett = def_set
+            def_sett = def_settings
 
         if undef_sett == "default":
-            undef_sett = undef_set
+            undef_sett = undef_settings
 
         # GEOMETRY
         points = Geo.pts_coord.to_numpy()
@@ -211,8 +224,7 @@ class PvGeoPlotter:
 
         # If true plot undeformed shape
         if plot_undef:
-            if plot_points:
-                pl.add_points(points, **undef_sett)
+            pl.add_points(points, **undef_sett)
             if plot_lines:
                 line_mesh = pv.PolyData(points, lines=lines)
                 pl.add_mesh(line_mesh, **undef_sett)
@@ -221,8 +233,7 @@ class PvGeoPlotter:
                 pl.add_mesh(face_mesh, **undef_sett)
 
         # PLOT MODE SHAPE
-        if plot_points:
-            pl.add_points(newpoints, scalars=df_phi_map.values, **def_sett)
+        pl.add_points(newpoints, scalars=df_phi_map.values, **def_sett)
         if plot_lines:
             line_mesh = pv.PolyData(newpoints, lines=lines)
             pl.add_mesh(line_mesh, scalars=df_phi_map.values, **def_sett)
@@ -245,19 +256,17 @@ class PvGeoPlotter:
         self,
         mode_nr: int = 1,
         scaleF: float = 1.0,
-        pl=None,
-        plot_points: bool = True,
         plot_lines: bool = True,
         plot_surf: bool = True,
         def_sett: dict = "default",
         saveGIF: bool = False,
+        pl=None,
     ):
-        # TODO ADD if plot_points... condition
         # define default settings for plot
-        def_set = dict(cmap="plasma", opacity=0.7, show_scalar_bar=False)
+        def_settings = dict(cmap="plasma", opacity=0.7, show_scalar_bar=False)
 
         if def_sett == "default":
-            def_sett = def_set
+            def_sett = def_settings
 
         # import geometry and results
         Geo = self.Geo
@@ -284,17 +293,18 @@ class PvGeoPlotter:
         # copy the dataset as we will modify its coordinates
         points_c = points.copy()
 
-        pl = pv.Plotter(off_screen=False) if saveGIF else pvqt.BackgroundPlotter()
+        if pl is None:
+            pl = pv.Plotter(off_screen=False) if saveGIF else pvqt.BackgroundPlotter()
 
+        # PLOT MODE SHAPE
         def_pts = pl.add_points(points_c, scalars=df_phi_map.values, **def_sett)
-        line_mesh = pv.PolyData(points_c, lines=lines)
-        pl.add_mesh(line_mesh, scalars=df_phi_map.values, **def_sett)
-        face_mesh = pv.PolyData(points_c, faces=surfs)
-        pl.add_mesh(
-            face_mesh,
-            scalars=df_phi_map.values,
-            **def_sett,
-        )
+
+        if plot_lines:
+            line_mesh = pv.PolyData(points_c, lines=lines)
+            pl.add_mesh(line_mesh, scalars=df_phi_map.values, **def_sett)
+        if plot_surf:
+            face_mesh = pv.PolyData(points_c, faces=surfs)
+            pl.add_mesh(face_mesh, scalars=df_phi_map.values, **def_sett)
 
         pl.add_text(
             rf"Mode nr. {mode_nr}, fn = {Res.Fn[mode_nr-1]:.3f}Hz",
