@@ -81,7 +81,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         pov = self.run_params.pov
         # self.run_params.df = 1 / dt / nxseg
 
-        freq, Sy = fdd.SD_Est(Y, Y, self.dt, nxseg, method=method, pov=pov)
+        freq, Sy = fdd.SD_est(Y, Y, self.dt, nxseg, method=method, pov=pov)
         Sval, Svec = fdd.SD_svalsvec(Sy)
 
         # Return results
@@ -384,7 +384,7 @@ class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         self.result.Phi = Phi_FDD
         self.result.forPlot = forPlot
 
-    def plot_FIT(
+    def plot_EFDDfit(
         self, freqlim: typing.Optional[tuple[float, float]] = None, *args, **kwargs
     ) -> typing.Any:
         """

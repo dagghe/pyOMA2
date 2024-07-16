@@ -67,36 +67,51 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         pov = self.run_params.pov
-        sgn_basf = self.run_params.sgn_basf
+        # sgn_basf = self.run_params.sgn_basf
         ordmax = self.run_params.ordmax
         ordmin = self.run_params.ordmin
-        err_fn = self.run_params.err_fn
-        err_xi = self.run_params.err_xi
-        err_phi = self.run_params.err_phi
-        xi_max = self.run_params.xi_max
-        mpc_lim = self.run_params.mpc_lim
-        mpd_lim = self.run_params.mpd_lim
-
-        freq, Sy = fdd.SD_Est(Y, Y, self.dt, nxseg, method=method, pov=pov)
+        sc = self.run_params.sc
+        hc = self.run_params.hc
+        
+        if method == "per":
+            sgn_basf=-1
+        elif method == "cor":
+            sgn_basf=+1
+        
+        freq, Sy = fdd.SD_est(Y, Y, self.dt, nxseg, method=method, pov=pov)
 
         Ad, Bn = plscf.pLSCF(Sy, self.dt, ordmax, sgn_basf=sgn_basf)
-        Fn_pol, Xi_pol, Ms_pol = plscf.pLSCF_Poles(
+        
+        Fns, Xis, Phis, Lambds = plscf.pLSCF_poles(
             Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
         )
-        Lab = gen.lab_stab(
-            Fn_pol,
-            Xi_pol,
-            Ms_pol,
-            ordmin,
-            ordmax,
-            step=1,
-            err_fn=err_fn,
-            err_xi=err_xi,
-            err_ms=err_phi,
-            max_xi=xi_max,
-            mpc_lim=mpc_lim,
-            mpd_lim=mpd_lim,
-        )
+        
+        # Apply HARD CRITERIA
+        hc_conj = hc["conj"]
+        hc_xi_max = hc["xi_max"]
+        hc_mpc_lim = hc["mpc_lim"]
+        hc_mpd_lim = hc["mpd_lim"]
+        
+        # HC - presence of complex conjugate
+        if hc_conj:
+            Lambds, mask1 = gen.HC_conj(Lambds)
+            lista = [Fns, Xis, Phis]
+            Fns, Xis, Phis = gen.applymask(lista, mask1, Phis.shape[2])
+            
+        # HC - damping
+        Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
+        lista = [Fns, Phis]
+        Fns, Phis = gen.applymask(lista, mask2, Phis.shape[2])
+
+        # HC - MPC and MPD
+        mask3, mask4 = gen.HC_PhiComp(Phis, hc_mpc_lim, hc_mpd_lim)
+        lista = [Fns, Xis, Phis]
+        Fns, Xis, Phis = gen.applymask(lista, mask3, Phis.shape[2])
+        Fns, Xis, Phis = gen.applymask(lista, mask4, Phis.shape[2])
+
+        # Apply SOFT CRITERIA
+        # Get the labels of the poles
+        Lab = gen.SC_apply(Fns, Xis, Phis, ordmin, ordmax-1, 1, sc["err_fn"], sc["err_xi"], sc["err_phi"]) 
 
         # Return results
         return self.ResultCls(
@@ -104,9 +119,9 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
             Sy=Sy,
             Ad=Ad,
             Bn=Bn,
-            Fn_poles=Fn_pol,
-            xi_poles=Xi_pol,
-            Phi_poles=Ms_pol,
+            Fn_poles=Fns,
+            Xi_poles=Xis,
+            Phi_poles=Phis,
             Lab=Lab,
         )
 
@@ -146,12 +161,12 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
 
         # Get poles
         Fn_pol = self.result.Fn_poles
-        Sm_pol = self.result.xi_poles
+        Sm_pol = self.result.Xi_poles
         Ms_pol = self.result.Phi_poles
         Lab = self.result.Lab
 
         # Extract modal results
-        Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = plscf.pLSCF_MPE(
+        Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = plscf.pLSCF_mpe(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, rtol=rtol
         )
 
@@ -191,7 +206,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
 
         # Get poles
         Fn_pol = self.result.Fn_poles
-        Sm_pol = self.result.xi_poles
+        Sm_pol = self.result.Xi_poles
         Ms_pol = self.result.Phi_poles
 
         # chiamare plot interattivo
@@ -200,7 +215,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         order = SFP.result[1]
 
         # e poi estrarre risultati
-        Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = plscf.pLSCF_MPE(
+        Fn_pLSCF, Xi_pLSCF, Phi_pLSCF, order_out = plscf.pLSCF_mpe(
             sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, rtol=rtol
         )
 
@@ -210,7 +225,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         self.result.Xi = Xi_pLSCF
         self.result.Phi = Phi_pLSCF
 
-    def plot_STDiag(
+    def plot_stab(
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
@@ -231,10 +246,10 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         Any
             A tuple containing the matplotlib figure and axes objects for the stability diagram.
         """
-        fig, ax = plot.Stab_plot(
+        fig, ax = plot.stab_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,
-            step=self.run_params.step,
+            step=1,
             ordmax=self.run_params.ordmax,
             ordmin=self.run_params.ordmin,
             freqlim=freqlim,
@@ -267,9 +282,9 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         if not self.result:
             raise ValueError("Run algorithm first")
 
-        fig, ax = plot.Cluster_plot(
+        fig, ax = plot.cluster_plot(
             Fn=self.result.Fn_poles,
-            Sm=self.result.xi_poles,
+            Sm=self.result.Xi_poles,
             Lab=self.result.Lab,
             ordmin=self.run_params.ordmin,
             freqlim=freqlim,
@@ -317,42 +332,56 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
             An instance of `pLSCFResult` containing the analysis results, including frequencies,
             system matrices, identified poles, and their labels.
         """
-
         Y = self.data
         nxseg = self.run_params.nxseg
         method = self.run_params.method_SD
         pov = self.run_params.pov
-        sgn_basf = self.run_params.sgn_basf
-        step = self.run_params.step
+        # sgn_basf = self.run_params.sgn_basf
+        # step = self.run_params.step
         ordmax = self.run_params.ordmax
         ordmin = self.run_params.ordmin
-        err_fn = self.run_params.err_fn
-        err_xi = self.run_params.err_xi
-        err_phi = self.run_params.err_phi
-        xi_max = self.run_params.xi_max
-        mpc_lim = self.run_params.mpc_lim
-        mpd_lim = self.run_params.mpd_lim
-        # self.run_params.df = 1 / dt / nxseg
-
+        sc = self.run_params.sc
+        hc = self.run_params.hc
+        
+        if method == "per":
+            sgn_basf=-1
+        elif method == "cor":
+            sgn_basf=+1
+        
         freq, Sy = fdd.SD_PreGER(Y, self.fs, nxseg=nxseg, method=method, pov=pov)
+        
         Ad, Bn = plscf.pLSCF(Sy, self.dt, ordmax, sgn_basf=sgn_basf)
-        Fn_pol, Xi_pol, Ms_pol = plscf.pLSCF_Poles(
+        
+        Fns, Xis, Phis, Lambds = plscf.pLSCF_poles(
             Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
         )
-        Lab = gen.lab_stab(
-            Fn_pol,
-            Xi_pol,
-            Ms_pol,
-            ordmin,
-            ordmax,
-            step,
-            err_fn=err_fn,
-            err_xi=err_xi,
-            err_ms=err_phi,
-            max_xi=xi_max,
-            mpc_lim=mpc_lim,
-            mpd_lim=mpd_lim,
-        )
+        
+        # Apply HARD CRITERIA
+        hc_conj = hc["conj"]
+        hc_xi_max = hc["xi_max"]
+        hc_mpc_lim = hc["mpc_lim"]
+        hc_mpd_lim = hc["mpd_lim"]
+        
+        # HC - presence of complex conjugate
+        if hc_conj:
+            Lambds, mask1 = gen.HC_conj(Lambds)
+            lista = [Fns, Xis, Phis]
+            Fns, Xis, Phis = gen.applymask(lista, mask1, Phis.shape[2])
+
+        # HC - damping
+        Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
+        lista = [Fns, Phis]
+        Fns, Phis = gen.applymask(lista, mask2, Phis.shape[2])
+
+        # HC - MPC and MPD
+        mask3, mask4 = gen.HC_PhiComp(Phis, hc_mpc_lim, hc_mpd_lim)
+        lista = [Fns, Xis, Phis]
+        Fns, Xis, Phis = gen.applymask(lista, mask3, Phis.shape[2])
+        Fns, Xis, Phis = gen.applymask(lista, mask4, Phis.shape[2])
+
+        # Apply SOFT CRITERIA
+        # Get the labels of the poles
+        Lab = gen.SC_apply(Fns, Xis, Phis, ordmin, ordmax-1, 1, sc["err_fn"], sc["err_xi"], sc["err_phi"]) 
 
         # Return results
         return self.ResultCls(
@@ -360,8 +389,9 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
             Sy=Sy,
             Ad=Ad,
             Bn=Bn,
-            Fn_poles=Fn_pol,
-            xi_poles=Xi_pol,
-            Phi_poles=Ms_pol,
+            Fn_poles=Fns,
+            Xi_poles=Xis,
+            Phi_poles=Phis,
             Lab=Lab,
         )
+        

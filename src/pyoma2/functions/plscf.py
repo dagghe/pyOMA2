@@ -99,11 +99,11 @@ def pLSCF(
         B_num = np.moveaxis(beta, 1, 0)
         Ad.append(A_den)
         Bn.append(B_num)
-
+    
     return Ad, Bn
 
 
-def pLSCF_Poles(
+def pLSCF_poles(
     Ad: np.ndarray, Bn: np.ndarray, dt: float, methodSy: str, nxseg: int
 ) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -131,24 +131,28 @@ def pLSCF_Poles(
     Fns = []
     Xis = []
     Phis = []
+    Lambds = []
     for ii in range(len(Ad)):
         A_den = Ad[ii]
         B_num = Bn[ii]
-        A, C = rmfd2AC(A_den, B_num)
+        A, C = rmfd2ac(A_den, B_num)
 
-        fn, xi, phi = AC2MP_poly(A, C, dt, methodSy, nxseg)
+        fn, xi, phi, lam_c = ac2mp_poly(A, C, dt, methodSy, nxseg)
         fn[fn == np.inf] = np.nan
         Fns.append(fn)
         Xis.append(xi)
         Phis.append(phi)
+        Lambds.append(lam_c)
     # Transform each array in list
     Fns = [list(c) for c in Fns]
     Xis = [list(c) for c in Xis]
     Phi1 = [list(c) for c in Phis]
+    Lambds = [list(c) for c in Lambds]
 
     # Fill with nan values so to get same size and then convert back to array
     Fns = np.array(list(itertools.zip_longest(*Fns, fillvalue=np.nan)))
     Xis = np.array(list(itertools.zip_longest(*Xis, fillvalue=np.nan)))
+    Lambds = np.array(list(itertools.zip_longest(*Lambds, fillvalue=np.nan)))
     Phi1 = []
     for phi in Phis:
         phi1 = np.full((len(Phis[-1]), phi.shape[1]), np.nan).astype(complex)
@@ -157,10 +161,10 @@ def pLSCF_Poles(
 
     Phi1 = np.array(Phi1)
     Phi1 = np.moveaxis(Phi1, 1, 0)
-    return Fns, Xis, Phi1
+    return Fns, Xis, Phi1, Lambds
 
 
-def rmfd2AC(A_den: np.ndarray, B_num: np.ndarray) -> typing.Tuple[np.ndarray, np.ndarray]:
+def rmfd2ac(A_den: np.ndarray, B_num: np.ndarray) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
     Convert Right Matrix Fraction Description (RMFD) to state-space representation.
 
@@ -190,7 +194,7 @@ def rmfd2AC(A_den: np.ndarray, B_num: np.ndarray) -> typing.Tuple[np.ndarray, np
     return A, C
 
 
-def AC2MP_poly(
+def ac2mp_poly(
     A: np.ndarray, C: np.ndarray, dt: float, methodSy: str, nxseg: int
 ) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -217,38 +221,38 @@ def AC2MP_poly(
         - phi : Complex mode shapes.
     """
     Nch = C.shape[0]
-    AuVal, AuVett = np.linalg.eig(A)
-    lambd1 = (np.log(AuVal)) * (1 / dt)
+    lam_d, AuVett = np.linalg.eig(A)
+    lambd = (np.log(lam_d)) * (1 / dt)
     # replace with nan every value with positive real part
-    lambd = np.where(np.real(lambd1) > 0, np.nan, lambd1)
+    lam_c = np.where(np.real(lambd) > 0, np.nan, lambd)
     # also for the part fact
     Q = np.array(
         [
             np.where(
-                np.real(lambd1[ii]) > 0, np.repeat(np.nan, AuVett.shape[1]), AuVett[:, ii]
+                np.real(lambd[ii]) > 0, np.repeat(np.nan, AuVett.shape[1]), AuVett[:, ii]
             )
-            for ii in range(len(lambd))
+            for ii in range(len(lam_c))
         ]
     ).T
     # correct for exponential window
     if methodSy == "cor":
         tau = -(nxseg - 1) / np.log(0.01)
-        lambd = lambd - 1 / tau
-    fn = abs(lambd) / (2 * np.pi)  # natural frequencies
-    xi = -((np.real(lambd)) / (abs(lambd)))  # damping ratios
+        lam_c = lam_c - 1 / tau
+    fn = abs(lam_c) / (2 * np.pi)  # natural frequencies
+    xi = -((np.real(lam_c)) / (abs(lam_c)))  # damping ratios
     # Complex mode shapes
     phi = np.dot(C, Q)
     # normalised (unity displacement)
     phi = np.array(
         [phi[:, ii] / phi[np.argmax(abs(phi[:, ii])), ii] for ii in range(phi.shape[1])]
     ).reshape(-1, Nch)
-    return fn, xi, phi
+    return fn, xi, phi, lam_c
 
 
 # -----------------------------------------------------------------------------
 
 
-def pLSCF_MPE(
+def pLSCF_mpe(
     sel_freq: typing.List[float],
     Fn_pol: np.ndarray,
     Xi_pol: np.ndarray,

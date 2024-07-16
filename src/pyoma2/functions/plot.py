@@ -238,8 +238,107 @@ def EFDD_FIT_plot(
 
 # -----------------------------------------------------------------------------
 
+def stab_plot(
+    Fn: np.ndarray,
+    Lab: np.ndarray,
+    step: int,
+    ordmax: int,
+    ordmin: int = 0,
+    freqlim: typing.Optional[typing.Tuple] = None,
+    hide_poles: bool = True,
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
+    Fn_cov = None
+):
+    """
+    Plots a stabilization chart of the poles of a system.
 
-# COMMENT
+    Parameters
+    ----------
+    Fn : np.ndarray
+        The frequencies of the poles.
+    Lab : np.ndarray
+        Labels indicating whether each pole is stable (1) or unstable (0).
+    step : int
+        The step size between model orders.
+    ordmax : int
+        The maximum model order.
+    ordmin : int, optional
+        The minimum model order, by default 0.
+    freqlim : tuple, optional
+        The frequency limits for the x-axis as a tuple (min_freq, max_freq), by default None.
+    hide_poles : bool, optional
+        Whether to hide the unstable poles, by default True.
+    fig : plt.Figure, optional
+        A matplotlib Figure object, by default None.
+    ax : plt.Axes, optional
+        A matplotlib Axes object, by default None.
+    Fn_cov : np.ndarray, optional
+        The covariance of the frequencies, used for error bars, by default None.
+
+    Returns
+    -------
+    fig : plt.Figure
+        The matplotlib Figure object containing the plot.
+    ax : plt.Axes
+        The matplotlib Axes object containing the plot.
+    """
+    if fig is None and ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
+
+    # Stable pole
+    Fns_stab = np.where(Lab == 1, Fn, np.nan)
+
+    # new or unstable
+    Fns_unstab = np.where(Lab == 0, Fn, np.nan)
+
+    ax.set_title("Stabilisation Chart")
+    ax.set_ylabel("Model Order")
+    ax.set_xlabel("Frequency [Hz]")
+    
+    if hide_poles:
+        x = Fns_stab.flatten(order="F")
+        y = np.array([i // len(Fns_stab) for i in range(len(x))]) * step
+        ax.plot(x, y, "go", markersize=7)
+        
+        if Fn_cov is not None:
+            xerr = abs(Fn_cov * Fn).flatten(order="f")
+            xerr1 = np.where(xerr <= 0.5, xerr, np.nan)
+            xerr2 = np.where(xerr > 0.5, 0.5, np.nan)
+            ax.errorbar(x, y, xerr=xerr1, fmt="None", capsize=5, ecolor="gray")
+            ax.errorbar(x, y, xerr=xerr2, fmt="None", capsize=5, ecolor="red", label="std > 0.5")
+            ax.legend(loc="lower center", ncol=2)
+
+    else:
+        x = Fns_stab.flatten(order="f")
+        y = np.array([i // len(Fns_stab) for i in range(len(x))]) * step
+
+        x1 = Fns_unstab.flatten(order="f")
+        y1 = np.array([i // len(Fns_unstab) for i in range(len(x))]) * step
+
+        ax.plot(x, y, "go", markersize=7, label="Stable pole")
+        ax.scatter(x1, y1, marker="o", s=4, c="r", label="Unstable pole")
+        
+        if Fn_cov is not None:
+            xerr=abs(Fn_cov*Fn)
+            xerr1 = np.where(xerr <= 0.5, xerr, np.nan)
+            xerr2 = np.where(xerr > 0.5, 0.5, np.nan)
+            ax.errorbar(x, y, xerr=xerr1.flatten(order="f"),fmt="None", capsize=5, ecolor="gray")
+            ax.errorbar(x, y, xerr=xerr2.flatten(order="f"),fmt="None", capsize=5, ecolor="red" )
+            ax.errorbar(x1, y1, xerr=xerr1.flatten(order="f"),fmt="None", capsize=5, ecolor="red")
+            ax.errorbar(x1, y1, xerr=xerr2.flatten(order="f"),fmt="None", capsize=5, ecolor="red", label="std>0.5")
+
+        ax.legend(loc="lower center", ncol=2)
+        ax.set_ylim(ordmin, ordmax + 1)
+
+    ax.grid()
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
+    plt.tight_layout()
+    return fig, ax
+
+
+# LEGACY
 def Stab_plot(
     Fn: np.ndarray,
     Lab: np.ndarray,
@@ -379,7 +478,78 @@ def Stab_plot(
 
 # -----------------------------------------------------------------------------
 
+def cluster_plot(
+    Fn: np.ndarray,
+    Xi: np.ndarray,
+    Lab: np.ndarray,
+    ordmin: int = 0,
+    freqlim: typing.Optional[typing.Tuple] = None,
+    hide_poles: bool = True,
+):
+    """
+    Plots the frequency-damping clusters of the identified poles using the Stochastic Subspace Identification
+    (SSI) method.
 
+    Parameters
+    ----------
+    Fn : ndarray
+        An array containing the frequencies of poles for each model order and identification step.
+    Xi : ndarray
+        An array containing the damping ratios associated with the poles in `Fn`.
+    Lab : ndarray
+        Labels indicating whether each pole is stable (1) or unstable (0).
+    ordmin : int, optional
+        The minimum model order to be displayed on the plot. Default is 0.
+    freqlim : tuple of float, optional
+        The frequency limits for the x-axis as a tuple (min_freq, max_freq), by default None.
+    hide_poles : bool, optional
+        Whether to hide the unstable poles, by default True.
+
+    Returns
+    -------
+    tuple
+        fig : matplotlib.figure.Figure
+            The matplotlib figure object.
+        ax : matplotlib.axes.Axes
+            The axes object with the stabilization chart.
+    """
+    # Stable pole
+    a = np.where(Lab == 1, Fn, np.nan)
+    aa = np.where(Lab == 1, Xi, np.nan)
+
+    # new or unstable
+    b = np.where(Lab == 0, Fn, np.nan)
+    bb = np.where(Lab == 0, Xi, np.nan)
+
+    fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
+    ax.set_title("Frequency-damping clustering")
+    ax.set_ylabel("Damping")
+    ax.set_xlabel("Frequency [Hz]")
+    if hide_poles:
+        x = a.flatten(order="f")
+        y = aa.flatten(order="f")
+        ax.plot(x, y, "go", markersize=7, label="Stable pole")
+
+    else:
+        x = a.flatten(order="f")
+        y = aa.flatten(order="f")
+
+        x1 = b.flatten(order="f")
+        y1 = bb.flatten(order="f")
+
+        ax.plot(x, y, "go", markersize=7, label="Stable pole")
+
+        ax.scatter(x1, y1, marker="o", s=4, c="r", label="Unstable pole")
+
+        ax.legend(loc="lower center", ncol=2)
+
+    ax.grid()
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
+    plt.tight_layout()
+    return fig, ax
+
+# LEGACY
 def Cluster_plot(
     Fn: np.ndarray,
     Sm: np.ndarray,
@@ -510,7 +680,7 @@ def Cluster_plot(
 # -----------------------------------------------------------------------------
 
 
-def SvalH_plot(
+def svalH_plot(
     H: np.ndarray,
     br: int,
     iter_n: int = None,
