@@ -26,7 +26,7 @@ from matplotlib.figure import Figure
 if typing.TYPE_CHECKING:
     from pyoma2.algorithms import BaseAlgorithm
 
-from pyoma2.functions.plot import CMIF_plot, Stab_plot
+from pyoma2.functions.plot import CMIF_plot, stab_plot
 
 logger = logging.getLogger(__name__)
 
@@ -269,16 +269,16 @@ class SelFromPlot:
         Fn = self.algo.result.Fn_poles
         Lab = self.algo.result.Lab
 
-        step = self.algo.run_params.step
+        # step = self.algo.run_params.step
         ordmin = self.algo.run_params.ordmin
         ordmax = self.algo.run_params.ordmax
 
         if not update_ticks:
             self.ax2.clear()
-            Stab_plot(
+            stab_plot(
                 Fn,
                 Lab,
-                step,
+                1,
                 ordmax,
                 ordmin=ordmin,
                 freqlim=freqlim,

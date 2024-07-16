@@ -82,13 +82,13 @@ def SD_PreGER(
 
         if method == "per":
             # noverlap = nxseg*pov
-            freq, Sy_allref = SD_Est(Y_all, Y_ref, dt, nxseg, method)
-            _, Sy_allmov = SD_Est(Y_all, Y_mov, dt, nxseg, method)
+            freq, Sy_allref = SD_est(Y_all, Y_ref, dt, nxseg, method)
+            _, Sy_allmov = SD_est(Y_all, Y_mov, dt, nxseg, method)
             Gyy.append(np.hstack((Sy_allref, Sy_allmov)))
 
         elif method == "cor":
-            freq, Sy_allref = SD_Est(Y_all, Y_ref, dt, nxseg, method)
-            _, Sy_allmov = SD_Est(Y_all, Y_mov, dt, nxseg, method)
+            freq, Sy_allref = SD_est(Y_all, Y_ref, dt, nxseg, method)
+            _, Sy_allmov = SD_est(Y_all, Y_mov, dt, nxseg, method)
             Gyy.append(np.hstack((Sy_allref, Sy_allmov)))
         logger.debug("... Done with setup nr.: %s!", ii)
 
@@ -121,7 +121,7 @@ def SD_PreGER(
 # -----------------------------------------------------------------------------
 
 
-def SD_Est(
+def SD_est(
     Yall,
     Yref,
     dt,

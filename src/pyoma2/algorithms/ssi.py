@@ -80,16 +80,14 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         """
         Y = self.data.T
         br = self.run_params.br
-        method = self.run_params.method or self.method
+        method_hank = self.run_params.method or self.method
         ordmin = self.run_params.ordmin
         ordmax = self.run_params.ordmax
         step = self.run_params.step
-        err_fn = self.run_params.err_fn
-        err_xi = self.run_params.err_xi
-        err_phi = self.run_params.err_phi
-        xi_max = self.run_params.xi_max
-        mpc_lim = self.run_params.mpc_lim
-        mpd_lim = self.run_params.mpd_lim
+        sc = self.run_params.sc
+        hc = self.run_params.hc
+        calc_unc = self.run_params.calc_unc
+        nb = self.run_params.nb
 
         if self.run_params.ref_ind is not None:
             ref_ind = self.run_params.ref_ind
@@ -98,36 +96,62 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Yref = Y
 
         # Build Hankel matrix
-        H = ssi.BuildHank(Y, Yref, br, self.fs, method=method)
+        H, T = ssi.build_hank(Y=Y, Yref=Yref, br=br, method=method_hank, calc_unc=calc_unc, nb=nb )
         # Get state matrix and output matrix
-        A, C = ssi.SSI_FAST(H, br, ordmax, step)
-        # Get frequency poles (and damping and mode shapes)
-        Fn_pol, Sm_pol, Ms_pol = ssi.SSI_Poles(A, C, ordmax, self.dt, step=step)
-        # Get the labels of the poles
-        Lab = gen.lab_stab(
-            Fn_pol,
-            Sm_pol,
-            Ms_pol,
-            ordmin,
-            ordmax,
-            step,
-            err_fn,
-            err_xi,
-            err_phi,
-            xi_max,
-            mpc_lim,
-            mpd_lim,
-        )
+        Obs, A, C, Q1, Q2, Q3, Q4 = ssi.SSI_fast(H, br, ordmax, step=step, calc_unc=calc_unc, T=T, nb=nb)
 
-        # Return results
+        # Get frequency poles (and damping and mode shapes)
+        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = \
+            ssi.SSI_poles(Obs, A, C, ordmax, self.dt, step=step, calc_unc=calc_unc,
+                          Q1=Q1, Q2=Q2, Q3=Q3, Q4=Q4)
+        
+        hc_conj = hc["conj"]
+        hc_xi_max = hc["xi_max"]
+        hc_mpc_lim = hc["mpc_lim"]
+        hc_mpd_lim = hc["mpd_lim"]
+        hc_cov_max = hc["cov_max"]
+        
+        # Apply HARD CRITERIA
+        # HC - presence of complex conjugate
+        if hc_conj:
+            Lambds, mask1 = gen.HC_conj(Lambds)
+            lista = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
+            Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(lista, mask1, Phis.shape[2])
+            
+        # HC - damping
+        Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
+        lista = [Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov]
+        Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(lista, mask2, Phis.shape[2])
+
+        # HC - MPC and MPD
+        mask3, mask4 = gen.HC_PhiComp(Phis, hc_mpc_lim, hc_mpd_lim)
+        lista = [Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov]
+        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(lista, mask3, Phis.shape[2])
+        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(lista, mask4, Phis.shape[2])
+
+        # HC - maximum covariance
+        if Fn_cov is not None:
+            Fn_cov, mask5  = gen.HC_cov(Fn_cov, hc_cov_max)
+            lista = [Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov]
+            Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov = gen.applymask(lista, mask5, Phis.shape[2])
+
+        # Apply SOFT CRITERIA
+        # Get the labels of the poles
+        Lab = gen.SC_apply(Fns, Xis, Phis, ordmin, ordmax, step, sc["err_fn"], sc["err_xi"], sc["err_phi"])
+
         return SSIResult(
+            Obs = Obs,
             A=A,
             C=C,
             H=H,
-            Fn_poles=Fn_pol,
-            xi_poles=Sm_pol,
-            Phi_poles=Ms_pol,
+            Lambds=Lambds,
+            Fn_poles=Fns,
+            Xi_poles=Xis,
+            Phi_poles=Phis,
             Lab=Lab,
+            Fn_poles_cov=Fn_cov,
+            Xi_poles_cov=Xi_cov,
+            Phi_poles_cov=Phi_cov,  
         )
 
     def mpe(
@@ -163,20 +187,28 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
 
         # Get poles
         Fn_pol = self.result.Fn_poles
-        Sm_pol = self.result.xi_poles
-        Ms_pol = self.result.Phi_poles
+        Xi_pol = self.result.Xi_poles
+        Phi_pol = self.result.Phi_poles
         Lab = self.result.Lab
-
+        # Get cov
+        Fn_pol_cov = self.result.Fn_poles_cov
+        Xi_pol_cov = self.result.Xi_poles_cov
+        Phi_pol_cov = self.result.Phi_poles_cov
         # Extract modal results
-        Fn_SSI, Xi_SSI, Phi_SSI, order_out = ssi.SSI_MPE(
-            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=Lab, rtol=rtol
+        Fn, Xi, Phi, order_out, Fn_cov, Xi_cov, Phi_cov  = ssi.SSI_mpe(
+            sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab=Lab, rtol=rtol,
+            Fn_cov=Fn_pol_cov, Xi_cov=Xi_pol_cov, Phi_cov=Phi_pol_cov
         )
 
         # Save results
         self.result.order_out = order_out
-        self.result.Fn = Fn_SSI
-        self.result.Xi = Xi_SSI
-        self.result.Phi = Phi_SSI
+        self.result.Fn = Fn
+        self.result.Xi = Xi
+        self.result.Phi = Phi
+        self.result.Fn_cov = Fn_cov
+        self.result.Xi_cov = Xi_cov
+        self.result.Phi_cov = Phi_cov
+        
 
     def mpe_fromPlot(
         self,
@@ -206,26 +238,35 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
 
         # Get poles
         Fn_pol = self.result.Fn_poles
-        Sm_pol = self.result.xi_poles
-        Ms_pol = self.result.Phi_poles
+        Xi_pol = self.result.Xi_poles
+        Phi_pol = self.result.Phi_poles
+        # Get cov
+        Fn_pol_cov = self.result.Fn_poles_cov
+        Xi_pol_cov = self.result.Xi_poles_cov
+        Phi_pol_cov = self.result.Phi_poles_cov
 
-        # chiamare plot interattivo
+        # call interactive plot
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
         sel_freq = SFP.result[0]
         order = SFP.result[1]
 
-        # e poi estrarre risultati
-        Fn_SSI, Xi_SSI, Phi_SSI, order_out = ssi.SSI_MPE(
-            sel_freq, Fn_pol, Sm_pol, Ms_pol, order, Lab=None, rtol=rtol
+        # and then extract results
+        Fn, Xi, Phi, order_out, Fn_cov, Xi_cov, Phi_cov  = ssi.SSI_mpe(
+            sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab=None, rtol=rtol,
+            Fn_cov=Fn_pol_cov, Xi_cov=Xi_pol_cov, Phi_cov=Phi_pol_cov
         )
 
         # Save results
         self.result.order_out = order_out
-        self.result.Fn = Fn_SSI
-        self.result.Xi = Xi_SSI
-        self.result.Phi = Phi_SSI
+        self.result.Fn = Fn
+        self.result.Xi = Xi
+        self.result.Phi = Phi
+        self.result.Fn_cov = Fn_cov
+        self.result.Xi_cov = Xi_cov
+        self.result.Phi_cov = Phi_cov
 
-    def plot_STDiag(
+
+    def plot_stab(
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
@@ -245,7 +286,10 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         typing.Any
             A tuple containing the matplotlib figure and axes of the Stability Diagram plot.
         """
-        fig, ax = plot.Stab_plot(
+        if not self.result:
+            raise ValueError("Run algorithm first")
+            
+        fig, ax = plot.stab_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,
             step=self.run_params.step,
@@ -255,6 +299,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             hide_poles=hide_poles,
             fig=None,
             ax=None,
+            Fn_cov = self.result.Fn_poles_cov,
         )
         return fig, ax
 
@@ -280,10 +325,10 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         """
         if not self.result:
             raise ValueError("Run algorithm first")
-
-        fig, ax = plot.Cluster_plot(
+            
+        fig, ax = plot.cluster_plot(
             Fn=self.result.Fn_poles,
-            Sm=self.result.xi_poles,
+            Xi=self.result.Xi_poles,
             Lab=self.result.Lab,
             ordmin=self.run_params.ordmin,
             freqlim=freqlim,
@@ -291,7 +336,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         )
         return fig, ax
 
-    def SvalH_plot(
+    def plot_svalH(
         self,
         iter_n: typing.Optional[int] = None,
     ) -> typing.Any:
@@ -299,7 +344,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         if not self.result:
             raise ValueError("Run algorithm first")
 
-        fig, ax = plot.SvalH_plot(H=self.result.H, br=self.run_params.br, iter_n=iter_n)
+        fig, ax = plot.svalH_plot(H=self.result.H, br=self.run_params.br, iter_n=iter_n)
         return fig, ax
 
 
@@ -370,50 +415,75 @@ class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
             An object containing the system matrices, poles, damping ratios, and mode shapes across
             multiple setups.
         """
+
         Y = self.data
         br = self.run_params.br
-        method = self.run_params.method or self.method
+        method_hank = self.run_params.method or self.method
         ordmin = self.run_params.ordmin
         ordmax = self.run_params.ordmax
         step = self.run_params.step
-        err_fn = self.run_params.err_fn
-        err_xi = self.run_params.err_xi
-        err_phi = self.run_params.err_phi
-        xi_max = self.run_params.xi_max
-        mpc_lim = self.run_params.mpc_lim
-        mpd_lim = self.run_params.mpd_lim
+        sc = self.run_params.sc
+        hc = self.run_params.hc
 
-        # Build Hankel matrix and Get state matrix and output matrix
-        A, C = ssi.SSI_MulSet(
-            Y, self.fs, br, ordmax, step=1, methodHank=method, method="FAST"
+
+        # Build Hankel matrix and Get observability matrix, state matrix and output matrix
+        Obs, A, C = ssi.SSI_multi_setup(
+            Y, self.fs, br, ordmax, step=1, method_hank=method_hank
         )
 
         # Get frequency poles (and damping and mode shapes)
-        Fn_pol, Sm_pol, Ms_pol = ssi.SSI_Poles(A, C, ordmax, self.dt, step=step)
+        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = \
+            ssi.SSI_poles(Obs, A, C, ordmax, self.dt, step=step, calc_unc=False)
+
+        # VALIDATION CRITERIA FOR POLES
+        hc_conj = hc["conj"]
+        hc_xi_max = hc["xi_max"]
+        hc_mpc_lim = hc["mpc_lim"]
+        hc_mpd_lim = hc["mpd_lim"]
+        hc_cov_max = hc["cov_max"]
+        
+        # Apply HARD CRITERIA
+        # HC - presence of complex conjugate
+        if hc_conj:
+            Lambds, mask1 = gen.HC_conj(Lambds)
+            lista = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
+            Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(lista, mask1, Phis.shape[2])
+            
+        # HC - damping
+        Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
+        lista = [Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov]
+        Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(lista, mask2, Phis.shape[2])
+
+        # HC - MPC and MPD
+        mask3, mask4 = gen.HC_PhiComp(Phis, hc_mpc_lim, hc_mpd_lim)
+        lista = [Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov]
+        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(lista, mask3, Phis.shape[2])
+        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(lista, mask4, Phis.shape[2])
+
+        # HC - maximum covariance
+        if Fn_cov is not None:
+            Fn_cov, mask5  = gen.HC_cov(Fn_cov, hc_cov_max)
+            lista = [Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov]
+            Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov = gen.applymask(lista, mask5, Phis.shape[2])
+
+        # Apply SOFT CRITERIA
         # Get the labels of the poles
-        Lab = gen.lab_stab(
-            Fn_pol,
-            Sm_pol,
-            Ms_pol,
-            ordmin,
-            ordmax,
-            step,
-            err_fn,
-            err_xi,
-            err_phi,
-            xi_max,
-            mpc_lim,
-            mpd_lim,
-        )
+        Lab = gen.SC_apply(Fns, Xis, Phis, ordmin, ordmax, step, sc["err_fn"], sc["err_xi"], sc["err_phi"])
 
         # Return results
         return SSIResult(
+            Obs = Obs,
             A=A,
             C=C,
-            Fn_poles=Fn_pol,
-            xi_poles=Sm_pol,
-            Phi_poles=Ms_pol,
+            H=None,
+            Lambds=Lambds,
+            Fn_poles=Fns,
+            Xi_poles=Xis,
+            Phi_poles=Phis,
             Lab=Lab,
+            Fn_poles_cov=Fn_cov,
+            Xi_poles_cov=Xi_cov,
+            Phi_poles_cov=Phi_cov,  
         )
 
 
@@ -439,4 +509,4 @@ class SSIcov_MS(SSIdat_MS):
     Inherits all methods from SSIdat_MS, adapted for covariance-based analysis.
     """
 
-    method: typing.Literal["cov_bias", "cov_mm", "cov_unb"] = "cov_bias"
+    method: typing.Literal["cov_R", "cov_mm"] = "cov_mm"
