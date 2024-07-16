@@ -112,19 +112,25 @@ class SSIResult(BaseResult):
         Output order after modal parameter estimation. Can be a list of integers, or a single integer
     """
 
+    Obs: typing.Optional[npt.NDArray[np.float64]] = None
     A: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
     C: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
     H: typing.Optional[npt.NDArray[np.float64]] = None
 
+    Lambds: typing.Optional[npt.NDArray[np.float64]] = None
     Fn_poles: typing.Optional[npt.NDArray[np.float64]] = None
-    xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
+    Xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
     Phi_poles: typing.Optional[npt.NDArray[np.float64]] = None
-    # lam_poles: npt.NDArray[np.float64]
     Lab: typing.Optional[npt.NDArray[np.float64]] = None
+    Fn_poles_cov: typing.Optional[npt.NDArray[np.float64]] = None
+    Xi_poles_cov: typing.Optional[npt.NDArray[np.float64]] = None
+    Phi_poles_cov: typing.Optional[npt.NDArray[np.float64]] = None
     # dopo MPE, MPE_forPlot
     Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
     order_out: typing.Union[typing.List[int], int, None] = None
-
+    Fn_cov: typing.Optional[npt.NDArray[np.float64]] = None  # covariance of natural frequencies
+    Xi_cov: typing.Optional[npt.NDArray[np.float64]] = None  # covariance of damping ratios
+    Phi_cov: typing.Optional[npt.NDArray[np.float64]] = None  # covariance of mode shapes
 
 class pLSCFResult(BaseResult):
     """
@@ -159,7 +165,7 @@ class pLSCFResult(BaseResult):
     Ad: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
     Bn: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
     Fn_poles: typing.Optional[npt.NDArray[np.float64]] = None
-    xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
+    Xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
     Phi_poles: typing.Optional[npt.NDArray[np.float64]] = None
     # lam_poles: npt.NDArray[np.float64]
     Lab: typing.Optional[npt.NDArray[np.float64]] = None

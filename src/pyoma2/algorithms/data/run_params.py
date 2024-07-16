@@ -110,9 +110,9 @@ class SSIRunParams(BaseRunParams):
     ----------
     br : int
         Block rows in the Hankel matrix.
-    method : str or None
+    method_hank : str or None
         Method used in the SSI algorithm, one of
-        ["data", "cov_mm", "cov_unb", "cov_bias].
+        ["data", "cov_mm", "cov_R"].
     ref_ind : list of int or None
         List of reference indices, default is None.
     ordmin : int
@@ -153,12 +153,10 @@ class SSIRunParams(BaseRunParams):
     ordmin: int = 0
     ordmax: typing.Optional[int] = None
     step: int = 1
-    err_fn: float = 0.01
-    err_xi: float = 0.05
-    err_phi: float = 0.03
-    xi_max: float = 0.1
-    mpc_lim: typing.Optional[typing.Tuple] = 0.7
-    mpd_lim: typing.Optional[typing.Tuple] = 0.3
+    sc: dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03) # soft criteria
+    hc: dict = dict(conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3, cov_max=0.2) # hard criteria
+    calc_unc: bool = False # uncertainty calculations
+    nb: int = 100 # number of dataset blocks
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"
@@ -216,14 +214,10 @@ class pLSCFRunParams(BaseRunParams):
     nxseg: int = 1024
     method_SD: str = "per"
     pov: float = 0.5
-    sgn_basf: int = -1
-    step: int = 1
-    err_fn: float = 0.01
-    err_xi: float = 0.05
-    err_phi: float = 0.03
-    xi_max: float = 0.1
-    mpc_lim: typing.Optional[typing.Tuple] = 0.7
-    mpd_lim: typing.Optional[typing.Tuple] = 0.3
+    # sgn_basf: int = -1
+    # step: int = 1
+    sc: dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)
+    hc: dict = dict(conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"
