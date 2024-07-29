@@ -72,32 +72,32 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         ordmin = self.run_params.ordmin
         sc = self.run_params.sc
         hc = self.run_params.hc
-        
+
         if method == "per":
-            sgn_basf=-1
+            sgn_basf = -1
         elif method == "cor":
-            sgn_basf=+1
-        
+            sgn_basf = +1
+
         freq, Sy = fdd.SD_est(Y, Y, self.dt, nxseg, method=method, pov=pov)
 
         Ad, Bn = plscf.pLSCF(Sy, self.dt, ordmax, sgn_basf=sgn_basf)
-        
+
         Fns, Xis, Phis, Lambds = plscf.pLSCF_poles(
             Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
         )
-        
+
         # Apply HARD CRITERIA
         hc_conj = hc["conj"]
         hc_xi_max = hc["xi_max"]
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
-        
+
         # HC - presence of complex conjugate
         if hc_conj:
             Lambds, mask1 = gen.HC_conj(Lambds)
             lista = [Fns, Xis, Phis]
             Fns, Xis, Phis = gen.applymask(lista, mask1, Phis.shape[2])
-            
+
         # HC - damping
         Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
         lista = [Fns, Phis]
@@ -111,7 +111,17 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
 
         # Apply SOFT CRITERIA
         # Get the labels of the poles
-        Lab = gen.SC_apply(Fns, Xis, Phis, ordmin, ordmax-1, 1, sc["err_fn"], sc["err_xi"], sc["err_phi"]) 
+        Lab = gen.SC_apply(
+            Fns,
+            Xis,
+            Phis,
+            ordmin,
+            ordmax - 1,
+            1,
+            sc["err_fn"],
+            sc["err_xi"],
+            sc["err_phi"],
+        )
 
         # Return results
         return self.ResultCls(
@@ -342,26 +352,26 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
         ordmin = self.run_params.ordmin
         sc = self.run_params.sc
         hc = self.run_params.hc
-        
+
         if method == "per":
-            sgn_basf=-1
+            sgn_basf = -1
         elif method == "cor":
-            sgn_basf=+1
-        
+            sgn_basf = +1
+
         freq, Sy = fdd.SD_PreGER(Y, self.fs, nxseg=nxseg, method=method, pov=pov)
-        
+
         Ad, Bn = plscf.pLSCF(Sy, self.dt, ordmax, sgn_basf=sgn_basf)
-        
+
         Fns, Xis, Phis, Lambds = plscf.pLSCF_poles(
             Ad, Bn, self.dt, nxseg=nxseg, methodSy=method
         )
-        
+
         # Apply HARD CRITERIA
         hc_conj = hc["conj"]
         hc_xi_max = hc["xi_max"]
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
-        
+
         # HC - presence of complex conjugate
         if hc_conj:
             Lambds, mask1 = gen.HC_conj(Lambds)
@@ -381,7 +391,17 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
 
         # Apply SOFT CRITERIA
         # Get the labels of the poles
-        Lab = gen.SC_apply(Fns, Xis, Phis, ordmin, ordmax-1, 1, sc["err_fn"], sc["err_xi"], sc["err_phi"]) 
+        Lab = gen.SC_apply(
+            Fns,
+            Xis,
+            Phis,
+            ordmin,
+            ordmax - 1,
+            1,
+            sc["err_fn"],
+            sc["err_xi"],
+            sc["err_phi"],
+        )
 
         # Return results
         return self.ResultCls(
@@ -394,4 +414,3 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
             Phi_poles=Phis,
             Lab=Lab,
         )
-        

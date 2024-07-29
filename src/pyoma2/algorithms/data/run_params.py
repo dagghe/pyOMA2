@@ -153,10 +153,12 @@ class SSIRunParams(BaseRunParams):
     ordmin: int = 0
     ordmax: typing.Optional[int] = None
     step: int = 1
-    sc: dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03) # soft criteria
-    hc: dict = dict(conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3, cov_max=0.2) # hard criteria
-    calc_unc: bool = False # uncertainty calculations
-    nb: int = 100 # number of dataset blocks
+    sc: dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)  # soft criteria
+    hc: dict = dict(
+        conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3, cov_max=0.2
+    )  # hard criteria
+    calc_unc: bool = False  # uncertainty calculations
+    nb: int = 100  # number of dataset blocks
     # METODO 2: MPE e MPE_fromPlot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"

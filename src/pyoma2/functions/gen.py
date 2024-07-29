@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 def applymask(list_arr, mask, len_phi):
     """
     Apply a mask to a list of arrays, filtering their values based on the mask.
-    
+
     Parameters
     ----------
     list_arr : list of np.ndarray
@@ -31,12 +31,12 @@ def applymask(list_arr, mask, len_phi):
         2D boolean array indicating which values to keep (True) or set to NaN (False).
     len_phi : int
         The length of the mode shape dimension for expanding the mask to 3D.
-    
+
     Returns
     -------
     list of np.ndarray
         List of filtered arrays with the same shapes as the input arrays.
-    
+
     Notes
     -----
     - If an array in `list_arr` is 3D, the mask is expanded to 3D and applied.
@@ -46,7 +46,7 @@ def applymask(list_arr, mask, len_phi):
     # Expand the mask to 3D by adding a new axis (for mode shape)
     expandedmask1 = np.expand_dims(mask, axis=-1)
     # Repeat the mask along the new dimension
-    expandedmask1 = np.repeat(expandedmask1,  len_phi, axis=-1)
+    expandedmask1 = np.repeat(expandedmask1, len_phi, axis=-1)
     list_filt_arr = []
     for arr in list_arr:
         if arr is None:
@@ -64,12 +64,12 @@ def applymask(list_arr, mask, len_phi):
 def HC_conj(lambd):
     """
     Apply Hard validation Criteria (HC), retaining only those elements which have their conjugates also present in the array.
-    
+
     Parameters
     ----------
     lambd : np.ndarray
         Array of complex numbers.
-    
+
     Returns
     -------
     filt_lambd : np.ndarray
@@ -80,7 +80,7 @@ def HC_conj(lambd):
     """
     # Create a set to store elements and their conjugates
     element_set = set(lambd.flatten())
-    
+
     # Create a mask to identify elements to keep
     mask = np.zeros(lambd.shape, dtype=bool)
 
@@ -91,13 +91,13 @@ def HC_conj(lambd):
             # Check if both element and its conjugate are in the set
             if element in element_set and conjugate in element_set:
                 mask[i, j] = True
-    
+
     # Create an output array filled with NaNs
     filt_lambd = np.full(lambd.shape, np.nan, dtype=lambd.dtype)
-    
+
     # Copy elements that satisfy the condition to the output array
     filt_lambd[mask] = lambd[mask]
-    
+
     return filt_lambd, mask
 
 
@@ -107,14 +107,14 @@ def HC_conj(lambd):
 def HC_damp(damp, max_damp):
     """
     Apply Hard validation Criteria (HC), retaining only those elements which are positive and less than a specified maximum (damping).
-    
+
     Parameters
     ----------
     damp : np.ndarray
         Array of damping ratios.
     max_damp : float
         Maximum allowed damping ratio.
-    
+
     Returns
     -------
     filt_damp : np.ndarray
@@ -137,7 +137,7 @@ def HC_damp(damp, max_damp):
 def HC_PhiComp(phi, mpc_lim, mpd_lim):
     """
     Apply Hard validation Criteria (HC), based on modal phase collinearity (MPC) and modal phase deviation (MPD) limits.
-    
+
     Parameters
     ----------
     phi : np.ndarray
@@ -146,7 +146,7 @@ def HC_PhiComp(phi, mpc_lim, mpd_lim):
         Minimum allowed value for modal phase collinearity.
     mpd_lim : float
         Maximum allowed value for modal phase deviation.
-    
+
     Returns
     -------
     mask_mpd : np.ndarray
@@ -161,12 +161,12 @@ def HC_PhiComp(phi, mpc_lim, mpd_lim):
                 mask.append((MPD(phi[o, i, :]) <= mpd_lim).astype(int))
             except Exception:
                 mask.append(0)
-    mask = np.array(mask).reshape((phi.shape[0],phi.shape[1]))
+    mask = np.array(mask).reshape((phi.shape[0], phi.shape[1]))
     mask1 = np.expand_dims(mask, axis=-1)
     mask1 = np.repeat(mask1, phi.shape[2], axis=-1)
     Phi = phi * mask1
     Phi[Phi == 0] = np.nan
-    
+
     mask2 = []
     for o in range(phi.shape[0]):
         for i in range(phi.shape[1]):
@@ -174,13 +174,13 @@ def HC_PhiComp(phi, mpc_lim, mpd_lim):
                 mask2.append((MPC(phi[o, i, :]) >= mpc_lim).astype(int))
             except Exception:
                 mask2.append(0)
-    mask2 = np.array(mask2).reshape((phi.shape[0],phi.shape[1]))
+    mask2 = np.array(mask2).reshape((phi.shape[0], phi.shape[1]))
     mask3 = np.expand_dims(mask2, axis=-1)
     mask3 = np.repeat(mask3, phi.shape[2], axis=-1)
     Phi = phi * mask3
     Phi[Phi == 0] = np.nan
 
-    return mask1[:,:,0], mask3[:,:,0]
+    return mask1[:, :, 0], mask3[:, :, 0]
 
 
 # -----------------------------------------------------------------------------
@@ -189,14 +189,14 @@ def HC_PhiComp(phi, mpc_lim, mpd_lim):
 def HC_cov(Fn_cov, max_cov):
     """
     Apply Hard validation Criteria (HC), retaining only those elements which have a covariance less than a specified maximum.
-    
+
     Parameters
     ----------
     Fn_cov : np.ndarray
         Array of frequency covariances.
     max_cov : float
         Maximum allowed covariance.
-    
+
     Returns
     -------
     filt_cov : np.ndarray
@@ -265,7 +265,7 @@ def SC_apply(Fn, Xi, Phi, ordmin, ordmax, step, err_fn, err_xi, err_phi):
         # Skip the first order as it has no previous order to compare with
         if o == 0:
             continue
-        
+
         for i in range(len(f_n)):
             try:
                 idx = np.nanargmin(np.abs(f_n1 - f_n[i]))
@@ -289,7 +289,7 @@ def SC_apply(Fn, Xi, Phi, ordmin, ordmax, step, err_fn, err_xi, err_phi):
 def dfphi_map_func(phi, sens_names, sens_map, cstrn=None):
     """
     Maps mode shapes to sensor locations and constraints, creating a dataframe.
-    
+
     Parameters
     ----------
     phi : np.ndarray
@@ -300,7 +300,7 @@ def dfphi_map_func(phi, sens_names, sens_map, cstrn=None):
         DataFrame containing the sensor mappings.
     cstrn : pd.DataFrame, optional
         DataFrame containing constraints, by default None.
-    
+
     Returns
     -------
     pd.DataFrame
@@ -339,14 +339,14 @@ def dfphi_map_func(phi, sens_names, sens_map, cstrn=None):
 def check_on_geo1(file_dict, ref_ind=None):
     """
     Validates and processes sensor and background geometry data from a dictionary of dataframes.
-    
+
     Parameters
     ----------
     file_dict : dict
         Dictionary containing dataframes of sensor and background geometry data.
     ref_ind : list, optional
         List of reference indices for sensor names, by default None.
-    
+
     Returns
     -------
     tuple
@@ -358,7 +358,7 @@ def check_on_geo1(file_dict, ref_ind=None):
         - BG_nodes (np.ndarray or None): Array of background nodes.
         - BG_lines (np.ndarray or None): Array of background lines.
         - BG_surf (np.ndarray or None): Array of background surfaces.
-    
+
     Raises
     ------
     ValueError
@@ -369,7 +369,7 @@ def check_on_geo1(file_dict, ref_ind=None):
         If 'BG surfaces' does not have 3 columns.
         If sensor names are not present in the index of 'sensors coordinates'.
     """
-    
+
     # Remove INFO sheet from dict of dataframes
     if "INFO" in file_dict:
         del file_dict["INFO"]
@@ -512,7 +512,7 @@ def check_on_geo1(file_dict, ref_ind=None):
 def check_on_geo2(file_dict, ref_ind=None, fill_na="zero"):
     """
     Validates and processes sensor and background geometry data from a dictionary of dataframes.
-    
+
     Parameters
     ----------
     file_dict : dict
@@ -521,7 +521,7 @@ def check_on_geo2(file_dict, ref_ind=None, fill_na="zero"):
         List of reference indices for sensor names, by default None.
     fill_na : str, optional
         Method to fill missing values in the mapping dataframe, by default "zero".
-    
+
     Returns
     -------
     tuple
@@ -536,7 +536,7 @@ def check_on_geo2(file_dict, ref_ind=None, fill_na="zero"):
         - BG_nodes (np.ndarray or None): Array of background nodes.
         - BG_lines (np.ndarray or None): Array of background lines.
         - BG_surf (np.ndarray or None): Array of background surfaces.
-    
+
     Raises
     ------
     ValueError
@@ -764,22 +764,22 @@ def check_on_geo2(file_dict, ref_ind=None, fill_na="zero"):
 
 def flatten_sns_names(sens_names, ref_ind=None):
     """
-    Ensures that sensors names is in the correct form (1D list of strings) for both 
+    Ensures that sensors names is in the correct form (1D list of strings) for both
     single-setup or multi-setup geometries.
-    
+
     Parameters
     ----------
     sens_names : list, pd.DataFrame, or np.ndarray
-        Sensor names which can be a list of strings, list of lists of strings, DataFrame, 
+        Sensor names which can be a list of strings, list of lists of strings, DataFrame,
         or 1D numpy array of strings.
     ref_ind : list, optional
         List of reference indices for multi-setup geometries, by default None.
-    
+
     Returns
     -------
     list
         Flattened list of sensor names.
-    
+
     Raises
     ------
     AttributeError
