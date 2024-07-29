@@ -99,7 +99,7 @@ def pLSCF(
         B_num = np.moveaxis(beta, 1, 0)
         Ad.append(A_den)
         Bn.append(B_num)
-    
+
     return Ad, Bn
 
 
