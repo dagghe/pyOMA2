@@ -238,6 +238,7 @@ def EFDD_FIT_plot(
 
 # -----------------------------------------------------------------------------
 
+
 def stab_plot(
     Fn: np.ndarray,
     Lab: np.ndarray,
@@ -248,7 +249,7 @@ def stab_plot(
     hide_poles: bool = True,
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
-    Fn_cov = None
+    Fn_cov=None,
 ):
     """
     Plots a stabilization chart of the poles of a system.
@@ -295,18 +296,20 @@ def stab_plot(
     ax.set_title("Stabilisation Chart")
     ax.set_ylabel("Model Order")
     ax.set_xlabel("Frequency [Hz]")
-    
+
     if hide_poles:
         x = Fns_stab.flatten(order="F")
         y = np.array([i // len(Fns_stab) for i in range(len(x))]) * step
         ax.plot(x, y, "go", markersize=7)
-        
+
         if Fn_cov is not None:
             xerr = abs(Fn_cov * Fn).flatten(order="f")
             xerr1 = np.where(xerr <= 0.5, xerr, np.nan)
             xerr2 = np.where(xerr > 0.5, 0.5, np.nan)
             ax.errorbar(x, y, xerr=xerr1, fmt="None", capsize=5, ecolor="gray")
-            ax.errorbar(x, y, xerr=xerr2, fmt="None", capsize=5, ecolor="red", label="std > 0.5")
+            ax.errorbar(
+                x, y, xerr=xerr2, fmt="None", capsize=5, ecolor="red", label="std > 0.5"
+            )
             ax.legend(loc="lower center", ncol=2)
 
     else:
@@ -318,15 +321,29 @@ def stab_plot(
 
         ax.plot(x, y, "go", markersize=7, label="Stable pole")
         ax.scatter(x1, y1, marker="o", s=4, c="r", label="Unstable pole")
-        
+
         if Fn_cov is not None:
-            xerr=abs(Fn_cov*Fn)
+            xerr = abs(Fn_cov * Fn)
             xerr1 = np.where(xerr <= 0.5, xerr, np.nan)
             xerr2 = np.where(xerr > 0.5, 0.5, np.nan)
-            ax.errorbar(x, y, xerr=xerr1.flatten(order="f"),fmt="None", capsize=5, ecolor="gray")
-            ax.errorbar(x, y, xerr=xerr2.flatten(order="f"),fmt="None", capsize=5, ecolor="red" )
-            ax.errorbar(x1, y1, xerr=xerr1.flatten(order="f"),fmt="None", capsize=5, ecolor="red")
-            ax.errorbar(x1, y1, xerr=xerr2.flatten(order="f"),fmt="None", capsize=5, ecolor="red", label="std>0.5")
+            ax.errorbar(
+                x, y, xerr=xerr1.flatten(order="f"), fmt="None", capsize=5, ecolor="gray"
+            )
+            ax.errorbar(
+                x, y, xerr=xerr2.flatten(order="f"), fmt="None", capsize=5, ecolor="red"
+            )
+            ax.errorbar(
+                x1, y1, xerr=xerr1.flatten(order="f"), fmt="None", capsize=5, ecolor="red"
+            )
+            ax.errorbar(
+                x1,
+                y1,
+                xerr=xerr2.flatten(order="f"),
+                fmt="None",
+                capsize=5,
+                ecolor="red",
+                label="std>0.5",
+            )
 
         ax.legend(loc="lower center", ncol=2)
         ax.set_ylim(ordmin, ordmax + 1)
@@ -478,6 +495,7 @@ def Stab_plot(
 
 # -----------------------------------------------------------------------------
 
+
 def cluster_plot(
     Fn: np.ndarray,
     Xi: np.ndarray,
@@ -548,6 +566,7 @@ def cluster_plot(
         ax.set_xlim(freqlim[0], freqlim[1])
     plt.tight_layout()
     return fig, ax
+
 
 # LEGACY
 def Cluster_plot(

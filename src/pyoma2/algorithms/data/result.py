@@ -128,9 +128,14 @@ class SSIResult(BaseResult):
     # dopo MPE, MPE_forPlot
     Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
     order_out: typing.Union[typing.List[int], int, None] = None
-    Fn_cov: typing.Optional[npt.NDArray[np.float64]] = None  # covariance of natural frequencies
-    Xi_cov: typing.Optional[npt.NDArray[np.float64]] = None  # covariance of damping ratios
+    Fn_cov: typing.Optional[npt.NDArray[np.float64]] = (
+        None  # covariance of natural frequencies
+    )
+    Xi_cov: typing.Optional[npt.NDArray[np.float64]] = (
+        None  # covariance of damping ratios
+    )
     Phi_cov: typing.Optional[npt.NDArray[np.float64]] = None  # covariance of mode shapes
+
 
 class pLSCFResult(BaseResult):
     """
