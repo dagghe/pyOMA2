@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `OMA.py` removed `inplace` method from `SingleSetup` and `MultiSetup_PreGER` classes, add a copy of data on init with the possibility to `rollback` them
+
 ## [0.6.0] - 2024-09-06
 
 ## Fixed

@@ -77,50 +77,62 @@ def test_plot_data(ms_preger: MultiSetup_PreGER) -> None:
     """
     Test the plotting and data manipulation methods of the MultiSetup_PreGER class.
     """
-    # test DECIMATE_DATA method not inplace
-    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.249758486587817e-05)
-    assert ms_preger.fs == 100.0
-    assert ms_preger.dt == 0.01
+    initial_data_first_ref = ms_preger.data[0]["ref"][0][0]
+    initial_datasets_first_el = ms_preger.datasets[0][0][0]
+    initial_fs = ms_preger.fs
+    initial_dt = ms_preger.dt
+
+    # test DECIMATE_DATA method
     decimation_factor = 4
-    newdatasets, Y, fs, dt, Ndats, Ts = ms_preger.decimate_data(
-        q=decimation_factor, inplace=False
-    )
-    assert math.isclose(Y[0]["ref"][0][0], -3.27248603574735e-05)
-    assert fs == 25.0
-    assert dt == 0.01
-
-    # initial class data has not changed
-    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.249758486587817e-05)
-    assert ms_preger.fs == 100.0
-    assert ms_preger.dt == 0.01
-
-    # test DECIMATE_DATA method inplace
-    ms_preger.decimate_data(q=decimation_factor, inplace=True)
+    ms_preger.decimate_data(q=decimation_factor)
+    # data has changed and is different from the initial data
     assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.27248603574735e-05)
+    assert not math.isclose(ms_preger.data[0]["ref"][0][0], initial_data_first_ref)
+    # datasets has changed and is different from the initial datasets
+    assert math.isclose(ms_preger.datasets[0][0][0], -3.272486035745707e-05)
+    assert not math.isclose(ms_preger.datasets[0][0][0], initial_datasets_first_el)
     assert ms_preger.fs == 25.0
     assert ms_preger.dt == 0.01
+    # rollback the data
+    ms_preger.rollback()
+    assert ms_preger.data[0]["ref"][0][0] == initial_data_first_ref
+    assert ms_preger.datasets[0][0][0] == initial_datasets_first_el
+    assert ms_preger.fs == initial_fs
+    assert ms_preger.dt == initial_dt
 
-    # test DETREND_DATA method not inplace
-    new_data = ms_preger.detrend_data(inplace=False)
-    assert math.isclose(new_data[0]["ref"][0][0], -3.238227274628828e-05)
-
-    # initial class data has not changed
-    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.27248603574735e-05)
-
-    # test DETREND_DATA method inplace
-    ms_preger.detrend_data(inplace=True)
+    # test DETREND_DATA method
+    ms_preger.detrend_data()
+    # data has changed and is different from the initial data
     assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.238227274628828e-05)
+    assert not math.isclose(ms_preger.data[0]["ref"][0][0], initial_data_first_ref)
+    assert ms_preger.fs == initial_fs
+    assert ms_preger.dt == initial_dt
+    # datasets has changed and is not different from the initial datasets
+    assert math.isclose(ms_preger.datasets[0][0][0], -3.249758486587817e-05)
+    assert math.isclose(ms_preger.datasets[0][0][0], initial_datasets_first_el)
+    # rollback the data
+    ms_preger.rollback()
+    assert ms_preger.data[0]["ref"][0][0] == initial_data_first_ref
+    assert ms_preger.datasets[0][0][0] == initial_datasets_first_el
+    assert ms_preger.fs == initial_fs
+    assert ms_preger.dt == initial_dt
 
-    # test FILTER_DATA method not inplace
-    new_data = ms_preger.filter_data(Wn=1, order=1, btype="lowpass", inplace=False)
-    assert math.isclose(new_data[0]["ref"][0][0], -3.28116336523655e-05)
-
-    # initial class data has not changed
-    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.238227274628828e-05)
-
-    # test FILTER_DATA method inplace
-    ms_preger.filter_data(Wn=1, order=1, btype="lowpass", inplace=True)
-    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.28116336523655e-05)
+    # test FILTER_DATA method
+    ms_preger.filter_data(Wn=1, order=1, btype="lowpass")
+    # data has changed and is different from the initial data
+    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.4815804592448214e-05)
+    assert not math.isclose(ms_preger.data[0]["ref"][0][0], initial_data_first_ref)
+    assert ms_preger.fs == initial_fs
+    assert ms_preger.dt == initial_dt
+    # datasets has changed and is not different from the initial datasets
+    assert math.isclose(ms_preger.datasets[0][0][0], -3.249758486587817e-05)
+    assert math.isclose(ms_preger.datasets[0][0][0], initial_datasets_first_el)
+    # rollback the data
+    ms_preger.rollback()
+    assert ms_preger.data[0]["ref"][0][0] == initial_data_first_ref
+    assert ms_preger.datasets[0][0][0] == initial_datasets_first_el
+    assert ms_preger.fs == initial_fs
+    assert ms_preger.dt == initial_dt
 
     # test PLOT_DATA method
     try:
@@ -190,7 +202,7 @@ def test_run(multi_setup_data_fixture, ms_preger: MultiSetup_PreGER) -> None:
     ssidat = SSIdat_MS(name="SSIdat", br=5, ordmax=5)
     plscf = pLSCF_MS(name="pLSCF", ordmax=5, nxseg=64)
 
-    ms_preger.decimate_data(q=50, inplace=True)
+    ms_preger.decimate_data(q=50)
 
     # Add algorithms to the class
     ms_preger.add_algorithms(ssidat, plscf)

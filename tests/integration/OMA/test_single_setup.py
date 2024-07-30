@@ -359,46 +359,50 @@ def test_plot_data(
     """
     Test the plotting and data manipulation methods of the SingleSetup.
     """
-    # test DECIMATE_DATA method not inplace
+    initial_data_first_el = ss.data[0][0]
+    initial_fs = ss.fs
+    initial_dt = ss.dt
     initial_shape = ss.data.shape
     decimation_factor = 4
-    new_data, *_ = ss.decimate_data(q=decimation_factor, inplace=False)
-    assert new_data.shape == (initial_shape[0] // decimation_factor, initial_shape[1])
-    assert ss.data.shape == initial_shape
+    initial_T = ss.T
 
-    # test DECIMATE_DATA method inplace
-    initial_shape = ss.data.shape
-    decimation_factor = 4
-    ss.decimate_data(q=decimation_factor, inplace=True)
+    # test DECIMATE_DATA method
+    ss.decimate_data(q=decimation_factor)
     assert ss.data.shape == (initial_shape[0] // decimation_factor, initial_shape[1])
-
-    # test DETREND_DATA method not inplace
-    initial_shape = ss.data.shape
-    assert math.isclose(ss.data[0][0], 0.002033720017696059)
-    new_data = ss.detrend_data(inplace=False)
-    assert math.isclose(new_data[0][0], 0.002687724196559849)
-    assert new_data.shape == initial_shape
-
-    # test DETREND_DATA method inplace
-    initial_shape = ss.data.shape
-    assert math.isclose(ss.data[0][0], 0.002033720017696059)
-    ss.detrend_data(inplace=True)
-    assert math.isclose(ss.data[0][0], 0.002687724196559849)
+    assert ss.fs != initial_fs
+    assert ss.data[0][0] != initial_data_first_el
+    assert initial_T != ss.T
+    # rollback the data
+    ss.rollback()
     assert ss.data.shape == initial_shape
+    assert ss.fs == initial_fs
+    assert ss.dt == initial_dt
+    assert ss.data[0][0] == initial_data_first_el
+    assert initial_T == ss.T
 
-    # test FILTER_DATA method not inplace
+    # test DETREND_DATA method
     initial_shape = ss.data.shape
-    assert math.isclose(ss.data[0][0], 0.002687724196559849)
-    new_data = ss.filter_data(Wn=1, order=1, btype="lowpass", inplace=False)
-    assert math.isclose(new_data[0][0], 0.002649116058096131)
-    assert new_data.shape == initial_shape
-
-    # test FILTER_DATA method inplace
-    initial_shape = ss.data.shape
-    assert math.isclose(ss.data[0][0], 0.002687724196559849)
-    ss.filter_data(Wn=1, order=1, btype="lowpass", inplace=True)
-    assert math.isclose(ss.data[0][0], 0.002649116058096131)
+    ss.detrend_data()
+    assert math.isclose(ss.data[0][0], 0.0026762160166322584)
     assert ss.data.shape == initial_shape
+    # rollback the data
+    ss.rollback()
+    assert ss.data.shape == initial_shape
+    assert ss.data[0][0] == initial_data_first_el
+    assert ss.fs == initial_fs
+    assert ss.dt == initial_dt
+
+    # test FILTER_DATA method
+    initial_shape = ss.data.shape
+    ss.filter_data(Wn=1, order=1, btype="lowpass")
+    assert math.isclose(ss.data[0][0], 0.001905473721713953)
+    assert ss.data.shape == initial_shape
+    # rollback the data
+    ss.rollback()
+    assert ss.data.shape == initial_shape
+    assert ss.data[0][0] == initial_data_first_el
+    assert ss.fs == initial_fs
+    assert ss.dt == initial_dt
 
     # test PLOT_DATA method
     try:

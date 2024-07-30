@@ -40,7 +40,7 @@ each channel from the selected datasets calling the
    msp = MultiSetup_PreGER(fs=100, ref_ind=ref_ind, datasets=data)
 
    # decimate data
-   msp.decimate_data(q=2, inplace=True)
+   msp.decimate_data(q=2)
 
    # plot Time Histories of all channels for the selected datasets
    msp.plot_data(data_idx=[2], nc=2)
