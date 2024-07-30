@@ -98,7 +98,7 @@ using the ``detrend_data()*`` and ``decimate_data()`` methods
 
     # Detrend and decimate
     #Pali_ss.detrend_data()
-    Pali_ss.decimate_data(q=4, inplace=True) # q=decimation factor
+    Pali_ss.decimate_data(q=4) # q=decimation factor
     print(Pali_ss.fs)
 
     >>> 25.0

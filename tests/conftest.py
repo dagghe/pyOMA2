@@ -227,9 +227,9 @@ def multi_setup_poser_fixture(
     ss2 = SingleSetup(set2, fs=100)
     ss3 = SingleSetup(set3, fs=100)
     # Detrend and decimate
-    ss1.decimate_data(q=2, inplace=True)
-    ss2.decimate_data(q=2, inplace=True)
-    ss3.decimate_data(q=2, inplace=True)
+    ss1.decimate_data(q=2)
+    ss2.decimate_data(q=2)
+    ss3.decimate_data(q=2)
 
     # Initialise the algorithms for setup 1
     ssicov1 = SSIcov(name="SSIcov1", method="cov_mm", br=50, ordmax=80)

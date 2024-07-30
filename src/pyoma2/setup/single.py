@@ -77,6 +77,11 @@ class SingleSetup(BaseSetup):
     The ``algorithms`` dictionary is initialized empty and is meant to store various algorithms as needed.
     """
 
+    dt: float
+    Nch: int
+    Ndat: int
+    T: float
+    algorithms: typing.Dict[str, BaseAlgorithm]
     geo1: typing.Optional[Geometry1] = None
     geo2: typing.Optional[Geometry2] = None
 
@@ -93,12 +98,34 @@ class SingleSetup(BaseSetup):
         """
         self.data = data  # data
         self.fs = fs  # sampling frequency [Hz]
+
+        self._initialize_data(data=data, fs=fs)
+
+    def _initialize_data(self, data: np.ndarray, fs: float) -> None:
+        """
+        Pre process the data and set the initial attributes after copying the data.
+
+        This method is called during the initialization of the SingleSetup instance.
+        """
+        # Store a copy of the initial data
+        self._initial_data = copy.deepcopy(data)
+        self._initial_fs = fs
+
         self.dt = 1 / fs  # sampling interval
         self.Nch = data.shape[1]  # number of channels
         self.Ndat = data.shape[0]  # number of data points
         self.T = self.dt * self.Ndat  # Period of acquisition [sec]
 
         self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
+
+    def rollback(self) -> None:
+        """
+        Rollback the data to the initial state.
+        """
+        self.data = self._initial_data
+        self.fs = self._initial_fs
+
+        self._initialize_data(data=self._initial_data, fs=self._initial_fs)
 
     # method to plot the time histories of the data channels.
     def plot_data(
@@ -258,9 +285,7 @@ class SingleSetup(BaseSetup):
         )
         return fig, ax
 
-    def decimate_data(
-        self, q: int, inplace: bool = False, **kwargs
-    ) -> typing.Optional[tuple]:
+    def decimate_data(self, q: int, **kwargs) -> typing.Optional[tuple]:
         """
         Decimates the data using the scipy.signal.decimate function.
 
@@ -272,9 +297,6 @@ class SingleSetup(BaseSetup):
         ----------
         q : int
             The decimation factor. Must be greater than 1.
-        inplace : bool, optional
-            If True, the data is decimated in place. If False, a copy of the decimated data is returned.
-            Default is False.
         **kwargs : dict, optional
             Additional keyword arguments for the scipy.signal.decimate function:
             n : int, optional
@@ -297,27 +319,19 @@ class SingleSetup(BaseSetup):
         tuple
             A tuple containing the decimated data, updated sampling frequency, sampling interval,
             number of data points, and total time period.
-            If 'inplace' is True, returns None.
         """
         axis = kwargs.pop("axis", 0)
-        data = self.data
-        if not inplace:
-            data = copy.deepcopy(self.data)
         decimated_data, fs, dt, Ndat, T = super()._decimate_data(
-            data=data, fs=self.fs, q=q, axis=axis, **kwargs
+            data=self.data, fs=self.fs, q=q, axis=axis, **kwargs
         )
-        if inplace:
-            self.data = decimated_data
-            self.fs = fs
-            self.dt = dt
-            self.Ndat = Ndat
-            self.T = T
-            return None
+        self.data = decimated_data
+        self.fs = fs
+        self.dt = dt
+        self.Ndat = Ndat
+        self.T = T
         return decimated_data, fs, dt, Ndat, T
 
-    def detrend_data(
-        self, inplace: bool = False, **kwargs
-    ) -> typing.Optional[np.ndarray]:
+    def detrend_data(self, **kwargs) -> typing.Optional[np.ndarray]:
         """
         Detrends the data using the scipy.signal.detrend function.
 
@@ -327,9 +341,6 @@ class SingleSetup(BaseSetup):
 
         Parameters
         ----------
-        in_place : bool, optional
-            If True, the data is detrended in place. If False, a copy of the detrended data is returned.
-            Default is False.
         **kwargs : dict, optional
             Additional keyword arguments for the scipy.signal.detrend function:
             type : {'linear', 'constant'}, optional
@@ -346,15 +357,9 @@ class SingleSetup(BaseSetup):
         Returns
         -------
         detrended_data : np.ndarray
-            The detrended data if 'inplace' is False, otherwise None.
         """
-        data = self.data
-        if not inplace:
-            data = copy.deepcopy(self.data)
-        detrended_data = super()._detrend_data(data=data, **kwargs)
-        if inplace:
-            self.data = detrended_data
-            return None
+        detrended_data = super()._detrend_data(data=self.data, **kwargs)
+        self.data = detrended_data
         return detrended_data
 
     def filter_data(
@@ -362,7 +367,6 @@ class SingleSetup(BaseSetup):
         Wn: typing.Union[float, typing.Tuple[float, float]],
         order: int = 8,
         btype: str = "lowpass",
-        inplace: bool = False,
     ) -> typing.Optional[np.ndarray]:
         """
         Apply a Butterworth filter to the input data and return the filtered signal.
@@ -381,14 +385,10 @@ class SingleSetup(BaseSetup):
         btype : str, optional
             The type of filter to apply. Options are "lowpass", "highpass", "bandpass", or "bandstop".
             Default is "lowpass".
-        inplace: bool, optional
-            If True, the data is filtered in place. If False, a copy of the filtered data is returned.
-            Default is False.
-
         Returns
         -------
         filt_data : ndarray
-            The filtered signal, with the same shape as the input data. If 'inplace' is True, returns None.
+            The filtered signal, with the same shape as the input data.
 
         Notes
         -----
@@ -397,17 +397,12 @@ class SingleSetup(BaseSetup):
         and `signal.sosfiltfilt`
         (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html).
         """
-        data = self.data
-        if not inplace:
-            data = copy.deepcopy(self.data)
         filt_data = super()._filter_data(
-            data=data,
+            data=self.data,
             fs=self.fs,
             Wn=Wn,
             order=order,
             btype=btype,
         )
-        if inplace:
-            self.data = filt_data
-            return None
+        self.data = filt_data
         return filt_data

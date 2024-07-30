@@ -35,9 +35,9 @@ remains the same as described in the example for the single setup.
    ss3 = SingleSetup(set3, fs=100)
 
    # Detrend and decimate
-   ss1.decimate_data(q=2, inplace=True)
-   ss2.decimate_data(q=2, inplace=True)
-   ss3.decimate_data(q=2, inplace=True)
+   ss1.decimate_data(q=2)
+   ss2.decimate_data(q=2)
+   ss3.decimate_data(q=2)
    print(ss1.fs, ss2.fs, ss3.fs)
 
    # Initialise the algorithms for setup 1
