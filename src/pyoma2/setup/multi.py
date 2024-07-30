@@ -782,9 +782,17 @@ class MultiSetup_PreGER(BaseSetup):
     setup and data characteristics.
     """
 
+    dt: float
+    Nsetup: int
+    data: typing.List[typing.Dict[str, np.ndarray]]
+    algorithms: typing.Dict[str, BaseAlgorithm]
+    Nchs: typing.List[int]
+    Ndats: typing.List[int]
+    Ts: typing.List[float]
+
     def __init__(
         self,
-        fs: float,  # ! list[float]
+        fs: float,
         ref_ind: typing.List[typing.List[int]],
         datasets: typing.List[npt.NDArray[np.float64]],
     ):
@@ -802,14 +810,35 @@ class MultiSetup_PreGER(BaseSetup):
             A list of datasets, each as a NumPy array.
         """
         self.fs = fs  # sampling frequencies
-        self.dt = 1 / fs  # sampling interval
         self.ref_ind = ref_ind  # list of (list of) reference indices
+        self.datasets = datasets
+
+        self._initialize_data(fs=fs, ref_ind=ref_ind, datasets=datasets)
+
+    def _initialize_data(
+        self,
+        fs: float,
+        ref_ind: typing.List[typing.List[int]],
+        datasets: typing.List[npt.NDArray[np.float64]],
+    ):
+        """
+        Pre process the data and set the initial attributes after copying the data.
+
+        This method is called internally to pre-process the data and set the initial attributes
+        """
+        # Store a copy of the initial data
+        self._initial_fs = fs
+        self._initial_ref_ind = copy.deepcopy(ref_ind)
+        self._initial_datasets = copy.deepcopy(datasets)
+
+        self.dt = 1 / fs  # sampling interval
         self.Nsetup = len(ref_ind)
+
         # Pre-process the data so to be multi-setup compatible
         Y = pre_MultiSetup(datasets, ref_ind)
+
         self.data = Y
         self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
-        self.datasets = datasets
         Nchs = []
         Ndats = []
         Ts = []
@@ -823,6 +852,20 @@ class MultiSetup_PreGER(BaseSetup):
         self.Nchs = Nchs
         self.Ndats = Ndats
         self.Ts = Ts
+
+    def rollback(self) -> None:
+        """
+        Rollback the data to the initial state.
+        """
+        self.fs = self._initial_fs
+        self.ref_ind = self._initial_ref_ind
+        self.datasets = self._initial_datasets
+
+        self._initialize_data(
+            fs=self._initial_fs,
+            ref_ind=self._initial_ref_ind,
+            datasets=self._initial_datasets,
+        )
 
     # method to plot the time histories of the data channels.
     def plot_data(
@@ -946,9 +989,15 @@ class MultiSetup_PreGER(BaseSetup):
     def decimate_data(
         self,
         q: int,
-        inplace: bool = False,
         **kwargs,
-    ) -> typing.Optional[tuple]:
+    ) -> typing.Tuple[
+        typing.List[npt.NDArray[np.float64]],
+        npt.NDArray[np.float64],
+        float,
+        float,
+        typing.List[int],
+        typing.List[float],
+    ]:
         """
         Applies decimation to the data using the scipy.signal.decimate function.
 
@@ -960,8 +1009,6 @@ class MultiSetup_PreGER(BaseSetup):
         ----------
         q : int
             The decimation factor. Must be greater than 1.
-        inplace : bool, optional
-            If True, updates the instance's data attribute with the decimated data.
         **kwargs : dict, optional, will be passed to scipy.signal.decimate
             Additional keyword arguments for the scipy.signal.decimate function:
             n : int, optional
@@ -985,24 +1032,16 @@ class MultiSetup_PreGER(BaseSetup):
         tuple
             A tuple containing the new datasets, the number of data points for each dataset,
             and the total duration of each dataset.
-            If 'inplace' is True, returns None.
-
-        See Also
-        --------
-        For further information, see `scipy.signal.decimate
-        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
         n = kwargs.get("n")
         ftype = kwargs.get("ftype", "iir")
         axis = kwargs.get("axis", 0)
         zero_phase = kwargs.get("zero_phase", True)
-        datasets = self.datasets
-        if not inplace:
-            datasets = copy.deepcopy(self.datasets)
+
         newdatasets = []
         Ndats = []
         Ts = []
-        for data in datasets:
+        for data in self.datasets:
             newdata, _, _, Ndat, T = super()._decimate_data(
                 data=data,
                 fs=self.fs,
@@ -1021,23 +1060,22 @@ class MultiSetup_PreGER(BaseSetup):
         fs = self.fs / q
         dt = 1 / self.fs
 
-        if inplace:
-            self.data = Y
-            self.fs = fs
-            self.dt = dt
-            self.Ndats = Ndats
-            self.Ts = Ts
-            return None
+        self.datasets = newdatasets
+        self.data = Y
+        self.fs = fs
+        self.dt = dt
+        self.Ndats = Ndats
+        self.Ts = Ts
+
         return newdatasets, Y, fs, dt, Ndats, Ts
 
-    # method to detrend data
+    # method to filter data
     def filter_data(
         self,
         Wn: typing.Union[float, typing.Tuple[float, float]],
         order: int = 8,
         btype: str = "lowpass",
-        inplace: bool = False,
-    ) -> typing.Optional[np.ndarray]:
+    ) -> npt.NDArray[np.float64]:
         """
         Applies a Butterworth filter to the input data based on specified parameters.
 
@@ -1054,9 +1092,6 @@ class MultiSetup_PreGER(BaseSetup):
         btype : str, optional
             The type of filter to apply: 'lowpass', 'highpass
             'bandpass', or 'bandstop'. Default is 'lowpass'.
-        inplace : bool, optional
-            If True, updates the instance's data attribute with the filtered data.
-            default is False.
 
         Raises
         ------
@@ -1067,20 +1102,9 @@ class MultiSetup_PreGER(BaseSetup):
         -------
         np.ndarray
             The filtered data.
-            If 'inplace' is True, returns None.
-
-        Notes
-        -----
-        For more information, see the scipy documentation for `signal.butter`
-        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
-        and `signal.sosfiltfilt`
-        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html).
         """
-        datasets = self.datasets
-        if not inplace:
-            datasets = copy.deepcopy(self.datasets)
         newdatasets = []
-        for data in datasets:
+        for data in self.datasets:
             newdata = super()._filter_data(
                 data=data,
                 fs=self.fs,
@@ -1091,17 +1115,14 @@ class MultiSetup_PreGER(BaseSetup):
             newdatasets.append(newdata)
 
         Y = pre_MultiSetup(newdatasets, self.ref_ind)
-        if inplace:
-            self.data = Y
-            return None
+        self.data = Y
         return Y
 
     # method to detrend data
     def detrend_data(
         self,
-        inplace: bool = False,
         **kwargs,
-    ) -> typing.Optional[np.ndarray]:
+    ) -> npt.NDArray[np.float64]:
         """
         Applies detrending to the data using the scipy.signal.detrend function.
 
@@ -1111,9 +1132,6 @@ class MultiSetup_PreGER(BaseSetup):
 
         Parameters
         ----------
-        inplace : bool, optional
-            If True, updates the instance's data attribute with the detrended data.
-            Default is False.
         **kwargs : dict, optional
             Additional keyword arguments for the scipy.signal.detrend function:
             axis : int, optional
@@ -1126,24 +1144,12 @@ class MultiSetup_PreGER(BaseSetup):
         -------
         np.ndarray
             The detrended data.
-            If 'inplace' is True, returns None.
-
-        See Also
-        --------
-        For further information, see `scipy.signal.detrend
-        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
         """
-        datasets = self.datasets
-        if not inplace:
-            datasets = copy.deepcopy(self.datasets)
-
         newdatasets = []
-        for data in datasets:
+        for data in self.datasets:
             newdata = super()._detrend_data(data=data, **kwargs)
             newdatasets.append(newdata)
 
         Y = pre_MultiSetup(newdatasets, self.ref_ind)
-        if inplace:
-            self.data = Y
-            return None
+        self.data = Y
         return Y

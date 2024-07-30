@@ -82,6 +82,12 @@ class BaseSetup:
     geo1: typing.Optional[Geometry1] = None
     geo2: typing.Optional[Geometry2] = None
 
+    def rollback(self) -> None:
+        """
+        Rollback the data to the initial state. To be implemented by subclasses of this mixin.
+        """
+        raise NotImplementedError("Rollback method must be implemented by subclasses.")
+
     # add algorithm (method) to the set.
     def add_algorithms(self, *algorithms: BaseAlgorithm):
         """
