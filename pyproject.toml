@@ -9,7 +9,8 @@ authors = [
     {name = "Diego Federico Margoni", email = "diegofederico.margoni@studenti.polito.it"},
 ]
 dependencies = [
-    "numpy>=1.24.4",
+    "numpy>=1.24.4; python_version < '3.12' or platform_system != 'Darwin'",
+    "numpy>2; python_version == '3.12' and platform_system == 'Darwin'",
     "pandas>=2.0.3",
     "scipy>=1.9.3",
     "pydantic>=2.5.1",
