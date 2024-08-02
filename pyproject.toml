@@ -9,14 +9,15 @@ authors = [
     {name = "Diego Federico Margoni", email = "diegofederico.margoni@studenti.polito.it"},
 ]
 dependencies = [
-    "numpy>=1.24.4",
+    "numpy<1.25; python_version < '3.9'",
+    "numpy>=1.25; python_version >= '3.9'",
     "pandas>=2.0.3",
     "scipy>=1.9.3",
     "pydantic>=2.5.1",
     "tqdm>=4.66.1",
     "matplotlib>=3.7.4",
 ]
-requires-python = ">=3.8,<=3.12"
+requires-python = ">=3.8,<3.13"
 readme = "README.md"
 license = {text = "MIT"}
 

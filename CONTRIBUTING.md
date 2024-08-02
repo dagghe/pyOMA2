@@ -1,6 +1,6 @@
 # Contribution Guide
 
-This project runs on python>=3.8,<3.11
+This project runs on python>=3.8,<3.13
 
 ## Setup
 
@@ -67,6 +67,32 @@ https://www.pythonguis.com/installation/install-tkinter-mac/
 If using python with `pyenv`:
 
 https://dev.to/xshapira/using-tkinter-with-pyenv-a-simple-two-step-guide-hh5
+
+### Building the lock file
+
+Due to [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html), Numpy drops support for active versions of Python before their support ends. Therefore, there are versions of numpy that cannot be installed for certain active versions of Python and this leads to PDM unable to resolve the dependencies, or attempting to install a version of numpy that does not have a wheel.
+
+By following [Lock for specific platforms or Python versions](https://pdm-project.org/en/latest/usage/lock-targets/), you can generate a single lock file for multiple versions of Python with:
+
+```
+pdm lock --python=">=3.9"
+pdm lock --python="<3.9" --append
+```
+
+When bumping the minimum supported version of Python in `pyproject` (`requires-python`), be sure to also bump the conditional numpy versions supported. For example, when Python 3.8 is dropped, you will have to modify:
+
+```
+    "numpy<1.25; python_version < '3.9'",
+    "numpy>=1.25; python_version >= '3.9'",
+```
+
+to (this is just a guess; numpy versions will have to change):
+
+```
+    "numpy<2.0; python_version < '3.10'",
+    "numpy>=2.0; python_version >= '3.10'",
+```
+
 
 ## Conventions
 
