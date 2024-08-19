@@ -93,6 +93,25 @@ to (this is just a guess; numpy versions will have to change):
     "numpy>=2.0; python_version >= '3.10'",
 ```
 
+## Running tests
+
+```shell
+make test
+```
+
+### Running tests with coverage
+
+```shell
+make test-coverage
+```
+
+### Running tests with tox on multiple python versions
+
+```shell
+make tox
+```
+
+### Running tests on
 
 ## Conventions
 
