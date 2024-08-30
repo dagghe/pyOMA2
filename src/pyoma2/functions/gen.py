@@ -990,6 +990,7 @@ def example_data():
 # -----------------------------------------------------------------------------
 
 
+# LEGACY
 def lab_stab(
     Fn: np.ndarray,
     Sm: np.ndarray,
