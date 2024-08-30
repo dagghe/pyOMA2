@@ -20,7 +20,7 @@ Classes:
 The ``pLSCF`` class
 -------------------------
 
-.. autoclass:: pyoma2.algorithm.plscf.pLSCF
+.. autoclass:: pyoma2.algorithms.plscf.pLSCF
    :members:
    :inherited-members:
    :show-inheritance:

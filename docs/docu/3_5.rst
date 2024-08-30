@@ -1,6 +1,6 @@
 The ``run_params`` module
 -------------------------
 
-.. automodule:: pyoma2.algorithm.data.run_params
+.. automodule:: pyoma2.algorithms.data.run_params
    :members:
    :show-inheritance:

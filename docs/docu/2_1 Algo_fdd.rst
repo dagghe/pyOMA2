@@ -31,7 +31,7 @@ Classes:
 The ``FDD`` class
 ----------------------
 
-.. autoclass:: pyoma2.algorithm.fdd.FDD
+.. autoclass:: pyoma2.algorithms.fdd.FDD
    :members:
    :inherited-members:
    :show-inheritance:
@@ -39,7 +39,7 @@ The ``FDD`` class
 The ``EFDD`` class
 -----------------------
 
-.. autoclass:: pyoma2.algorithm.fdd.EFDD
+.. autoclass:: pyoma2.algorithms.fdd.EFDD
    :members:
    :inherited-members:
    :show-inheritance:
@@ -47,7 +47,7 @@ The ``EFDD`` class
 The ``FSDD`` class
 -----------------------
 
-.. autoclass:: pyoma2.algorithm.fdd.FSDD
+.. autoclass:: pyoma2.algorithms.fdd.FSDD
    :members:
    :inherited-members:
    :show-inheritance:
@@ -55,7 +55,7 @@ The ``FSDD`` class
 The ``FDD_MS`` class
 -------------------------
 
-.. autoclass:: pyoma2.algorithm.fdd.FDD_MS
+.. autoclass:: pyoma2.algorithms.fdd.FDD_MS
    :members:
    :inherited-members:
    :show-inheritance:
@@ -63,7 +63,7 @@ The ``FDD_MS`` class
 The ``EFDD_MS`` class
 --------------------------
 
-.. autoclass:: pyoma2.algorithm.fdd.EFDD_MS
+.. autoclass:: pyoma2.algorithms.fdd.EFDD_MS
    :members:
    :inherited-members:
    :show-inheritance:

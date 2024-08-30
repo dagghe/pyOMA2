@@ -44,7 +44,7 @@ The ``SSIcov`` class
 The ``SSIdat_MS`` class
 ----------------------------
 
-.. autoclass:: pyoma2.algorithm.ssi.SSIdat_MS
+.. autoclass:: pyoma2.algorithms.ssi.SSIdat_MS
    :members:
    :inherited-members:
    :show-inheritance:
@@ -53,7 +53,7 @@ The ``SSIdat_MS`` class
 The ``SSIcov_MS`` class
 ----------------------------
 
-.. autoclass:: pyoma2.algorithm.ssi.SSIcov_MS
+.. autoclass:: pyoma2.algorithms.ssi.SSIcov_MS
    :members:
    :inherited-members:
    :show-inheritance:

@@ -54,11 +54,10 @@ def CMIF_plot(
 
     Returns
     -------
-    tuple
-        fig : matplotlib.figure.Figure
-            The matplotlib figure object.
-        ax : matplotlib.axes.Axes
-            The axes object with the CMIF plot.
+    fig : matplotlib.figure.Figure
+        The matplotlib figure object.
+    ax : matplotlib.axes.Axes
+        The axes object with the CMIF plot.
 
     Raises
     ------
@@ -131,11 +130,10 @@ def EFDD_FIT_plot(
 
     Returns
     -------
-    tuple
-        figs : list of matplotlib.figure.Figure
-            A list of matplotlib figure objects.
-        axs : list of lists of matplotlib.axes.Axes
-            A list of lists containing axes objects for each figure.
+    figs : list of matplotlib.figure.Figure
+        A list of matplotlib figure objects.
+    axs : list of lists of matplotlib.axes.Axes
+        A list of lists containing axes objects for each figure.
 
     Note
     -----
@@ -144,6 +142,7 @@ def EFDD_FIT_plot(
     includes four subplots, showing the details of the EFDD fit process, including identified frequency
     and damping ratio.
     """
+
     figs = []
     axs = []
     for numb_mode in range(len(PerPlot)):
@@ -505,8 +504,7 @@ def cluster_plot(
     hide_poles: bool = True,
 ):
     """
-    Plots the frequency-damping clusters of the identified poles using the Stochastic Subspace Identification
-    (SSI) method.
+    Plots the frequency-damping clusters of the identified poles.
 
     Parameters
     ----------
@@ -1185,7 +1183,7 @@ def plt_data(
 ):
     """
     Plots time series data for multiple channels, with an option to include the Root Mean Square (RMS)
-      of each signal.
+    of each signal.
 
     Parameters
     ----------
@@ -1205,11 +1203,10 @@ def plt_data(
 
     Returns
     -------
-    tuple
-        fig : matplotlib.figure.Figure
-            The matplotlib figure object.
-        axs : array of matplotlib.axes.Axes
-            An array of axes objects for the generated subplots.
+    fig : matplotlib.figure.Figure
+        The matplotlib figure object.
+    axs : array of matplotlib.axes.Axes
+        An array of axes objects for the generated subplots.
 
     Note
     -----
@@ -1540,8 +1537,25 @@ def STFT(
 def plot_mac_matrix(array1, array2, colormap="plasma", ax=None):
     """
     Compute and plot the MAC matrix between the columns of two 2D arrays.
-    """
 
+    Parameters
+    ----------
+    array1 : np.ndarray
+        The first 2D array with shape (n_modes, n_dofs).
+    array2 : np.ndarray
+        The second 2D array with shape (n_modes, n_dofs).
+    colormap : str, optional
+        The colormap to use for the plot. Default is 'plasma'.
+    ax : matplotlib.axes.Axes, optional
+        The axes object to plot on. If None, a new figure and axes will be created. Default is None.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The matplotlib figure object.
+    ax : matplotlib.axes.Axes
+        The matplotlib axes object.
+    """
     # Check if there are more than 1 column vector in the input arrays
     if array1.shape[1] < 2 or array2.shape[1] < 2:
         raise ValueError("Each input array must have more than one column vector.")

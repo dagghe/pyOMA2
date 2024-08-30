@@ -1,16 +1,9 @@
 # pyOMA2
 ![pyoma2_logo_v2_COMPACT](https://github.com/dagghe/pyOMA2/assets/64746269/aa19bc05-d452-4749-a404-b702e6fe685d)
 
-[![python](https://img.shields.io/badge/Python-3.8-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
-[![python](https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
-[![python](https://img.shields.io/badge/Python-3.10-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
-[![python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
-[![python](https://img.shields.io/badge/Python-3.12-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
-
+[![python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-
 [![Test Pyoma2](https://github.com/dagghe/pyOMA2/actions/workflows/main.yml/badge.svg?branch=main&event=push)](https://github.com/dagghe/pyOMA2/actions/workflows/main.yml)
-
 
 _______________________
 

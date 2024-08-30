@@ -7,6 +7,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 sys.path.insert(0, os.path.abspath("../"))
+sys.path.insert(0, os.path.abspath("../src"))
+sys.path.insert(0, os.path.abspath("../src/pyoma2"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -14,7 +16,7 @@ sys.path.insert(0, os.path.abspath("../"))
 project = "pyoma2"
 copyright = "2024, Dag Pasca"
 author = "Dag Pasca"
-release = "0.3.2"
+release = "0.5.2"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
