@@ -67,11 +67,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
 
     Note
     -----
-    - BaseAlgorithm is an abstract class and should not be instantiated directly.
-    - Subclasses must implement the `run`, `mpe`, and `mpe_fromPlot` methods.
-    - The class is designed to be generic and flexible, accommodating various types of algorithms
-      within the pyOMA2 framework.
-    - The `result` attribute is only populated after the `run` method is executed.
+    BaseAlgorithm is an abstract class and should not be instantiated directly.
     """
 
     result: typing.Optional[T_Result] = None

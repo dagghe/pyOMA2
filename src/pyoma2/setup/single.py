@@ -52,26 +52,6 @@ class SingleSetup(BaseSetup):
     algorithms : Dict[str, BaseAlgorithm]
         A dictionary to store algorithms associated with the setup.
 
-    Methods
-    -------
-    plot_data(...)
-        Plots the time histories of the data channels in a subplot format.
-    plot_ch_info(...)
-        Plots Time History (TH), Power Spectral Density (PSD),
-        and Kernel Density Estimation (KDE) for each channel.
-    plt_STFT(...)
-        Plots the Short Time Fourier Transform (STFT) magnitude spectrogram for specified channels.
-    decimate_data(...)
-        Decimates the data using a wrapper for the scipy.signal.decimate function.
-    detrend_data(...)
-        Detrends the data using a wrapper for the scipy.signal.detrend function.
-    filter_data(...)
-        Applies a Butterworth filter to the input data based on specified parameters.
-    def_geo1(...)
-        Defines the first geometry setup (geo1) for the instances.
-    def_geo2(...)
-        Defines the second geometry setup (geo2) for the instance..
-
     Notes
     -----
     The ``algorithms`` dictionary is initialized empty and is meant to store various algorithms as needed.
@@ -299,6 +279,7 @@ class SingleSetup(BaseSetup):
             The decimation factor. Must be greater than 1.
         **kwargs : dict, optional
             Additional keyword arguments for the scipy.signal.decimate function:
+
             n : int, optional
                 The order of the filter (if 'ftype' is 'fir') or the number of times
                 to apply the filter (if 'ftype' is 'iir'). If None, a default value is used.
@@ -343,6 +324,7 @@ class SingleSetup(BaseSetup):
         ----------
         **kwargs : dict, optional
             Additional keyword arguments for the scipy.signal.detrend function:
+
             type : {'linear', 'constant'}, optional
                 The type of detrending: 'linear' for linear detrend, or 'constant' for just
                 subtracting the mean. Default is 'linear'.

@@ -41,25 +41,6 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         The class of results produced by this algorithm.
     method : str
         The method used in this SSI algorithm, set to 'dat' by default.
-
-    Methods
-    -------
-    run() -> SSIResult
-        Executes the SSIdat algorithm on provided data, returning a SSIResult object with analysis results.
-    mpe(...)
-        Extracts modal parameters at selected frequencies.
-    mpe_fromPlot(...)
-        Interactive modal parameter extraction from a plot.
-    plot_STDiag(...)
-        Plots the Stability Diagram.
-    plot_cluster(...)
-        Plots the cluster diagram of identified modal parameters.
-    plot_mode_g1(...)
-        Plots the mode shapes using Geometry1.
-    plot_mode_g2(...)
-        Plots the mode shapes using Geometry2.
-    anim_mode_g2(...)
-        Creates an animation of mode shapes using Geometry2.
     """
 
     RunParamCls = SSIRunParams
@@ -444,8 +425,6 @@ class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
 
     Methods
     -------
-    run() -> SSIResult
-        Executes the algorithm for multiple setups and returns the identification results.
     Inherits other methods from SSIdat, applicable to multi-setup scenarios.
     """
 
