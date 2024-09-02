@@ -64,31 +64,6 @@ class MultiSetup_PoSER:
         Private attribute to store references to the algorithms used in the setups. It maps
         each algorithm type to its corresponding name.
 
-    Methods
-    -------
-    merge_results()
-        Merges the results from individual setups into a combined result for holistic analysis.
-    plot_mode_g1(mode_number: int, scale_factor: int, view_type: str)
-        Plots mode shapes for a specified mode number using the first type of geometric setup (geo1).
-    plot_mode_g2(mode_number: int, scale_factor: int, view_type: str)
-        Plots mode shapes for a specified mode number using the second type of geometric setup (geo2).
-    anim_mode_g2(mode_number: int, scale_factor: int, view_type: str, save_as_gif: bool)
-        Creates an animation of the mode shapes for a specified mode number using the second type
-        of geometric setup (geo2). Option to save the animation as a GIF file.
-    def_geo1(...)
-        Defines the first type of geometric setup (geo1) for the instance, based on sensor placements
-        and structural characteristics.
-    def_geo2(...)
-        Defines the second type of geometric setup (geo2) for the instance, typically involving more
-        complex geometries or additional data.
-
-    plot_geo1(...)
-        Plots the geometric configuration of the structure based on the geo1 setup, including sensor
-        placements and structural details.
-    plot_geo2(...)
-        Plots the geometric configuration of the structure based on the geo2 setup, highlighting
-        more intricate details or alternative layouts.
-
     Warning
     -------
     The PoSER approach assumes that the setups used are compatible in terms of their experimental
@@ -741,41 +716,6 @@ class MultiSetup_PreGER(BaseSetup):
     Nsetup : int
         The number of setups (or datasets) included in the analysis.
 
-    Methods
-    -------
-    add_algorithms(...)
-        Adds algorithms to the setup and initializes them with data and sampling frequency.
-    run_all(...)
-        Executes all algorithms added to the setup.
-    run_by_name(...)
-        Runs a specific algorithm identified by its name.
-    MPE(...)
-        Extracts modal parameters based on selected poles/peaks.
-    MPE_fromPlot(...)
-        Allows modal parameter extraction directly from interactive plot selections.
-    plot_geo1(...)
-        Plots the first type of geometric configuration for the structure.
-    plot_geo2(...)
-        Plots the second type of geometric configuration for the structure.
-    plot_data(...)
-        Visualizes time history data of channels for selected datasets.
-    plot_ch_info(...)
-        Displays Time History (TH), Power Spectral Density (PSD), and Kernel Density Estimation (KDE)
-        for each channel.
-    plt_STFT(...)
-        Computes and plots the Short Time Fourier Transform (STFT) magnitude spectrogram for the
-        specified channels.
-    decimate_data(...)
-        Applies data decimation using scipy.signal.decimate.
-    detrend_data(...)
-        Detrends data using scipy.signal.detrend.
-    filter_data(...)
-        Applies a Butterworth filter to the input data based on specified parameters.
-    def_geo1(...)
-        Defines the first type of geometric setup (geo1) for the instance.
-    def_geo2(...)
-        Defines the second type of geometric setup (geo2) for the instance.
-
     Warning
     -------
     The PreGER approach assumes that the setups used are compatible in terms of their experimental
@@ -1011,6 +951,7 @@ class MultiSetup_PreGER(BaseSetup):
             The decimation factor. Must be greater than 1.
         **kwargs : dict, optional, will be passed to scipy.signal.decimate
             Additional keyword arguments for the scipy.signal.decimate function:
+
             n : int, optional
                 The order of the filter (if 'ftype' is 'fir') or the number of times
                 to apply the filter (if 'ftype' is 'iir'). If None, a default value is used.
@@ -1134,6 +1075,7 @@ class MultiSetup_PreGER(BaseSetup):
         ----------
         **kwargs : dict, optional
             Additional keyword arguments for the scipy.signal.detrend function:
+
             axis : int, optional
                 The axis along which to detrend the data. Default is 0.
             type : {'linear', 'constant'}, optional

@@ -52,23 +52,6 @@ class BaseSetup:
     fs : float, optional
         Sampling frequency of the data.
 
-    Methods
-    -------
-    add_algorithms(...)
-        Adds algorithms to the setup and sets the data and sampling frequency for them.
-    run_all(...)
-        Runs all the algorithms added to the class.
-    run_by_name(...)
-        Executes a specific algorithm by its name.
-    MPE(...)
-        Extracts modal parameters from selected poles/peaks.
-    MPE_fromPlot(...)
-        Extracts modal parameters directly from plot selections.
-    plot_geo1(...)
-        Plots the first type of geometry setup for the structure.
-    plot_geo2(...)
-        Plots the second type of geometry setup for the structure.
-
     Warning
     -------
     The BaseSetup class is not intended for direct instantiation by users.
