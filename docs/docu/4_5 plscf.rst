@@ -1,5 +1,5 @@
-The ``pLSCF_funct`` module
---------------------------
+The ``plscf`` module
+--------------------
 
 Bla Bla Bla
 
@@ -10,5 +10,5 @@ Functions:
     - :func:`.AC2MP_poly`: Convert state-space representation to modal parameters.
     - :func:`.pLSCF_MPE`: Extract modal parameters using the pLSCF method for selected frequencies.
 
-.. automodule:: pyoma2.functions.pLSCF_funct
+.. automodule:: pyoma2.functions.plscf
    :members:

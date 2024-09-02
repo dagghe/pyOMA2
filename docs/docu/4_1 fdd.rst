@@ -1,5 +1,5 @@
-The ``FDD_funct`` module
-------------------------
+The ``fdd`` module
+------------------
 
 This module is a part of the pyOMA2 package and provides utility functions for conducting
 Operational Modal Analysis (OMA) using Frequency Domain Decomposition (FDD)[BZA01]_, Enhanced
@@ -14,5 +14,5 @@ Functions:
     - :func:`.SDOF_bellandMS`: Utility function for EFDD and FSDD methods.
     - :func:`.EFDD_MPE`: Extracts modal parameters using EFDD and FSDD methods.
 
-.. automodule:: pyoma2.functions.FDD_funct
+.. automodule:: pyoma2.functions.fdd
    :members:

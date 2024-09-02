@@ -1,5 +1,5 @@
-The ``ssi`` module
-==================
+The ``ssi`` algorithm module
+============================
 
 This module implements the Stochastic Subspace Identification (SSI) [BPDG99]_, [MiDo11]_ algorithm in various forms,
 tailored for both single and multiple experimental setup scenarios [MiDo11]_. It includes classes and methods
@@ -28,7 +28,7 @@ Classes:
 The ``SSIdat`` class
 -------------------------
 
-.. autoclass:: pyoma2.algorithm.ssi.SSIdat
+.. autoclass:: pyoma2.algorithms.ssi.SSIdat
    :members:
    :inherited-members:
    :show-inheritance:
@@ -36,7 +36,7 @@ The ``SSIdat`` class
 The ``SSIcov`` class
 -------------------------
 
-.. autoclass:: pyoma2.algorithm.ssi.SSIcov
+.. autoclass:: pyoma2.algorithms.ssi.SSIcov
    :members:
    :inherited-members:
    :show-inheritance:

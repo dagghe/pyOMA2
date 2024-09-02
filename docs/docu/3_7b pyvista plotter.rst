@@ -1,5 +1,5 @@
 The ``pyvista_plotter`` module
-------------------------
+------------------------------
 
 This module, part of the pyOMA2 package, is dedicated to visualizing and animating mode shapes
 from Operational Modal Analysis (OMA) results. It provides an interface to create animated 3D

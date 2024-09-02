@@ -1,5 +1,5 @@
-The ``Gen_funct`` module
-------------------------
+The ``gen`` module
+------------------
 
 Part of the pyOMA2 package, this module provides general utility functions crucial for
 implementational aspects of Operational Modal Analysis (OMA). These functions support
@@ -17,5 +17,5 @@ Functions:
     - :func:`.lab_stab`: Get the labels to construct the Stability Chart.
 
 
-.. automodule:: pyoma2.functions.Gen_funct
+.. automodule:: pyoma2.functions.gen
    :members:
