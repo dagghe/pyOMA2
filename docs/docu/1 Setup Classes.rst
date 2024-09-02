@@ -22,7 +22,7 @@ Classes:
 The ``SingleSetup`` class
 -------------------------
 
-.. autoclass:: pyoma2.setup.single
+.. autoclass:: pyoma2.setup.single.SingleSetup
    :members:
    :inherited-members:
    :show-inheritance:

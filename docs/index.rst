@@ -8,7 +8,7 @@ pyOMA2's documentation!
 
 .. image:: https://github.com/dagghe/pyOMA2/assets/64746269/aa19bc05-d452-4749-a404-b702e6fe685d
 
-|Python 3.8| |Python 3.9| |Python 3.10| |Python 3.11| |pre-commit| |Code style: black|
+|Python| |pre-commit| |Code style: black|
 
 This is the new and updated version of **pyOMA** module, a Python module designed for conducting operational modal analysis. With this update, we've transformed **pyOMA** from a basic collection of functions into a more sophisticated module that fully leverages the capabilities of Python classes.
 
@@ -96,21 +96,9 @@ References
 
 .. _source: https://github.com/dagghe/pyOMA2
 
-.. |Python 3.8| image:: https://img.shields.io/badge/Python-3.8-3776AB.svg?style=flat&logo=python&logoColor=white
-    :alt: Python 3.8
-    :target: https://img.shields.io/badge/Python-3.8-3776AB.svg?style=flat&logo=python&logoColor=white
-
-.. |Python 3.9| image:: https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&logo=python&logoColor=white
-    :alt: Python 3.9
-    :target: https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&logo=python&logoColor=white
-
-.. |Python 3.10| image:: https://img.shields.io/badge/Python-3.10-3776AB.svg?style=flat&logo=python&logoColor=white
-    :alt: Python 3.10
-    :target: https://img.shields.io/badge/Python-3.10-3776AB.svg?style=flat&logo=python&logoColor=white
-
-.. |Python 3.11| image:: https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&logo=python&logoColor=white
-    :alt: Python 3.11
-    :target: https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&logo=python&logoColor=white
+.. |Python| image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg?style=flat&logo=python&logoColor=white
+    :alt: Python
+    :target: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg?style=flat&logo=python&logoColor=white
 
 .. |pre-commit| image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
    :alt: pre-commit

@@ -1,5 +1,5 @@
 The ``plot`` module
--------------------------
+-------------------
 
 This module, part of the pyOMA2 package, offers a suite of plotting functions
 designed specifically for use within the pyOMA2 module. These functions aid in

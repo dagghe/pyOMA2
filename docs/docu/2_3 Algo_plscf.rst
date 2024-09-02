@@ -1,5 +1,5 @@
-The ``plscf`` module
-====================
+The ``plscf`` algorithm module
+==============================
 
 Bla bla bla
 
@@ -28,7 +28,7 @@ The ``pLSCF`` class
 The ``pLSCF_MS`` class
 -------------------------
 
-.. autoclass:: pyoma2.algorithm.plscf.pLSCF_MS
+.. autoclass:: pyoma2.algorithms.plscf.pLSCF_MS
    :members:
    :inherited-members:
    :show-inheritance:

@@ -9,8 +9,8 @@ The following functions are the "foundamental bricks" to perform the analyses.
 .. toctree::
    :maxdepth: 2
 
-   4_1
-   4_2
-   4_3
-   4_4
-   4_5
+   4_1 fdd
+   4_2 gen
+   4_3 ssi
+   4_4 plot
+   4_5 plscf

@@ -1,4 +1,4 @@
-The ``Sel_from_plot`` module
+The ``sel_from_plot`` module
 ----------------------------
 
 This module provides interactive plotting functionalities for selecting and analyzing poles

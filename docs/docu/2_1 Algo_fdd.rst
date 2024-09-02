@@ -1,5 +1,5 @@
-The ``fdd`` module
-==================
+The ``fdd`` algorithm module
+============================
 
 This module provides implementation of the Frequency Domain Decomposition (FDD) [BZA01]_, the Enhanced
 Frequency Domain Decomposition (EFDD) [BVA01]_, and the Frequency Spatial Domain Decomposition (FSDD)

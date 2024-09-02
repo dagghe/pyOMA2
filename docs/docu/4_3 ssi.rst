@@ -1,5 +1,5 @@
-The ``SSI_funct`` module
-------------------------
+The ``ssi`` module
+------------------
 
 This module provides a collection of utility functions to support the implementation
 of Stochastic Subspace Identification (SSI) algorithms. It includes functions for building
@@ -20,5 +20,5 @@ Functions:
     - :func:`.SSI_MulSet`: SSI for multiple setup measurements.
     - :func:`.SSI_MPE`: Extracts modal parameters for selected frequencies.
 
-.. automodule:: pyoma2.functions.SSI_funct
+.. automodule:: pyoma2.functions.ssi
    :members:
