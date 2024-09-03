@@ -241,7 +241,10 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
         """
-        Plot the Stability Diagram.
+        Plot the Stability Diagram for the pLSCF analysis.
+
+        The stability diagram helps visualize the stability of poles across different model orders.
+        It can be used to identify stable poles, which correspond to physical modes.
 
         Parameters
         ----------
@@ -275,7 +278,10 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
         """
-        Plots the frequency-damping cluster diagram for the identified modal parameters.
+        Plot the frequency-damping cluster diagram for the identified modal parameters.
+
+        The cluster diagram visualizes the distribution of identified modal frequencies and their
+        corresponding damping ratios. It helps identify clusters of stable modes.
 
         Parameters
         ----------

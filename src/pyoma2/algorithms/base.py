@@ -377,7 +377,44 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         col_BG_lines: str = "gray",
         col_BG_surf: str = "gray",
     ) -> typing.Any:
-        """ """
+        """
+        Plots the mode shapes for the first geometry setup (geo1) using Matplotlib.
+
+        This method visualizes the mode shapes corresponding to the specified mode number for the
+        first geometry configuration (geo1). The plot can be customized using colors and scaling options
+        for various geometrical elements like sensors, lines, and background surfaces.
+
+        Parameters
+        ----------
+        geo1 : Geometry1
+            The first geometry configuration containing sensor information and coordinates.
+        mode_nr : int
+            The mode number to be plotted.
+        scaleF : int, optional
+            Scaling factor to adjust the size of the mode shapes. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            The viewing plane or angle for the plot. Default is '3D'.
+        col_sns : str, optional
+            Color of the sensors in the plot. Default is 'red'.
+        col_sns_lines : str, optional
+            Color of the lines connecting the sensors. Default is 'red'.
+        col_BG_nodes : str, optional
+            Color of the background nodes in the plot. Default is 'gray'.
+        col_BG_lines : str, optional
+            Color of the background lines in the plot. Default is 'gray'.
+        col_BG_surf : str, optional
+            Color of the background surfaces in the plot. Default is 'gray'.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the Matplotlib figure and axes objects for further customization or saving.
+
+        Raises
+        ------
+        ValueError
+            If geo1 is not defined or if the algorithm results are missing (e.g., `Fn` is None).
+        """
         from pyoma2.support.mpl_plotter import MplGeoPlotter
 
         if geo1 is None:
@@ -411,7 +448,35 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         *args,
         **kwargs,
     ) -> typing.Any:
-        """ """
+        """
+        Plots the mode shapes for the second geometry setup (geo2) using Matplotlib.
+
+        This method visualizes the mode shapes, with customizable scaling, color, and viewing options.
+        The plot can be configured for different modes and color maps.
+
+        Parameters
+        ----------
+        geo2 : Geometry2
+            The second geometry configuration containing sensor information and coordinates.
+        mode_nr : int, optional
+            The mode number to be plotted. If None, the default mode is plotted.
+        scaleF : int, optional
+            Scaling factor to adjust the size of the mode shapes. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            The viewing plane or angle for the plot. Default is '3D'.
+        color : str, optional
+            Color scheme or colormap to be used for the mode shapes. Default is 'cmap'.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the Matplotlib figure and axes objects for further customization or saving.
+
+        Raises
+        ------
+        ValueError
+            If geo2 is not defined or if the algorithm results are missing.
+        """
         from pyoma2.support.mpl_plotter import MplGeoPlotter
 
         if geo2 is None:
@@ -441,7 +506,46 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         *args,
         **kwargs,
     ) -> typing.Any:
-        """ """
+        """
+        Plots the mode shapes for the second geometry setup (geo2) using PyVista for interactive 3D visualization.
+
+        This method uses PyVista for creating an interactive 3D plot of the mode shapes corresponding
+        to the specified mode number. The plot can include options for visualizing lines, surfaces, and
+        undeformed geometries, with customization for appearance settings.
+
+        Parameters
+        ----------
+        geo2 : Geometry2
+            The second geometry configuration containing sensor information and coordinates.
+        mode_nr : int, optional
+            The mode number to be plotted. Default is 1.
+        scaleF : float, optional
+            Scaling factor for the mode shape visualization. Default is 1.0.
+        plot_lines : bool, optional
+            Whether to plot lines connecting sensors. Default is True.
+        plot_surf : bool, optional
+            Whether to plot surfaces connecting sensors. Default is True.
+        plot_undef : bool, optional
+            Whether to plot the undeformed geometry. Default is True.
+        def_sett : dict, optional
+            Settings for the deformed mode shapes. Default is 'default'.
+        undef_sett : dict, optional
+            Settings for the undeformed mode shapes. Default is 'default'.
+        bg_plotter : bool, optional
+            Whether to include a background plotter. Default is True.
+        notebook : bool, optional
+            Whether to render the plot in a Jupyter notebook. Default is False.
+
+        Returns
+        -------
+        pyvista.Plotter
+            A PyVista plotter object with the interactive 3D visualization.
+
+        Raises
+        ------
+        ValueError
+            If geo2 is not defined or if the algorithm results are missing.
+        """
         from pyoma2.support.pyvista_plotter import PvGeoPlotter
 
         if geo2 is None:
@@ -481,7 +585,43 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         *args,
         **kwargs,
     ) -> typing.Any:
-        """ """
+        """
+        Creates an animation of the mode shapes for the second geometry setup (geo2) using PyVista.
+
+        This method animates the mode shapes corresponding to the specified mode number, using
+        PyVista for interactive 3D visualization. It supports saving the animation as a GIF.
+
+        Parameters
+        ----------
+        geo2 : Geometry2
+            The second geometry configuration containing sensor information and coordinates.
+        mode_nr : int, optional
+            The mode number to animate. Default is 1.
+        scaleF : float, optional
+            Scaling factor for the mode shape animation. Default is 1.0.
+        pl : pyvista.Plotter, optional
+            An existing PyVista plotter object for the animation. If None, a new plotter is created.
+        plot_points : bool, optional
+            Whether to plot sensor points. Default is True.
+        plot_lines : bool, optional
+            Whether to plot lines connecting sensors. Default is True.
+        plot_surf : bool, optional
+            Whether to plot surfaces connecting sensors. Default is True.
+        def_sett : dict, optional
+            Settings for the deformed mode shapes. Default is 'default'.
+        saveGIF : bool, optional
+            Whether to save the animation as a GIF. Default is False.
+
+        Returns
+        -------
+        pyvista.Plotter
+            A PyVista plotter object with the animated 3D visualization.
+
+        Raises
+        ------
+        ValueError
+            If geo2 is not defined or if the algorithm results are missing.
+        """
         from pyoma2.support.pyvista_plotter import PvGeoPlotter
 
         if geo2 is None:

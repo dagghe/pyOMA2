@@ -1,7 +1,9 @@
 The ``plscf`` module
 --------------------
 
-Bla Bla Bla
+This module is a part of the pyOMA2 package and provides utility functions for conducting
+Operational Modal Analysis (OMA) using the poly-reference Least Square Complex Frequency Domain (pLSCFD)
+identification method, also known as polymax [PAGL04]_.
 
 Functions:
     - :func:`.pLSCF`: Perform the poly-reference Least Square Complex Frequency (pLSCF) algorithm.

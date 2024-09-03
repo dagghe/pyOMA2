@@ -329,7 +329,23 @@ class MultiSetup_PoSER:
 
     # metodo per definire geometria 1 da file
     def def_geo1_byFILE(self, path: str):
-        """ """
+        """
+        Defines the first geometry (geo1) from an Excel file.
+
+        This method reads an Excel file to extract sensor information, including sensor names,
+        coordinates, and other optional geometry elements such as lines and background nodes.
+        The information is used to set up the geometry for the instance.
+
+        Parameters
+        ----------
+        path : str
+            The file path to the Excel file containing the geometry data.
+
+        Raises
+        ------
+        ValueError
+            If the input data is invalid or missing required fields.
+        """
         # Get reference index (if any)
         ref_ind = getattr(self, "ref_ind", None)
 
@@ -437,7 +453,23 @@ class MultiSetup_PoSER:
         )
 
     def def_geo2_byFILE(self, path: str):
-        """ """
+        """
+        Defines the second geometry (geo2) from an Excel file.
+
+        This method reads an Excel file to extract information related to the geometry configuration,
+        including sensor names, points' coordinates, mapping, and optional background nodes and surfaces.
+        The information is used to set up the second geometry for the instance.
+
+        Parameters
+        ----------
+        path : str
+            The file path to the Excel file containing the geometry data.
+
+        Raises
+        ------
+        ValueError
+            If the input data is invalid or missing required fields.
+        """
         # Get reference index
         ref_ind = self.ref_ind if hasattr(self, "ref_ind") else None
 
@@ -473,6 +505,42 @@ class MultiSetup_PoSER:
         col_BG_surf: str = "gray",
         col_txt: str = "red",
     ):
+        """
+        Plots the first geometry setup (geo1) using Matplotlib.
+
+        This method creates a 2D or 3D plot of the first geometry, including sensors, lines, background nodes,
+        and surfaces, using customizable color schemes for each element.
+
+        Parameters
+        ----------
+        scaleF : int, optional
+            Scaling factor for the plot. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            The view angle of the plot. Default is '3D'.
+        col_sns : str, optional
+            Color of the sensors. Default is 'red'.
+        col_sns_lines : str, optional
+            Color of the lines connecting sensors. Default is 'red'.
+        col_BG_nodes : str, optional
+            Color of the background nodes. Default is 'gray'.
+        col_BG_lines : str, optional
+            Color of the background lines. Default is 'gray'.
+        col_BG_surf : str, optional
+            Color of the background surfaces. Default is 'gray'.
+        col_txt : str, optional
+            Color of the text labels for sensors. Default is 'red'.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the Matplotlib figure and axes objects.
+
+        Raises
+        ------
+        ValueError
+            If `geo1` is not defined.
+        """
+
         if self.geo1 is None:
             raise ValueError("geo1 is not defined. Call def_geo1 first.")
 
@@ -503,6 +571,43 @@ class MultiSetup_PoSER:
         col_BG_surf: str = "gray",
         col_txt: str = "red",
     ):
+        """
+        Plots the second geometry setup (geo2) using Matplotlib.
+
+        This method creates a 2D or 3D plot of the second geometry, including sensors, lines,
+        surfaces, background nodes, and surfaces, with customizable colors.
+
+        Parameters
+        ----------
+        scaleF : int, optional
+            Scaling factor for the plot. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
+            The view angle of the plot. Default is '3D'.
+        col_sns : str, optional
+            Color of the sensors. Default is 'red'.
+        col_sns_lines : str, optional
+            Color of the lines connecting sensors. Default is 'black'.
+        col_sns_surf : str, optional
+            Color of the surfaces connecting sensors. Default is 'lightcoral'.
+        col_BG_nodes : str, optional
+            Color of the background nodes. Default is 'gray'.
+        col_BG_lines : str, optional
+            Color of the background lines. Default is 'gray'.
+        col_BG_surf : str, optional
+            Color of the background surfaces. Default is 'gray'.
+        col_txt : str, optional
+            Color of the text labels for sensors. Default is 'red'.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the Matplotlib figure and axes objects.
+
+        Raises
+        ------
+        ValueError
+            If `geo2` is not defined.
+        """
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
@@ -534,6 +639,44 @@ class MultiSetup_PoSER:
         bg_plotter: bool = True,
         notebook: bool = False,
     ):
+        """
+        Plots the second geometry setup (geo2) using PyVista for 3D visualization.
+
+        This method creates a 3D interactive plot of the second geometry setup with options
+        to visualize sensor points, connecting lines, and surfaces. It provides various
+        customization options for coloring and rendering.
+
+        Parameters
+        ----------
+        scaleF : int, optional
+            Scaling factor for the plot. Default is 1.
+        col_sens : str, optional
+            Color of the sensors. Default is 'red'.
+        plot_lines : bool, optional
+            Whether to plot lines connecting sensors. Default is True.
+        plot_surf : bool, optional
+            Whether to plot surfaces connecting sensors. Default is True.
+        points_sett : dict, optional
+            Settings for the points' appearance. Default is 'default'.
+        lines_sett : dict, optional
+            Settings for the lines' appearance. Default is 'default'.
+        surf_sett : dict, optional
+            Settings for the surfaces' appearance. Default is 'default'.
+        bg_plotter : bool, optional
+            Whether to include a background plotter. Default is True.
+        notebook : bool, optional
+            Whether to render the plot in a Jupyter notebook environment. Default is False.
+
+        Returns
+        -------
+        pyvista.Plotter
+            A PyVista Plotter object with the geometry visualization.
+
+        Raises
+        ------
+        ValueError
+            If `geo2` is not defined.
+        """
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
@@ -566,7 +709,43 @@ class MultiSetup_PoSER:
         col_BG_lines: str = "gray",
         col_BG_surf: str = "gray",
     ) -> typing.Any:
-        """ """
+        """
+        Plots the mode shapes for the first geometry setup (geo1) using Matplotlib.
+
+        This method visualizes the mode shapes corresponding to the specified mode number, with customizable
+        colors and scaling for different geometrical elements such as sensors, lines, and background surfaces.
+
+        Parameters
+        ----------
+        Algo_Res : MsPoserResult
+            The result object containing modal parameters and mode shape data from the PoSER algorithm.
+        mode_nr : int
+            The mode number to be plotted.
+        scaleF : int, optional
+            Scaling factor to adjust the size of the mode shapes. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            The viewing plane or angle for the plot. Default is '3D'.
+        col_sns : str, optional
+            Color of the sensors in the plot. Default is 'red'.
+        col_sns_lines : str, optional
+            Color of the lines connecting the sensors. Default is 'red'.
+        col_BG_nodes : str, optional
+            Color of the background nodes in the plot. Default is 'gray'.
+        col_BG_lines : str, optional
+            Color of the background lines in the plot. Default is 'gray'.
+        col_BG_surf : str, optional
+            Color of the background surfaces in the plot. Default is 'gray'.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the Matplotlib figure and axes objects for further customization or saving.
+
+        Raises
+        ------
+        ValueError
+            If `geo1` is not defined or if the algorithm results are missing.
+        """
         if self.geo1 is None:
             raise ValueError("geo1 is not defined. Call def_geo1 first.")
 
@@ -597,7 +776,35 @@ class MultiSetup_PoSER:
         *args,
         **kwargs,
     ) -> typing.Any:
-        """ """
+        """
+        Plots the mode shapes for the second geometry setup (geo2) using Matplotlib.
+
+        This method visualizes the mode shapes for geo2, with customizable scaling, color, and viewing options.
+        The plot can be configured for different modes and color maps.
+
+        Parameters
+        ----------
+        Algo_Res : MsPoserResult
+            The result object containing modal parameters and mode shape data from the PoSER algorithm.
+        mode_nr : int, optional
+            The mode number to be plotted. If None, the default mode is plotted.
+        scaleF : int, optional
+            Scaling factor to adjust the size of the mode shapes. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            The viewing plane or angle for the plot. Default is '3D'.
+        color : str, optional
+            Color scheme or colormap to be used for the mode shapes. Default is 'cmap'.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the Matplotlib figure and axes objects for further customization or saving.
+
+        Raises
+        ------
+        ValueError
+            If `geo2` is not defined or if the algorithm results are missing (e.g., `Fn` is None).
+        """
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
@@ -625,7 +832,46 @@ class MultiSetup_PoSER:
         *args,
         **kwargs,
     ) -> typing.Any:
-        """ """
+        """
+        Plots the mode shapes for the second geometry setup (geo2) using PyVista for interactive 3D visualization.
+
+        This method uses PyVista for creating an interactive 3D plot of the mode shapes corresponding
+        to the specified mode number. The plot can include options for visualizing lines, surfaces, and
+        undeformed geometries, with customization for appearance settings.
+
+        Parameters
+        ----------
+        Algo_Res : MsPoserResult
+            The result object containing modal parameters and mode shape data from the PoSER algorithm.
+        mode_nr : int, optional
+            The mode number to be plotted. Default is 1.
+        scaleF : float, optional
+            Scaling factor for the mode shape visualization. Default is 1.0.
+        plot_lines : bool, optional
+            Whether to plot lines connecting sensors. Default is True.
+        plot_surf : bool, optional
+            Whether to plot surfaces connecting sensors. Default is True.
+        plot_undef : bool, optional
+            Whether to plot the undeformed geometry. Default is True.
+        def_sett : dict, optional
+            Settings for the deformed mode shapes. Default is 'default'.
+        undef_sett : dict, optional
+            Settings for the undeformed mode shapes. Default is 'default'.
+        bg_plotter : bool, optional
+            Whether to include a background plotter. Default is True.
+        notebook : bool, optional
+            Whether to render the plot in a Jupyter notebook. Default is False.
+
+        Returns
+        -------
+        pyvista.Plotter
+            A PyVista plotter object with the interactive 3D visualization.
+
+        Raises
+        ------
+        ValueError
+            If `geo2` is not defined or if the algorithm results are missing (e.g., `Fn` is None).
+        """
         from pyoma2.support.pyvista_plotter import PvGeoPlotter
 
         if self.geo2 is None:
@@ -665,7 +911,43 @@ class MultiSetup_PoSER:
         *args,
         **kwargs,
     ) -> typing.Any:
-        """ """
+        """
+        Creates an animation of the mode shapes for the second geometry setup (geo2) using PyVista.
+
+        This method animates the mode shapes corresponding to the specified mode number, using
+        PyVista for interactive 3D visualization. It supports saving the animation as a GIF.
+
+        Parameters
+        ----------
+        Algo_Res : MsPoserResult
+            The result object containing modal parameters and mode shape data from the PoSER algorithm.
+        mode_nr : int, optional
+            The mode number to animate. Default is 1.
+        scaleF : float, optional
+            Scaling factor for the mode shape animation. Default is 1.0.
+        pl : pyvista.Plotter, optional
+            An existing PyVista plotter object for the animation. If None, a new plotter is created.
+        plot_points : bool, optional
+            Whether to plot sensor points. Default is True.
+        plot_lines : bool, optional
+            Whether to plot lines connecting sensors. Default is True.
+        plot_surf : bool, optional
+            Whether to plot surfaces connecting sensors. Default is True.
+        def_sett : dict, optional
+            Settings for the deformed mode shapes. Default is 'default'.
+        saveGIF : bool, optional
+            Whether to save the animation as a GIF. Default is False.
+
+        Returns
+        -------
+        pyvista.Plotter
+            A PyVista plotter object with the animated 3D visualization.
+
+        Raises
+        ------
+        ValueError
+            If `geo2` is not defined or if the algorithm results are missing (e.g., `Fn` is None).
+        """
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
@@ -675,7 +957,13 @@ class MultiSetup_PoSER:
         Plotter = PvGeoPlotter(self.geo2, Algo_Res)
 
         pl = Plotter.animate_mode(
-            mode_nr, scaleF, None, plot_points, plot_lines, plot_surf, def_sett, saveGIF
+            mode_nr=mode_nr,
+            scaleF=scaleF,
+            plot_lines=plot_lines,
+            plot_surf=plot_surf,
+            def_sett=def_sett,
+            saveGIF=saveGIF,
+            pl=None,
         )
         return pl
 
@@ -795,7 +1083,11 @@ class MultiSetup_PreGER(BaseSetup):
 
     def rollback(self) -> None:
         """
-        Rollback the data to the initial state.
+        Restores the data and sampling frequency to their initial state.
+
+        This method reverts the `data` and `fs` attributes to their original values, effectively
+        undoing any operations that modify the data, such as filtering, detrending, or decimation.
+        It can be used to reset the setup to the state it was in after instantiation.
         """
         self.fs = self._initial_fs
         self.ref_ind = self._initial_ref_ind
@@ -873,7 +1165,31 @@ class MultiSetup_PreGER(BaseSetup):
         logscale: bool = True,
         unit: str = "unit",
     ):
-        """ """
+        """
+        Plot channel information including time history, normalized auto-correlation,
+        power spectral density (PSD), probability density function, and normal probability
+        plot for each channel in the selected datasets.
+
+        Parameters
+        ----------
+        data_idx : str or list[int], optional
+            Indices of the datasets to plot. Use 'all' to plot data for all datasets. Default is 'all'.
+        nxseg : float, optional
+            The number of data points per segment for the PSD estimation. Default is 1024.
+        ch_idx : str or list[int], optional
+            Indices of the channels to plot. Use 'all' to plot information for all channels. Default is 'all'.
+        freqlim : tuple of float, optional
+            Frequency limits (min, max) for the PSD plot. Default is None, using the full range.
+        logscale : bool, optional
+            Whether to use a logarithmic scale for the PSD plot. Default is True.
+        unit : str, optional
+            Unit of measurement for the data, used in labeling the plots. Default is 'unit'.
+
+        Returns
+        -------
+        tuple
+            A tuple containing lists of figure and axes objects for further customization or saving.
+        """
         if data_idx != "all":
             datasets = [self.datasets[i] for i in data_idx]
         else:
@@ -904,7 +1220,34 @@ class MultiSetup_PreGER(BaseSetup):
         freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         win: str = "hann",
     ):
-        """ """
+        """
+        Plot the Short-Time Fourier Transform (STFT) magnitude spectrogram for the specified channels.
+
+        This method computes and plots the STFT magnitude spectrogram for each selected channel in the
+        specified datasets. The spectrogram is plotted as a heatmap where the x-axis represents time, the y-axis
+        represents frequency, and the color intensity represents the magnitude of the STFT.
+
+        Parameters
+        ----------
+        data_idx : str or list[int], optional
+            Indices of the datasets to plot. Use 'all' to plot data for all datasets. Default is 'all'.
+        nxseg : float, optional
+            The number of data points per segment for the STFT calculation. Default is 256.
+        pov : float, optional
+            Proportion of overlap between consecutive segments, expressed as a decimal between 0 and 1.
+            Default is 0.9 (90% overlap).
+        ch_idx : str or list[int], optional
+            Indices of the channels to plot. Use 'all' to plot information for all channels. Default is 'all'.
+        freqlim : tuple of float, optional
+            Frequency limits (min, max) for the STFT plot. Default is None, using the full range.
+        win : str, optional
+            The windowing function to apply to each segment. Default is 'hann'.
+
+        Returns
+        -------
+        tuple
+            A tuple containing lists of figure and axes objects for further customization or saving.
+        """
         if data_idx != "all":
             datasets = [self.datasets[i] for i in data_idx]
         else:
@@ -968,11 +1311,10 @@ class MultiSetup_PreGER(BaseSetup):
         ValueError
             If the decimation factor 'q' is not greater than 1.
 
-        Returns
-        -------
-        tuple
-            A tuple containing the new datasets, the number of data points for each dataset,
-            and the total duration of each dataset.
+        Notes
+        -----
+        For further information, see `scipy.signal.decimate
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
         n = kwargs.get("n")
         ftype = kwargs.get("ftype", "iir")
@@ -1008,7 +1350,7 @@ class MultiSetup_PreGER(BaseSetup):
         self.Ndats = Ndats
         self.Ts = Ts
 
-        return newdatasets, Y, fs, dt, Ndats, Ts
+        # return newdatasets, Y, fs, dt, Ndats, Ts
 
     # method to filter data
     def filter_data(
@@ -1018,31 +1360,29 @@ class MultiSetup_PreGER(BaseSetup):
         btype: str = "lowpass",
     ) -> npt.NDArray[np.float64]:
         """
-        Applies a Butterworth filter to the input data based on specified parameters.
+        Apply a Butterworth filter to the input data and return the filtered signal.
 
-        This method filters the data using a Butterworth filter with the specified parameters.
-        The method updates the instance's data attribute.
+        This function designs and applies a Butterworth filter with the specified parameters to the input
+        data. It can be used to apply lowpass, highpass, bandpass, or bandstop filters.
 
         Parameters
         ----------
-        Wn : float | tuple
-            The critical frequency or frequencies for the filter. For lowpass and highpass filters,
-            Wn is a scalar; for bandpass and bandstop filters, Wn is a tuple.
+        Wn : float or tuple of float
+            The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar;
+            for bandpass and bandstop filters, Wn is a length-2 sequence.
         order : int, optional
-            The order of the filter. Default is 8.
+            The order of the filter. A higher order leads to a sharper frequency cutoff but can also
+            lead to instability and significant phase delay. Default is 8.
         btype : str, optional
-            The type of filter to apply: 'lowpass', 'highpass
-            'bandpass', or 'bandstop'. Default is 'lowpass'.
+            The type of filter to apply. Options are "lowpass", "highpass", "bandpass", or "bandstop".
+            Default is "lowpass".
 
-        Raises
-        ------
-        ValueError
-            If the order of the filter is not an integer greater than 0.
-
-        Returns
-        -------
-        np.ndarray
-            The filtered data.
+        Notes
+        -----
+        For more information, see the scipy documentation for `signal.butter`
+        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
+        and `signal.sosfiltfilt`
+        (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html).
         """
         newdatasets = []
         for data in self.datasets:
@@ -1057,7 +1397,7 @@ class MultiSetup_PreGER(BaseSetup):
 
         Y = pre_MultiSetup(newdatasets, self.ref_ind)
         self.data = Y
-        return Y
+        # return Y
 
     # method to detrend data
     def detrend_data(
@@ -1065,27 +1405,32 @@ class MultiSetup_PreGER(BaseSetup):
         **kwargs,
     ) -> npt.NDArray[np.float64]:
         """
-        Applies detrending to the data using the scipy.signal.detrend function.
+        Detrends the data using the scipy.signal.detrend function.
 
-        This method removes the linear trend from the data by fitting a least-squares
-        polynomial to the data and subtracting it.
-        The method updates the instance's data attribute.
+        This method removes a linear or constant trend from the data, commonly used to remove drifts
+        or offsets in time series data. It's a preprocessing step, often necessary for methods that
+        assume stationary data. The method updates the instance's data attribute.
 
         Parameters
         ----------
         **kwargs : dict, optional
             Additional keyword arguments for the scipy.signal.detrend function:
 
-            axis : int, optional
-                The axis along which to detrend the data. Default is 0.
             type : {'linear', 'constant'}, optional
-                The type of detrending to apply: 'linear' for linear detrending
-                or 'constant' for mean removal. Default is 'linear'.
+                The type of detrending: 'linear' for linear detrend, or 'constant' for just
+                subtracting the mean. Default is 'linear'.
+            bp : int or numpy.ndarray of int, optional
+                Breakpoints where the data is split for piecewise detrending. Default is 0.
 
-        Returns
-        -------
-        np.ndarray
-            The detrended data.
+        Raises
+        ------
+        ValueError
+            If invalid parameters are provided.
+
+        Notes
+        -----
+        For further information, see `scipy.signal.detrend
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
         """
         newdatasets = []
         for data in self.datasets:
@@ -1094,4 +1439,4 @@ class MultiSetup_PreGER(BaseSetup):
 
         Y = pre_MultiSetup(newdatasets, self.ref_ind)
         self.data = Y
-        return Y
+        # return Y

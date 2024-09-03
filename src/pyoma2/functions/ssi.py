@@ -44,8 +44,7 @@ def build_hank(
         The method to use for constructing the Hankel matrix.
         Options are 'cov_mm', 'cov_R', 'dat', or 'YfYp'.
     calc_unc : bool, optional
-        Whether to calculate uncertainties (default is False).
-        Only applicable for 'cov_mm' method.
+        Whether to calculate uncertainties (default is False). Only applicable for the 'cov_mm' method.
     nb : int, optional
         The number of bootstrap samples to use for uncertainty calculations (default is 100).
 
@@ -54,7 +53,7 @@ def build_hank(
     Hank : np.ndarray
         The constructed Hankel matrix.
     T : np.ndarray, optional
-        The uncertainty matrix. Returned only if `calc_unc` is True and `method` is 'cov_mm'.
+        The uncertainty matrix. Only returned if `calc_unc` is True and `method` is 'cov_mm'.
 
     Raises
     ------
@@ -66,7 +65,7 @@ def build_hank(
     Notes
     -----
     - The 'YfYp' method constructs separate future and past data matrices without combining them into a Hankel matrix.
-
+    - When `calc_unc` is True, the uncertainty matrix `T` is calculated using the bootstrap method, which quantifies the uncertainty of the Hankel matrix elements.
     """
     Ndat = Y.shape[1]  # number of data points
     l = Y.shape[0]  # number of chaiiels  # noqa E741 (ambiguous variable name 'l')
@@ -195,10 +194,9 @@ def ac2mp(A: np.ndarray, C: np.ndarray, dt: float, calc_unc: bool = False):
     lam_d : np.ndarray, optional
         Discrete-time eigenvalues. Returned only if `calc_unc` is True.
     l_eigvt : np.ndarray, optional
-        Left eigenvectors. Returned only if `calc_unc` is True.
+        Left eigenvectors of the system matrix `A`. Returned only if `calc_unc` is True.
     r_eigvt : np.ndarray, optional
-        Right eigenvectors. Returned only if `calc_unc` is True.
-
+        Right eigenvectors of the system matrix `A`. Returned only if `calc_unc` is True.
     """
     Nch = C.shape[0]
     lam_d, l_eigvt, r_eigvt = linalg.eig(A, left=True)  # l_eigvt=chi, r_eigvt=phi
@@ -595,7 +593,7 @@ def SSI_poles(
                 Xi_cov[jj, ii] = abs(cov_fx[1, 0])
 
                 # # FIXME
-                # # THE COVARIANGE FOR THE MODESHAPE IS WRONG!!!
+                # # THE COVARIANCE FOR THE MODESHAPE IS WRONG!!!
                 # # Lemma 5
                 # Mat1_1 = np.linalg.pinv(lam_d[jj]*np.eye(ii) - A)
                 # Mat2_1 = (np.eye(ii) -

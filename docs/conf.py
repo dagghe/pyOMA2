@@ -33,6 +33,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "nbsphinx",
     "sphinx_rtd_theme",
+    #    'sphinxcontrib.bibtex',
 ]
 
 intersphinx_mapping = {

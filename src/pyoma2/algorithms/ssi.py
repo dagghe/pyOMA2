@@ -301,7 +301,10 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
         """
-        Plots the Stability Diagram for the SSIdat algorithm.
+        Plot the Stability Diagram for the SSI algorithms.
+
+        The Stability Diagram helps visualize the stability of identified poles across different
+        model orders, making it easier to separate physical poles from spurious ones.
 
         Parameters
         ----------
@@ -338,7 +341,10 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
         """
-        Plots the frequency-damping cluster diagram for the identified modal parameters.
+        Plot the frequency-damping cluster diagram for the identified modal parameters.
+
+        The cluster diagram visualizes the relationship between frequencies and damping
+        ratios for the identified poles, helping to identify clusters of physical modes.
 
         Parameters
         ----------
@@ -369,7 +375,28 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         self,
         iter_n: typing.Optional[int] = None,
     ) -> typing.Any:
-        """ """
+        """
+        Plot the singular values of the Hankel matrix for the SSI algorithm.
+
+        This plot is useful for checking the influence of the number of block-rows, br,
+        on the Singular Values of the Hankel matrix.
+
+        Parameters
+        ----------
+        iter_n : int, optional
+            The iteration number for which to plot the singular values. If None, the last
+            iteration is used. Default is None.
+
+        Returns
+        -------
+        typing.Any
+            A tuple containing the matplotlib figure and axes of the singular value plot.
+
+        Raises
+        ------
+        ValueError
+            If the algorithm has not been run before plotting.
+        """
         if not self.result:
             raise ValueError("Run algorithm first")
 

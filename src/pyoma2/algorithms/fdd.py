@@ -176,8 +176,13 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
 
         Returns
         -------
-        matplotlib.figure.Figure
-            The figure object containing the CMIF plot.
+        tuple
+            A tuple containing the Matplotlib figure and axes objects for the CMIF plot.
+
+        Raises
+        ------
+        ValueError
+            If the algorithm has not been run and no results are available.
         """
         if not self.result:
             raise ValueError("Run algorithm first")
@@ -375,8 +380,13 @@ class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
 
         Returns
         -------
-        matplotlib.figure.Figure
-            The figure object containing the FIT plot.
+        tuple
+            A tuple containing the Matplotlib figure and axes objects for the EFDD FIT plot.
+
+        Raises
+        ------
+        ValueError
+            If the algorithm has not been run and no results are available.
         """
 
         if not self.result:

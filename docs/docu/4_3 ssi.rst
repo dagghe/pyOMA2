@@ -2,14 +2,10 @@ The ``ssi`` module
 ------------------
 
 This module provides a collection of utility functions to support the implementation
-of Stochastic Subspace Identification (SSI) algorithms. It includes functions for building
-Hankel matrices with various methods, converting state-space representations to modal parameters,
-performing system identification using SSI, and extracting modal parameters from identified systems.
-These functions are integral to performing advanced modal analysis and system identification
-in structural engineering and other fields.
-
-The module primarily offers low-level functions that are called by higher-level SSI classes
-and algorithms, making it a foundational component of a larger system identification toolkit.
+of Stochastic Subspace Identification (SSI) algorithms [BPDG99]_, [MiDo11]_, [DOME13]_.
+It includes functions for building Hankel matrices with various methods, converting
+state-space representations to modal parameters,performing system identification using
+SSI, and extracting modal parameters from identified systems.
 
 Functions:
     - :func:`.BuildHank`: Constructs a Hankel matrix from time series data.
