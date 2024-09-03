@@ -84,7 +84,7 @@ class MplGeoPlotter:
             raise ValueError("geo1 is not defined. Call def_geo1 first.")
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
-        ax.set_title("Plot of the geometry and sensors' placement and direction")
+        # ax.set_title("Plot of the geometry and sensors' placement and direction")
         # plot sensors' nodes
         sens_coord = self.Geo.sens_coord[["x", "y", "z"]].to_numpy()
         plt_nodes(ax, sens_coord, color=col_sns)
@@ -298,7 +298,7 @@ class MplGeoPlotter:
         #     raise ValueError("geo2 is not defined. Call def_geo2 first.")
         fig = plt.figure(figsize=(8, 8), tight_layout=True)
         ax = fig.add_subplot(111, projection="3d")
-        ax.set_title("Plot of the geometry and sensors' placement and direction")
+        # ax.set_title("Plot of the geometry and sensors' placement and direction")
         # plot sensors'
         pts = self.Geo.pts_coord.to_numpy()[:, :]
         plt_nodes(ax, pts, color="red")

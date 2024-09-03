@@ -67,7 +67,10 @@ class BaseSetup:
 
     def rollback(self) -> None:
         """
-        Rollback the data to the initial state. To be implemented by subclasses of this mixin.
+        Rollback the data to the initial state.
+
+        This method must be implemented by subclasses to provide a rollback mechanism for the data.
+        Raises a `NotImplementedError` in the base class.
         """
         raise NotImplementedError("Rollback method must be implemented by subclasses.")
 
@@ -292,7 +295,23 @@ class BaseSetup:
 
     # metodo per definire geometria 1 da file
     def def_geo1_byFILE(self, path: str):
-        """ """
+        """
+        Defines the first geometry (geo1) from an Excel file.
+
+        This method reads an Excel file to extract sensor information, including sensor names,
+        coordinates, and other optional geometry elements such as lines and background nodes.
+        The information is used to set up the geometry for the instance.
+
+        Parameters
+        ----------
+        path : str
+            The file path to the Excel file containing the geometry data.
+
+        Raises
+        ------
+        ValueError
+            If the input data is invalid or missing required fields.
+        """
         # Get reference index (if any)
         ref_ind = getattr(self, "ref_ind", None)
 
@@ -400,7 +419,23 @@ class BaseSetup:
         )
 
     def def_geo2_byFILE(self, path: str):
-        """ """
+        """
+        Defines the second geometry (geo2) from an Excel file.
+
+        This method reads an Excel file to extract information related to the geometry configuration,
+        including sensor names, points' coordinates, mapping, and optional background nodes and surfaces.
+        The information is used to set up the second geometry for the instance.
+
+        Parameters
+        ----------
+        path : str
+            The file path to the Excel file containing the geometry data.
+
+        Raises
+        ------
+        ValueError
+            If the input data is invalid or missing required fields.
+        """
         # Get reference index
         ref_ind = self.ref_ind if hasattr(self, "ref_ind") else None
 
@@ -436,6 +471,42 @@ class BaseSetup:
         col_BG_surf: str = "gray",
         col_txt: str = "red",
     ):
+        """
+        Plots the first geometry setup (geo1) using Matplotlib.
+
+        This method creates a 2D or 3D plot of the first geometry, including sensors, lines, background nodes,
+        and surfaces, using customizable color schemes for each element.
+
+        Parameters
+        ----------
+        scaleF : int, optional
+            Scaling factor for the plot. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz'}, optional
+            The view angle of the plot. Default is '3D'.
+        col_sns : str, optional
+            Color of the sensors. Default is 'red'.
+        col_sns_lines : str, optional
+            Color of the lines connecting sensors. Default is 'red'.
+        col_BG_nodes : str, optional
+            Color of the background nodes. Default is 'gray'.
+        col_BG_lines : str, optional
+            Color of the background lines. Default is 'gray'.
+        col_BG_surf : str, optional
+            Color of the background surfaces. Default is 'gray'.
+        col_txt : str, optional
+            Color of the text labels for sensors. Default is 'red'.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the Matplotlib figure and axes objects.
+
+        Raises
+        ------
+        ValueError
+            If `geo1` is not defined.
+        """
+
         if self.geo1 is None:
             raise ValueError("geo1 is not defined. Call def_geo1 first.")
 
@@ -466,6 +537,44 @@ class BaseSetup:
         col_BG_surf: str = "gray",
         col_txt: str = "red",
     ):
+        """
+        Plots the second geometry setup (geo2) using Matplotlib.
+
+        This method creates a 2D or 3D plot of the second geometry, including sensors, lines,
+        surfaces, background nodes, and surfaces, with customizable colors.
+
+        Parameters
+        ----------
+        scaleF : int, optional
+            Scaling factor for the plot. Default is 1.
+        view : {'3D', 'xy', 'xz', 'yz', 'x', 'y', 'z'}, optional
+            The view angle of the plot. Default is '3D'.
+        col_sns : str, optional
+            Color of the sensors. Default is 'red'.
+        col_sns_lines : str, optional
+            Color of the lines connecting sensors. Default is 'black'.
+        col_sns_surf : str, optional
+            Color of the surfaces connecting sensors. Default is 'lightcoral'.
+        col_BG_nodes : str, optional
+            Color of the background nodes. Default is 'gray'.
+        col_BG_lines : str, optional
+            Color of the background lines. Default is 'gray'.
+        col_BG_surf : str, optional
+            Color of the background surfaces. Default is 'gray'.
+        col_txt : str, optional
+            Color of the text labels for sensors. Default is 'red'.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the Matplotlib figure and axes objects.
+
+        Raises
+        ------
+        ValueError
+            If `geo2` is not defined.
+        """
+
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
@@ -497,6 +606,44 @@ class BaseSetup:
         bg_plotter: bool = True,
         notebook: bool = False,
     ):
+        """
+        Plots the second geometry setup (geo2) using PyVista for 3D visualization.
+
+        This method creates a 3D interactive plot of the second geometry setup with options
+        to visualize sensor points, connecting lines, and surfaces. It provides various
+        customization options for coloring and rendering.
+
+        Parameters
+        ----------
+        scaleF : int, optional
+            Scaling factor for the plot. Default is 1.
+        col_sens : str, optional
+            Color of the sensors. Default is 'red'.
+        plot_lines : bool, optional
+            Whether to plot lines connecting sensors. Default is True.
+        plot_surf : bool, optional
+            Whether to plot surfaces connecting sensors. Default is True.
+        points_sett : dict, optional
+            Settings for the points' appearance. Default is 'default'.
+        lines_sett : dict, optional
+            Settings for the lines' appearance. Default is 'default'.
+        surf_sett : dict, optional
+            Settings for the surfaces' appearance. Default is 'default'.
+        bg_plotter : bool, optional
+            Whether to include a background plotter. Default is True.
+        notebook : bool, optional
+            Whether to render the plot in a Jupyter notebook environment. Default is False.
+
+        Returns
+        -------
+        pyvista.Plotter
+            A PyVista Plotter object with the geometry visualization.
+
+        Raises
+        ------
+        ValueError
+            If `geo2` is not defined.
+        """
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
@@ -518,13 +665,36 @@ class BaseSetup:
 
     # FIXME SAVE LOAD FILES NOT WORKING
     def save_to_file(self, file_name):
-        """ """
+        """
+        Save the current setup instance to a file.
+
+        This method serializes the current instance and saves it to a file using the pickle module.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the file where the setup instance will be saved.
+        """
         with open(file_name, "wb") as f:
             pickle.dump(self, f)
 
     @classmethod
     def load_from_file(cls, file_name):
-        """ """
+        """
+        Load a setup instance from a file.
+
+        This method deserializes a saved setup instance from the specified file.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the file from which the setup instance will be loaded.
+
+        Returns
+        -------
+        BaseSetup
+            An instance of the setup loaded from the file.
+        """
         with open(file_name, "rb") as f:
             instance = pickle.load(f)  # noqa S301
         return instance
@@ -570,8 +740,8 @@ class BaseSetup:
         tuple
             A tuple containing the decimated data, updated sampling frequency, sampling interval,
 
-        See Also
-        --------
+        Notes
+        -----
         For further information, see `scipy.signal.decimate
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
@@ -616,8 +786,8 @@ class BaseSetup:
         np.ndarray
             The detrended data.
 
-        See Also
-        --------
+        Notes
+        -----
         For further information, see `scipy.signal.detrend
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
         """
@@ -646,7 +816,7 @@ class BaseSetup:
             (i.e., each column is filtered independently).
         fs : float
             The sampling frequency of the input data.
-        Wn : array_like
+        Wn : float or tuple of float
             The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar;
             for bandpass and bandstop filters, Wn is a length-2 sequence.
         order : int, optional

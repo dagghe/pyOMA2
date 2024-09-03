@@ -2,7 +2,7 @@ Example1 - Getting started
 ==========================
 
 In this first example we'll take a look at a simple 5 degrees of freedom (DOF) system.
-To access the data and the true results of the system we can call the ```example_data()``` function in the submodule ```functions.gen```
+To access the data and the exact results of the system we can call the ``example_data()`` function in the submodule ``functions.gen``
 
 .. code:: python
 
@@ -18,7 +18,7 @@ To access the data and the true results of the system we can call the ```example
     # assign the returned values
     data, ground_truth = example_data()
 
-    # Print the true results
+    # Print the exact results
     np.set_printoptions(precision=3)
     print(f"the natural frequencies are: {ground_truth[0]} \n")
     print(f"the damping is: {ground_truth[2]} \n")
@@ -72,6 +72,8 @@ We can now check the results
     # plot the stabilisation diagram
     _, _ = ssidat.plot_stab(freqlim=(0,10),hide_poles=False)
 
+.. image:: /img/Ex1-Fig1.png
+.. image:: /img/Ex2-Fig2.png
 
 We can get the modal parameters with the help of an interactive plot calling the ```MPE_fromPlot()``` method, or we can get the results "manually" with the ```MPE()``` method.
 
@@ -87,6 +89,7 @@ We can get the modal parameters with the help of an interactive plot calling the
 Now we can now access all the results and compare them to the exact solution
 
 .. code:: python
+
     # dict of results
     ssidat_res = dict(ssidat.result)
 
@@ -100,3 +103,5 @@ Now we can now access all the results and compare them to the exact solution
     print(f"{ssidat_res['Phi'].real} \n")
 
     _, _ = plot_mac_matrix(ssidat_res['Phi'].real, ground_truth[1])
+
+.. image:: /img/Ex2-Fig3.png

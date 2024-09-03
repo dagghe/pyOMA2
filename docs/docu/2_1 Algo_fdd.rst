@@ -1,9 +1,9 @@
 The ``fdd`` algorithm module
 ============================
 
-This module provides implementation of the Frequency Domain Decomposition (FDD) [BZA01]_, the Enhanced
-Frequency Domain Decomposition (EFDD) [BVA01]_, and the Frequency Spatial Domain Decomposition (FSDD)
-[ZWT10]_ algorithms, along with their adaptations for multi-setup experimental data [SARB21]_. These algorithms
+This module provides implementation of the Frequency Domain Decomposition (FDD) algorithm [BZA01]_, the Enhanced
+Frequency Domain Decomposition (EFDD) algorithm [BVA01]_, and the Frequency Spatial Domain Decomposition (FSDD)
+algorithm [ZWT10]_, along with their adaptations for multi-setup experimental data [SARB21]_. These algorithms
 are used in structural dynamics to identify modal parameters such as natural frequencies, damping ratios,
 and mode shapes from ambient vibration measurements.
 
@@ -20,9 +20,9 @@ Classes:
       Extends ``EFDD`` for multi-setup scenarios.
 
 .. Important::
-   Each class contains methods for executing the respective algorithms, extracting modal parameters,
-   and plotting results. The module also includes utility functions and classes for visualization
-   and interactive analysis.
+   Each class contains methods for executing the respective Frequency Domain Decomposition based
+   algorithm, extracting modal parameters, plotting results, and additional utilities relevant to
+   the specific FDD approach.
 
 .. Note::
    Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.

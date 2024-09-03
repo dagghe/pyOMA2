@@ -1,7 +1,10 @@
 The ``plscf`` algorithm module
 ==============================
 
-Bla bla bla
+This module implements the Poly-reference Least Square Complex Frequency (pLSCF) algorithm [PAGL04]_,
+a robust identification method in the frequency domain. It is specifically designed for both single and
+multi-setup experimental scenarios. The module includes classes and methods for process measurement data,
+extract modal parameters and visualisation tools.
 
 Classes:
    :class:`.pLSCF`

@@ -100,7 +100,11 @@ class SingleSetup(BaseSetup):
 
     def rollback(self) -> None:
         """
-        Rollback the data to the initial state.
+        Restores the data and sampling frequency to their initial state.
+
+        This method reverts the `data` and `fs` attributes to their original values, effectively
+        undoing any operations that modify the data, such as filtering, detrending, or decimation.
+        It can be used to reset the setup to the state it was in after instantiation.
         """
         self.data = self._initial_data
         self.fs = self._initial_fs
@@ -183,12 +187,6 @@ class SingleSetup(BaseSetup):
             A list of figure objects, one for each channel plotted.
         axs : list of matplotlib.axes.Axes
             A list of Axes objects corresponding to the subplots for each channel's information.
-
-        Notes
-        -----
-        This function provides a comprehensive overview of the signal characteristics for one or
-        multiple channels of a dataset. It's useful for initial signal analysis and understanding
-        signal properties.
         """
         data = self.data
         fs = self.fs
@@ -215,7 +213,7 @@ class SingleSetup(BaseSetup):
         """
         Plot the Short-Time Fourier Transform (STFT) magnitude spectrogram for the specified channels.
 
-        This function computes and plots the STFT magnitude spectrogram for each selected channel in the
+        This method computes and plots the STFT magnitude spectrogram for each selected channel in the
         data. The spectrogram is plotted as a heatmap where the x-axis represents time, the y-axis
         represents frequency, and the color intensity represents the magnitude of the STFT.
 
@@ -245,11 +243,6 @@ class SingleSetup(BaseSetup):
             A list of figure objects, one for each channel plotted.
         axs : list of matplotlib.axes.Axes
             A list of Axes objects corresponding to the figures.
-
-        Notes
-        -----
-        This function is designed to visualize the frequency content of signals over time, which can be
-        particularly useful for analyzing non-stationary signals.
         """
 
         data = self.data
@@ -295,11 +288,10 @@ class SingleSetup(BaseSetup):
         ValueError
             If the decimation factor 'q' is not greater than 1.
 
-        Returns
-        -------
-        tuple
-            A tuple containing the decimated data, updated sampling frequency, sampling interval,
-            number of data points, and total time period.
+        Notes
+        -----
+        For further information, see `scipy.signal.decimate
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
         axis = kwargs.pop("axis", 0)
         decimated_data, fs, dt, Ndat, T = super()._decimate_data(
@@ -310,7 +302,7 @@ class SingleSetup(BaseSetup):
         self.dt = dt
         self.Ndat = Ndat
         self.T = T
-        return decimated_data, fs, dt, Ndat, T
+        # return decimated_data, fs, dt, Ndat, T
 
     def detrend_data(self, **kwargs) -> typing.Optional[np.ndarray]:
         """
@@ -336,13 +328,14 @@ class SingleSetup(BaseSetup):
         ValueError
             If invalid parameters are provided.
 
-        Returns
-        -------
-        detrended_data : np.ndarray
+        Notes
+        -----
+        For further information, see `scipy.signal.detrend
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
         """
         detrended_data = super()._detrend_data(data=self.data, **kwargs)
         self.data = detrended_data
-        return detrended_data
+        # return detrended_data
 
     def filter_data(
         self,
@@ -367,10 +360,6 @@ class SingleSetup(BaseSetup):
         btype : str, optional
             The type of filter to apply. Options are "lowpass", "highpass", "bandpass", or "bandstop".
             Default is "lowpass".
-        Returns
-        -------
-        filt_data : ndarray
-            The filtered signal, with the same shape as the input data.
 
         Notes
         -----
@@ -387,4 +376,4 @@ class SingleSetup(BaseSetup):
             btype=btype,
         )
         self.data = filt_data
-        return filt_data
+        # return filt_data
