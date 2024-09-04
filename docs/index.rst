@@ -8,7 +8,7 @@ pyOMA2's documentation!
 
 .. image:: https://github.com/dagghe/pyOMA2/assets/64746269/aa19bc05-d452-4749-a404-b702e6fe685d
 
-|Python| |pre-commit| |Code style: black|
+|Python| |pre-commit| |Code style: black| |Downloads| |docs|
 
 This is the new and updated version of **pyOMA** module, a Python module designed for conducting
 operational modal analysis. With this update, we've transformed **pyOMA** from a basic collection
@@ -23,7 +23,7 @@ are obtained. The underlying functions of these classes have been rigorously rev
 in significant enhancements and optimizations.
 
 *03/09/2024:
-We have introduced uncertainty calculations for the SSIcov algorithm [DLM13]_. Currently, this feature is
+We have introduced uncertainty calculations for the SSIcov algorithm* [DLM13]_ *. Currently, this feature is
 supported only by the "cov_mm" method and provides covariances for natural frequencies and damping
 ratios only. We are actively working to extend this functionality to include uncertainties in mode
 shapes, and to make it available for the "cov_R" method and the SSIdat class (contributions from
@@ -121,12 +121,20 @@ References
 
 .. |Python| image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg?style=flat&logo=python&logoColor=white
     :alt: Python
-    :target: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg?style=flat&logo=python&logoColor=white
+    :target: https://www.python.org
 
 .. |pre-commit| image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
    :alt: pre-commit
-   :target: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
+   :target: https://github.com/pre-commit/pre-commit
 
 .. |Code style: black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :alt: Code style: black
    :target: https://img.shields.io/badge/code%20style-black-000000.svg
+
+.. |Downloads| image:: https://img.shields.io/pepy/dt/pyOMA-2
+   :alt: Downloads
+   :target: https://img.shields.io/pepy/dt/pyOMA-2
+
+.. |docs| image:: https://img.shields.io/readthedocs/pyoma
+   :alt: docs
+   :target: https://img.shields.io/readthedocs/pyoma
