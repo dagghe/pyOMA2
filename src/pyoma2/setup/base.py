@@ -10,7 +10,6 @@ Diego Margoni
 from __future__ import annotations
 
 import logging
-import pickle
 import typing
 
 import numpy as np
@@ -662,42 +661,6 @@ class BaseSetup:
             notebook=notebook,
         )
         return pl
-
-    # FIXME SAVE LOAD FILES NOT WORKING
-    def save_to_file(self, file_name):
-        """
-        Save the current setup instance to a file.
-
-        This method serializes the current instance and saves it to a file using the pickle module.
-
-        Parameters
-        ----------
-        file_name : str
-            The name of the file where the setup instance will be saved.
-        """
-        with open(file_name, "wb") as f:
-            pickle.dump(self, f)
-
-    @classmethod
-    def load_from_file(cls, file_name):
-        """
-        Load a setup instance from a file.
-
-        This method deserializes a saved setup instance from the specified file.
-
-        Parameters
-        ----------
-        file_name : str
-            The name of the file from which the setup instance will be loaded.
-
-        Returns
-        -------
-        BaseSetup
-            An instance of the setup loaded from the file.
-        """
-        with open(file_name, "rb") as f:
-            instance = pickle.load(f)  # noqa S301
-        return instance
 
     # method to decimate data
     @staticmethod

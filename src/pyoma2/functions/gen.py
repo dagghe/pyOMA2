@@ -7,6 +7,7 @@ Dag Pasca
 """
 
 import logging
+import pickle
 import typing
 
 import numpy as np
@@ -134,7 +135,7 @@ def HC_damp(damp, max_damp):
 # -----------------------------------------------------------------------------
 
 
-def HC_PhiComp(phi, mpc_lim, mpd_lim):
+def HC_phi_comp(phi, mpc_lim, mpd_lim):
     """
     Apply Hard validation Criteria (HC), based on modal phase collinearity (MPC) and modal phase deviation (MPD) limits.
 
@@ -1061,7 +1062,21 @@ def merge_mode_shapes(
 
 def MPC(phi: np.ndarray) -> float:
     """
-    Modal phase collinearity
+    Calculate the Modal Phase Collinearity (MPC) of a complex mode shape.
+
+    The MPC is a measure of the collinearity between the real and imaginary parts
+    of a mode shape. A value of 1 indicates perfect collinearity, while lower values
+    indicate a more complex (non-collinear) mode.
+
+    Parameters
+    ----------
+    phi : ndarray
+        Complex mode shape vector, shape: (n_locations, ).
+
+    Returns
+    -------
+    float
+        MPC value, ranging between 0 and 1, where 1 indicates perfect collinearity.
     """
     S = np.cov(phi.real, phi.imag)
     lambd = np.linalg.eigvals(S)
@@ -1074,7 +1089,21 @@ def MPC(phi: np.ndarray) -> float:
 
 def MPD(phi: np.ndarray) -> float:
     """
-    Mean phase deviation
+    Calculate the Mean Phase Deviation (MPD) of a complex mode shape.
+
+    The MPD measures the deviation of the mode shape phases from a purely
+    real mode. It quantifies the phase variation along the mode shape.
+
+    Parameters
+    ----------
+    phi : ndarray
+        Complex mode shape vector, shape: (n_locations, ).
+
+    Returns
+    -------
+    float
+        MPD value, representing the average deviation of the phase from a
+        purely real mode.
     """
 
     U, s, VT = np.linalg.svd(np.c_[phi.real, phi.imag])
@@ -1227,7 +1256,7 @@ def MAC(phi_X: np.ndarray, phi_A: np.ndarray) -> np.ndarray:
 # -----------------------------------------------------------------------------
 
 
-def pre_MultiSetup(
+def pre_multisetup(
     dataList: typing.List[np.ndarray], reflist: typing.List[typing.List[int]]
 ) -> typing.List[typing.Dict[str, np.ndarray]]:
     """
@@ -1382,3 +1411,44 @@ def filter_data(
     sos = signal.butter(order, Wn, btype=btype, output="sos", fs=fs)
     filt_data = signal.sosfiltfilt(sos, data, axis=0)
     return filt_data
+
+
+# -----------------------------------------------------------------------------
+
+
+def save_to_file(setup: object, file_name: str):
+    """
+    Save the specified setup instance to a file.
+
+    This method serializes the current instance and saves it to a file using the pickle module.
+
+    Parameters
+    ----------
+    setup : obj
+        The Setup class that is to be saved.
+    file_name : str
+        The name (path) of the file where the setup instance will be saved.
+    """
+    with open(file_name, "wb") as f:
+        pickle.dump(setup, f)
+
+
+def load_from_file(file_name: str):
+    """
+    Load a setup instance from a file.
+
+    This method deserializes a saved setup instance from the specified file.
+
+    Parameters
+    ----------
+    file_name : str
+        The name (path) of the file from which the setup instance will be loaded.
+
+    Returns
+    -------
+    Setup
+        An instance of the setup loaded from the file.
+    """
+    with open(file_name, "rb") as f:
+        instance = pickle.load(f)  # noqa S301
+    return instance
