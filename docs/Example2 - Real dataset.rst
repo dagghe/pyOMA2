@@ -220,7 +220,7 @@ EFDD and FSDD algorithms
 .. code:: python
 
     # plot additional info (goodness of fit) for EFDD or FSDD
-    Pali_ss[fsdd.name].plot_FIT(freqlim=(0,5))
+    Pali_ss[fsdd.name].plot_EFDDfit(freqlim=(0,5))
 
 
 .. figure:: /img/Ex2-Fig11.png

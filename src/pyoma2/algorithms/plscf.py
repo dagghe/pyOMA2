@@ -104,7 +104,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         Fns, Phis = gen.applymask(lista, mask2, Phis.shape[2])
 
         # HC - MPC and MPD
-        mask3, mask4 = gen.HC_PhiComp(Phis, hc_mpc_lim, hc_mpd_lim)
+        mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
         lista = [Fns, Xis, Phis]
         Fns, Xis, Phis = gen.applymask(lista, mask3, Phis.shape[2])
         Fns, Xis, Phis = gen.applymask(lista, mask4, Phis.shape[2])
