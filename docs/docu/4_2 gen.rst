@@ -28,6 +28,8 @@ Functions:
     - :func:`.invperm`: Computes the inverse permutation of an array.
     - :func:`.find_map`: Establishes a mapping between two arrays based on sorting order.
     - :func:`.filter_data`: Apply a Butterworth filter to the input data.
+    - :func:`.save_to_file`: Save the specified setup instance to a file.
+    - :func:`.load_from_file`: Load a setup instance from a file.
 
 
 .. automodule:: pyoma2.functions.gen
