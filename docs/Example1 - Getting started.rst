@@ -35,7 +35,8 @@ Now we can instantiate the SingleSetup class, passing the dataset and the sampli
     simp_5dof = SingleSetup(data, fs=200)
 
 
-Since the maximum frequency is at approximately 6Hz, we can decimate the signal quite a bit. To do this we can call the ```decimate_data()``` method
+Since the maximum frequency is at approximately 6Hz, we can decimate the signal quite a bit.
+To do this we can call the ``decimate_data()`` method
 
 .. code:: python
 
@@ -73,9 +74,10 @@ We can now check the results
     _, _ = ssidat.plot_stab(freqlim=(0,10),hide_poles=False)
 
 .. image:: /img/Ex1-Fig1.png
-.. image:: /img/Ex2-Fig2.png
+.. image:: /img/Ex1-Fig2.png
 
-We can get the modal parameters with the help of an interactive plot calling the ```MPE_fromPlot()``` method, or we can get the results "manually" with the ```MPE()``` method.
+We can get the modal parameters with the help of an interactive plot calling the ``MPE_fromPlot()`` method,
+or we can get the results "manually" with the ``MPE()`` method.
 
 .. code:: python
 
@@ -104,4 +106,4 @@ Now we can now access all the results and compare them to the exact solution
 
     _, _ = plot_mac_matrix(ssidat_res['Phi'].real, ground_truth[1])
 
-.. image:: /img/Ex2-Fig3.png
+.. image:: /img/Ex1-Fig3.png
