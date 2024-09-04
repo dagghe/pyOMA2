@@ -8,11 +8,11 @@ algorithm [ZWT10]_.
 
 Functions:
     - :func:`.SD_PreGER`: Estimates Power Spectral Density matrices for multi-setup experiments.
-    - :func:`.SD_Est`: Computes Cross-Spectral Density using correlogram or periodogram methods.
+    - :func:`.SD_est`: Computes Cross-Spectral Density using correlogram or periodogram methods.
     - :func:`.SD_svalsvec`: Calculates singular values and vectors for Cross-Spectral Density matrices.
-    - :func:`.FDD_MPE`: Extracts modal parameters using the FDD method.
+    - :func:`.FDD_mpe`: Extracts modal parameters using the FDD method.
     - :func:`.SDOF_bellandMS`: Utility function for EFDD and FSDD methods.
-    - :func:`.EFDD_MPE`: Extracts modal parameters using EFDD and FSDD methods.
+    - :func:`.EFDD_mpe`: Extracts modal parameters using EFDD and FSDD methods.
 
 .. automodule:: pyoma2.functions.fdd
    :members:

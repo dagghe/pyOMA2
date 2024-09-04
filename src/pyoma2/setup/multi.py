@@ -22,7 +22,7 @@ from pyoma2.functions.gen import (
     check_on_geo1,
     check_on_geo2,
     merge_mode_shapes,
-    pre_MultiSetup,
+    pre_multisetup,
 )
 from pyoma2.functions.plot import (
     STFT,
@@ -1063,7 +1063,7 @@ class MultiSetup_PreGER(BaseSetup):
         self.Nsetup = len(ref_ind)
 
         # Pre-process the data so to be multi-setup compatible
-        Y = pre_MultiSetup(datasets, ref_ind)
+        Y = pre_multisetup(datasets, ref_ind)
 
         self.data = Y
         self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
@@ -1339,7 +1339,7 @@ class MultiSetup_PreGER(BaseSetup):
             Ndats.append(Ndat)
             Ts.append(T)
 
-        Y = pre_MultiSetup(newdatasets, self.ref_ind)
+        Y = pre_multisetup(newdatasets, self.ref_ind)
         fs = self.fs / q
         dt = 1 / self.fs
 
@@ -1395,7 +1395,7 @@ class MultiSetup_PreGER(BaseSetup):
             )
             newdatasets.append(newdata)
 
-        Y = pre_MultiSetup(newdatasets, self.ref_ind)
+        Y = pre_multisetup(newdatasets, self.ref_ind)
         self.data = Y
         # return Y
 
@@ -1437,6 +1437,6 @@ class MultiSetup_PreGER(BaseSetup):
             newdata = super()._detrend_data(data=data, **kwargs)
             newdatasets.append(newdata)
 
-        Y = pre_MultiSetup(newdatasets, self.ref_ind)
+        Y = pre_multisetup(newdatasets, self.ref_ind)
         self.data = Y
         # return Y

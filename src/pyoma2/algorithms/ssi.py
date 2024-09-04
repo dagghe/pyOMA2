@@ -513,7 +513,7 @@ class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
         )
 
         # HC - MPC and MPD
-        mask3, mask4 = gen.HC_PhiComp(Phis, hc_mpc_lim, hc_mpd_lim)
+        mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
         lista = [Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov]
         Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
             lista, mask3, Phis.shape[2]
