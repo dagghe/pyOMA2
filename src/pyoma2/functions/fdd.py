@@ -235,7 +235,7 @@ def SD_svalsvec(SD):
 # -----------------------------------------------------------------------------
 
 
-def FDD_MPE(
+def FDD_mpe(
     Sval,
     Svec,
     freq,
@@ -414,7 +414,7 @@ def SDOF_bellandMS(Sy, dt, sel_fn, phi_FDD, method="FSDD", cm=1, MAClim=0.85, DF
 # -----------------------------------------------------------------------------
 
 
-def EFDD_MPE(
+def EFDD_mpe(
     Sy: np.ndarray,
     freq: np.ndarray,
     dt: float,
@@ -481,7 +481,7 @@ def EFDD_MPE(
     Nch, Nref, nxseg = Sval.shape
     # number of points for the inverse transform (zeropadding)
     nIFFT = (int(nxseg)) * 5
-    Freq_FDD, Phi_FDD = FDD_MPE(Sval, Svec, freq, sel_freq, DF=DF1)
+    Freq_FDD, Phi_FDD = FDD_mpe(Sval, Svec, freq, sel_freq, DF=DF1)
 
     # Initialize Results
     PerPlot = []

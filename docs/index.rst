@@ -37,7 +37,7 @@ Check out the project source_.
 
 .. note::
 
-   Please note that this is still an alpha release, this project is under active development.
+   Please note that the project is still under active development.
 
 
 

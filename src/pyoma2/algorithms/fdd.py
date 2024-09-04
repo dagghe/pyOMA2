@@ -105,7 +105,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         freq = self.result.freq
 
         # Get Modal Parameters
-        Fn_FDD, Phi_FDD = fdd.FDD_MPE(
+        Fn_FDD, Phi_FDD = fdd.FDD_mpe(
             Sval=S_val, Svec=S_vec, freq=freq, sel_freq=sel_freq, DF=DF
         )
 
@@ -148,7 +148,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         sel_freq = SFP.result[0]
 
         # e poi estrarre risultati
-        Fn_FDD, Phi_FDD = fdd.FDD_MPE(
+        Fn_FDD, Phi_FDD = fdd.FDD_mpe(
             Sval=S_val, Svec=S_vec, freq=freq, sel_freq=sel_freq, DF=DF
         )
 
@@ -270,7 +270,7 @@ class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         self.run_params.npmax = npmax
 
         # Extract modal results
-        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = fdd.EFDD_MPE(
+        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = fdd.EFDD_mpe(
             self.result.Sy,
             self.result.freq,
             self.dt,
@@ -343,7 +343,7 @@ class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         sel_freq = SFP.result[0]
 
         # e poi estrarre risultati
-        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = fdd.EFDD_MPE(
+        Fn_FDD, Xi_FDD, Phi_FDD, forPlot = fdd.EFDD_mpe(
             self.result.Sy,
             self.result.freq,
             self.dt,
