@@ -10,7 +10,7 @@ variable
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
-    from pyoma2.algorithms import FDD,FSDD,SSIcov
+    from pyoma2.algorithms import pLSCF,FSDD,SSIcov
     from pyoma2.setup import SingleSetup
 
     # load example dataset for single setup
@@ -149,7 +149,7 @@ We can now plot some of the results:
 .. code:: python
 
     # plot Stabilisation chart for SSI
-    ssicov.plot_STDiag(freqlim=(0,5), hide_poles=False)
+    ssicov.plot_stab(freqlim=(0,5), hide_poles=False)
 
 
 .. figure:: /img/Ex2-Fig8.png
@@ -238,7 +238,7 @@ the analysis
     # MODE SHAPES PLOT
     # Plot mode 2 (geometry 1)
     Pali_ss[fsdd.name].plot_mode_g1(
-        geo1=Pali_ss.geo1, mode_numb=2, view="3D", scaleF=2)
+        geo1=Pali_ss.geo1, mode_nr=2, view="3D", scaleF=2)
 
 
 .. figure:: /img/Ex2-Fig14.png
@@ -248,10 +248,26 @@ the analysis
 
     # Animate mode 1 (geometry 2)
     Pali_ss[ssicov.name].anim_mode_g2(
-        geo2=Pali_ss.geo2, mode_numb=1, view="3D", scaleF=3)
+        geo2=Pali_ss.geo2, mode_nr=1, scaleF=3)
 
 .. image:: /img/Ex2-Fig15.gif
 
+It is also possible to save and load the results to a pickled file.
 
+.. code:: python
+
+    from pyoma2.functions.gen import save_to_file, load_from_file
+
+    # Save setup
+    save_to_file(Pali_ss, "<Path to your file>/name.pkl")
+
+    # Load setup
+    pali2 = load_from_file("<Path to your file>/name.pkl"")
+
+    # plot from loded instance
+    pali2[fsdd.name].plot_mode_g2_mpl(
+        geo2=pali2.geo2, mode_nr=2, view="3D", scaleF=2)
+
+.. figure:: /img/Ex2-Fig16.png
 
 .. [APTF20] Aloisio, A., Pasca, D., Tomasi, R., & Fragiacomo, M. (2020). Dynamic identification and model updating of an eight-storey CLT building. Engineering Structures, 213, 110593.

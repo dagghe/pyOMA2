@@ -96,8 +96,8 @@ poles and plot the mode shapes.
          order=80)
 
    # plot mode shapes
-   ssidat.plot_mode_g1(geo1=msp.geo1, mode_numb=1, view="3D", scaleF=2)
-   ssidat.plot_mode_g2(geo2=msp.geo2, mode_numb=6, view="xy", scaleF=2)
+   ssidat.plot_mode_g1(geo1=msp.geo1, mode_nr=1, view="3D", scaleF=2)
+   ssidat.plot_mode_g2(geo2=msp.geo2, mode_nr=6, view="xy", scaleF=2)
 
 .. figure:: /img/Ex4-Fig3.png
 .. figure:: /img/Ex4-Fig4.png
