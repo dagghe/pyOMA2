@@ -91,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - file `src/pyoma2/test_data/palisaden/sens_map.txt`
 - file `src/pyoma2/test_data/palisaden/sens_sign.txt`
 - function `pyoma2/functions/ssi.py::Lab_stab_SSI`
+- function `pyoma2/functions/gen.py::lab_stab`
 
 
 ## [0.6.0] - 2024-09-06
