@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+**BREAKING CHANGES**
+
+This version introduces a new project structure and a new way to handle the algorithms.
+A script is available here https://gist.github.com/dfm88/2bd2a08bb8b5837103dd074033bd7710
+to help running the migration to new version.
+
 ### Added
 
 - `pyvista` optional dependency for 3D plots
@@ -24,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- tests to support new project structure
 - `OMA.py` removed `inplace` method from `SingleSetup` and `MultiSetup_PreGER` classes, add a copy of data on init with the possibility to `rollback` them
 - moved `plot_mode_g1` and `plot_mode_g2` and `anim_mode_g2` methods from `SingleSetup` to `BaseSetup` class
 - function `pyoma2/functions/fdd.py::SDOF_bellandMS` now have custom logiv for algorithm methods `FSDD` and `EFDD`
