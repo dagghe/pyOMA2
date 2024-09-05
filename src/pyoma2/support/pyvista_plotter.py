@@ -33,7 +33,26 @@ from pyoma2.support.geometry import Geometry2
 
 
 class PvGeoPlotter:
-    """A class to animate mode shapes in 3D."""
+    """
+    A class to visualize and animate mode shapes in 3D using `pyvista`.
+
+    This class provides methods for plotting geometry, mode shapes, and animating
+    mode shapes, utilizing the `pyvista` and `pyvistaqt` libraries for visualization.
+
+    Parameters
+    ----------
+    Geo : Geometry2
+        The geometric data of the model, which includes sensor coordinates and other
+        structural information.
+    Res : Union[BaseResult, MsPoserResult], optional
+        The result data containing mode shapes and frequency data (default is None).
+
+    Raises
+    ------
+    ImportError
+        If `pyvista` or `pyvistaqt` are not installed, an error is raised when attempting
+        to instantiate the class.
+    """
 
     def __init__(
         self,
@@ -63,6 +82,44 @@ class PvGeoPlotter:
         bg_plotter: bool = True,
         notebook: bool = False,
     ):
+        """
+        Plot the 3D geometry of the model, including points, lines, and surfaces.
+
+        Parameters
+        ----------
+        scaleF : float, optional
+            Scale factor for the sensor vectors (default is 1).
+        col_sens : str, optional
+            Color for the sensor points and arrows (default is 'red').
+        plot_points : bool, optional
+            Whether to plot sensor points (default is True).
+        points_sett : dict or str, optional
+            Settings for plotting points (default is 'default', which applies preset settings).
+        plot_lines : bool, optional
+            Whether to plot lines representing connections between sensors (default is True).
+        lines_sett : dict or str, optional
+            Settings for plotting lines (default is 'default', which applies preset settings).
+        plot_surf : bool, optional
+            Whether to plot surfaces (default is True).
+        surf_sett : dict or str, optional
+            Settings for plotting surfaces (default is 'default', which applies preset settings).
+        pl : pyvista.Plotter, optional
+            Existing plotter instance to use (default is None, which creates a new plotter).
+        bg_plotter : bool, optional
+            Whether to use a background plotter for visualization (default is True).
+        notebook : bool, optional
+            If True, a plotter for use in Jupyter notebooks is created (default is False).
+
+        Returns
+        -------
+        pyvista.Plotter
+            The plotter object used for visualization.
+
+        Notes
+        -----
+        If `pyvistaqt` is used, a background plotter will be created. If running in
+        a notebook environment, a `pyvista` plotter with notebook support is used.
+        """
         # import geometry
         Geo = self.Geo
 
@@ -176,6 +233,42 @@ class PvGeoPlotter:
         bg_plotter: bool = True,
         notebook: bool = False,
     ):
+        """
+        Plot the mode shape of the structure for a given mode number.
+
+        Parameters
+        ----------
+        mode_nr : int, optional
+            The mode number to plot (default is 1).
+        scaleF : float, optional
+            Scale factor for the deformation (default is 1.0).
+        plot_lines : bool, optional
+            Whether to plot lines connecting sensor points (default is True).
+        plot_surf : bool, optional
+            Whether to plot surface meshes (default is True).
+        plot_undef : bool, optional
+            Whether to plot the undeformed shape of the structure (default is True).
+        def_sett : dict or str, optional
+            Settings for the deformed plot (default is 'default', which applies preset settings).
+        undef_sett : dict or str, optional
+            Settings for the undeformed plot (default is 'default', which applies preset settings).
+        pl : pyvista.Plotter, optional
+            Existing plotter instance to use (default is None, which creates a new plotter).
+        bg_plotter : bool, optional
+            Whether to use a background plotter for visualization (default is True).
+        notebook : bool, optional
+            If True, a plotter for use in Jupyter notebooks is created (default is False).
+
+        Returns
+        -------
+        pyvista.Plotter
+            The plotter object used for visualization.
+
+        Raises
+        ------
+        ValueError
+            If the result (`Res`) data is not provided when plotting a mode shape.
+        """
         # import geometry and results
         Geo = self.Geo
         Res = self.Res
@@ -262,6 +355,31 @@ class PvGeoPlotter:
         saveGIF: bool = False,
         pl=None,
     ):
+        """
+        Animate the mode shape for the given mode number.
+
+        Parameters
+        ----------
+        mode_nr : int, optional
+            The mode number to animate (default is 1).
+        scaleF : float, optional
+            Scale factor for the deformation (default is 1.0).
+        plot_lines : bool, optional
+            Whether to plot lines connecting sensor points (default is True).
+        plot_surf : bool, optional
+            Whether to plot surface meshes (default is True).
+        def_sett : dict or str, optional
+            Settings for the deformed plot (default is 'default', which applies preset settings).
+        saveGIF : bool, optional
+            If True, the animation is saved as a GIF (default is False).
+        pl : pyvista.Plotter, optional
+            Existing plotter instance to use (default is None, which creates a new plotter).
+
+        Returns
+        -------
+        pyvista.Plotter
+            The plotter object used for the animation.
+        """
         # define default settings for plot
         def_settings = dict(cmap="plasma", opacity=0.7, show_scalar_bar=False)
 

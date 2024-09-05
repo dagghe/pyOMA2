@@ -232,7 +232,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         self.result.Xi_cov = Xi_cov
         self.result.Phi_cov = Phi_cov
 
-    def mpe_fromPlot(
+    def mpe_from_plot(
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         rtol: float = 1e-2,
@@ -253,7 +253,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             The extracted modal parameters after interactive selection. Format depends on algorithm's
             implementation.
         """
-        super().mpe_fromPlot(freqlim=freqlim, rtol=rtol)
+        super().mpe_from_plot(freqlim=freqlim, rtol=rtol)
 
         # Save run parameters
         self.run_params.rtol = rtol
