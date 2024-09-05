@@ -15,11 +15,6 @@ from pydantic import BaseModel, ConfigDict
 class BaseRunParams(BaseModel):
     """
     Base class for storing run parameters for modal analysis algorithms.
-
-    Attributes
-    ----------
-    model_config : ConfigDict
-        Configuration dictionary containing model attributes, allowing for arbitrary types.
     """
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
@@ -130,9 +125,9 @@ class SSIRunParams(BaseRunParams):
     xi_max : float
         Maximum allowed damping ratio, default is 0.1.
     mpc_lim : float
-        xxx, default is 0.7.
+        Minimum Modal Phase Collinearity, default is 0.7.
     mpd_lim : float
-        xxx, default is 0.3.
+        Maximum Mean Phase Deviation, default is 0.3.
     sel_freq : list of float or None
         List of selected frequencies for modal parameter extraction.
     order_in : int or str

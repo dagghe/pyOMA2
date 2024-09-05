@@ -68,39 +68,6 @@ class SelFromPlot:
         Flag to control the visibility of the legend in the plot.
     hide_poles : int
         Flag to control the visibility of unstable poles in the plot.
-
-    Methods
-    -------
-    __init__(algo: BaseAlgorithm, freqlim=None, plot: Literal["FDD", "SSI", "pLSCF"] = "FDD"):
-        Initializes the SelFromPlot class with the specified algorithm, frequency limit, and plot type.
-    plot_svPSD(update_ticks=False):
-        Plots the Singular Values of the Power Spectral Density matrix for FDD analysis.
-    get_closest_freq():
-        Selects the frequency closest to the mouse click location for FDD plots.
-    plot_stab(plot, update_ticks=False):
-        Plots the stabilization chart for SSI or pLSCF methods.
-    get_closest_pole(plot):
-        Selects the pole closest to the mouse click location for SSI or pLSCF plots.
-    on_click_FDD(event):
-        Handles mouse click events for FDD plots.
-    on_click_SSI(event, plot):
-        Handles mouse click events for SSI or pLSCF plots.
-    on_key_press(event):
-        Handles key press events (SHIFT key for selecting poles).
-    on_key_release(event):
-        Handles key release events.
-    on_closing():
-        Handles the closing event of the Tkinter window.
-    toggle_legend(x):
-        Toggles the visibility of the legend in the plot.
-    toggle_hide_poles(x):
-        Toggles the visibility of unstable poles in the plot.
-    sort_selected_poles():
-        Sorts the selected poles based on their frequencies.
-    show_help():
-        Displays a help dialog with instructions for selecting poles.
-    save_this_figure():
-        Saves the current plot to a file.
     """
 
     def __init__(

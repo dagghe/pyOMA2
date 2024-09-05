@@ -1,10 +1,10 @@
 The ``sel_from_plot`` module
 ----------------------------
 
-This module provides interactive plotting functionalities for selecting and analyzing poles
-in Operational Modal Analysis (OMA). It is designed to work with Frequency Domain Decomposition
-(FDD) and Stochastic Subspace Identification (SSI) algorithms, enabling users to visually
-inspect and interact with stabilization charts and plots of the singular value of the PSD matrix.
+This module provides interactive plotting functionalities for selecting the mode to extract.
+It is designed to work with Frequency Domain Decomposition (FDD) and Stochastic Subspace
+Identification (SSI) algorithms, enabling users to visually inspect and interact with
+stabilization charts and plots of the singular value of the PSD matrix.
 The module integrates matplotlib plots into a Tkinter GUI, allowing for intuitive interaction
 such as pole selection through mouse clicks and keyboard shortcuts.
 
