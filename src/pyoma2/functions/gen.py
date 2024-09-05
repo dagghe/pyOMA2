@@ -849,7 +849,6 @@ def example_data():
     displacement normalised mode shapes matrix (FI_1 = (5,5) array); and the
     damping ratios (xi = float)
 
-    -------
     Returns
     -------
     acc : 2D array
