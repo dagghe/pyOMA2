@@ -4,8 +4,8 @@ The ``pyvista_plotter`` module
 This module, part of the pyOMA2 package, provides tools for visualizing and
 animating mode shapes derived from Operational Modal Analysis (OMA). It offers a flexible interface
 to create interactive 3D visualizations of mode shapes, incorporating both structural geometry and
- mode shape data from OMA results. The module leverages `PyVista` for rich 3D visualizations and
- supports saving animations as GIFs.
+mode shape data from OMA results. The module leverages `PyVista` for rich 3D visualizations and
+supports saving animations as GIFs.
 
 Classes:
     :class:`.PvGeoPlotter`: A class to animate mode shapes in 3D. It takes geometry and result objects as inputs
