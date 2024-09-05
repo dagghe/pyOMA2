@@ -27,7 +27,7 @@ class BaseResult(BaseModel):
     """
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
-    # dopo MPE o MPE_fromPlot
+    # dopo MPE o mpe_from_plot
     Fn: typing.Optional[npt.NDArray[np.float64]] = None  # array of natural frequencies
     Phi: typing.Optional[npt.NDArray[np.float64]] = None  # array of Mode shape vectors
 

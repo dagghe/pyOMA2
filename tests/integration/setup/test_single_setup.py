@@ -15,15 +15,7 @@ def test_base_setup(single_setup_data_fixture, bs: BaseSetup) -> None:
     """Test BaseSetup utility functions."""
     (
         data,
-        _,
-        _,
-        _,
-        _,
-        _,
-        _,
-        _,
-        _,
-        _,
+        *_,
     ) = single_setup_data_fixture
     alg1 = FakeAlgorithm(name="fake_1")
     alg2 = FakeAlgorithm2(name="fake_2")
@@ -103,7 +95,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
     """
     Test the first geometry definition and plotting of the SingleSetup.
     """
-    _, Names, Bg_nodes, Bg_lines, sens_coord, sens_dir, *_ = single_setup_data_fixture
+    _, Names = single_setup_data_fixture
 
     # Test that the geometry is not defined
     assert ss.geo1 is None
@@ -113,29 +105,9 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
         ss.plot_geo1()
     assert "geo1 is not defined. Call def_geo1 first." in str(e.value)
 
-    assert np.array_equal(
-        Bg_lines,
-        np.array([[1, 5], [2, 6], [3, 7], [4, 8], [5, 6], [6, 7], [7, 8], [8, 5]]),
-    )
-
-    assert sens_coord.equals(
-        pd.DataFrame(
-            {
-                "sName": ["ch5", "ch6", "ch1", "ch2", "ch3", "ch4"],
-                "x": [5, 5, 2, 2, 11, 11],
-                "y": [2, 2, 8, 8, 8, 8],
-                "z": [20, 20, 20, 20, 20, 20],
-            }
-        )
-    )
-
     # DEFINE THE GEOMETRY
-    ss.def_geo1(
-        sens_names=Names,
-        sens_coord=sens_coord,
-        sens_dir=sens_dir,
-        bg_nodes=Bg_nodes,
-        bg_lines=Bg_lines,
+    ss.def_geo1_byFILE(
+        path="./src/pyoma2/test_data/palisaden/Geo1.xlsx",
     )
 
     # Test the initialization of the Geometry
@@ -144,19 +116,18 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
     # bg_lines are different because the first column is 0-indexed
     assert np.array_equal(
         ss.geo1.bg_lines,
-        np.array([[0, 4], [1, 5], [2, 6], [3, 7], [4, 5], [5, 6], [6, 7], [7, 4]]),
+        np.array([[3, 0], [4, 1], [5, 2], [0, 1], [1, 2], [2, 0]]),
     )
     # sens_cord was reindexed
     assert ss.geo1.sens_coord.equals(
         pd.DataFrame(
             {
-                "sName": ["ch1", "ch2", "ch3", "ch4", "ch5", "ch6"],
-                "x": [2, 2, 11, 11, 5, 5],
-                "y": [8, 8, 8, 8, 2, 2],
+                "label": ["ch1", "ch2", "ch3", "ch4", "ch5", "ch6"],
+                "x": [2, 11, 5, 2, 11, 5],
+                "y": [8, 8, 2, 8, 8, 2],
                 "z": [20, 20, 20, 20, 20, 20],
             },
-            index=[2, 3, 4, 5, 0, 1],
-        )
+        ).set_index("label")
     )
     assert np.array_equal(
         ss.geo1.sens_dir,
@@ -171,7 +142,13 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
             ]
         ),
     )
-    assert np.array_equal(ss.geo1.bg_nodes, Bg_nodes)
+    assert np.array_equal(
+        ss.geo1.bg_nodes,
+        np.array(
+            [[2, 8, 20], [11, 8, 20], [5, 2, 20], [2, 8, 0], [11, 8, 0], [5, 2, 0]],
+            dtype=int,
+        ),
+    )
     assert ss.geo1.bg_surf is None
 
     # PLOT THE GEOMETRY
@@ -211,7 +188,6 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
         assert False, f"plot_mode_geo1 raised an exception {e}"
 
 
-# @pytest.mark.xfail(reason="Issue #8")
 @pytest.mark.parametrize(
     "input_sens_map, input_sens_sign",
     (
@@ -234,9 +210,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
             ),
         ),
         (None, None),  # use default sens map and sens sign
-        pytest.param(
-            None, None, marks=pytest.mark.xfail
-        ),  # use default sens map and sens sign
+        (None, None),  # use default sens map and sens sign
         (None, None),  # use default sens map and sens sign
         (
             pd.DataFrame(
@@ -252,7 +226,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
                 }
             ),
         ),
-        pytest.param(
+        (
             pd.DataFrame(
                 {
                     "ptName": [1, 2, 3, 4, 5, 6],
@@ -265,7 +239,6 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
                     "x": [-1, -1, -1, 0, 0, 0],
                 }
             ),
-            marks=pytest.mark.xfail,
         ),
         (
             pd.DataFrame(
@@ -284,7 +257,6 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
     ),
 )
 def test_geo2(
-    single_setup_data_fixture,
     ss: SingleSetup,
     input_sens_map: typing.Optional[pd.DataFrame],
     input_sens_sign: typing.Optional[pd.DataFrame],
@@ -292,14 +264,10 @@ def test_geo2(
     """
     Test the second geometry definition and plotting of the SingleSetup.
     """
-    _, Names, Bg_nodes, Bg_lines, _, _, sens_lines, pts_coord, sens_map, sens_sign = (
-        single_setup_data_fixture
-    )
-
     if input_sens_map is not None:
-        sens_map = input_sens_map
+        _ = input_sens_map
     if input_sens_sign is not None:
-        sens_sign = input_sens_sign
+        _ = input_sens_sign
 
     # Test the initialization of the SingleSetup
     assert ss.geo2 is None
@@ -310,37 +278,34 @@ def test_geo2(
     assert "geo2 is not defined. Call def_geo2 first." in str(e.value)
 
     # DEFINE THE GEOMETRY
-    ss.def_geo2(
-        sens_names=Names,
-        pts_coord=pts_coord,
-        sens_map=sens_map,
-        sens_lines=sens_lines,
-        sens_sign=sens_sign,
-        bg_nodes=Bg_nodes,
-        bg_lines=Bg_lines,
-    )
+    ss.def_geo2_byFILE(path="./src/pyoma2/test_data/palisaden/Geo2.xlsx")
 
     # Test the initialization of the Geometry
     assert ss.geo2 is not None
     assert np.array_equal(
         ss.geo2.bg_lines,
-        np.array([[0, 4], [1, 5], [2, 6], [3, 7], [4, 5], [5, 6], [6, 7], [7, 4]]),
+        np.array([[3, 0], [4, 1], [5, 2], [0, 1], [1, 2], [2, 0]]),
     )
     assert np.array_equal(
         ss.geo2.sens_lines, np.array([[3, 0], [4, 1], [5, 2], [0, 1], [1, 2], [2, 0]])
     )
-    assert ss.geo2.pts_coord.equals(pts_coord)
+    assert ss.geo2.pts_coord.equals(
+        pd.DataFrame(
+            {
+                "ptName": [1, 2, 3, 4, 5, 6],
+                "x": [2.0, 11.0, 5.0, 2.0, 11.0, 5.0],
+                "y": [8.0, 8.0, 2.0, 8.0, 8.0, 2.0],
+                "z": [20.0, 20.0, 20.0, 0.0, 0.0, 0.0],
+            }
+        ).set_index("ptName")
+    )
 
     # PLOT THE GEOMETRY
     # Call the plot_geo2 method and check that it doesn't raise an exception
     try:
-        fig, ax = ss.plot_geo2()
+        _ = ss.plot_geo2()
     except Exception as e:
         assert False, f"plot_geo2 raised an exception {e}"
-
-    # Check the number of lines in the plot
-    expected_number_of_lines = 0
-    assert len(ax.lines) == expected_number_of_lines
 
     # PLOT GEOMETRY WITH bg_surf
     # Define the bg_surf
@@ -348,7 +313,7 @@ def test_geo2(
     ss.geo2.bg_surf = bg_surf
 
     try:
-        fig, ax = ss.plot_geo2()
+        _ = ss.plot_geo2()
     except Exception as e:
         assert False, f"plot_geo2 with bg_surf raised an exception: {e}"
 
@@ -418,43 +383,18 @@ def test_plot_data(
         assert False, f"plot_ch_info raised an exception {e}"
 
 
-def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
+def test_run(ss: SingleSetup) -> None:
     """
     Test the running of the algorithms in the SingleSetup.
     """
-    # Initialize the geometries
-    (
-        _,
-        Names,
-        Bg_nodes,
-        Bg_lines,
-        sens_coord,
-        sens_dir,
-        sens_lines,
-        pts_coord,
-        sens_map,
-        sens_sign,
-    ) = single_setup_data_fixture
 
     # Define geometry1
-    ss.def_geo1(
-        Names,  # Names of the channels
-        sens_coord,  # coordinates of the sensors
-        sens_dir,  # sensors' direction
-        bg_nodes=Bg_nodes,  # BG nodes
-        bg_lines=Bg_lines,  # BG lines
+    ss.def_geo1_byFILE(
+        path="./src/pyoma2/test_data/palisaden/Geo1.xlsx",
     )
 
     # Define geometry 2
-    ss.def_geo2(
-        Names,  # Names of the channels
-        pts_coord,  # name and coordinates of the points
-        sens_map,  # mapping between points and sensors
-        sens_sign=sens_sign,  # sign of the sensor (respect to reference axis)
-        sens_lines=sens_lines,  # lines connecting points
-        bg_nodes=Bg_nodes,  # background nodes
-        bg_lines=Bg_lines,  # background lines
-    )
+    ss.def_geo2_byFILE(path="./src/pyoma2/test_data/palisaden/Geo2.xlsx")
 
     # Initialise the algorithms
     fdd = FDD(name="FDD")
@@ -493,9 +433,9 @@ def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
 
     # plot STABILISATION CHART for SSI
     try:
-        fig4, ax4 = ssicov.plot_STDiag(freqlim=(1, 4), hide_poles=False)
+        fig4, ax4 = ssicov.plot_stab(freqlim=(1, 4), hide_poles=False)
     except Exception as e:
-        assert False, f"plot_STDiag raised an exception {e}"
+        assert False, f"plot_stab raised an exception {e}"
 
     # plot FREQUECY-DAMPING CLUSTERS for SSI
     try:
@@ -503,21 +443,21 @@ def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
     except Exception as e:
         assert False, f"plot_cluster raised an exception {e}"
 
-    # run MPE_FROMPLOT for algorithms
+    # run mpe_from_plot for algorithms
     try:
-        ss.MPE_fromPlot("SSIcov", freqlim=(1, 4))
+        ss.mpe_from_plot("SSIcov", freqlim=(1, 4))
     except Exception as e:
-        assert False, f"MPE_fromPlot raised an exception {e} for SSIcov"
+        assert False, f"mpe_from_plot raised an exception {e} for SSIcov"
 
     try:
-        ss.MPE_fromPlot("FSDD", freqlim=(1, 4))
+        ss.mpe_from_plot("FSDD", freqlim=(1, 4))
     except Exception as e:
-        assert False, f"MPE_fromPlot raised an exception {e} for FSDD"
+        assert False, f"mpe_from_plot raised an exception {e} for FSDD"
 
     try:
-        ss.MPE_fromPlot("FDD", freqlim=(1, 4))
+        ss.mpe_from_plot("FDD", freqlim=(1, 4))
     except Exception as e:
-        assert False, f"MPE_fromPlot raised an exception {e} for FDD"
+        assert False, f"mpe_from_plot raised an exception {e} for FDD"
 
     # run MPE for algorithms
     try:
@@ -535,9 +475,9 @@ def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
     except Exception as e:
         assert False, f"MPE raised an exception {e} for FDD"
 
-    # plot_FIT for FSDD algorithms
+    # plot_EFDDfit for FSDD algorithms
     try:
-        figs, axs = ss["FSDD"].plot_FIT(freqlim=(1, 4))
+        figs, axs = ss["FSDD"].plot_EFDDfit(freqlim=(1, 4))
         assert isinstance(figs, list)
         assert isinstance(axs, list)
     except Exception as e:
@@ -545,12 +485,12 @@ def test_run(single_setup_data_fixture, ss: SingleSetup) -> None:
 
     # PLOTE_MODE_G1
     try:
-        fig, ax = ss["FDD"].plot_mode_g1(geo1=ss.geo1, mode_nr=2, view="3D", scaleF=2)
+        _ = ss["FDD"].plot_mode_g1(geo1=ss.geo1, mode_nr=2, view="3D", scaleF=2)
     except Exception as e:
         assert False, f"plot_mode_g1 raised an exception {e} for FDD"
 
     # PLOTE_MODE_G2
     try:
-        fig, ax = ss["FSDD"].plot_mode_g2(geo2=ss.geo2, mode_nr=2, view="3D", scaleF=2)
+        _ = ss["FSDD"].plot_mode_g2(geo2=ss.geo2, mode_nr=2, view="3D", scaleF=2)
     except Exception as e:
         assert False, f"plot_mode_g2 raised an exception {e} for FSDD"

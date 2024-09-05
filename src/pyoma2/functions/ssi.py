@@ -25,10 +25,10 @@ def build_hank(
     Y: np.ndarray,
     Yref: np.ndarray,
     br: int,
-    method: str,
+    method: typing.Literal["cov_mm", "cov_R", "dat"],
     calc_unc: bool = False,
     nb: int = 100,
-):
+) -> typing.Tuple[np.ndarray, typing.Union[None, np.ndarray]]:
     """
     Construct a Hankel matrix using various methods with optional uncertainty calculations.
 
@@ -42,7 +42,7 @@ def build_hank(
         The number of block rows to use in the Hankel matrix.
     method : str
         The method to use for constructing the Hankel matrix.
-        Options are 'cov_mm', 'cov_R', 'dat', or 'YfYp'.
+        Options are 'cov_mm', 'cov_R', 'dat'ì
     calc_unc : bool, optional
         Whether to calculate uncertainties (default is False). Only applicable for the 'cov_mm' method.
     nb : int, optional
@@ -60,7 +60,7 @@ def build_hank(
     AttributeError
         If `calc_unc` is True but `method` is not 'cov_mm'.
     AttributeError
-        If `method` is not one of 'cov_mm', 'cov_R', 'dat', or 'YfYp'.
+        If `method` is not one of 'cov_mm', 'cov_R', 'dat'ì
 
     Notes
     -----
@@ -79,8 +79,8 @@ def build_hank(
             "Uncertainty calculations are only available for 'cov_mm' method"
         )
 
+    logger.info("Assembling Hankel matrix method: %s...", method)
     if method == "cov_mm":
-        logger.info(f"Assembling Hankel matrix method: {method}...")
         # Future and past Output (Y^+ and Y^-)
         Yf = np.vstack([(1 / N**0.5) * Y[:, q + 1 + i : N + q + i] for i in range(p + 1)])
         Yp = np.vstack(
@@ -114,7 +114,6 @@ def build_hank(
             return Hank, None
 
     elif method == "cov_R":
-        logger.info(f"Assembling Hankel matrix method: {method}...")
         # Correlations
         Ri = np.array(
             [
@@ -136,7 +135,6 @@ def build_hank(
         return Hank, None
 
     elif method == "dat":
-        logger.info(f"Assembling Hankel matrix method: {method}...")
         # Efficient method for assembling the Hankel matrix for data driven SSI
         # see [1]
         Yf = np.vstack([(1 / N**0.5) * Y[:, q + 1 + i : N + q + i] for i in range(p + 1)])
@@ -159,7 +157,7 @@ def build_hank(
     else:
         raise AttributeError(
             f'{method} is not a valid argument. "method" must be \
-                         one of: "cov_mm", "cov_R", ", "dat"'
+                         one of: "cov_mm", "cov_R", "dat"'
         )
 
 
@@ -422,8 +420,8 @@ def SSI_fast(
 
 def SSI_poles(
     Obs: np.ndarray,
-    AA: list,
-    CC: list,
+    AA: typing.List[np.ndarray],
+    CC: typing.List[np.ndarray],
     ordmax: int,
     dt: float,
     step: int = 1,
@@ -470,7 +468,7 @@ def SSI_poles(
         Damping ratios.
     Phi : np.ndarray
         Normalized mode shapes.
-    Lambds : np.ndarray
+    Lambdas : np.ndarray
         Continuous-time eigenvalues.
     Fn_cov : np.ndarray, optional
         Covariances of natural frequencies. Returned only if `calc_unc` is True.
@@ -482,7 +480,7 @@ def SSI_poles(
     # NB Nch = l
     Nch = CC[0].shape[0]
     # initialization of the matrix that contains the frequencies
-    Lambds = np.full((ordmax, int((ordmax) / step + 1)), np.nan, dtype=complex)
+    Lambdas = np.full((ordmax, int((ordmax) / step + 1)), np.nan, dtype=complex)
     # initialization of the matrix that contains the frequencies
     Fn = np.full((ordmax, int((ordmax) / step + 1)), np.nan)
     # initialization of the matrix that contains the damping ratios
@@ -513,7 +511,7 @@ def SSI_poles(
         Fn[: len(fn), ii] = fn  # save the frequencies
         Xi[: len(fn), ii] = xi  # save the damping ratios
         Phi[: len(fn), ii, :] = phi
-        Lambds[: len(fn), ii] = lam_c
+        Lambdas[: len(fn), ii] = lam_c
 
         logger.debug("... Done!")
 
@@ -623,9 +621,9 @@ def SSI_poles(
                 # Phi_cov[jj, ii, :] = abs(cov_phi[:Nch, 0])
             # logger.debug("... uncertainty calculations done!")
     if calc_unc is True:
-        return Fn, Xi, Phi, Lambds, Fn_cov, Xi_cov, Phi_cov
+        return Fn, Xi, Phi, Lambdas, Fn_cov, Xi_cov, Phi_cov
     else:
-        return Fn, Xi, Phi, Lambds, None, None, None
+        return Fn, Xi, Phi, Lambdas, None, None, None
 
 
 # -----------------------------------------------------------------------------
@@ -662,6 +660,7 @@ def SSI_multi_setup(
     Returns
     -------
     tuple
+        Obs_all : numpy array of the global observability matrix.
         A : list of numpy arrays
             System matrices for each model order.
         C : list of numpy arrays

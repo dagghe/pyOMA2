@@ -63,9 +63,9 @@ remains the same as described in the example for the single setup.
    ss3.run_all()
 
    # Plot stabilisation chart
-   ssicov1.plot_STDiag(freqlim=(0,20))
-   ssicov2.plot_STDiag(freqlim=(0,20))
-   ssicov3.plot_STDiag(freqlim=(0,20))
+   ssicov1.plot_stab(freqlim=(0,20))
+   ssicov2.plot_stab(freqlim=(0,20))
+   ssicov3.plot_stab(freqlim=(0,20))
 
    ss1.MPE(
          "SSIcov1",

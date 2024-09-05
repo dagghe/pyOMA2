@@ -76,13 +76,13 @@ We can now check the results
 .. image:: /img/Ex1-Fig1.png
 .. image:: /img/Ex1-Fig2.png
 
-We can get the modal parameters with the help of an interactive plot calling the ``MPE_fromPlot()`` method,
+We can get the modal parameters with the help of an interactive plot calling the ``mpe_from_plot()`` method,
 or we can get the results "manually" with the ``MPE()`` method.
 
 .. code:: python
 
     # get the modal parameters with the interactive plot
-    # simp_ex.MPE_fromPlot("SSIdat", freqlim=(0,10))
+    # simp_ex.mpe_from_plot("SSIdat", freqlim=(0,10))
 
     # or manually
     simp_5dof.MPE("SSIdat", sel_freq=[0.89, 2.598, 4.095, 5.261, 6.], order="find_min")

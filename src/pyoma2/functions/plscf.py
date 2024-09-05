@@ -105,7 +105,7 @@ def pLSCF(
 
 def pLSCF_poles(
     Ad: np.ndarray, Bn: np.ndarray, dt: float, methodSy: str, nxseg: int
-) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Extract poles from the pLSCF algorithm results.
 
@@ -127,7 +127,9 @@ def pLSCF_poles(
     tuple of numpy.ndarray
         - Fns : Natural frequencies from the pLSCF analysis.
         - Xis : Damping ratios from the pLSCF analysis.
-        - Phis : Mode shapes from the pLSCF analysis."""
+        - Phis : Mode shapes from the pLSCF analysis.
+        - Lambdas : Complex poles from the pLSCF analysis.
+    """
     Fns = []
     Xis = []
     Phis = []
@@ -196,7 +198,7 @@ def rmfd2ac(A_den: np.ndarray, B_num: np.ndarray) -> typing.Tuple[np.ndarray, np
 
 def ac2mp_poly(
     A: np.ndarray, C: np.ndarray, dt: float, methodSy: str, nxseg: int
-) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Convert state-space representation to modal parameters.
 
@@ -219,6 +221,7 @@ def ac2mp_poly(
         - fn : Natural frequencies in Hz.
         - xi : Damping ratios.
         - phi : Complex mode shapes.
+        - lam_c : Complex poles.
     """
     Nch = C.shape[0]
     lam_d, AuVett = np.linalg.eig(A)

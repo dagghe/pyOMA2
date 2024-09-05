@@ -37,21 +37,22 @@ def test_pLSCF(input_sgn_basf: int):
     assert all([isinstance(el, np.ndarray) for el in Bn])
 
 
-def test_pLSCF_Poles() -> None:
+def test_pLSCF_poles() -> None:
     """
-    Test the pLSCF_Poles function.
+    Test the pLSCF_poles function.
     """
     Ad = np.array([[[[1, -0.5], [1, -0.7]]]])
     Bn = np.array([[[[7, 8], [9, 10]]]])
     dt = 0.01
     methodSy = "per"
     nxseg = 10
-    Fns, Xis, Phi1 = plscf.pLSCF_Poles(Ad, Bn, dt, methodSy, nxseg)
+    Fns, Xis, Phi1, lambdas = plscf.pLSCF_poles(Ad, Bn, dt, methodSy, nxseg)
 
     # Check if output types are correct
     assert isinstance(Fns, np.ndarray)
     assert isinstance(Xis, np.ndarray)
     assert isinstance(Phi1, np.ndarray)
+    assert isinstance(lambdas, np.ndarray)
 
     # Check shapes of output arrays
     assert Fns.shape == (2, 1)
@@ -59,15 +60,15 @@ def test_pLSCF_Poles() -> None:
     assert Phi1.shape == (2, 1, 2)
 
 
-def test_rmfd2AC() -> None:
-    """Test the rmfd2AC function."""
+def test_rmfd2ac() -> None:
+    """Test the rmfd2ac function."""
     # Define test data
     A_den = np.array([[[1, 2], [3, 4]]])
     B_num = np.array([[[1, 2]], [[3, 4]], [[5, 6]]])
 
     # Call the function with test data
 
-    A, C = plscf.rmfd2AC(A_den, B_num)
+    A, C = plscf.rmfd2ac(A_den, B_num)
 
     # Define expected output
     assert np.allclose(
@@ -86,8 +87,8 @@ def test_rmfd2AC() -> None:
     assert np.allclose(C, ([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]))
 
 
-def test_AC2MP_poly() -> None:
-    """Test the AC2MP_poly function."""
+def test_ac2mp_poly() -> None:
+    """Test the ac2mp_poly function."""
     # Define test inputs
     A = np.array([[-1, -2], [1, 0]])
     C = np.array([[1, 0], [0, 1]])
@@ -96,19 +97,20 @@ def test_AC2MP_poly() -> None:
     nxseg = 100
 
     # Call the function with test inputs
-    fn, xi, phi = plscf.AC2MP_poly(A, C, dt, methodSy, nxseg)
+    fn, xi, phi, lam_c = plscf.ac2mp_poly(A, C, dt, methodSy, nxseg)
 
     assert fn.shape == (2,)
     assert xi.shape == (2,)
     assert phi.shape == (2, 2)
+    assert lam_c.shape == (2,)
 
 
 @pytest.mark.parametrize(
     "input_order, expected_order",
     [("find_min", 1), (1, 1), ([0, 1, 2], np.array([0.0, 1.0, 2.0]))],
 )
-def test_pLSCF_MPE(input_order, expected_order) -> None:
-    """Test the pLSCF_MPE function."""
+def test_pLSCF_mpe(input_order, expected_order) -> None:
+    """Test the pLSCF_mpe function."""
     # Define test inputs
     sel_freq = [1.0, 2.0, 3.0]
     Fn_pol = np.array(
@@ -138,7 +140,7 @@ def test_pLSCF_MPE(input_order, expected_order) -> None:
     rtol = 1e-2
 
     # Call the function with test inputs
-    Fn, Xi, Phi, order_out = plscf.pLSCF_MPE(
+    Fn, Xi, Phi, order_out = plscf.pLSCF_mpe(
         sel_freq, Fn_pol, Xi_pol, Phi_pol, input_order, Lab, deltaf, rtol
     )
 
@@ -148,8 +150,8 @@ def test_pLSCF_MPE(input_order, expected_order) -> None:
         assert order_out == expected_order
 
 
-def test_pLSCF_MPE_exc() -> None:
-    """Test the pLSCF_MPE function. Exception case."""
+def test_pLSCF_mpe_exc() -> None:
+    """Test the pLSCF_mpe function. Exception case."""
     # Define test inputs
     sel_freq = [1.0, 2.0, 3.0]
     Fn_pol = Xi_pol = Phi_pol = np.array([])
@@ -160,4 +162,4 @@ def test_pLSCF_MPE_exc() -> None:
 
     with pytest.raises(ValueError):
         # Call the function with test inputs
-        plscf.pLSCF_MPE(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab, deltaf, rtol)
+        plscf.pLSCF_mpe(sel_freq, Fn_pol, Xi_pol, Phi_pol, order, Lab, deltaf, rtol)

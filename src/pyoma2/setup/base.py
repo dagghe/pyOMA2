@@ -159,7 +159,7 @@ class BaseSetup:
         self[name].mpe(*args, **kwargs)
 
     # get the modal properties (all results) from the plots.
-    def MPE_fromPlot(self, name: str, *args, **kwargs):
+    def mpe_from_plot(self, name: str, *args, **kwargs):
         """
         Extracts modal parameters directly from plot selections of a specified algorithm.
 
@@ -178,7 +178,7 @@ class BaseSetup:
             If the specified algorithm name does not exist in the setup.
         """
         logger.info("Getting MPE modal parameters from plot... %s", name)
-        self[name].mpe_fromPlot(*args, **kwargs)
+        self[name].mpe_from_plot(*args, **kwargs)
 
     def __getitem__(self, name: str) -> BaseAlgorithm:
         """

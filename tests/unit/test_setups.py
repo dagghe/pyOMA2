@@ -105,7 +105,7 @@ def test_init_multisetup_poser(multi_setup_data_fixture) -> None:
     """Test the initialization of MultiSetup_PoSER."""
 
     # setup multisetup poser initialization
-    set1, set2, set3, *_ = multi_setup_data_fixture
+    set1, set2, set3 = multi_setup_data_fixture
     ss1 = SingleSetup(set1, fs=100)
     ss2 = SingleSetup(set2, fs=100)
     ss3 = SingleSetup(set3, fs=100)
@@ -150,7 +150,7 @@ def test_init_multisetup_preger(multi_setup_data_fixture) -> None:
     """Test the initialization of MultiSetup_PreGER."""
 
     # setup multisetup poser initialization
-    set1, set2, set3, *_ = multi_setup_data_fixture
+    set1, set2, set3 = multi_setup_data_fixture
     # list of datasets and reference indices
     data = [set1, set2, set3]
     ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]

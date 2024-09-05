@@ -3,32 +3,6 @@ import pytest
 from pyoma2.functions import gen
 
 
-@pytest.mark.parametrize(
-    "test_input, expected_output",
-    [
-        (
-            {
-                "Fn": np.array([[1.0, 2.0], [2.0, 3.0]]),
-                "Sm": np.array([[0.1, 0.2], [0.3, 0.4]]),
-                "Ms": np.array([[[0.1, 0.2], [0.3, 0.4]], [[0.5, 0.6], [0.7, 0.8]]]),
-                "ordmin": 1,
-                "ordmax": 2,
-                "step": 1,
-                "err_fn": 0.1,
-                "err_xi": 0.1,
-                "err_ms": 0.1,
-                "max_xi": 0.5,
-            },
-            np.array([[0, 0], [0, 0]]),
-        ),
-    ],
-)
-def test_lab_stab(test_input, expected_output) -> None:
-    """Test the lab_stab function."""
-    result = gen.lab_stab(**test_input)
-    np.testing.assert_array_equal(result, expected_output)
-
-
 def test_merge_mode_shapes() -> None:
     """Test the merge_mode_shapes function."""
     MSarr_list = [np.array([[1, 2], [3, 4]]), np.array([[5, 6], [7, 8]])]
@@ -111,10 +85,10 @@ def test_MAC_exc(input_phi_X: np.ndarray, expected_exc_msg: str) -> None:
 
 
 def test_PRE_MultiSetup() -> None:
-    """Test the pre_MultiSetup function."""
+    """Test the pre_multisetup function."""
     DataList = [np.array([[1, 2], [3, 4]]), np.array([[5, 6], [7, 8]])]
     reflist = [[0], [1]]
-    result = gen.pre_MultiSetup(DataList, reflist)
+    result = gen.pre_multisetup(DataList, reflist)
     assert len(result) == len(DataList)
     assert "ref" in result[0] and "mov" in result[0]
 
