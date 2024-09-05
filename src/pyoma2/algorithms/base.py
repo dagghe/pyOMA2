@@ -65,9 +65,10 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     __init_subclass__(cls, **kwargs)
         Ensures that subclasses define `RunParamCls` and `ResultCls`.
 
-    Note
-    -----
-    BaseAlgorithm is an abstract class and should not be instantiated directly.
+    Warning
+    -------
+    The BaseAlgorithm class is not intended for direct instantiation by users.
+    Specific functionalities are provided through its subclasses.
     """
 
     result: typing.Optional[T_Result] = None

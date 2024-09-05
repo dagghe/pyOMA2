@@ -33,7 +33,7 @@ from pyoma2.support.geometry import Geometry2
 
 
 class PvGeoPlotter:
-    """ """
+    """A class to animate mode shapes in 3D."""
 
     def __init__(
         self,
@@ -342,42 +342,3 @@ class PvGeoPlotter:
             pl.add_callback(update_shape, interval=100)
             # pl.show()
         # pl.close()
-
-
-# # =============================================================================
-# # TEST
-# # =============================================================================
-# _path=r"X:\OneDrive - Norsk Treteknisk Institutt\Dokumenter\Dev\pyomaTEST\HTC_geom\geo2.xlsx"
-# _file=r"X:\OneDrive - Norsk Treteknisk Institutt\Dokumenter\Dev\pyomaTEST\HTC_geom\PHI.npy"
-# ref_ind = [[4, 5], [6, 7], [6, 7], [6, 7]]
-# Phi=np.load(_file)
-# Geo = Gen_funct.import_excel_GEO2(_path,ref_ind)
-# Geo = Geometry2(
-#             sens_names=Geo[0],
-#             pts_coord=Geo[1],
-#             sens_map=Geo[2],
-#             cstrn=Geo[3],
-#             sens_sign=Geo[4],
-#             sens_lines=Geo[5],
-#             sens_surf=Geo[6],
-#             bg_nodes=Geo[7],
-#             bg_lines=Geo[8],
-#             bg_surf=Geo[9],
-#         )
-
-# Res = BaseResult(
-#     Fn= np.arange(Phi.shape[1]),
-#     Phi=Phi)
-
-
-# Plotter = pv_GeoPlotter(Geo,Res)
-
-# Plotter.plot_mode(mode_nr=7,scaleF=8000,
-# #                       def_sett=dict(cmap="magma", opacity=0.7,show_scalar_bar=False),
-# #                       undef_sett=dict(color="gray", opacity=0.1,),
-#                       )
-
-# Plotter.animate_mode(mode_nr=7,scaleF=10000,
-#                       # def_sett=dict(cmap="magma", opacity=0.7,show_scalar_bar=False),
-#                       # undef_sett=dict(color="gray", opacity=0.1,),
-#                       )

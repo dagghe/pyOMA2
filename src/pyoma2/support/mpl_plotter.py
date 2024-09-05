@@ -24,7 +24,7 @@ from pyoma2.support.geometry import Geometry1, Geometry2
 
 
 class MplGeoPlotter:
-    """ """
+    """A class to plot mode shapes in 3D."""
 
     def __init__(
         self,

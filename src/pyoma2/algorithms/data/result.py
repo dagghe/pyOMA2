@@ -20,8 +20,6 @@ class BaseResult(BaseModel):
 
     Attributes
     ----------
-    model_config : ConfigDict
-        Configuration dictionary containing model attributes, allowing for arbitrary types.
     Fn : numpy.typing.NDArray
         Array of natural frequencies obtained from modal analysis.
     Phi : numpy.typing.NDArray
@@ -92,24 +90,40 @@ class SSIResult(BaseResult):
 
     Attributes
     ----------
-    A : list of numpy.typing.NDArray
+    Obs : numpy.typing.NDArray, optional
+        Observability matrix obtained from the SSI analysis.
+    A : list of numpy.typing.NDArray, optional
         List of system matrices A from the SSI analysis.
-    C : list of numpy.typing.NDArray
+    C : list of numpy.typing.NDArray, optional
         List of system matrices C from the SSI analysis.
-    H : numpy.typing.NDArray
+    H : numpy.typing.NDArray, optional
         Hankel matrix used in SSI analysis.
-    Fn_poles : numpy.typing.NDArray
-        Array of identified natural frequencies (poles) from SSI analysis
-    xi_poles : numpy.typing.NDArray
-        Array of damping ratios corresponding to identified poles
-    Phi_poles : numpy.typing.NDArray
-        Array of mode shape vectors corresponding to identified poles
-    Lab : numpy.typing.NDArray
-        Array of labels for the identified poles
-    Xi : numpy.typing.NDArray
-        Array of damping ratios obtained after modal parameter estimation
-    order_out : Union[list[int], int]
-        Output order after modal parameter estimation. Can be a list of integers, or a single integer
+    Lambds : numpy.typing.NDArray, optional
+        Array of eigenvalues from the SSI analysis.
+    Fn_poles : numpy.typing.NDArray, optional
+        Array of all natural frequencies.
+    Xi_poles : numpy.typing.NDArray, optional
+        Array of all damping ratios.
+    Phi_poles : numpy.typing.NDArray, optional
+        Array of all mode shape vectors.
+    Lab : numpy.typing.NDArray, optional
+        Array of labels for all the poles.
+    Fn_poles_cov : numpy.typing.NDArray, optional
+        Covariance of all natural frequencies.
+    Xi_poles_cov : numpy.typing.NDArray, optional
+        Covariance of all damping ratios.
+    Phi_poles_cov : numpy.typing.NDArray, optional
+        Covariance of all mode shape vectors.
+    Xi : numpy.typing.NDArray, optional
+        Array of damping ratios.
+    order_out : Union[list[int], int], optional
+        Output order after modal parameter estimation. Can be a list of integers or a single integer.
+    Fn_cov : numpy.typing.NDArray, optional
+        Covariance of natural frequencies obtained from the analysis.
+    Xi_cov : numpy.typing.NDArray, optional
+        Covariance of damping ratios obtained from the analysis.
+    Phi_cov : numpy.typing.NDArray, optional
+        Covariance of mode shape vectors obtained from the analysis.
     """
 
     Obs: typing.Optional[npt.NDArray[np.float64]] = None
@@ -180,8 +194,6 @@ class pLSCFResult(BaseResult):
 
 
 class MsPoserResult(BaseModel):
-    # FIXME non molto corretto che sia sotto la cartella algorithms.. ???
-    # valutare se creare una cartella apposita per i setups
     """
     Base class for MultiSetup Poser result data.
 
