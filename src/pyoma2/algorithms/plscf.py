@@ -186,7 +186,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         self.result.Xi = Xi_pLSCF
         self.result.Phi = Phi_pLSCF
 
-    def mpe_fromPlot(
+    def mpe_from_plot(
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         rtol: float = 5e-2,
@@ -209,7 +209,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         Any
             The results of the modal parameter estimation based on user selection from the plot.
         """
-        super().mpe_fromPlot(freqlim=freqlim, rtol=rtol)
+        super().mpe_from_plot(freqlim=freqlim, rtol=rtol)
 
         # Save run parameters
         self.run_params.rtol = rtol

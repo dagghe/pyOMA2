@@ -238,7 +238,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
             raise ValueError("Run algorithm first")
 
     @abc.abstractmethod
-    def mpe_fromPlot(self, *args, **kwargs) -> typing.Any:
+    def mpe_from_plot(self, *args, **kwargs) -> typing.Any:
         """
         Abstract method to select peaks or modal parameters from plots.
 

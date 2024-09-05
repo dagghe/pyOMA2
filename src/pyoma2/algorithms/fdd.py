@@ -113,7 +113,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         self.result.Fn = Fn_FDD
         self.result.Phi = Phi_FDD
 
-    def mpe_fromPlot(
+    def mpe_from_plot(
         self, freqlim: typing.Optional[tuple[float, float]] = None, DF: float = 0.1
     ) -> typing.Any:
         """
@@ -134,7 +134,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         None
             Updates the results in the associated FDDResult object with the selected modal parameters.
         """
-        super().mpe_fromPlot(freqlim=freqlim)
+        super().mpe_from_plot(freqlim=freqlim)
 
         # Sy = self.result.Sy
         S_val = self.result.S_val
@@ -291,7 +291,7 @@ class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         self.result.Phi = Phi_FDD
         self.result.forPlot = forPlot
 
-    def mpe_fromPlot(
+    def mpe_from_plot(
         self,
         DF1: float = 0.1,
         DF2: float = 1.0,
