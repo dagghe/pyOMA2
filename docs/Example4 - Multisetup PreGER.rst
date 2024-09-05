@@ -79,7 +79,7 @@ we wish to execute, such as ``SSIdat``.
    msp.run_all()
 
    # Plot
-   ssidat.plot_STDiag(freqlim=20)
+   ssidat.plot_stab(freqlim=20)
 
 .. figure:: /img/Ex4-Fig2.png
 

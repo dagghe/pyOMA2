@@ -41,7 +41,7 @@ class FakeAlgorithm(BaseAlgorithm[FakeRunParams, FakeResult, typing.Iterable[flo
     def mpe(self, *args, **kwargs) -> typing.Any:
         return np.array([1.0, 2.0, 3.0])
 
-    def mpe_fromPlot(self, *args, **kwargs) -> typing.Any:
+    def mpe_from_plot(self, *args, **kwargs) -> typing.Any:
         return np.array([1.0, 2.0, 3.0])
 
     def plot_mode_g1(
@@ -59,3 +59,18 @@ class FakeAlgorithm(BaseAlgorithm[FakeRunParams, FakeResult, typing.Iterable[flo
 
 class FakeAlgorithm2(FakeAlgorithm):
     """FakeAlgorithm2 is a subclass of FakeAlgorithm."""
+
+
+def assert_array_equal_with_nan(arr1: npt.ArrayLike, arr2: npt.ArrayLike) -> bool:
+    """Utility function to compare two arrays with NaN values.
+
+    Args:
+        arr1 (npt.ArrayLike)
+        arr2 (npt.ArrayLike)
+
+    Returns:
+        bool: True if the arrays are equal, False otherwise
+    """
+    nan_equal = np.isnan(arr1) == np.isnan(arr2)
+    allclose_equal = np.allclose(arr1[~np.isnan(arr1)], arr2[~np.isnan(arr2)])
+    return np.all(nan_equal) and allclose_equal

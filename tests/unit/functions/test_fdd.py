@@ -35,7 +35,7 @@ def test_SD_PreGER(input_method: str) -> None:
         "per",
     ],
 )
-def test_SD_Est(input_method: str) -> None:
+def test_SD_est(input_method: str) -> None:
     fs = 1000
     N = 1000
     Yall = np.random.rand(10, N)
@@ -43,12 +43,12 @@ def test_SD_Est(input_method: str) -> None:
     nxseg = 1024
     pov = 0.5
     dt = 1 / fs
-    freq, Sy = fdd.SD_Est(Yall, Yref, dt, nxseg=nxseg, method=input_method, pov=pov)
+    freq, Sy = fdd.SD_est(Yall, Yref, dt, nxseg=nxseg, method=input_method, pov=pov)
     assert len(freq) > 0  # Ensure frequency array is not empty
     assert Sy.shape[0] == Yall.shape[0]  # Ensure correct shape of Sy
 
 
-def test_FDD_MPE():
+def test_FDD_mpe():
     # Generate some dummy data
     Sval = np.random.rand(2, 2, 1000)
     Svec = np.random.rand(2, 2, 1000)
@@ -57,7 +57,7 @@ def test_FDD_MPE():
     DF = 0.1
 
     # Call the function with the dummy data
-    Fn, Phi = fdd.FDD_MPE(Sval, Svec, freq, sel_freq, DF)
+    Fn, Phi = fdd.FDD_mpe(Sval, Svec, freq, sel_freq, DF)
 
     # Check that the output has the expected shape
     assert Fn.shape == (len(sel_freq),)
@@ -112,7 +112,7 @@ def test_SDOF_bellandMS(input_method: str) -> None:
         "paer",
     ],
 )
-def test_EFDD_MPE(input_method: str) -> None:
+def test_EFDD_mpe(input_method: str) -> None:
     # Sample data
     Sy = np.random.rand(3, 3, 100)
     freq = np.linspace(0, 1, 100)
@@ -120,7 +120,7 @@ def test_EFDD_MPE(input_method: str) -> None:
     sel_freq = [0.3, 0.5, 0.7]
 
     # Call the function
-    Fn, Xi, Phi, PerPlot = fdd.EFDD_MPE(
+    Fn, Xi, Phi, PerPlot = fdd.EFDD_mpe(
         Sy=Sy, freq=freq, dt=dt, sel_freq=sel_freq, methodSy=input_method, npmax=2
     )
 

@@ -9,7 +9,6 @@ if typing.TYPE_CHECKING:
     from pyoma2.setup import BaseSetup, MultiSetup_PoSER, MultiSetup_PreGER, SingleSetup
 
 import numpy as np
-import pandas as pd
 import pytest
 from pyoma2.algorithms import SSIcov
 
@@ -83,28 +82,10 @@ def single_setup_data_fixture():
     # import geometry files
     # Names of the channels
     Names = ["ch1", "ch2", "ch3", "ch4", "ch5", "ch6"]
-    # Common Backgroung nodes and lines
-    BG_nodes = np.loadtxt("./src/pyoma2/test_data/palisaden/BG_nodes.txt")
-    BG_lines = np.loadtxt("./src/pyoma2/test_data/palisaden/BG_lines.txt").astype(int)
-    # Geometry 1
-    sens_coord = pd.read_csv("./src/pyoma2/test_data/palisaden/sens_coord.txt", sep="\t")
-    sens_dir = np.loadtxt("./src/pyoma2/test_data/palisaden/sens_dir.txt")
-    # Geometry 2
-    sens_lines = np.loadtxt("./src/pyoma2/test_data/palisaden/sens_lines.txt").astype(int)
-    pts_coord = pd.read_csv("./src/pyoma2/test_data/palisaden/pts_coord.txt", sep="\t")
-    sens_map = pd.read_csv("./src/pyoma2/test_data/palisaden/sens_map.txt", sep="\t")
-    sens_sign = pd.read_csv("./src/pyoma2/test_data/palisaden/sens_sign.txt", sep="\t")
+
     yield (
         data,
         Names,
-        BG_nodes,
-        BG_lines,
-        sens_coord,
-        sens_dir,
-        sens_lines,
-        pts_coord,
-        sens_map,
-        sens_sign,
     )
 
 
@@ -148,70 +129,10 @@ def multi_setup_data_fixture():
     set2 = np.load("./src/pyoma2/test_data/3SL/set2.npy", allow_pickle=True)
     set3 = np.load("./src/pyoma2/test_data/3SL/set3.npy", allow_pickle=True)
 
-    # import geometry files
-    # Names of the channels
-    Names = [
-        [
-            "ch1_1",
-            "ch2_1",
-            "ch3_1",
-            "ch4_1",
-            "ch5_1",
-            "ch6_1",
-            "ch7_1",
-            "ch8_1",
-            "ch9_1",
-            "ch10_1",
-        ],
-        [
-            "ch1_2",
-            "ch2_2",
-            "ch3_2",
-            "ch4_2",
-            "ch5_2",
-            "ch6_2",
-            "ch7_2",
-            "ch8_2",
-            "ch9_2",
-            "ch10_2",
-        ],
-        [
-            "ch1_3",
-            "ch2_3",
-            "ch3_3",
-            "ch4_3",
-            "ch5_3",
-            "ch6_3",
-            "ch7_3",
-            "ch8_3",
-            "ch9_3",
-            "ch10_3",
-        ],
-    ]
-    # Background
-    BG_nodes = np.loadtxt("./src/pyoma2/test_data/3SL/BG_nodes.txt")
-    BG_lines = np.loadtxt("./src/pyoma2/test_data/3SL/BG_lines.txt").astype(int)
-    # Geometry 1
-    sens_coord = pd.read_csv("./src/pyoma2/test_data/3SL/sens_coord.txt", sep="\t")
-    sens_dir = np.loadtxt("./src/pyoma2/test_data/3SL/sens_dir.txt")
-    # Geometry 2
-    sens_lines = np.loadtxt("./src/pyoma2/test_data/3SL/sens_lines.txt").astype(int)
-    pts_coord = pd.read_csv("./src/pyoma2/test_data/3SL/pts_coord.txt", sep="\t")
-    sens_map = pd.read_csv("./src/pyoma2/test_data/3SL/sens_map.txt", sep="\t")
-    sens_sign = pd.read_csv("./src/pyoma2/test_data/3SL/sens_sign.txt", sep="\t")
     yield (
         set1,
         set2,
         set3,
-        Names,
-        BG_nodes,
-        BG_lines,
-        sens_coord,
-        sens_dir,
-        sens_lines,
-        pts_coord,
-        sens_map,
-        sens_sign,
     )
 
 
@@ -222,7 +143,7 @@ def multi_setup_poser_fixture(
     from pyoma2.setup import MultiSetup_PoSER, SingleSetup
 
     """Fixture for MultiSetup Poser with parameters."""
-    set1, set2, set3, *_ = multi_setup_data_fixture
+    set1, set2, set3 = multi_setup_data_fixture
     ss1 = SingleSetup(set1, fs=100)
     ss2 = SingleSetup(set2, fs=100)
     ss3 = SingleSetup(set3, fs=100)
@@ -277,7 +198,7 @@ def multi_setup_preger_fixture(
     """Fixture for MultiSetup Poser with parameters."""
     from pyoma2.setup import MultiSetup_PreGER
 
-    set1, set2, set3, *_ = multi_setup_data_fixture
+    set1, set2, set3 = multi_setup_data_fixture
     data = [set1, set2, set3]
     ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
     # Creating Multi setup
