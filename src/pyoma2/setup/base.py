@@ -137,7 +137,7 @@ class BaseSetup:
         self[name]._set_result(result)
 
     # get the modal properties (all results).
-    def MPE(self, name: str, *args, **kwargs):
+    def mpe(self, name: str, *args, **kwargs):
         """
         Extracts modal parameters from selected poles/peaks of a specified algorithm.
 

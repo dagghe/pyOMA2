@@ -196,7 +196,7 @@ using the ``MPE()`` method.
     # Pali_ss.mpe_from_plot("FSDD", freqlim=(0,5), MAClim=0.95)
 
     # or directly
-    Pali_ss.MPE("FSDD", sel_freq=[1.88, 2.42, 2.68], MAClim=0.95)
+    Pali_ss.mpe("FSDD", sel_freq=[1.88, 2.42, 2.68], MAClim=0.95)
 
     # update dict of results
     fsdd_res = dict(fsdd.result)

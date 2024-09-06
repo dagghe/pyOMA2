@@ -10,18 +10,13 @@ Example4 - Multisetup with Pre Global Estimation Re-scaling (PreGER) method
    from pyoma2.algorithms import SSIdat_MS
    from pyoma2.setup import MultiSetup_PreGER
 
-
-For the **PreGER** merging procedure, we adopt a strategy similar to that
-used for the single setup class. The first step involves
-instantiating the ``MultiSetup_PreGER`` class and passing the list of
-datasets, the lists of reference sensors, and their sampling
-frequency. Similarly to the single setup class, also for the ``PreGER``
-class we can detrend and/or decimate the signals with the
-``detrend_data()`` and ``decimate_data()`` methods. Furthermore, we
-can plot all the time histories of the channels for the selected
-datasets calling the ``plot_data()`` method, and get more info from
-each channel from the selected datasets calling the
-``plot_ch_info()`` method.
+For the **preGER** merging procedure, we adopt a strategy similar to that used
+for the single setup class. The first step involves instantiating the
+``MultiSetup_PreGER`` class and passing the list of datasets, the lists of
+reference sensors, and their sampling frequency. Similarly to the single setup
+class, also for the ``MultiSetup_PreGER`` we have access to a wide set of
+tools to pre-process the data and get more information regarding its quality
+(e.g. ``decimate_data()``, ``filter_data()``, ``plot_ch_info()`` methods).
 
 .. code:: python
 
@@ -90,7 +85,7 @@ poles and plot the mode shapes.
 .. code:: python
 
    # get modal parameters
-   msp.MPE(
+   msp.mpe(
          "SSIdat",
          sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
          order=80)

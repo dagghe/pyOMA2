@@ -1,7 +1,14 @@
 """
 This module provides classes for handling geometry-related data, specifically designed
-to store and manipulate sensor and background geometry information. It includes two main
-classes: Geometry1 and Geometry2, each tailored for different types of geometric data.
+to store and manipulate sensor and background geometry information. It includes two
+classes: Geometry1 and Geometry2, each offering unique plotting capabilities:
+
+- Geometry1 enables users to visualise mode
+  shapes with arrows that represent the placement, direction, and
+  magnitude of displacement for each sensor.
+- Geometry2 allows for the plotting and
+  animation of mode shapes, with sensors mapped to user defined
+  points.
 """
 
 from __future__ import annotations
