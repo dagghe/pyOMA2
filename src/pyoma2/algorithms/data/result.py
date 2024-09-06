@@ -27,7 +27,7 @@ class BaseResult(BaseModel):
     """
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
-    # dopo MPE o mpe_from_plot
+    # dopo mpe o mpe_from_plot
     Fn: typing.Optional[npt.NDArray[np.float64]] = None  # array of natural frequencies
     Phi: typing.Optional[npt.NDArray[np.float64]] = None  # array of Mode shape vectors
 
@@ -79,7 +79,7 @@ class EFDDResult(BaseResult):
     Sy: typing.Optional[npt.NDArray[np.float64]] = None
     S_val: typing.Optional[npt.NDArray[np.float64]] = None
     S_vec: typing.Optional[npt.NDArray[np.float64]] = None
-    # dopo MPE, MPE_forPlot
+    # dopo mpe, MPE_forPlot
     Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
     forPlot: typing.Optional[typing.List] = None
 
@@ -139,7 +139,7 @@ class SSIResult(BaseResult):
     Fn_poles_cov: typing.Optional[npt.NDArray[np.float64]] = None
     Xi_poles_cov: typing.Optional[npt.NDArray[np.float64]] = None
     Phi_poles_cov: typing.Optional[npt.NDArray[np.float64]] = None
-    # dopo MPE, MPE_forPlot
+    # dopo mpe, MPE_forPlot
     Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
     order_out: typing.Union[typing.List[int], int, None] = None
     Fn_cov: typing.Optional[npt.NDArray[np.float64]] = (
@@ -188,7 +188,7 @@ class pLSCFResult(BaseResult):
     Phi_poles: typing.Optional[npt.NDArray[np.float64]] = None
     # lam_poles: npt.NDArray[np.float64]
     Lab: typing.Optional[npt.NDArray[np.float64]] = None
-    # dopo MPE, MPE_forPlot
+    # dopo mpe, MPE_forPlot
     Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
     order_out: typing.Union[typing.List[int], int, None] = None
 

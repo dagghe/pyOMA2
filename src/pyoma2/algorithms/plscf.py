@@ -30,7 +30,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
 
     This class inherits from `BaseAlgorithm` and specializes in handling modal analysis computations and
     visualizations based on the pLSCF method. It provides methods to run the analysis, extract modal parameter
-    estimation (MPE), plot stability diagrams, cluster diagrams, mode shapes, and animations of mode shapes.
+    estimation (mpe), plot stability diagrams, cluster diagrams, mode shapes, and animations of mode shapes.
 
     Parameters
     ----------

@@ -77,7 +77,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
 
     def mpe(self, sel_freq: typing.List[float], DF: float = 0.1) -> typing.Any:
         """
-        Performs Modal Parameter Estimation (MPE) on selected frequencies using FDD results.
+        Performs Modal Parameter Estimation (mpe) on selected frequencies using FDD results.
 
         Estimates modal parameters such as natural frequencies and mode shapes from the
         frequencies specified by the user.
@@ -120,7 +120,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         Extracts modal parameters interactively from a plot using selected frequencies.
 
         This method allows for interactive selection of frequencies from a plot, followed by
-        MPE at those frequencies.
+        mpe at those frequencies.
 
         Parameters
         ----------
@@ -232,7 +232,7 @@ class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         npmax: int = 20,
     ) -> typing.Any:
         """
-        Performs Modal Parameter Estimation (MPE) on selected frequencies using EFDD results.
+        Performs Modal Parameter Estimation (mpe) on selected frequencies using EFDD results.
 
         Estimates modal parameters such as natural frequencies, damping ratios, and mode shapes
         from the frequencies specified by the user.

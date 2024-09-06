@@ -33,7 +33,7 @@ to help running the migration to new version.
 - tests to support new project structure
 - `OMA.py` removed `inplace` method from `SingleSetup` and `MultiSetup_PreGER` classes, add a copy of data on init with the possibility to `rollback` them
 - moved `plot_mode_g1` and `plot_mode_g2` and `anim_mode_g2` methods from `SingleSetup` to `BaseSetup` class
-- function `pyoma2/functions/fdd.py::SDOF_bellandMS` now have custom logiv for algorithm methods `FSDD` and `EFDD`
+- function `pyoma2/functions/fdd.py::SDOF_bellandMS` now have custom logic for algorithm methods `FSDD` and `EFDD`
 - function `pyoma2/functions/plscf.py::pLSCF_poles` now return an additional element in the tuple
 - function `pyoma2/functions/plscf.py::ac2mp_poly` now return an additional element in the tuple
 
@@ -71,6 +71,8 @@ to help running the migration to new version.
   - file `pyoma2/functions/plot_funct.py` renamed to `pyoma2/functions/plot.py`
   - file `pyoma2/functions/Gen_funct.py` renamed to `pyoma2/functions/gen.py`
   - file `pyoma2/functions/SSI_funct.py` renamed to `pyoma2/functions/ssi.py`
+  - method `pyoma2/algorithms/base.py::BaseAlgorithm.MPE` renamed to `pyoma2/algorithms/base.py::BaseAlgorithm.mpe`
+  - method `pyoma2/algorithms/base.py::BaseAlgorithm.mpe_fromPlot` renamed to `pyoma2/algorithms/base.py::BaseAlgorithm.mpe_from_plot`
 
 
 ### Fixed

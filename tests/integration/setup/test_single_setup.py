@@ -459,21 +459,21 @@ def test_run(ss: SingleSetup) -> None:
     except Exception as e:
         assert False, f"mpe_from_plot raised an exception {e} for FDD"
 
-    # run MPE for algorithms
+    # run mpe for algorithms
     try:
-        ss.MPE("SSIcov", sel_freq=[1.88, 2.42, 2.68], order=40)
+        ss.mpe("SSIcov", sel_freq=[1.88, 2.42, 2.68], order=40)
     except Exception as e:
-        assert False, f"MPE raised an exception {e} for SSIcov"
+        assert False, f"mpe raised an exception {e} for SSIcov"
 
     try:
-        ss.MPE("FSDD", sel_freq=[1.88, 2.42, 2.68], MAClim=0.95)
+        ss.mpe("FSDD", sel_freq=[1.88, 2.42, 2.68], MAClim=0.95)
     except Exception as e:
-        assert False, f"MPE raised an exception {e} for FSDD"
+        assert False, f"mpe raised an exception {e} for FSDD"
 
     try:
-        ss.MPE("FDD", sel_freq=[1.88, 2.42, 2.68])
+        ss.mpe("FDD", sel_freq=[1.88, 2.42, 2.68])
     except Exception as e:
-        assert False, f"MPE raised an exception {e} for FDD"
+        assert False, f"mpe raised an exception {e} for FDD"
 
     # plot_EFDDfit for FSDD algorithms
     try:

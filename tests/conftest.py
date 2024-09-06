@@ -168,18 +168,18 @@ def multi_setup_poser_fixture(
     ss3.add_algorithms(ssicov3)
     ss3.run_all()
 
-    # run MPE
-    ss1.MPE(
+    # run mpe
+    ss1.mpe(
         "SSIcov1",
         sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
         order=50,
     )
-    ss2.MPE(
+    ss2.mpe(
         "SSIcov2",
         sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
         order=40,
     )
-    ss3.MPE(
+    ss3.mpe(
         "SSIcov3",
         sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
         order=40,
