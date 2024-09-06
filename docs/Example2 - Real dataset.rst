@@ -175,7 +175,7 @@ We can now plot some of the results:
 
 We are now ready to extract the modal properties of interest either
 from the interactive plots using the ``mpe_from_plot()`` method or
-using the ``MPE()`` method.
+using the ``mpe()`` method.
 
 
 .. code:: python
@@ -184,7 +184,7 @@ using the ``MPE()`` method.
     # Pali_ss.mpe_from_plot("SSIcov", freqlim=(0,5))
 
     # or directly
-    Pali_ss.MPE("SSIcov", sel_freq=[1.88, 2.42, 2.68], order=40)
+    Pali_ss.mpe("SSIcov", sel_freq=[1.88, 2.42, 2.68], order=40)
 
     # update dict of results
     ssi_res = dict(ssicov.result)

@@ -81,7 +81,7 @@ We can now check the results
 .. image:: /img/Ex1-Fig2.png
 
 We can get the modal parameters with the help of an interactive plot calling the ``mpe_from_plot()`` method,
-or we can get the results "manually" with the ``MPE()`` method.
+or we can get the results "manually" with the ``mpe()`` method.
 
 .. code:: python
 
