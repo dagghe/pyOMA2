@@ -51,11 +51,11 @@ def test_run_by_name(base_setup):
 
 
 def test_mpe(base_setup):
-    """Test the MPE method."""
+    """Test the mpe method."""
     alg = FakeAlgorithm(name="test_alg")
     base_setup.add_algorithms(alg)
 
-    base_setup.MPE("test_alg")
+    base_setup.mpe("test_alg")
 
     # Since FakeAlgorithm's mpe method doesn't do anything, we just check if it runs without error
 

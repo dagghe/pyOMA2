@@ -195,7 +195,7 @@ class MultiSetup_PoSER:
                 if not alg.result or alg.result.Fn is None:
                     raise ValueError(
                         "You must pass Single setups that have already been run"
-                        " and the Modal Parameters have to be extracted (call MPE method on SingleSetup)"
+                        " and the Modal Parameters have to be extracted (call mpe method on SingleSetup)"
                     )
             yield setup
 

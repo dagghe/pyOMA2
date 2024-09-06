@@ -146,16 +146,16 @@ class BaseSetup:
         name : str
             Name of the algorithm from which to extract modal parameters.
         args : tuple
-            Positional arguments to be passed to the algorithm's MPE method.
+            Positional arguments to be passed to the algorithm's mpe method.
         kwargs : dict
-            Keyword arguments to be passed to the algorithm's MPE method.
+            Keyword arguments to be passed to the algorithm's mpe method.
 
         Raises
         ------
         KeyError
             If the specified algorithm name does not exist in the setup.
         """
-        logger.info("Getting MPE modal parameters from %s", name)
+        logger.info("Getting mpe modal parameters from %s", name)
         self[name].mpe(*args, **kwargs)
 
     # get the modal properties (all results) from the plots.
@@ -168,16 +168,16 @@ class BaseSetup:
         name : str
             Name of the algorithm from which to extract modal parameters.
         args : tuple
-            Positional arguments to be passed to the algorithm's MPE method.
+            Positional arguments to be passed to the algorithm's mpe method.
         kwargs : dict
-            Keyword arguments to be passed to the algorithm's MPE method.
+            Keyword arguments to be passed to the algorithm's mpe method.
 
         Raises
         ------
         KeyError
             If the specified algorithm name does not exist in the setup.
         """
-        logger.info("Getting MPE modal parameters from plot... %s", name)
+        logger.info("Getting mpe modal parameters from plot... %s", name)
         self[name].mpe_from_plot(*args, **kwargs)
 
     def __getitem__(self, name: str) -> BaseAlgorithm:

@@ -39,14 +39,14 @@ class FDDRunParams(BaseRunParams):
 
     Notes
     -----
-    ``sel_freq`` and ``DF`` are used in the ``MPE`` method.
+    ``sel_freq`` and ``DF`` are used in the ``mpe`` method.
     """
 
     # METODO 1: run
     nxseg: int = 1024
     method_SD: str = "per"
     pov: float = 0.5
-    # METODO 2: MPE e mpe_from_plot
+    # METODO 2: mpe e mpe_from_plot
     sel_freq: typing.Optional[npt.NDArray[np.float64]] = None
     DF: float = 0.1
 
@@ -80,14 +80,14 @@ class EFDDRunParams(BaseRunParams):
     Notes
     -----
     ``sel_freq``, ``DF1``, ``DF2``, ``cm``, ``MAClim``, ``sppk`` and ``npmax``
-    are used in the ``MPE`` method.
+    are used in the ``mpe`` method.
     """
 
     # METODO 1: run
     nxseg: int = 1024
     method_SD: str = "per"
     pov: float = 0.5
-    # METODO 2: MPE e mpe_from_plot
+    # METODO 2: mpe e mpe_from_plot
     sel_freq: typing.Optional[npt.NDArray[np.float64]] = None
     DF1: float = 0.1
     DF2: float = 1.0
@@ -138,7 +138,7 @@ class SSIRunParams(BaseRunParams):
         Relative tolerance for comparing frequencies, default is 1e-2.
     Notes
     -----
-    ``sel_freq``, ``order_in``, ``deltaf`` and ``rtol`` are used in the ``MPE`` method.
+    ``sel_freq``, ``order_in``, ``deltaf`` and ``rtol`` are used in the ``mpe`` method.
     """
 
     # METODO 1: run
@@ -154,7 +154,7 @@ class SSIRunParams(BaseRunParams):
     )  # hard criteria
     calc_unc: bool = False  # uncertainty calculations
     nb: int = 100  # number of dataset blocks
-    # METODO 2: MPE e mpe_from_plot
+    # METODO 2: mpe e mpe_from_plot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"
     rtol: float = 5e-2
@@ -202,7 +202,7 @@ class pLSCFRunParams(BaseRunParams):
         Relative tolerance for comparing frequencies, default is 1e-2.
     Notes
     -----
-    ``sel_freq``, ``order_in``, ``deltaf`` and ``rtol`` are used in the ``MPE`` method.
+    ``sel_freq``, ``order_in``, ``deltaf`` and ``rtol`` are used in the ``mpe`` method.
     """
 
     # METODO 1: run
@@ -215,7 +215,7 @@ class pLSCFRunParams(BaseRunParams):
     # step: int = 1
     sc: dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)
     hc: dict = dict(conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
-    # METODO 2: MPE e mpe_from_plot
+    # METODO 2: mpe e mpe_from_plot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"
     rtol: float = 5e-2
