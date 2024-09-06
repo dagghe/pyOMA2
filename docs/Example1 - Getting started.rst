@@ -6,12 +6,6 @@ To access the data and the exact results of the system we can call the ``example
 
 .. code:: python
 
-    import os
-    import sys
-    import numpy as np
-    # Add the directory we executed the script from to path:
-    sys.path.insert(0, os.path.realpath('__file__'))
-
     # import the function to generate the example dataset
     from pyoma2.functions.gen import example_data
 
@@ -24,6 +18,16 @@ To access the data and the exact results of the system we can call the ``example
     print(f"the damping is: {ground_truth[2]} \n")
     print("the (column-wise) mode shape matrix: \n"
     f"{ground_truth[1]} \n")
+
+    >>> the natural frequencies are: [0.89  2.598 4.095 5.261 6.   ]
+    >>> the damping is: 0.02
+    >>> the (column-wise) mode shape matrix:
+        [[ 0.285 -0.764  1.     0.919 -0.546]
+        [ 0.546 -1.     0.285 -0.764  0.919]
+        [ 0.764 -0.546 -0.919 -0.285 -1.   ]
+        [ 0.919  0.285 -0.546  1.     0.764]
+        [ 1.     0.919  0.764 -0.546 -0.285]]
+
 
 
 Now we can instantiate the SingleSetup class, passing the dataset and the sampling frequency as arguments
@@ -85,7 +89,7 @@ or we can get the results "manually" with the ``MPE()`` method.
     # simp_ex.mpe_from_plot("SSIdat", freqlim=(0,10))
 
     # or manually
-    simp_5dof.MPE("SSIdat", sel_freq=[0.89, 2.598, 4.095, 5.261, 6.], order="find_min")
+    simp_5dof.mpe("SSIdat", sel_freq=[0.89, 2.598, 4.095, 5.261, 6.], order="find_min")
 
 
 Now we can now access all the results and compare them to the exact solution
