@@ -1,6 +1,6 @@
 [project]
 name = "pyOMA_2"
-version = "0.5.2"
+version = "0.6.0"
 description = "Python module for conducting Operational Modal Analysis"
 authors = [
     {name = "Dag Pasca", email = "dpa@treteknisk.no"},
