@@ -120,9 +120,9 @@ geometry on it and then plot or animate the mode shapes
    _geo2 = "./src/pyoma2/test_data/3SL/Geo2.xlsx"
 
    # Define geometry1
-   msp.def_geo1_byFILE(_geo1)
+   msp.def_geo1_by_file(_geo1)
    # Define geometry 2
-   msp.def_geo2_byFILE(_geo2)
+   msp.def_geo2_by_file(_geo2)
 
 
 .. code:: python
@@ -131,17 +131,17 @@ geometry on it and then plot or animate the mode shapes
    algoRes = result[SSIcov.__name__]
 
    # Plot mode 2 (geometry 1)
-   _, _ = msp.plot_mode_g1(
-         Algo_Res=algoRes, mode_nr=2, scaleF=2)
+   _, _ = msp.plot_mode_geo1(
+         algo_res=algoRes, mode_nr=2, scaleF=2)
    # Plot mode 1 (geometry 2, pyvista)
-   _ = msp.plot_mode_g2(
-         Algo_Res=algoRes, mode_nr=1, scaleF=3)
+   _ = msp.plot_mode_geo2(
+         algo_res=algoRes, mode_nr=1, scaleF=3)
    # Plot mode 4 (geometry 2, matplotlib)
-   _, _ = msp.plot_mode_g2_mpl(
-         Algo_Res=algoRes, mode_nr=4, view="xz", scaleF=3)
+   _, _ = msp.plot_mode_geo2_mpl(
+         algo_res=algoRes, mode_nr=4, view="xz", scaleF=3)
    # Animate mode 5 (geometry 2, pyvista)
    _ = msp.anim_mode_g2(
-         Algo_Res=algoRes, mode_nr=5, scaleF=3)
+         algo_res=algoRes, mode_nr=5, scaleF=3)
 
 .. figure:: /img/Ex3-Fig4.png
 .. figure:: /img/Ex3-Fig5.png

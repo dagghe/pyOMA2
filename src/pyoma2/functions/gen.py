@@ -1451,3 +1451,55 @@ def load_from_file(file_name: str):
     with open(file_name, "rb") as f:
         instance = pickle.load(f)  # noqa S301
     return instance
+
+
+def read_excel_file(
+    path: str,
+    sheet_name: typing.Optional[str] = None,
+    engine: str = "openpyxl",
+    index_col: int = 0,
+    **kwargs,
+) -> dict:
+    """
+    Read an Excel file and return its contents as a dictionary.
+
+    Parameters:
+    -----------
+    path : str
+        The path to the Excel file.
+    sheet_name : str, optional
+        The name of the sheet to read. If None, all sheets are read. Default is None.
+    engine : str, optional
+        The engine to use for reading the Excel file. Default is 'openpyxl'.
+    index_col : int, optional
+        The column to use as the index. Default is 0
+    **kwargs : dict, optional
+        Additional keyword arguments to pass to pd.read_excel.
+
+    Returns:
+    --------
+    dict
+        A dictionary containing the contents of the Excel file, with sheet names as keys.
+
+    Raises:
+    -------
+    ImportError
+        If the specified engine is not available.
+    RuntimeError
+        If an error occurs while reading the Excel file.
+    """
+    try:
+        file_dict = pd.read_excel(
+            path, sheet_name=sheet_name, engine=engine, index_col=index_col, **kwargs
+        )
+        return file_dict
+    except ImportError as e:
+        raise ImportError(
+            "Optional package 'openpyxl' is not installed. "
+            "Install 'openpyxl' with 'pip install openpyxl' or 'pip install pyoma_2[pyvista]'"
+        ) from e
+    except Exception as e:
+        logger.error("An error occurred while reading the Excel file: %s", e)
+        raise RuntimeError(
+            f"An error occurred while reading the Excel file: {e.__class__}: {e}"
+        ) from e

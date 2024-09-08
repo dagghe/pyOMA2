@@ -106,7 +106,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
     assert "geo1 is not defined. Call def_geo1 first." in str(e.value)
 
     # DEFINE THE GEOMETRY
-    ss.def_geo1_byFILE(
+    ss.def_geo1_by_file(
         path="./src/pyoma2/test_data/palisaden/Geo1.xlsx",
     )
 
@@ -183,7 +183,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
         f_al = FakeAlgorithm(name="fake1", run_params=FakeAlgorithm.RunParamCls())
         ss.add_algorithms(f_al)
         ss.run_all()
-        fig, ax = ss["fake1"].plot_mode_g1(geo1=ss.geo1, mode_numb=2, view="3D", scaleF=2)
+        fig, ax = ss.plot_mode_geo1(algo_res=f_al.result, mode_nr=2, view="3D", scaleF=2)
     except Exception as e:
         assert False, f"plot_mode_geo1 raised an exception {e}"
 
@@ -278,7 +278,7 @@ def test_geo2(
     assert "geo2 is not defined. Call def_geo2 first." in str(e.value)
 
     # DEFINE THE GEOMETRY
-    ss.def_geo2_byFILE(path="./src/pyoma2/test_data/palisaden/Geo2.xlsx")
+    ss.def_geo2_by_file(path="./src/pyoma2/test_data/palisaden/Geo2.xlsx")
 
     # Test the initialization of the Geometry
     assert ss.geo2 is not None
@@ -389,12 +389,12 @@ def test_run(ss: SingleSetup) -> None:
     """
 
     # Define geometry1
-    ss.def_geo1_byFILE(
+    ss.def_geo1_by_file(
         path="./src/pyoma2/test_data/palisaden/Geo1.xlsx",
     )
 
     # Define geometry 2
-    ss.def_geo2_byFILE(path="./src/pyoma2/test_data/palisaden/Geo2.xlsx")
+    ss.def_geo2_by_file(path="./src/pyoma2/test_data/palisaden/Geo2.xlsx")
 
     # Initialise the algorithms
     fdd = FDD(name="FDD")
@@ -485,12 +485,12 @@ def test_run(ss: SingleSetup) -> None:
 
     # PLOTE_MODE_G1
     try:
-        _ = ss["FDD"].plot_mode_g1(geo1=ss.geo1, mode_nr=2, view="3D", scaleF=2)
+        _ = ss.plot_mode_geo1(algo_res=fdd.result, mode_nr=2, view="3D", scaleF=2)
     except Exception as e:
-        assert False, f"plot_mode_g1 raised an exception {e} for FDD"
+        assert False, f"plot_mode_geo1 raised an exception {e} for FDD"
 
     # PLOTE_MODE_G2
     try:
-        _ = ss["FSDD"].plot_mode_g2(geo2=ss.geo2, mode_nr=2, view="3D", scaleF=2)
+        _ = ss.plot_mode_geo2(algo_res=fsdd.result, mode_nr=2, view="3D", scaleF=2)
     except Exception as e:
-        assert False, f"plot_mode_g2 raised an exception {e} for FSDD"
+        assert False, f"plot_mode_geo2 raised an exception {e} for FSDD"

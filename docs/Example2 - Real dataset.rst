@@ -41,8 +41,8 @@ different method available that offers unique plotting capabilities:
     _geo1 =  r"../src/pyoma2/test_data/palisaden/Geo1.xlsx"
     _geo2 =  r"../src/pyoma2/test_data/palisaden/Geo2.xlsx"
 
-    Pali_ss.def_geo1_byFILE(_geo1)
-    Pali_ss.def_geo2_byFILE(_geo2)
+    Pali_ss.def_geo1_by_file(_geo1)
+    Pali_ss.def_geo2_by_file(_geo2)
 
 
 Once we have defined the geometry we can show it calling the
@@ -237,8 +237,8 @@ the analysis
 
     # MODE SHAPES PLOT
     # Plot mode 2 (geometry 1)
-    Pali_ss[fsdd.name].plot_mode_g1(
-        geo1=Pali_ss.geo1, mode_nr=2, view="3D", scaleF=2)
+    Pali_ss.plot_mode_geo1(
+        algo_res=fsdd.result, mode_nr=2, view="3D", scaleF=2)
 
 
 .. figure:: /img/Ex2-Fig14.png
@@ -247,8 +247,8 @@ the analysis
 .. code:: python
 
     # Animate mode 1 (geometry 2)
-    Pali_ss[ssicov.name].anim_mode_g2(
-        geo2=Pali_ss.geo2, mode_nr=1, scaleF=3)
+    Pali_ss.anim_mode_g2(
+        algo_res=ssicov.result, mode_nr=1, scaleF=3)
 
 .. image:: /img/Ex2-Fig15.gif
 
@@ -265,8 +265,8 @@ It is also possible to save and load the results to a pickled file.
     pali2 = load_from_file("<Path to your file>/name.pkl"")
 
     # plot from loded instance
-    pali2[fsdd.name].plot_mode_g2_mpl(
-        geo2=pali2.geo2, mode_nr=2, view="3D", scaleF=2)
+    pali2.plot_mode_geo2_mpl(
+        algo_res=fsdd.result, mode_nr=2, view="3D", scaleF=2)
 
 .. figure:: /img/Ex2-Fig16.png
 

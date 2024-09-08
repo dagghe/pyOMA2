@@ -10,6 +10,8 @@ import warnings
 
 import numpy as np
 
+from pyoma2.support.geometry.data import Geometry2
+
 # import numpy.typing as npt
 try:
     import pyvista as pv
@@ -27,12 +29,16 @@ except ImportError:
     )
     pv = None
     pvqt = None
-from pyoma2.algorithms.data.result import BaseResult, MsPoserResult
+from pyoma2.algorithms.data.result import BaseResult
 from pyoma2.functions import gen
-from pyoma2.support.geometry import Geometry2
+
+from .plotter import BasePlotter
+
+if typing.TYPE_CHECKING:
+    from pyoma2.support.geometry import Geometry2
 
 
-class PvGeoPlotter:
+class PvGeoPlotter(BasePlotter[Geometry2]):
     """
     A class to visualize and animate mode shapes in 3D using `pyvista`.
 
@@ -41,7 +47,7 @@ class PvGeoPlotter:
 
     Parameters
     ----------
-    Geo : Geometry2
+    geo : Geometry2
         The geometric data of the model, which includes sensor coordinates and other
         structural information.
     Res : Union[BaseResult, MsPoserResult], optional
@@ -54,14 +60,12 @@ class PvGeoPlotter:
         to instantiate the class.
     """
 
-    def __init__(
-        self,
-        Geo: Geometry2,
-        Res: typing.Union[BaseResult, MsPoserResult] = None,
-    ) -> None:
-        self.Geo = Geo
-        self.Res = Res
-
+    def __init__(self, geo: Geometry2, res: typing.Optional[BaseResult] = None):
+        """
+        Initialize the class with geometric and result data.
+        Ensure that the `pyvista` and `pyvistaqt` libraries are installed.
+        """
+        super().__init__(geo, res)
         if pv is None or pvqt is None:
             raise ImportError(
                 "Optional package 'pyvista' is not installed. Some features may not be available."
@@ -121,7 +125,7 @@ class PvGeoPlotter:
         a notebook environment, a `pyvista` plotter with notebook support is used.
         """
         # import geometry
-        Geo = self.Geo
+        geo = self.geo
 
         # define the plotter object type
         if pl is None:
@@ -148,9 +152,9 @@ class PvGeoPlotter:
             surf_sett = undef_sett
 
         # GEOMETRY
-        points = Geo.pts_coord.to_numpy()
-        lines = Geo.sens_lines
-        surfs = Geo.sens_surf
+        points = geo.pts_coord.to_numpy()
+        lines = geo.sens_lines
+        surfs = geo.sens_surf
         # geometry in pyvista format
         if lines is not None:
             lines = np.array([np.hstack([2, line]) for line in lines])
@@ -172,8 +176,8 @@ class PvGeoPlotter:
         # pl.show()
 
         # add sensor points + arrows for direction
-        sens_names = Geo.sens_names
-        ch_names = Geo.sens_map.to_numpy()
+        sens_names = geo.sens_names
+        ch_names = geo.sens_map.to_numpy()
         ch_names = np.array(
             [name if name in sens_names else "nan" for name in ch_names.flatten()]
         ).reshape(ch_names.shape)
@@ -198,7 +202,7 @@ class PvGeoPlotter:
                 if elem != "nan":
                     vector = [0, 0, 0]
                     # vector[j] = 1
-                    vector[j] = Geo.sens_sign.values[i, j]
+                    vector[j] = geo.sens_sign.values[i, j]
                     directions.append(vector)
                     points_new.append(row2)
 
@@ -270,8 +274,8 @@ class PvGeoPlotter:
             If the result (`Res`) data is not provided when plotting a mode shape.
         """
         # import geometry and results
-        Geo = self.Geo
-        Res = self.Res
+        geo = self.geo
+        res = self.res
 
         # define the plotter object type
         if pl is None:
@@ -293,9 +297,9 @@ class PvGeoPlotter:
             undef_sett = undef_settings
 
         # GEOMETRY
-        points = Geo.pts_coord.to_numpy()
-        lines = Geo.sens_lines
-        surfs = Geo.sens_surf
+        points = geo.pts_coord.to_numpy()
+        lines = geo.sens_lines
+        surfs = geo.sens_surf
         # geometry in pyvista format
         if lines is not None:
             lines = np.array([np.hstack([2, line]) for line in lines])
@@ -303,17 +307,17 @@ class PvGeoPlotter:
             surfs = np.array([np.hstack([3, surf]) for surf in surfs])
 
         # Mode shape
-        if Res is not None:
-            phi = Res.Phi[:, int(mode_nr - 1)].real * scaleF
+        if res is not None:
+            phi = res.Phi[:, int(mode_nr - 1)].real * scaleF
         else:
             raise ValueError("You must pass the Res class to plot a mode shape!")
 
         # APPLY POINTS TO SENSOR MAPPING
         df_phi_map = gen.dfphi_map_func(
-            phi, Geo.sens_names, Geo.sens_map, cstrn=Geo.cstrn
+            phi, geo.sens_names, geo.sens_map, cstrn=geo.cstrn
         )
         # calculate deformed shape (NEW POINTS)
-        newpoints = points + df_phi_map.to_numpy() * Geo.sens_sign.to_numpy()
+        newpoints = points + df_phi_map.to_numpy() * geo.sens_sign.to_numpy()
 
         # If true plot undeformed shape
         if plot_undef:
@@ -335,7 +339,7 @@ class PvGeoPlotter:
             pl.add_mesh(face_mesh, scalars=df_phi_map.values, **def_sett)
 
         pl.add_text(
-            rf"Mode nr. {mode_nr}, fn = {Res.Fn[mode_nr-1]:.3f}Hz",
+            rf"Mode nr. {mode_nr}, fn = {res.Fn[mode_nr-1]:.3f}Hz",
             position="upper_edge",
             color="black",
             # font_size=26,
@@ -354,7 +358,7 @@ class PvGeoPlotter:
         def_sett: dict = "default",
         saveGIF: bool = False,
         pl=None,
-    ):
+    ) -> "pv.Plotter":
         """
         Animate the mode shape for the given mode number.
 
@@ -387,11 +391,11 @@ class PvGeoPlotter:
             def_sett = def_settings
 
         # import geometry and results
-        Geo = self.Geo
-        Res = self.Res
-        points = pv.pyvista_ndarray(Geo.pts_coord.to_numpy())
-        lines = Geo.sens_lines
-        surfs = Geo.sens_surf
+        geo = self.geo
+        res = self.res
+        points = pv.pyvista_ndarray(geo.pts_coord.to_numpy())
+        lines = geo.sens_lines
+        surfs = geo.sens_surf
         # geometry in pyvista format
         if lines is not None:
             lines = np.array([np.hstack([2, line]) for line in lines])
@@ -399,14 +403,14 @@ class PvGeoPlotter:
             surfs = np.array([np.hstack([3, surf]) for surf in surfs])
 
         # Mode shape
-        phi = Res.Phi[:, int(mode_nr - 1)].real * scaleF
+        phi = res.Phi[:, int(mode_nr - 1)].real * scaleF
 
         # mode shape mapped to points
         df_phi_map = gen.dfphi_map_func(
-            phi, Geo.sens_names, Geo.sens_map, cstrn=Geo.cstrn
+            phi, geo.sens_names, geo.sens_map, cstrn=geo.cstrn
         )
         # add together coordinates and mode shape displacement
-        # newpoints = (points + df_phi_map.to_numpy() * Geo.sens_sign.to_numpy() )
+        # newpoints = (points + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() )
 
         # copy the dataset as we will modify its coordinates
         points_c = points.copy()
@@ -425,7 +429,7 @@ class PvGeoPlotter:
             pl.add_mesh(face_mesh, scalars=df_phi_map.values, **def_sett)
 
         pl.add_text(
-            rf"Mode nr. {mode_nr}, fn = {Res.Fn[mode_nr-1]:.3f}Hz",
+            rf"Mode nr. {mode_nr}, fn = {res.Fn[mode_nr-1]:.3f}Hz",
             position="upper_edge",
             color="black",
             # font_size=26,
@@ -460,3 +464,5 @@ class PvGeoPlotter:
             pl.add_callback(update_shape, interval=100)
             # pl.show()
         # pl.close()
+
+        return pl

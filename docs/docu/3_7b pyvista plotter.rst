@@ -22,6 +22,6 @@ Key Features:
     The module is designed for use within the pyOMA2 package. It requires OMA results and
     geometry data specific to the structures being analyzed.
 
-.. automodule:: pyoma2.support.pyvista_plotter
+.. automodule:: pyoma2.support.geometry.pyvista_plotter
    :members:
    :show-inheritance:

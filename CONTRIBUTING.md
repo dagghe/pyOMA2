@@ -24,10 +24,22 @@ Windows:
 
 Add PATH to environment manager and then run this command to install all the dependencies
 
-Install dependencies
+Install dependencies for python ==3.8
 
 ```shell
-pdm install
+pdm install --lockfile=pdm-py38.lock
+```
+
+Install dependencies for python >=3.9
+
+```shell
+pdm install --lockfile=pdm-py39+.lock
+```
+
+Having this per-python version lockfiles also adding a new package should reference the correct lockfile, for example:
+
+```shell
+pdm add requests --lockfile=pdm-py39+.lock
 ```
 
 Install pre-commit
@@ -75,8 +87,8 @@ Due to [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html), Numpy 
 By following [Lock for specific platforms or Python versions](https://pdm-project.org/en/latest/usage/lock-targets/), you can generate a single lock file for multiple versions of Python with:
 
 ```
-pdm lock --python=">=3.9"
-pdm lock --python="<3.9" --append
+pdm lock --python=">=3.9" --with pyvista --with openpyxl
+pdm lock --python="==3.8.*" --with pyvista --with openpyxl
 ```
 
 When bumping the minimum supported version of Python in `pyproject` (`requires-python`), be sure to also bump the conditional numpy versions supported. For example, when Python 3.8 is dropped, you will have to modify:
