@@ -36,6 +36,7 @@ to help running the migration to new version.
 - function `pyoma2/functions/fdd.py::SDOF_bellandMS` now have custom logic for algorithm methods `FSDD` and `EFDD`
 - function `pyoma2/functions/plscf.py::pLSCF_poles` now return an additional element in the tuple
 - function `pyoma2/functions/plscf.py::ac2mp_poly` now return an additional element in the tuple
+- moved all geometry related methods to the `pyoma2/support/geometry/mixin.py` file where the following method are available `def_geo1`, `def_geo2`, `_def_geo_by_file`, `def_geo1_by_file`, `def_geo2_by_file`, `plot_geo1`, `plot_geo2`, `plot_geo2_mpl`, `plot_mode_geo1`, `plot_mode_geo2`, `plot_mode_geo2_mpl`, `anim_mode_geo2` and available to `BaseSetup` class and `MultiSetup_PoSER` class. The proxy to these method were removed from `BaseAlgorithm` class and moved to the mixin class `GeometryMixin` and so proxied by the `Setup` classes that implement the geometry mixin.
 
 - Library re-organization:
   - file `pyoma2/OMA.py` split in `pyoma2/setup` package in the following files:

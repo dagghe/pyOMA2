@@ -5,12 +5,13 @@ Created on Sun Jun  9 12:48:34 2024
 @author: dagpa
 """
 
+from __future__ import annotations
+
 import typing
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyoma2.algorithms.data.result import BaseResult, MsPoserResult
 from pyoma2.functions.gen import dfphi_map_func
 from pyoma2.functions.plot import (
     plt_lines,
@@ -20,22 +21,58 @@ from pyoma2.functions.plot import (
     set_ax_options,
     set_view,
 )
-from pyoma2.support.geometry import Geometry1, Geometry2
+
+from .data import Geometry1, Geometry2
+from .plotter import BasePlotter, T_Geo
 
 
-class MplGeoPlotter:
-    """A class to plot mode shapes in 3D."""
+class MplPlotter(BasePlotter[T_Geo]):
+    """An abstract base class for plotting geometry and mode shapes using Matplotlib."""
 
-    def __init__(
-        self,
-        Geo: typing.Union[Geometry1, Geometry2],
-        Res: typing.Union[BaseResult, MsPoserResult] = None,
-    ) -> typing.Any:
-        self.Geo = Geo
-        self.Res = Res
+    def _create_figure(self):
+        """Create and return a new figure and 3D axis."""
+        fig = plt.figure(figsize=(8, 8), tight_layout=True)
+        ax = fig.add_subplot(111, projection="3d")
+        return fig, ax
 
-    # metodo per plottare geometria 1
-    def plot_geo1(
+    def _set_common_options(self, ax, scaleF, view):
+        """Set common axis options and view."""
+        set_ax_options(
+            ax,
+            bg_color="w",
+            remove_fill=True,
+            remove_grid=True,
+            remove_axis=True,
+            scaleF=scaleF,
+        )
+        set_view(ax, view=view)
+
+    def _plot_background(self, ax, col_BG_nodes, col_BG_lines, col_BG_surf):
+        """Plot background nodes, lines, and surfaces if they exist."""
+        if self.geo.bg_nodes is not None:
+            # if True plot
+            plt_nodes(ax, self.geo.bg_nodes, color=col_BG_nodes, alpha=0.5)
+            # Check that BG lines are defined
+            if self.geo.bg_lines is not None:
+                # if True plot
+                plt_lines(
+                    ax,
+                    self.geo.bg_nodes,
+                    self.geo.bg_lines,
+                    color=col_BG_lines,
+                    alpha=0.5,
+                )
+            if self.geo.bg_surf is not None:
+                # if True plot
+                plt_surf(
+                    ax, self.geo.bg_nodes, self.geo.bg_surf, color=col_BG_surf, alpha=0.1
+                )
+
+
+class Geo1MplPlotter(MplPlotter[Geometry1]):
+    """A class to plot mode shapes in 3D using Geometry1."""
+
+    def plot_geo(
         self,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz"] = "3D",
@@ -45,7 +82,7 @@ class MplGeoPlotter:
         col_BG_lines: str = "gray",
         col_BG_surf: str = "gray",
         col_txt: str = "red",
-    ):
+    ) -> typing.Tuple[plt.Figure, plt.Axes]:
         """
         Plots the geometry (type 1) of tested structure.
 
@@ -80,70 +117,37 @@ class MplGeoPlotter:
             further customization or saving the plot externally.
 
         """
-        if type(self.Geo) != Geometry1:
-            raise ValueError("geo1 is not defined. Call def_geo1 first.")
-        fig = plt.figure(figsize=(8, 8), tight_layout=True)
-        ax = fig.add_subplot(111, projection="3d")
-        # ax.set_title("Plot of the geometry and sensors' placement and direction")
+        fig, ax = self._create_figure()
+
         # plot sensors' nodes
-        sens_coord = self.Geo.sens_coord[["x", "y", "z"]].to_numpy()
+        sens_coord = self.geo.sens_coord[["x", "y", "z"]].to_numpy()
         plt_nodes(ax, sens_coord, color=col_sns)
 
         # plot sensors' directions
         plt_quiver(
             ax,
             sens_coord,
-            self.Geo.sens_dir,
+            self.geo.sens_dir,
             scaleF=scaleF,
-            names=self.Geo.sens_names,
+            names=self.geo.sens_names,
             color=col_sns,
             color_text=col_txt,
             method="2",
         )
 
-        # Check that BG nodes are defined
-        if self.Geo.bg_nodes is not None:
-            # if True plot
-            plt_nodes(ax, self.Geo.bg_nodes, color=col_BG_nodes, alpha=0.5)
-            # Check that BG lines are defined
-            if self.Geo.bg_lines is not None:
-                # if True plot
-                plt_lines(
-                    ax,
-                    self.Geo.bg_nodes,
-                    self.Geo.bg_lines,
-                    color=col_BG_lines,
-                    alpha=0.5,
-                )
-            if self.Geo.bg_surf is not None:
-                # if True plot
-                plt_surf(
-                    ax, self.Geo.bg_nodes, self.Geo.bg_surf, alpha=0.1, color=col_BG_surf
-                )
+        self._plot_background(ax, col_BG_nodes, col_BG_lines, col_BG_surf)
 
         # check for sens_lines
-        if self.Geo.sens_lines is not None:
-            # if True plot
-            plt_lines(ax, sens_coord, self.Geo.sens_lines, color=col_sns_lines)
+        if self.geo.sens_lines is not None:
+            plt_lines(ax, sens_coord, self.geo.sens_lines, color=col_sns_lines)
 
-        # Set ax options
-        set_ax_options(
-            ax,
-            bg_color="w",
-            remove_fill=True,
-            remove_grid=True,
-            remove_axis=True,
-            scaleF=scaleF,
-        )
-
-        # Set view
-        set_view(ax, view=view)
+        self._set_common_options(ax, scaleF, view)
 
         return fig, ax
 
-    def plot_mode_g1(
+    def plot_mode(
         self,
-        mode_numb: int,
+        mode_nr: int,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz"] = "3D",
         col_sns: str = "red",
@@ -151,7 +155,7 @@ class MplGeoPlotter:
         col_BG_nodes: str = "gray",
         col_BG_lines: str = "gray",
         col_BG_surf: str = "gray",
-    ) -> typing.Any:
+    ) -> typing.Tuple[plt.Figure, plt.Axes]:
         """
         Plots a 3D mode shape for a specified mode number using the Geometry1 object.
 
@@ -159,7 +163,7 @@ class MplGeoPlotter:
         ----------
         Geo : Geometry1
             Geometry object containing sensor coordinates and other information.
-        mode_numb : int
+        mode_nr : int
             Mode number to visualize.
         scaleF : int, optional
             Scale factor for mode shape visualization. Default is 1.
@@ -177,78 +181,47 @@ class MplGeoPlotter:
         typing.Any
             A tuple containing the matplotlib figure and axes of the mode shape plot.
         """
-        if not isinstance(self.Geo, Geometry1):
-            raise ValueError(
-                f"geo1 is not defined. cannot plot geometry on {self}. Call def_geo1 first."
-            )
-
-        if self.Res.Fn is None:
+        if self.res.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Geo = self.Geo
         # Select the (real) mode shape
-        phi = self.Res.Phi[:, int(mode_numb - 1)].real
-        fn = self.Res.Fn[int(mode_numb - 1)]
+        phi = self.res.Phi[:, int(mode_nr - 1)].real
+        fn = self.res.Fn[int(mode_nr - 1)]
 
-        fig = plt.figure(figsize=(8, 8), tight_layout=True)
-        ax = fig.add_subplot(111, projection="3d")
-
-        # set title
-        ax.set_title(f"Mode nr. {mode_numb}, $f_n$={fn:.3f}Hz")
+        fig, ax = self._create_figure()
+        # Set title
+        ax.set_title(f"Mode nr. {mode_nr}, $f_n$={fn:.3f}Hz")
 
         # plot sensors' nodes
-        sens_coord = Geo.sens_coord[["x", "y", "z"]].to_numpy()
+        sens_coord = self.geo.sens_coord[["x", "y", "z"]].to_numpy()
         plt_nodes(ax, sens_coord, color="red")
 
         # plot Mode shape
         plt_quiver(
             ax,
             sens_coord,
-            Geo.sens_dir * phi.reshape(-1, 1),
+            self.geo.sens_dir * phi.reshape(-1, 1),
             scaleF=scaleF,
             method="2",
             color=col_sns,
-            #            names=Geo.sens_names,
         )
 
-        # Check that BG nodes are defined
-        if Geo.bg_nodes is not None:
-            # if True plot
-            plt_nodes(ax, Geo.bg_nodes, color=col_BG_nodes, alpha=0.5)
-            # Check that BG lines are defined
-            if Geo.bg_lines is not None:
-                # if True plot
-                plt_lines(
-                    ax,
-                    Geo.bg_nodes,
-                    Geo.bg_lines,
-                    color=col_BG_lines,
-                    alpha=0.5,
-                )
-            if Geo.bg_surf is not None:
-                # if True plot
-                plt_surf(ax, Geo.bg_nodes, Geo.bg_surf, alpha=0.1, color=col_BG_surf)
+        self._plot_background(ax, col_BG_nodes, col_BG_lines, col_BG_surf)
 
         # check for sens_lines
-        if Geo.sens_lines is not None:
+        if self.geo.sens_lines is not None:
             # if True plot
-            plt_lines(ax, sens_coord, Geo.sens_lines, color=col_sns_lines)
+            plt_lines(ax, sens_coord, self.geo.sens_lines, color=col_sns_lines)
 
-        # Set ax options
-        set_ax_options(
-            ax,
-            bg_color="w",
-            remove_fill=True,
-            remove_grid=True,
-            remove_axis=True,
-            scaleF=scaleF,
-        )
+        self._set_common_options(ax, scaleF, view)
 
-        # Set view
-        set_view(ax, view=view)
         return fig, ax
 
-    def plot_geo2(
+
+class Geo2MplPlotter(MplPlotter[Geometry2]):
+    """A class to plot mode shapes in 3D using Geometry2."""
+
+    def plot_geo(
         self,
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz"] = "3D",
@@ -259,7 +232,7 @@ class MplGeoPlotter:
         col_BG_lines: str = "gray",
         col_BG_surf: str = "gray",
         col_txt: str = "red",
-    ):
+    ) -> typing.Tuple[plt.Figure, plt.Axes]:
         """
         Plots the geometry (type 2) of tested structure.
 
@@ -292,125 +265,69 @@ class MplGeoPlotter:
         tuple
             Returns a tuple containing the figure and axis objects of the matplotlib plot.
             This allows for further customization or saving outside the method.
-
         """
-        # if type(self.Geo) != Geometry2:
-        #     raise ValueError("geo2 is not defined. Call def_geo2 first.")
-        fig = plt.figure(figsize=(8, 8), tight_layout=True)
-        ax = fig.add_subplot(111, projection="3d")
-        # ax.set_title("Plot of the geometry and sensors' placement and direction")
+        fig, ax = self._create_figure()
+
         # plot sensors'
-        pts = self.Geo.pts_coord.to_numpy()[:, :]
+        pts = self.geo.pts_coord.to_numpy()[:, :]
         plt_nodes(ax, pts, color="red")
 
         # plot sensors' directions
-        ch_names = self.Geo.sens_map.to_numpy()
-        s_sign = self.Geo.sens_sign.to_numpy().astype(float)  # array of signs
+        ch_names = self.geo.sens_map.to_numpy()
+        s_sign = self.geo.sens_sign.to_numpy().astype(float)
 
         zero2 = np.zeros((s_sign.shape[0], 2))
-
         s_sign[s_sign == 0] = np.nan
+        s_signs = [
+            np.hstack((s_sign[:, 0].reshape(-1, 1), zero2)),
+            np.insert(zero2, 1, s_sign[:, 1], axis=1),
+            np.hstack((zero2, s_sign[:, 2].reshape(-1, 1))),
+        ]
 
-        s_sign1 = np.hstack((s_sign[:, 0].reshape(-1, 1), zero2))
-        s_sign2 = np.insert(zero2, 1, s_sign[:, 1], axis=1)
-        s_sign3 = np.hstack((zero2, s_sign[:, 2].reshape(-1, 1)))
-
-        valid_indices1 = ch_names[:, 0] != 0
-        valid_indices2 = ch_names[:, 1] != 0
-        valid_indices3 = ch_names[:, 2] != 0
-
-        if np.any(valid_indices1):
-            plt_quiver(
-                ax,
-                pts[valid_indices1],
-                s_sign1[valid_indices1],
-                scaleF=scaleF,
-                names=ch_names[valid_indices1, 0],
-                color=col_sns,
-                color_text=col_txt,
-                method="2",
-            )
-        if np.any(valid_indices2):
-            plt_quiver(
-                ax,
-                pts[valid_indices2],
-                s_sign2[valid_indices2],
-                scaleF=scaleF,
-                names=ch_names[valid_indices2, 1],
-                color=col_sns,
-                color_text=col_txt,
-                method="2",
-            )
-        if np.any(valid_indices3):
-            plt_quiver(
-                ax,
-                pts[valid_indices3],
-                s_sign3[valid_indices3],
-                scaleF=scaleF,
-                names=ch_names[valid_indices3, 2],
-                color=col_sns,
-                color_text=col_txt,
-                method="2",
-            )
-
-        # Check that BG nodes are defined
-        if self.Geo.bg_nodes is not None:
-            # if True plot
-            plt_nodes(ax, self.Geo.bg_nodes, color=col_BG_nodes, alpha=0.5)
-            # Check that BG lines are defined
-            if self.Geo.bg_lines is not None:
-                # if True plot
-                plt_lines(
+        for i, s_sign_direction in enumerate(s_signs):
+            valid_indices = ch_names[:, i] != 0
+            if np.any(valid_indices):
+                plt_quiver(
                     ax,
-                    self.Geo.bg_nodes,
-                    self.Geo.bg_lines,
-                    color=col_BG_lines,
-                    alpha=0.5,
+                    pts[valid_indices],
+                    s_sign_direction[valid_indices],
+                    scaleF=scaleF,
+                    names=ch_names[valid_indices, i],
+                    color=col_sns,
+                    color_text=col_txt,
+                    method="2",
                 )
-            if self.Geo.bg_surf is not None:
-                # if True plot
-                plt_surf(
-                    ax, self.Geo.bg_nodes, self.Geo.bg_surf, color=col_BG_surf, alpha=0.1
-                )
+
+        self._plot_background(ax, col_BG_nodes, col_BG_lines, col_BG_surf)
 
         # check for sens_lines
-        if self.Geo.sens_lines is not None:
+        if self.geo.sens_lines is not None:
             # if True plot
-            plt_lines(ax, pts, self.Geo.sens_lines, color=col_sns_lines)
+            plt_lines(ax, pts, self.geo.sens_lines, color=col_sns_lines)
 
-        if self.Geo.sens_surf is not None:
+        if self.geo.sens_surf is not None:
             # if True plot
             plt_surf(
                 ax,
-                self.Geo.pts_coord.values,
-                self.Geo.sens_surf,
+                self.geo.pts_coord.values,
+                self.geo.sens_surf,
                 color=col_sns_surf,
                 alpha=0.3,
             )
 
-        # Set ax options
-        set_ax_options(
-            ax,
-            bg_color="w",
-            remove_fill=True,
-            remove_grid=True,
-            remove_axis=True,
-            scaleF=scaleF,
-        )
+        self._set_common_options(ax, scaleF, view)
 
-        # Set view
-        set_view(ax, view=view)
         return fig, ax
 
-    def plot_mode_g2(
+    def plot_mode(
         self,
-        mode_numb: typing.Optional[int],
+        mode_nr: typing.Optional[int],
         scaleF: int = 1,
         view: typing.Literal["3D", "xy", "xz", "yz"] = "3D",
         color: str = "cmap",
         *args,
         **kwargs,
-    ) -> typing.Any:
+    ) -> typing.Tuple[plt.Figure, plt.Axes]:
         """
         Plots a 3D mode shape for a specified mode number using the Geometry2 object.
 
@@ -418,7 +335,7 @@ class MplGeoPlotter:
         ----------
         geo2 : Geometry2
             Geometry object containing nodes, sensor information, and additional geometrical data.
-        mode_numb : int
+        mode_nr : int
             Mode number to visualize.
         scaleF : int, optional
             Scale factor for mode shape visualization. Default is 1.
@@ -435,86 +352,66 @@ class MplGeoPlotter:
 
         Returns
         -------
-        typing.Any
+        typing.Tuple[plt.Figure, plt.Axes]
             A tuple containing the matplotlib figure and axes of the mode shape plot.
         """
-        # if type(self.Geo) != Geometry2:
-        #     raise ValueError("geo2 is not defined. Call def_geo2 first.")
-
-        geo2 = self.Geo
-
-        if self.Res.Fn is None:
+        if self.res.Fn is None:
             raise ValueError("Run algorithm first")
 
         # Select the (real) mode shape
-        fn = self.Res.Fn[int(mode_numb - 1)]
-        phi = self.Res.Phi[:, int(mode_numb - 1)].real * scaleF
+        fn = self.res.Fn[int(mode_nr - 1)]
+        phi = self.res.Phi[:, int(mode_nr - 1)].real * scaleF
 
         # APPLY POINTS TO SENSOR MAPPING
-        df_phi_map = dfphi_map_func(phi, geo2.sens_names, geo2.sens_map, cstrn=geo2.cstrn)
+        df_phi_map = dfphi_map_func(
+            phi, self.geo.sens_names, self.geo.sens_map, cstrn=self.geo.cstrn
+        )
         # add together coordinates and mode shape displacement
         newpoints = (
-            geo2.pts_coord.to_numpy() + df_phi_map.to_numpy() * geo2.sens_sign.to_numpy()
+            self.geo.pts_coord.to_numpy()
+            + df_phi_map.to_numpy() * self.geo.sens_sign.to_numpy()
         )
 
         # create fig and ax
-        fig = plt.figure(figsize=(8, 8), tight_layout=True)
-        ax = fig.add_subplot(111, projection="3d")
+        fig, ax = self._create_figure()
+        ax.set_title(f"Mode nr. {mode_nr}, $f_n$={fn:.3f}Hz")
 
-        ax.set_title(f"Mode nr. {mode_numb}, $f_n$={fn:.3f}Hz")
+        self._plot_background(ax, "gray", "gray", "gray")
 
-        # Check that BG nodes are defined
-        if geo2.bg_nodes is not None:
-            # if True plot
-            plt_nodes(ax, geo2.bg_nodes, color="gray", alpha=0.5)
-            # Check that BG lines are defined
-            if geo2.bg_lines is not None:
-                # if True plot
-                plt_lines(ax, geo2.bg_nodes, geo2.bg_lines, color="gray", alpha=0.5)
-            if geo2.bg_surf is not None:
-                # if True plot
-                plt_surf(ax, geo2.bg_nodes, geo2.bg_surf, alpha=0.1)
         # PLOT MODE SHAPE
         if color == "cmap":
-            oldpoints = geo2.pts_coord.to_numpy()[:, :]
+            oldpoints = self.geo.pts_coord.to_numpy()[:, :]
             plt_nodes(ax, newpoints, color="cmap", initial_coord=oldpoints)
 
         else:
             plt_nodes(ax, newpoints, color=color)
         # check for sens_lines
-        if geo2.sens_lines is not None:
+        if self.geo.sens_lines is not None:
             if color == "cmap":
                 plt_lines(
-                    ax, newpoints, geo2.sens_lines, color="cmap", initial_coord=oldpoints
+                    ax,
+                    newpoints,
+                    self.geo.sens_lines,
+                    color="cmap",
+                    initial_coord=oldpoints,
                 )
             else:
-                plt_lines(ax, newpoints, geo2.sens_lines, color=color)
+                plt_lines(ax, newpoints, self.geo.sens_lines, color=color)
 
-        if geo2.sens_surf is not None:
+        if self.geo.sens_surf is not None:
             if color == "cmap":
                 plt_surf(
                     ax,
                     newpoints,
-                    geo2.sens_surf,
+                    self.geo.sens_surf,
                     color="cmap",
                     initial_coord=oldpoints,
                     alpha=0.4,
                 )
             else:
-                plt_surf(ax, newpoints, geo2.sens_surf, color=color, alpha=0.4)
+                plt_surf(ax, newpoints, self.geo.sens_surf, color=color, alpha=0.4)
 
-        # Set ax options
-        set_ax_options(
-            ax,
-            bg_color="w",
-            remove_fill=True,
-            remove_grid=True,
-            remove_axis=True,
-            scaleF=scaleF,
-        )
-
-        # Set view
-        set_view(ax, view=view)
+        self._set_common_options(ax, scaleF, view)
 
         return fig, ax
 
@@ -541,7 +438,7 @@ class MplGeoPlotter:
 # # =============================================================================
 # # DEFINE GEOMETRY
 
-# Geo = Geometry1(
+# Geo1 = Geometry1(
 #         sens_names=Geo[0],
 #         sens_coord=Geo[1],
 #         sens_dir=Geo[2].values,
@@ -551,7 +448,7 @@ class MplGeoPlotter:
 #         bg_surf=Geo[6],
 #         )
 
-# # Geo = Geometry2(
+# # Geo2 = Geometry2(
 # #             sens_names=Geo[0],
 # #             pts_coord=Geo[1],
 # #             sens_map=Geo[2],
@@ -570,14 +467,15 @@ class MplGeoPlotter:
 
 
 # # CREATE PLOTTER
-# Plotter = MplGeoPlotter(Geo,Res)
+# PlotterGeo1 = Geo1MplPlotter(Geo1, Res)
+# PlotterGeo2 = Geo2MplPlotter(Geo2, Res)
 
 # # =============================================================================
 # # GEO1
-# Plotter.plot_geo1(scaleF=8000, )
-# Plotter.plot_mode_g1(mode_numb=6, scaleF=8000)
+# PlotterGeo1.plot_geo(scaleF=8000)
+# PlotterGeo1.plot_mode(mode_nr=6, scaleF=8000)
 
 # # =============================================================================
 # # GEO2
-# # Plotter.plot_geo2(scaleF=8000, )
-# # Plotter.plot_mode_g2(mode_numb=6, scaleF=8000)
+# # PlotterGeo2.plot_geo(scaleF=8000)
+# # PlotterGeo2.plot_mode(mode_nr=6, scaleF=8000)

@@ -8,7 +8,11 @@ from OMA analysis. The module leverages matplotlib's animation capabilities to c
 visualizations that can be interactively viewed or saved as GIFs.
 
 Classes:
-    :class:`.MplGeoPlotter`: A class to animate mode shapes in 3D. It takes geometry and result objects as inputs
+    :class:`.Geo1MplPlotter`: A class to animate mode shapes in 3D specifically for geometry 1. It takes geometry and result objects as inputs
+        and provides functionalities to visualize mode shapes with various customizable
+        options such as scale factor, view type, and others.
+
+    :class:`.Geo2MplPlotter`: A class to animate mode shapes in 3D specifically for geometry 2. It takes geometry and result objects as inputs
         and provides functionalities to visualize mode shapes with various customizable
         options such as scale factor, view type, and others.
 
@@ -22,6 +26,6 @@ Key Features:
     The module is designed for use within the pyOMA2 package. It requires OMA results and
     geometry data specific to the structures being analyzed.
 
-.. automodule:: pyoma2.support.mpl_plotter
+.. automodule:: pyoma2.support.geometry.mpl_plotter
    :members:
    :show-inheritance:

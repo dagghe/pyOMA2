@@ -17,7 +17,7 @@ import numpy as np
 
 from pyoma2.functions import plot
 from pyoma2.setup.base import BaseSetup
-from pyoma2.support.geometry import Geometry1, Geometry2
+from pyoma2.support.geometry import GeometryMixin
 
 if typing.TYPE_CHECKING:
     from pyoma2.algorithms import BaseAlgorithm
@@ -26,7 +26,7 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class SingleSetup(BaseSetup):
+class SingleSetup(BaseSetup, GeometryMixin):
     """
     Class for managing and processing single setup data for Operational Modal Analysis.
 
@@ -62,8 +62,6 @@ class SingleSetup(BaseSetup):
     Ndat: int
     T: float
     algorithms: typing.Dict[str, BaseAlgorithm]
-    geo1: typing.Optional[Geometry1] = None
-    geo2: typing.Optional[Geometry2] = None
 
     def __init__(self, data: np.ndarray, fs: float):
         """

@@ -55,9 +55,9 @@ need to define the geometry of the structure.
    _geo2 = "./src/pyoma2/test_data/3SL/Geo2.xlsx"
 
    # Define geometry1
-   msp.def_geo1_byFILE(_geo1)
+   msp.def_geo1_by_file(_geo1)
    # Define geometry 2
-   msp.def_geo2_byFILE(_geo2)
+   msp.def_geo2_by_file(_geo2)
 
 
 Now we need to instantiate the multi-setup versions of the algorithms
@@ -91,8 +91,8 @@ poles and plot the mode shapes.
          order=80)
 
    # plot mode shapes
-   ssidat.plot_mode_g1(geo1=msp.geo1, mode_nr=1, view="3D", scaleF=2)
-   ssidat.plot_mode_g2(geo2=msp.geo2, mode_nr=6, view="xy", scaleF=2)
+   msp.plot_mode_geo1(alg_res=SSIdat.result, mode_nr=1, view="3D", scaleF=2)
+   ssidat.plot_mode_geo2(geo2=msp.geo2, mode_nr=6, view="xy", scaleF=2)
 
 .. figure:: /img/Ex4-Fig3.png
 .. figure:: /img/Ex4-Fig4.png

@@ -9,7 +9,7 @@ authors = [
     {name = "Diego Federico Margoni", email = "diegofederico.margoni@studenti.polito.it"},
 ]
 dependencies = [
-    "numpy<1.25; python_version < '3.9'",
+    "numpy>=1.20,<1.25; python_version < '3.9'",
     "numpy>=1.25; python_version >= '3.9'",
     "pandas>=2.0.3",
     "scipy>=1.9.3",
@@ -32,8 +32,11 @@ Contributing = "https://github.com/dagghe/pyOMA2/blob/main/CONTRIBUTING.md"
 
 [project.optional-dependencies]
 pyvista = [
-    "pyvista>=0.43.9",
-    "pyvistaqt>=0.11.0",
+    "pyvista[all]",
+    "pyvistaqt",
+    "PyQt5==5.15.10",
+    "PyQt5-Qt5==5.15.2",
+    "PyQt5-sip==12.15.0",
 ]
 openpyxl = [
     "openpyxl>=3.1.3",

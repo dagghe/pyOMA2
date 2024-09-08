@@ -1,16 +1,3 @@
-"""
-This module provides classes for handling geometry-related data, specifically designed
-to store and manipulate sensor and background geometry information. It includes two
-classes: Geometry1 and Geometry2, each offering unique plotting capabilities:
-
-- Geometry1 enables users to visualise mode
-  shapes with arrows that represent the placement, direction, and
-  magnitude of displacement for each sensor.
-- Geometry2 allows for the plotting and
-  animation of mode shapes, with sensors mapped to user defined
-  points.
-"""
-
 from __future__ import annotations
 
 import typing
@@ -23,7 +10,38 @@ from pydantic import BaseModel, ConfigDict
 """TODO fix type"""
 
 
-class Geometry1(BaseModel):
+class BaseGeometry(BaseModel):
+    """
+    Base class for storing and managing sensor and background geometry data.
+
+    Attributes
+    ----------
+    sens_names : List[str]
+        Names of the sensors.
+    sens_lines : numpy.ndarray of shape (n, 2), optional
+        An array representing lines between sensors, where each entry is a pair of
+        sensor indices. Default is None.
+    bg_nodes : numpy.ndarray of shape (m, 3), optional
+        An array of background nodes in 3D space. Default is None.
+    bg_lines : numpy.ndarray of shape (p, 2), optional
+        An array of lines between background nodes, where each entry is a pair of
+        node indices. Default is None.
+    bg_surf : numpy.ndarray of shape (q, 3), optional
+        An array of background surfaces, where each entry is a node index.
+        Default is None.
+    """
+
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+    # MANDATORY
+    sens_names: typing.List[str]
+    # OPTIONAL
+    sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines between sensors
+    bg_nodes: typing.Optional[npt.NDArray[np.float64]] = None  # Background nodes
+    bg_lines: typing.Optional[npt.NDArray[np.int64]] = None  # Background lines
+    bg_surf: typing.Optional[npt.NDArray[np.int64]] = None  # Background surfaces
+
+
+class Geometry1(BaseGeometry):
     """
     Class for storing and managing sensor and background geometry data for Geometry 1.
 
@@ -51,19 +69,12 @@ class Geometry1(BaseModel):
         Default is None.
     """
 
-    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # MANDATORY
-    sens_names: typing.List[str]
     sens_coord: pd.DataFrame  # sensors' coordinates
     sens_dir: npt.NDArray[np.int64]  # sensors' directions
-    # OPTIONAL
-    sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines between sensors
-    bg_nodes: typing.Optional[npt.NDArray[np.float64]] = None  # Background nodes
-    bg_lines: typing.Optional[npt.NDArray[np.int64]] = None  # Background lines
-    bg_surf: typing.Optional[npt.NDArray[np.int64]] = None  # Background surfaces
 
 
-class Geometry2(BaseModel):
+class Geometry2(BaseGeometry):
     """
     Class for storing and managing sensor and background geometry data for Geometry 2.
 
@@ -100,16 +111,10 @@ class Geometry2(BaseModel):
         Default is None.
     """
 
-    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # MANDATORY
-    sens_names: typing.List[str]  # sensors' names
     pts_coord: pd.DataFrame  # points' coordinates
     sens_map: pd.DataFrame  # mapping sensors to points
     # OPTIONAL
     cstrn: typing.Optional[pd.DataFrame] = None
     sens_sign: typing.Optional[pd.DataFrame] = None  # sensors sign
-    sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines between sensors
     sens_surf: typing.Optional[npt.NDArray[np.int64]] = None  # surfaces between sensors
-    bg_nodes: typing.Optional[npt.NDArray[np.float64]] = None  # Background nodes
-    bg_lines: typing.Optional[npt.NDArray[np.int64]] = None  # Background lines
-    bg_surf: typing.Optional[npt.NDArray[np.int64]] = None  # Background surfaces
