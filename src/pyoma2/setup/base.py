@@ -52,8 +52,8 @@ class BaseSetup:
     """
 
     algorithms: typing.Dict[str, BaseAlgorithm]
-    data: typing.Optional[np.ndarray] = None  # TODO use generic typing
-    fs: typing.Optional[float] = None  # sampling frequency
+    data: np.ndarray  # TODO use generic typing
+    fs: float  # sampling frequency
 
     def rollback(self) -> None:
         """
@@ -65,7 +65,7 @@ class BaseSetup:
         raise NotImplementedError("Rollback method must be implemented by subclasses.")
 
     # add algorithm (method) to the set.
-    def add_algorithms(self, *algorithms: BaseAlgorithm):
+    def add_algorithms(self, *algorithms: BaseAlgorithm) -> None:
         """
         Adds algorithms to the setup and configures them with data and sampling frequency.
 
@@ -85,7 +85,7 @@ class BaseSetup:
         }
 
     # run the whole set of algorithms (methods). METODO 1 di tutti
-    def run_all(self):
+    def run_all(self) -> None:
         """
         Runs all the algorithms added to the setup.
 
@@ -102,7 +102,7 @@ class BaseSetup:
         logger.info("all done")
 
     # run algorithm (method) by name. QUESTO è IL METODO 1 di un singolo
-    def run_by_name(self, name: str):
+    def run_by_name(self, name: str) -> None:
         """
         Runs a specific algorithm by its name.
 
@@ -128,7 +128,7 @@ class BaseSetup:
         self[name]._set_result(result)
 
     # get the modal properties (all results).
-    def mpe(self, name: str, *args, **kwargs):
+    def mpe(self, name: str, *args, **kwargs) -> None:
         """
         Extracts modal parameters from selected poles/peaks of a specified algorithm.
 
@@ -150,7 +150,7 @@ class BaseSetup:
         self[name].mpe(*args, **kwargs)
 
     # get the modal properties (all results) from the plots.
-    def mpe_from_plot(self, name: str, *args, **kwargs):
+    def mpe_from_plot(self, name: str, *args, **kwargs) -> None:
         """
         Extracts modal parameters directly from plot selections of a specified algorithm.
 

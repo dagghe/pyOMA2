@@ -13,6 +13,7 @@ import copy
 import logging
 import typing
 
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 
@@ -97,14 +98,14 @@ class MultiSetup_PoSER(GeometryMixin):
         self.__result = None
 
     @property
-    def setups(self):
+    def setups(self) -> typing.List[SingleSetup]:
         """
         Returns the list of SingleSetup instances representing individual measurement setups.
         """
         return self._setups
 
     @setups.setter
-    def setups(self, setups):
+    def setups(self, setups: typing.List[SingleSetup]) -> None:
         """
         Sets the list of SingleSetup instances. Not allowed after initialization.
 
@@ -158,7 +159,7 @@ class MultiSetup_PoSER(GeometryMixin):
         if any(not setup.algorithms for setup in setups):
             raise ValueError("You must pass setups with at least one algorithm")
 
-        self.__alg_ref: typing.Dict[type[BaseAlgorithm], str] = {
+        self.__alg_ref: typing.Dict[type[BaseAlgorithm], typing.Optional[str]] = {
             alg.__class__: alg.name for alg in setups[0].algorithms.values()
         }
 
@@ -213,7 +214,7 @@ class MultiSetup_PoSER(GeometryMixin):
             If the method is called before running algorithms on the setups.
         """
         # group algorithms by type
-        alg_groups: typing.Dict[type[BaseAlgorithm], BaseAlgorithm] = {}
+        alg_groups: typing.Dict[type[BaseAlgorithm], typing.List[BaseAlgorithm]] = {}
         for setup in self.setups:
             for alg in setup.algorithms.values():
                 alg_groups.setdefault(alg.__class__, []).append(alg)
@@ -226,6 +227,7 @@ class MultiSetup_PoSER(GeometryMixin):
             results = []
             for alg in algs:
                 logger.info("Merging %s results", alg.name)
+                assert alg.result, f"Algorithm {alg.name} has no result"
                 all_fn.append(alg.result.Fn)
                 all_xi.append(alg.result.Xi)
                 results.append(alg.result.Phi)
@@ -335,7 +337,7 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         fs: float,
         ref_ind: typing.List[typing.List[int]],
         datasets: typing.List[npt.NDArray[np.float64]],
-    ):
+    ) -> None:
         """
         Pre process the data and set the initial attributes after copying the data.
 
@@ -395,7 +397,7 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         # names: list[list[str]] = None,
         unit: str = "unit",
         show_rms: bool = False,
-    ):
+    ) -> typing.Tuple[plt.Figure, plt.Axes]:
         """
         Plots the time histories of the data channels for selected datasets.
 
@@ -451,7 +453,7 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         logscale: bool = True,
         unit: str = "unit",
-    ):
+    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
         """
         Plot channel information including time history, normalized auto-correlation,
         power spectral density (PSD), probability density function, and normal probability
@@ -506,7 +508,7 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         ch_idx: typing.Union[str, typing.List[int]] = "all",
         freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         win: str = "hann",
-    ):
+    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
         """
         Plot the Short-Time Fourier Transform (STFT) magnitude spectrogram for the specified channels.
 
@@ -559,15 +561,8 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
     def decimate_data(
         self,
         q: int,
-        **kwargs,
-    ) -> typing.Tuple[
-        typing.List[npt.NDArray[np.float64]],
-        npt.NDArray[np.float64],
-        float,
-        float,
-        typing.List[int],
-        typing.List[float],
-    ]:
+        **kwargs: typing.Any,
+    ) -> None:
         """
         Applies decimation to the data using the scipy.signal.decimate function.
 
@@ -637,15 +632,13 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         self.Ndats = Ndats
         self.Ts = Ts
 
-        # return newdatasets, Y, fs, dt, Ndats, Ts
-
     # method to filter data
     def filter_data(
         self,
         Wn: typing.Union[float, typing.Tuple[float, float]],
         order: int = 8,
         btype: str = "lowpass",
-    ) -> npt.NDArray[np.float64]:
+    ) -> None:
         """
         Apply a Butterworth filter to the input data and return the filtered signal.
 
@@ -684,13 +677,12 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
 
         Y = pre_multisetup(newdatasets, self.ref_ind)
         self.data = Y
-        # return Y
 
     # method to detrend data
     def detrend_data(
         self,
-        **kwargs,
-    ) -> npt.NDArray[np.float64]:
+        **kwargs: typing.Any,
+    ) -> None:
         """
         Detrends the data using the scipy.signal.detrend function.
 
@@ -726,4 +718,3 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
 
         Y = pre_multisetup(newdatasets, self.ref_ind)
         self.data = Y
-        # return Y

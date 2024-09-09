@@ -427,7 +427,7 @@ def EFDD_mpe(
     MAClim: float = 0.85,
     sppk: int = 3,
     npmax: int = 20,
-):
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, list]:
     """
     Extracts modal parameters using the Enhanced Frequency Domain Decomposition (EFDD) and
     the Frequency Spatial Domain Decomposition (FSDD) algorithms.

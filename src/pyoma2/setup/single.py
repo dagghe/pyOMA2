@@ -13,6 +13,7 @@ import copy
 import logging
 import typing
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from pyoma2.functions import plot
@@ -116,7 +117,7 @@ class SingleSetup(BaseSetup, GeometryMixin):
         names: typing.Optional[typing.List[str]] = None,
         unit: str = "unit",
         show_rms: bool = False,
-    ):
+    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
         """
         Plots the time histories of the data channels in a subplot format.
 
@@ -155,7 +156,7 @@ class SingleSetup(BaseSetup, GeometryMixin):
         freqlim: typing.Optional[tuple[float, float]] = None,
         logscale: bool = True,
         unit: str = "unit",
-    ):
+    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
         """
         Plot channel information including time history, normalized auto-correlation,
         power spectral density (PSD), probability density function, and normal probability
@@ -207,7 +208,7 @@ class SingleSetup(BaseSetup, GeometryMixin):
         ch_idx: typing.Union[str, typing.List[int]] = "all",
         freqlim: typing.Optional[tuple[float, float]] = None,
         win: str = "hann",
-    ):
+    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
         """
         Plot the Short-Time Fourier Transform (STFT) magnitude spectrogram for the specified channels.
 
@@ -256,7 +257,7 @@ class SingleSetup(BaseSetup, GeometryMixin):
         )
         return fig, ax
 
-    def decimate_data(self, q: int, **kwargs) -> typing.Optional[tuple]:
+    def decimate_data(self, q: int, **kwargs) -> None:
         """
         Decimates the data using the scipy.signal.decimate function.
 
@@ -300,9 +301,8 @@ class SingleSetup(BaseSetup, GeometryMixin):
         self.dt = dt
         self.Ndat = Ndat
         self.T = T
-        # return decimated_data, fs, dt, Ndat, T
 
-    def detrend_data(self, **kwargs) -> typing.Optional[np.ndarray]:
+    def detrend_data(self, **kwargs) -> None:
         """
         Detrends the data using the scipy.signal.detrend function.
 
@@ -333,14 +333,13 @@ class SingleSetup(BaseSetup, GeometryMixin):
         """
         detrended_data = super()._detrend_data(data=self.data, **kwargs)
         self.data = detrended_data
-        # return detrended_data
 
     def filter_data(
         self,
         Wn: typing.Union[float, typing.Tuple[float, float]],
         order: int = 8,
         btype: str = "lowpass",
-    ) -> typing.Optional[np.ndarray]:
+    ) -> None:
         """
         Apply a Butterworth filter to the input data and return the filtered signal.
 
@@ -374,4 +373,3 @@ class SingleSetup(BaseSetup, GeometryMixin):
             btype=btype,
         )
         self.data = filt_data
-        # return filt_data

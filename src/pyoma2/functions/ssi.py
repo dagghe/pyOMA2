@@ -164,7 +164,17 @@ def build_hank(
 # -----------------------------------------------------------------------------
 
 
-def ac2mp(A: np.ndarray, C: np.ndarray, dt: float, calc_unc: bool = False):
+def ac2mp(
+    A: np.ndarray, C: np.ndarray, dt: float, calc_unc: bool = False
+) -> typing.Tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    typing.Optional[np.ndarray],
+    typing.Optional[np.ndarray],
+]:
     """
     Convert state-space matrices to modal parameters with optional uncertainty calculations.
 
@@ -217,7 +227,9 @@ def ac2mp(A: np.ndarray, C: np.ndarray, dt: float, calc_unc: bool = False):
 
 
 # Legacy
-def SSI(H: np.ndarray, br: int, ordmax: int, step: int = 1):
+def SSI(
+    H: np.ndarray, br: int, ordmax: int, step: int = 1
+) -> typing.Tuple[typing.List[np.ndarray], typing.List[np.ndarray]]:
     """
     Perform System Identification using Stochastic Subspace Identification (SSI) method.
 
@@ -279,7 +291,15 @@ def SSI_fast(
     calc_unc: bool = False,
     T: np.ndarray = None,
     nb: int = 100,
-):
+) -> typing.Tuple[
+    typing.List[np.ndarray],
+    typing.List[np.ndarray],
+    typing.Optional[np.ndarray],
+    typing.Optional[np.ndarray],
+    typing.Optional[np.ndarray],
+    typing.Optional[np.ndarray],
+    typing.Optional[np.ndarray],
+]:
     """
     Perform Subspace System Identification (SSI) with optional uncertainty calculations.
 
@@ -430,7 +450,16 @@ def SSI_poles(
     Q2: np.ndarray = None,
     Q3: np.ndarray = None,
     Q4: np.ndarray = None,
-):
+) -> typing.Tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    typing.Optional[np.ndarray],
+    typing.Optional[np.ndarray],
+    typing.Optional[np.ndarray],
+    typing.Optional[np.ndarray],
+]:
     """
     Calculate modal parameters (natural frequencies, damping ratios, mode shapes) for increasing model orders
     using Subspace System Identification (SSI) with optional uncertainty calculations.
@@ -636,7 +665,11 @@ def SSI_multi_setup(
     ordmax: int,
     method_hank: str,
     step: int = 1,
-):
+) -> typing.Tuple[
+    np.ndarray,
+    typing.List[np.ndarray],
+    typing.List[np.ndarray],
+]:
     """
     Perform Subspace System Identification SSI for multiple setup measurements.
 
@@ -753,13 +786,21 @@ def SSI_mpe(
     Fn_pol: np.ndarray,
     Xi_pol: np.ndarray,
     Phi_pol: np.ndarray,
-    order: int,
+    order: typing.Union[int, list, str],
     Lab: typing.Optional[np.ndarray] = None,
     rtol: float = 5e-2,
     Fn_cov: np.ndarray = None,
     Xi_cov: np.ndarray = None,
     Phi_cov: np.ndarray = None,
-):
+) -> typing.Tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    typing.Union[np.ndarray, int],
+    typing.Optional[np.ndarray],
+    typing.Optional[np.ndarray],
+    typing.Optional[np.ndarray],
+]:
     """
     Extract modal parameters using the Stochastic Subspace Identification (SSI) method
     for selected frequencies.

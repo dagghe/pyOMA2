@@ -89,8 +89,8 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         self,
         run_params: typing.Optional[T_RunParams] = None,
         name: typing.Optional[str] = None,
-        *args,
-        **kwargs,
+        *args: typing.Any,
+        **kwargs: typing.Any,
     ):
         """
         Initialize the algorithm with optional run parameters and a name.

@@ -31,7 +31,7 @@ def CMIF_plot(
     nSv: str = "all",
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
-):
+) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plots the Complex Mode Indicator Function (CMIF) based on given singular values and frequencies.
 
@@ -111,7 +111,7 @@ def EFDD_FIT_plot(
     Xi: np.ndarray,
     PerPlot: typing.List[typing.Tuple],
     freqlim: typing.Optional[typing.Tuple] = None,
-):
+) -> typing.Tuple[plt.Figure, typing.List[plt.Axes]]:
     """
     Plot detailed results for the Enhanced Frequency Domain Decomposition (EFDD) and
     the Frequency Spatial Domain Decomposition (FSDD) algorithms.
@@ -249,7 +249,7 @@ def stab_plot(
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
     Fn_cov=None,
-):
+) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plots a stabilization chart of the poles of a system.
 
@@ -365,7 +365,7 @@ def Stab_plot(
     hide_poles: bool = True,
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
-):
+) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plot the stabilization chart for modal analysis.
 
@@ -502,7 +502,7 @@ def cluster_plot(
     ordmin: int = 0,
     freqlim: typing.Optional[typing.Tuple] = None,
     hide_poles: bool = True,
-):
+) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plots the frequency-damping clusters of the identified poles.
 
@@ -574,7 +574,7 @@ def Cluster_plot(
     ordmin: int = 0,
     freqlim: typing.Optional[typing.Tuple] = None,
     hide_poles: bool = True,
-):
+) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plots the frequency-damping clusters of the identified poles using the Stochastic Subspace Identification
     (SSI) method.
@@ -703,7 +703,7 @@ def svalH_plot(
     iter_n: int = None,
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
-):
+) -> typing.Tuple[plt.Figure, plt.Axes]:
     """ """
     if fig is None and ax is None:
         fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
@@ -739,7 +739,7 @@ def plt_nodes(
     alpha: float = 1.0,
     color: str = "k",
     initial_coord: np.ndarray = None,
-):
+) -> plt.Axes:
     """
     Plots nodes coordinates in a 3D scatter plot on the provided axes.
 
@@ -808,7 +808,7 @@ def plt_lines(
     alpha: float = 1.0,
     color: str = "k",
     initial_coord: np.ndarray = None,
-):
+) -> plt.Axes:
     """
     Plots lines between specified nodes in a 3D plot on the provided axes.
 
@@ -891,7 +891,7 @@ def plt_surf(
     alpha: float = 0.5,
     color: str = "cyan",
     initial_coord: np.ndarray = None,
-):
+) -> plt.Axes:
     """
     Plots a 3D surface defined by nodes and surface triangulation on the provided axes.
 
@@ -964,7 +964,7 @@ def plt_quiver(
     names: typing.Optional[typing.List[str]] = None,
     color_text: str = "red",
     method: str = "1",
-):
+) -> plt.Axes:
     """
     Plots vectors (arrows) on a 3D plot to represent directions and magnitudes at given node coordinates.
 
@@ -1048,7 +1048,7 @@ def set_ax_options(
     remove_axis: bool = True,
     add_orig: bool = True,
     scaleF: float = 1,
-):
+) -> plt.Axes:
     """
     Configures various display options for a given matplotlib 3D axes object.
 
@@ -1120,7 +1120,7 @@ def set_ax_options(
 # -----------------------------------------------------------------------------
 
 
-def set_view(ax: plt.Axes, view: str):
+def set_view(ax: plt.Axes, view: str) -> plt.Axes:
     """
     Sets the viewing angle of a 3D matplotlib axes object based on a predefined view option.
 
@@ -1180,7 +1180,7 @@ def plt_data(
     names: typing.Optional[typing.List[str]] = None,
     unit: str = "unit",
     show_rms: bool = False,
-):
+) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
     """
     Plots time series data for multiple channels, with an option to include the Root Mean Square (RMS)
     of each signal.
@@ -1297,7 +1297,7 @@ def plt_ch_info(
     logscale: bool = False,
     ch_idx: typing.Union[int, typing.List[int], str] = "all",
     unit: str = "unit",
-):
+) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
     """
     Plot channel information including time history, normalised auto-correlation,
     power spectral density (PSD), probability density function, and a normal
@@ -1462,7 +1462,7 @@ def STFT(
     win: str = "hann",
     freqlim: typing.Optional[typing.Tuple] = None,
     ch_idx: typing.Union[int, typing.List[int], str] = "all",
-):
+) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
     """
     Perform the Short Time Fourier Transform (STFT) to generate spectrograms for given signal data.
 
@@ -1534,7 +1534,9 @@ def STFT(
     return figs, axs
 
 
-def plot_mac_matrix(array1, array2, colormap="plasma", ax=None):
+def plot_mac_matrix(
+    array1, array2, colormap="plasma", ax=None
+) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Compute and plot the MAC matrix between the columns of two 2D arrays.
 
