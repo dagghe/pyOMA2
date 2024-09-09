@@ -64,7 +64,7 @@ class GeometryMixin:
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.int64] = None,  # Background lines
         bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
-    ):
+    ) -> None:
         """
         Defines the first geometry setup (geo1) for the instance.
 
@@ -135,7 +135,7 @@ class GeometryMixin:
         bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
         bg_lines: npt.NDArray[np.float64] = None,  # Background lines
         bg_surf: npt.NDArray[np.float64] = None,  # Background lines
-    ):
+    ) -> None:
         """
         Defines the second geometry setup (geo2) for the instance.
 
@@ -202,7 +202,9 @@ class GeometryMixin:
             bg_surf=res_ok[9],
         )
 
-    def _def_geo_by_file(self, geo_type: str, path: str, **read_excel_file_kwargs):
+    def _def_geo_by_file(
+        self, geo_type: str, path: str, **read_excel_file_kwargs
+    ) -> None:
         """
         Defines the geometry setup from an Excel file.
 
@@ -260,7 +262,7 @@ class GeometryMixin:
             raise ValueError(f"Invalid geometry type: {geo_type}")
 
     # metodo per definire geometria 1 da file
-    def def_geo1_by_file(self, path: str, **read_excel_file_kwargs):
+    def def_geo1_by_file(self, path: str, **read_excel_file_kwargs) -> None:
         """
         Defines the first geometry (geo1) from an Excel file.
 
@@ -282,7 +284,7 @@ class GeometryMixin:
         """
         self._def_geo_by_file(geo_type="geo1", path=path, **read_excel_file_kwargs)
 
-    def def_geo2_by_file(self, path: str, **read_excel_file_kwargs):
+    def def_geo2_by_file(self, path: str, **read_excel_file_kwargs) -> None:
         """
         Defines the second geometry (geo2) from an Excel file.
 
@@ -315,7 +317,7 @@ class GeometryMixin:
         col_BG_lines: str = "gray",
         col_BG_surf: str = "gray",
         col_txt: str = "red",
-    ):
+    ) -> typing.Tuple[plt.Figure, plt.Axes]:
         """
         Plots the first geometry setup (geo1) using Matplotlib.
 
@@ -381,7 +383,7 @@ class GeometryMixin:
         surf_sett: dict = "default",
         bg_plotter: bool = True,
         notebook: bool = False,
-    ):
+    ) -> "pv.Plotter":
         """
         Plots the second geometry setup (geo2) using PyVista for 3D visualization.
 
@@ -451,7 +453,7 @@ class GeometryMixin:
         col_BG_lines: str = "gray",
         col_BG_surf: str = "gray",
         col_txt: str = "red",
-    ):
+    ) -> typing.Tuple[plt.Figure, plt.Axes]:
         """
         Plots the second geometry setup (geo2) using Matplotlib.
 

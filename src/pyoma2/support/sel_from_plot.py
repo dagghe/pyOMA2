@@ -116,7 +116,7 @@ class SelFromPlot:
         elif self.plot == "FDD":
             self.result = self.sel_freq, None
 
-    def _initialize_gui(self):
+    def _initialize_gui(self) -> None:
         """
         Initializes the Tkinter GUI components.
         """
@@ -169,7 +169,7 @@ class SelFromPlot:
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-    def plot_svPSD(self, update_ticks: bool = False):
+    def plot_svPSD(self, update_ticks: bool = False) -> None:
         """
         Plots the Singular Values of the Power Spectral Density matrix for FDD analysis.
 
@@ -209,7 +209,7 @@ class SelFromPlot:
         self.ax2.grid(True)  # Ensure grid is always displayed
         self.fig.canvas.draw_idle()  # Use draw_idle for better performance and interaction handling
 
-    def get_closest_freq(self):
+    def get_closest_freq(self) -> None:
         """
         Selects the frequency closest to the mouse click location for FDD plots.
         """
@@ -219,7 +219,9 @@ class SelFromPlot:
         self.sel_freq.append(freq[sel])
         self.sort_selected_poles()
 
-    def plot_stab(self, plot: Literal["SSI", "pLSCF"], update_ticks: bool = False):
+    def plot_stab(
+        self, plot: Literal["SSI", "pLSCF"], update_ticks: bool = False
+    ) -> None:
         """
         Plots the stabilization chart for SSI or pLSCF methods.
 
@@ -263,7 +265,7 @@ class SelFromPlot:
         self.ax2.grid(True)  # Ensure grid is always displayed
         self.fig.canvas.draw_idle()  # Use draw_idle for better performance and interaction handling
 
-    def get_closest_pole(self, plot: Literal["SSI", "pLSCF"]):
+    def get_closest_pole(self, plot: Literal["SSI", "pLSCF"]) -> None:
         """
         Selects the pole closest to the mouse click location for SSI or pLSCF plots.
 
@@ -284,7 +286,7 @@ class SelFromPlot:
 
         self.sort_selected_poles()
 
-    def on_click_FDD(self, event):
+    def on_click_FDD(self, event) -> None:
         """
         Handles mouse click events for FDD plots.
 
@@ -312,7 +314,7 @@ class SelFromPlot:
                 self.freq_ind.pop(i)
                 self.plot_svPSD()
 
-    def on_click_SSI(self, event, plot: Literal["SSI", "pLSCF"]):
+    def on_click_SSI(self, event, plot: Literal["SSI", "pLSCF"]) -> None:
         """
         Handles mouse click events for SSI or pLSCF plots.
 
@@ -342,7 +344,7 @@ class SelFromPlot:
                 self.pole_ind.pop(i)
                 self.plot_stab(plot)
 
-    def on_key_press(self, event):
+    def on_key_press(self, event) -> None:
         """
         Handles key press events for interactive pole selection.
 
@@ -354,7 +356,7 @@ class SelFromPlot:
         if event.key == "shift":
             self.shift_is_held = True
 
-    def on_key_release(self, event):
+    def on_key_release(self, event) -> None:
         """
         Handles key release events.
 
@@ -366,14 +368,14 @@ class SelFromPlot:
         if event.key == "shift":
             self.shift_is_held = False
 
-    def on_closing(self):
+    def on_closing(self) -> None:
         """
         Handles the closing event of the Tkinter window.
         """
         self.root.quit()
         self.root.destroy()
 
-    def toggle_legend(self, x: int):
+    def toggle_legend(self, x: int) -> None:
         """
         Toggles the visibility of the legend in the plot.
 
@@ -385,7 +387,7 @@ class SelFromPlot:
         self.show_legend = bool(x)
         self.plot_stab(self.plot)
 
-    def toggle_hide_poles(self, x: int):
+    def toggle_hide_poles(self, x: int) -> None:
         """
         Toggles the visibility of unstable poles in the plot.
 
@@ -397,14 +399,14 @@ class SelFromPlot:
         self.hide_poles = bool(x)
         self.plot_stab(self.plot)
 
-    def sort_selected_poles(self):
+    def sort_selected_poles(self) -> None:
         """
         Sorts the selected poles based on their frequencies.
         """
         sorted_indices = np.argsort(self.sel_freq)
         self.sel_freq = list(np.array(self.sel_freq)[sorted_indices])
 
-    def show_help(self):
+    def show_help(self) -> None:
         """
         Displays a help dialog with instructions for selecting poles.
         """
@@ -417,7 +419,7 @@ class SelFromPlot:
         ]
         tk.messagebox.showinfo("Picking poles", "\n".join(lines))
 
-    def save_this_figure(self):
+    def save_this_figure(self) -> None:
         """
         Saves the current plot to a file.
         """

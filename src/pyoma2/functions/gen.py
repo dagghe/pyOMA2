@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # FUNZIONI GENERALI
 # =============================================================================
-def applymask(list_arr, mask, len_phi):
+def applymask(list_arr, mask, len_phi) -> typing.List[np.ndarray]:
     """
     Apply a mask to a list of arrays, filtering their values based on the mask.
 
@@ -62,7 +62,7 @@ def applymask(list_arr, mask, len_phi):
 # -----------------------------------------------------------------------------
 
 
-def HC_conj(lambd):
+def HC_conj(lambd) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
     Apply Hard validation Criteria (HC), retaining only those elements which have their conjugates also present in the array.
 
@@ -105,7 +105,7 @@ def HC_conj(lambd):
 # -----------------------------------------------------------------------------
 
 
-def HC_damp(damp, max_damp):
+def HC_damp(damp, max_damp) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
     Apply Hard validation Criteria (HC), retaining only those elements which are positive and less than a specified maximum (damping).
 
@@ -135,7 +135,7 @@ def HC_damp(damp, max_damp):
 # -----------------------------------------------------------------------------
 
 
-def HC_phi_comp(phi, mpc_lim, mpd_lim):
+def HC_phi_comp(phi, mpc_lim, mpd_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
     Apply Hard validation Criteria (HC), based on modal phase collinearity (MPC) and modal phase deviation (MPD) limits.
 
@@ -187,7 +187,7 @@ def HC_phi_comp(phi, mpc_lim, mpd_lim):
 # -----------------------------------------------------------------------------
 
 
-def HC_cov(Fn_cov, max_cov):
+def HC_cov(Fn_cov, max_cov) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
     Apply Hard validation Criteria (HC), retaining only those elements which have a covariance less than a specified maximum.
 
@@ -217,7 +217,7 @@ def HC_cov(Fn_cov, max_cov):
 # -----------------------------------------------------------------------------
 
 
-def SC_apply(Fn, Xi, Phi, ordmin, ordmax, step, err_fn, err_xi, err_phi):
+def SC_apply(Fn, Xi, Phi, ordmin, ordmax, step, err_fn, err_xi, err_phi) -> np.ndarray:
     """
     Apply Soft validation Criteria (SC) to determine the stability of modal parameters between consecutive orders.
 
@@ -287,7 +287,7 @@ def SC_apply(Fn, Xi, Phi, ordmin, ordmax, step, err_fn, err_xi, err_phi):
 # -----------------------------------------------------------------------------
 
 
-def dfphi_map_func(phi, sens_names, sens_map, cstrn=None):
+def dfphi_map_func(phi, sens_names, sens_map, cstrn=None) -> pd.DataFrame:
     """
     Maps mode shapes to sensor locations and constraints, creating a dataframe.
 
@@ -337,7 +337,17 @@ def dfphi_map_func(phi, sens_names, sens_map, cstrn=None):
 # -----------------------------------------------------------------------------
 
 
-def check_on_geo1(file_dict, ref_ind=None):
+def check_on_geo1(
+    file_dict, ref_ind=None
+) -> typing.Tuple[
+    typing.List[str],
+    pd.DataFrame,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
     """
     Validates and processes sensor and background geometry data from a dictionary of dataframes.
 
@@ -510,7 +520,20 @@ def check_on_geo1(file_dict, ref_ind=None):
 # -----------------------------------------------------------------------------
 
 
-def check_on_geo2(file_dict, ref_ind=None, fill_na="zero"):
+def check_on_geo2(
+    file_dict, ref_ind=None, fill_na="zero"
+) -> typing.Tuple[
+    typing.List[str],
+    pd.DataFrame,
+    np.ndarray,
+    pd.DataFrame,
+    pd.DataFrame,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
     """
     Validates and processes sensor and background geometry data from a dictionary of dataframes.
 
@@ -763,7 +786,7 @@ def check_on_geo2(file_dict, ref_ind=None, fill_na="zero"):
 # -----------------------------------------------------------------------------
 
 
-def flatten_sns_names(sens_names, ref_ind=None):
+def flatten_sns_names(sens_names, ref_ind=None) -> typing.List[str]:
     """
     Ensures that sensors names is in the correct form (1D list of strings) for both
     single-setup or multi-setup geometries.
@@ -839,7 +862,7 @@ def flatten_sns_names(sens_names, ref_ind=None):
 # -----------------------------------------------------------------------------
 
 
-def example_data():
+def example_data() -> dict:
     """
     This function generates a time history of acceleration for a 5 DOF
     system.
@@ -1368,7 +1391,7 @@ def filter_data(
     Wn: float,
     order: int = 4,
     btype: str = "lowpass",
-):
+) -> np.ndarray:
     """
     Apply a Butterworth filter to the input data.
 
@@ -1415,7 +1438,7 @@ def filter_data(
 # -----------------------------------------------------------------------------
 
 
-def save_to_file(setup: object, file_name: str):
+def save_to_file(setup: object, file_name: str) -> None:
     """
     Save the specified setup instance to a file.
 
@@ -1432,7 +1455,7 @@ def save_to_file(setup: object, file_name: str):
         pickle.dump(setup, f)
 
 
-def load_from_file(file_name: str):
+def load_from_file(file_name: str) -> object:
     """
     Load a setup instance from a file.
 
@@ -1458,7 +1481,7 @@ def read_excel_file(
     sheet_name: typing.Optional[str] = None,
     engine: str = "openpyxl",
     index_col: int = 0,
-    **kwargs,
+    **kwargs: typing.Any,
 ) -> dict:
     """
     Read an Excel file and return its contents as a dictionary.
