@@ -8,15 +8,9 @@ mode shape data from OMA results. The module leverages `PyVista` for rich 3D vis
 supports saving animations as GIFs.
 
 Classes:
-    :class:`.PvGeoPlotter`: A class to animate mode shapes in 3D. It takes geometry and result objects as inputs
-        and provides functionalities to visualize mode shapes with various customizable
-        options such as scale factor, view type, and others.
-
-Key Features:
-    - Animated 3D visualization of mode shapes based on OMA results.
-    - Customizable options for scale factor, view angle, and plot aesthetics.
-    - Supports saving the animation as a GIF file.
-    - Interactive Tkinter window with embedded matplotlib figure for visualization.
+    :class:`.PvGeoPlotter`: A class to plot and animate mode shapes in 3D.
+    It takes geometry and result objects as inputs and provides functionalities to visualize mode
+    shapes with various customizable options such as scale factor, view type, and others.
 
 .. Warning::
     The module is designed for use within the pyOMA2 package. It requires OMA results and

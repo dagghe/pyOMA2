@@ -7,8 +7,6 @@ import numpy.typing as npt
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
-"""TODO fix type"""
-
 
 class BaseGeometry(BaseModel):
     """

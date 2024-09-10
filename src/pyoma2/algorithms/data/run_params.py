@@ -39,7 +39,7 @@ class FDDRunParams(BaseRunParams):
 
     Notes
     -----
-    ``sel_freq`` and ``DF`` are used in the ``mpe`` method.
+    `sel_freq` and `DF` are used in the ``mpe`` method.
     """
 
     # METODO 1: run
@@ -79,7 +79,7 @@ class EFDDRunParams(BaseRunParams):
         Maximum number of peaks to use in the fit, default is 20.
     Notes
     -----
-    ``sel_freq``, ``DF1``, ``DF2``, ``cm``, ``MAClim``, ``sppk`` and ``npmax``
+    `sel_freq`, `DF1`, `DF2`, `cm`, `MAClim`, `sppk` and `npmax`
     are used in the ``mpe`` method.
     """
 
@@ -99,46 +99,52 @@ class EFDDRunParams(BaseRunParams):
 
 class SSIRunParams(BaseRunParams):
     """
-    Class for storing Stochastic Subspace Identification (SSI) run parameters.
+    Parameters for the Stochastic Subspace Identification (SSI) method.
 
     Attributes
     ----------
     br : int
-        Block rows in the Hankel matrix.
-    method_hank : str or None
-        Method used in the SSI algorithm, one of
-        ["data", "cov_mm", "cov_R"].
-    ref_ind : list of int or None
-        List of reference indices, default is None.
-    ordmin : int
-        Minimum order of the model, default is 0.
-    ordmax : int or None
-        Maximum order of the model, default is None.
-    step : int
-        Step size for iterating through model orders, default is 1.
-    err_fn : float
-        Threshold for relative frequency difference, default is 0.01.
-    err_xi : float
-        Threshold for relative damping ratio difference, default is 0.05.
-    err_phi : float
-        Threshold for Modal Assurance Criterion (MAC), default is 0.03.
-    xi_max : float
-        Maximum allowed damping ratio, default is 0.1.
-    mpc_lim : float
-        Minimum Modal Phase Collinearity, default is 0.7.
-    mpd_lim : float
-        Maximum Mean Phase Deviation, default is 0.3.
-    sel_freq : list of float or None
-        List of selected frequencies for modal parameter extraction.
-    order_in : int or str
-        Specified model order for extraction, default is 'find_min'.
-    deltaf : float
-        Frequency bandwidth around each selected frequency, default is 0.05.
-    rtol : float
-        Relative tolerance for comparing frequencies, default is 1e-2.
+        Number of block rows in the Hankel matrix.
+    method_hank : str or None, optional
+        Method used in the SSI algorithm. Options are ['data', 'cov_mm', 'cov_R'].
+        Default is None.
+    ref_ind : list of int or None, optional
+        List of reference indices used for subspace identification. Default is None.
+    ordmin : int, optional
+        Minimum model order for the analysis. Default is 0.
+    ordmax : int or None, optional
+        Maximum model order for the analysis. Default is None.
+    step : int, optional
+        Step size for iterating through model orders. Default is 1.
+    sc : dict, optional
+        Soft criteria for the SSI analysis, including thresholds for relative
+        frequency difference (`err_fn`), damping ratio difference (`err_xi`), and
+        Modal Assurance Criterion (`err_phi`). Default values are {'err_fn': 0.01,
+        'err_xi': 0.05, 'err_phi': 0.03}.
+    hc : dict, optional
+        Hard criteria for the SSI analysis, including settings for presence of
+        complex conjugates (`conj`), maximum damping ratio (`xi_max`),
+        Modal Phase Collinearity (`mpc_lim`), and Mean Phase Deviation (`mpd_lim`)
+        and maximum covariance (`cov_max`). Default values are {'conj': True,
+        'xi_max': 0.1, 'mpc_lim': 0.7, 'mpd_lim': 0.3, 'cov_max': 0.2}.
+    calc_unc : bool, optional
+        Whether to calculate uncertainty. Default is False.
+    nb : int, optional
+        Number of bootstrap samples to use for uncertainty calculations (default is 100).
+    sel_freq : list of float or None, optional
+        List of selected frequencies for modal parameter extraction. Default is None.
+    order_in : int, list of int, or str
+        Specified model order(s) for which the modal parameters are to be extracted.
+        If 'find_min', the function attempts to find the minimum model order that provides
+        stable poles for each mode of interest.
+    rtol : float, optional
+        Relative tolerance for comparing identified frequencies with the selected ones.
+        Default is 5e-2.
+
     Notes
     -----
-    ``sel_freq``, ``order_in``, ``deltaf`` and ``rtol`` are used in the ``mpe`` method.
+    `sel_freq`, `order_in`, and `rtol` are used in the ``mpe`` method to extract
+    modal parameters.
     """
 
     # METODO 1: run
@@ -156,53 +162,55 @@ class SSIRunParams(BaseRunParams):
     nb: int = 100  # number of dataset blocks
     # METODO 2: mpe e mpe_from_plot
     sel_freq: typing.Optional[typing.List[float]] = None
-    order_in: typing.Union[int, str] = "find_min"
+    order_in: typing.Union[int, list, str] = "find_min"
     rtol: float = 5e-2
 
 
 class pLSCFRunParams(BaseRunParams):
     """
-    Class for storing poly-reference Least Square Complex Frequency (pLSCF) run parameters.
+    Parameters for the poly-reference Least Square Complex Frequency (pLSCF) method.
 
     Attributes
     ----------
     ordmax : int
         Maximum order for the analysis.
-    ordmin : int
-        Minimum order for the analysis, default is 0.
-    nxseg : int
-        Number of segments for the PSD estimation, default is 1024.
-    method_SD : str
-        Method used for spectral density estimation, default is 'per'.
-    pov : float
-        Percentage of overlap between the segments (only for "per"), default is 0.5.
-    sgn_basf : int
-        Sign of the basis function, default is -1.
-    step : int
-        Step size for iterating through model orders, default is 1.
-    err_fn : float
-        Threshold for relative frequency difference, default is 0.01.
-    err_xi : float
-        Threshold for relative damping ratio difference, default is 0.05.
-    err_phi : float
-        Threshold for Modal Assurance Criterion (MAC), default is 0.03.
-    xi_max : float
-        Maximum allowed damping ratio, default is 0.1.
-    mpc_lim : float
-        xxx, default is 0.7.
-    mpd_lim : float
-        xxx, default is 0.3.
-    sel_freq : list of float or None
-        List of selected frequencies for modal parameter extraction.
-    order_in : int or str
-        Specified model order for extraction, default is 'find_min'.
-    deltaf : float
-        Frequency bandwidth around each selected frequency, default is 0.05.
-    rtol : float
-        Relative tolerance for comparing frequencies, default is 1e-2.
+    ordmin : int, optional
+        Minimum order for the analysis. Default is 0.
+    nxseg : int, optional
+        Number of segments for the Power Spectral Density (PSD) estimation.
+        Default is 1024.
+    method_SD : str, optional
+        Method used for spectral density estimation. Options are ['per', 'cor'].
+        Default is 'per'.
+    pov : float, optional
+        Percentage of overlap between segments for PSD estimation (only applicable
+        for 'per' method). Default is 0.5.
+    sc : dict, optional
+        Soft criteria for the SSI analysis, including thresholds for relative
+        frequency difference (`err_fn`), damping ratio difference (`err_xi`), and
+        Modal Assurance Criterion (`err_phi`). Default values are {'err_fn': 0.01,
+        'err_xi': 0.05, 'err_phi': 0.03}.
+    hc : dict, optional
+        Hard criteria for the SSI analysis, including settings for presence of
+        complex conjugates (`conj`), maximum damping ratio (`xi_max`),
+        Modal Phase Collinearity (`mpc_lim`), and Mean Phase Deviation (`mpd_lim`)
+        and maximum covariance (`cov_max`). Default values are {'conj': True,
+        'xi_max': 0.1, 'mpc_lim': 0.7, 'mpd_lim': 0.3, 'cov_max': 0.2}.
+    sel_freq : list of float or None, optional
+        List of selected frequencies for modal parameter extraction. Default is None.
+    order_in : int or str, optional
+        Specified model order for extraction. Can be an integer or 'find_min'. Default
+        is 'find_min'.
+    deltaf : float, optional
+        Frequency bandwidth around each selected frequency. Default is 0.05.
+    rtol : float, optional
+        Relative tolerance for comparing identified frequencies with the selected ones.
+        Default is 1e-2.
+
     Notes
     -----
-    ``sel_freq``, ``order_in``, ``deltaf`` and ``rtol`` are used in the ``mpe`` method.
+    `sel_freq`, `order_in`, `deltaf`, and `rtol` are used in the ``mpe`` method to
+    extract modal parameters.
     """
 
     # METODO 1: run
