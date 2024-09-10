@@ -1342,11 +1342,6 @@ def invperm(p: np.ndarray) -> np.ndarray:
     -------
     ndarray
         An array representing the inverse permutation of `p`.
-
-    Example
-    -------
-    >>> invperm(np.array([3, 0, 2, 1]))
-    array([1, 3, 2, 0])
     """
     q = np.empty_like(p)
     q[p] = np.arange(len(p))
@@ -1371,11 +1366,6 @@ def find_map(arr1: np.ndarray, arr2: np.ndarray) -> np.ndarray:
     -------
     ndarray
         An array of indices that maps the sorted version of `arr1` to the sorted version of `arr2`.
-
-    Example
-    -------
-    >>> find_map(np.array([10, 30, 20]), np.array([3, 2, 1]))
-    array([2, 0, 1])
     """
     o1 = np.argsort(arr1)
     o2 = np.argsort(arr2)
@@ -1486,8 +1476,8 @@ def read_excel_file(
     """
     Read an Excel file and return its contents as a dictionary.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     path : str
         The path to the Excel file.
     sheet_name : str, optional
@@ -1499,13 +1489,13 @@ def read_excel_file(
     **kwargs : dict, optional
         Additional keyword arguments to pass to pd.read_excel.
 
-    Returns:
-    --------
+    Returns
+    -------
     dict
         A dictionary containing the contents of the Excel file, with sheet names as keys.
 
-    Raises:
-    -------
+    Raises
+    ------
     ImportError
         If the specified engine is not available.
     RuntimeError

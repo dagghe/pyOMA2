@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
 
 class GeometryMixin:
     """
-    Mixin that gives the ability to define geometry setups for the instance.
+    Mixin that gives the ability to define the geometry the instance of the setup class.
 
     This mixin provides methods to define the geometry setups for the instance, including
     sensor names, coordinates, directions, and optional elements like lines, surfaces, and
@@ -602,8 +602,8 @@ class GeometryMixin:
 
         Parameters
         ----------
-        algo_res : MsPoserResult
-            The result object containing modal parameters and mode shape data from the PoSER algorithm.
+        algo_res : BaseResult
+            The result object containing modal parameters and mode shape data.
         mode_nr : int, optional
             The mode number to be plotted. Default is 1.
         scaleF : float, optional
@@ -676,7 +676,7 @@ class GeometryMixin:
         Parameters
         ----------
         algo_res : BaseResult
-            The result object containing modal parameters and mode shape data from the PoSER algorithm.
+            The result object containing modal parameters and mode shape data.
         mode_nr : int, optional
             The mode number to be plotted. If None, the default mode is plotted.
         scaleF : int, optional
@@ -731,7 +731,7 @@ class GeometryMixin:
         Parameters
         ----------
         algo_res : BaseResult
-            The result object containing modal parameters and mode shape data from the PoSER algorithm.
+            The result object containing modal parameters and mode shape data.
         mode_nr : int, optional
             The mode number to animate. Default is 1.
         scaleF : float, optional
