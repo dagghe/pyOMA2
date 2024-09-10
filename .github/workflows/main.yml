@@ -11,10 +11,9 @@ on:
 
 jobs:
   test:
-
     runs-on: ${{ matrix.os }}
-
     strategy:
+      fail-fast: false  # allows all matrix jobs to complete
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -35,33 +34,9 @@ jobs:
     - name: Install tkinter for Ubuntu
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install -y python3-tk
-      continue-on-error: true
 
     - name: Install PDM
       run: python -m pip install pdm==2.17.2
-      continue-on-error: true
-
-    - name: Generate lock file (Linux and macOS)
-      if: matrix.os != 'windows-latest'
-      run: |
-        if [ "${{ matrix.python-version }}" == "3.8" ]; then
-          pdm lock --python="==3.8.*" --lockfile=pdm-py38.lock
-        else
-          pdm lock --python=">=3.9" --lockfile=pdm-py39+.lock
-        fi
-      shell: bash
-      continue-on-error: true
-
-    - name: Generate lock file (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        if (${{ matrix.python-version }} -eq "3.8") {
-          pdm lock --python="==3.8.*" --lockfile=pdm-py38.lock
-        } else {
-          pdm lock --python=">=3.9" --lockfile=pdm-py39+.lock
-        }
-      shell: pwsh
-      continue-on-error: true
 
     - name: Install dependencies (Linux and macOS)
       if: matrix.os != 'windows-latest'
@@ -72,7 +47,6 @@ jobs:
           pdm install --lockfile=pdm-py39+.lock --without docs
         fi
       shell: bash
-      continue-on-error: true
 
     - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
@@ -83,8 +57,26 @@ jobs:
           pdm install --lockfile=pdm-py39+.lock --without docs
         }
       shell: pwsh
-      continue-on-error: true
 
     - name: Run tests
       run: pdm run pytest
-      continue-on-error: true  # Allow the workflow to proceed even if tests fail
+      continue-on-error: true
+
+    - name: Set job status
+      if: failure()
+      run: echo "job_status=failure" >> $GITHUB_ENV
+      shell: bash
+
+  check_failures:
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check for failures
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "One or more jobs failed"
+            exit 1
+          else
+            echo "All jobs succeeded"
+          fi
