@@ -22,38 +22,124 @@ Windows:
 (Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py -UseBasicParsing).Content | python -
 ```
 
-Add PATH to environment manager and then run this command to install all the dependencies
+Add PATH to environment manager and then run the appropriate command to install all the dependencies based on your Python version and operating system:
 
-Install dependencies for python ==3.8
+### For Python 3.8
 
+Linux:
 ```shell
-pdm install --lockfile=pdm-py38.lock
+pdm install --lockfile=pdm-py38unix.lock
 ```
 
-Install dependencies for python >=3.9
-
+Windows:
 ```shell
-pdm install --lockfile=pdm-py39+.lock
+pdm install --lockfile=pdm-py38win.lock
 ```
 
-Having this per-python version lockfiles also adding a new package should reference the correct lockfile, for example:
-
+macOS:
 ```shell
-pdm add requests --lockfile=pdm-py39+.lock
+pdm install --lockfile=pdm-py38macos.lock
 ```
 
-Install pre-commit
+### For Python 3.9 and above
+
+Linux:
+```shell
+pdm install --lockfile=pdm-py39+unix.lock
+```
+
+Windows:
+```shell
+pdm install --lockfile=pdm-py39+win.lock
+```
+
+macOS:
+```shell
+pdm install --lockfile=pdm-py39+macos.lock
+```
+
+### Using requirements.txt files
+
+The corresponding `requirements.txt` files are generated during pre-commit hooks and located in the `/requirements` folder.
+
+### Adding new packages
+
+When adding a new package, make sure to update the correct lock file(s). For example:
+
+For Python 3.8 (all platforms):
+```shell
+pdm add <package_name> --lockfile=pdm-py38.lock
+```
+
+For Python 3.9+ (Linux/Windows):
+```shell
+pdm add <package_name> --lockfile=pdm-py39+.lock
+```
+
+For Python 3.9+ (macOS):
+```shell
+pdm add <package_name> --lockfile=pdm-py39+macos.lock
+```
+
+Remember to update all relevant lock files when adding or updating dependencies.
+
+### Regenerate the lock file
+
+If you need to regenerate the lock file, you can use the following command:
+
+```shell
+# Example for macos and Python 3.8
+pdm lock --python="==3.8.*" --platform=macos --with pyvista --with openpyxl --lockfile=pdm-py38macos.lock
+```
+
+```shell
+# Example for Windows and Python 3.9+
+pdm lock --python="==3.8.*" --platform=windows --with pyvista --with openpyxl --lockfile=pdm-py39+win.lock
+```
+
+```shell
+# Example for Linux and Python 3.9+
+pdm lock --python="==3.8.*" --platform=linux --with pyvista --with openpyxl --lockfile=pdm-py39+unix.lock
+```
+
+### Install pre-commit
 
 ```shell
 pdm run pre-commit install --hook-type pre-commit --hook-type pre-push
 ```
- Run the project
 
- Linux/MAC
+## Run the project
 
- ```shell
- pdm run src/pyoma2/main.py
- ```
+Linux/MAC:
+```shell
+pdm run src/pyoma2/main.py
+```
+
+## Updating lock files
+
+To update the lock files for different platforms and Python versions, use the following commands:
+
+For Python 3.8 (Linux/Windows):
+```shell
+pdm lock --python="3.8" --lockfile=pdm-py38.lock
+```
+
+For Python 3.8 (macOS):
+```shell
+pdm lock --python="3.8" --platform=macos --lockfile=pdm-py38macos.lock
+```
+
+For Python 3.9+ (Linux/Windows):
+```shell
+pdm lock --python=">=3.9" --lockfile=pdm-py39+.lock
+```
+
+For Python 3.9+ (macOS):
+```shell
+pdm lock --python=">=3.9" --platform=macos --lockfile=pdm-py39+macos.lock
+```
+
+Make sure to update all relevant lock files when making changes to the project dependencies.
 
 Windows
 

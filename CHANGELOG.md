@@ -26,6 +26,7 @@ to help running the migration to new version.
 - file `src/pyoma2/test_data/Template_Geometry2.xlsx`
 - file `src/pyoma2/test_data/palisaden/Geo1.xlsx`
 - file `src/pyoma2/test_data/palisaden/Geo2.xlsx`
+- platform specific installation in github workflow and requirements extraction in pre-commit
 
 
 ### Changed
