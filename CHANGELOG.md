@@ -103,7 +103,7 @@ to help running the migration to new version.
 - file `src/pyoma2/test_data/palisaden/sens_sign.txt`
 - function `pyoma2/functions/ssi.py::Lab_stab_SSI`
 - function `pyoma2/functions/gen.py::lab_stab`
-
+- support in testing for `python3.8` and `macos` due to `vtk` dependency that is not compatible with platform using during tests action
 
 ## [0.6.0] - 2024-09-06
 
