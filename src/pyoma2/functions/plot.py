@@ -1180,7 +1180,7 @@ def plt_data(
     names: typing.Optional[typing.List[str]] = None,
     unit: str = "unit",
     show_rms: bool = False,
-) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
+) -> typing.Tuple[plt.Figure, np.ndarray]:
     """
     Plots time series data for multiple channels, with an option to include the Root Mean Square (RMS)
     of each signal.
@@ -1297,7 +1297,7 @@ def plt_ch_info(
     logscale: bool = False,
     ch_idx: typing.Union[int, typing.List[int], str] = "all",
     unit: str = "unit",
-) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
+) -> typing.Tuple[plt.Figure, np.ndarray]:
     """
     Plot channel information including time history, normalised auto-correlation,
     power spectral density (PSD), probability density function, and a normal
@@ -1462,7 +1462,7 @@ def STFT(
     win: str = "hann",
     freqlim: typing.Optional[typing.Tuple] = None,
     ch_idx: typing.Union[int, typing.List[int], str] = "all",
-) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
+) -> typing.Tuple[plt.Figure, np.ndarray]:
     """
     Perform the Short Time Fourier Transform (STFT) to generate spectrograms for given signal data.
 
