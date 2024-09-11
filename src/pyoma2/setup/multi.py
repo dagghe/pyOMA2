@@ -453,7 +453,7 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         logscale: bool = True,
         unit: str = "unit",
-    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
+    ) -> typing.Tuple[plt.Figure, np.ndarray]:
         """
         Plot channel information including time history, normalized auto-correlation,
         power spectral density (PSD), probability density function, and normal probability
@@ -508,7 +508,7 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         ch_idx: typing.Union[str, typing.List[int]] = "all",
         freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         win: str = "hann",
-    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
+    ) -> typing.Tuple[plt.Figure, np.ndarray]:
         """
         Plot the Short-Time Fourier Transform (STFT) magnitude spectrogram for the specified channels.
 

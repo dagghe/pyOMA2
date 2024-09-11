@@ -117,7 +117,7 @@ class SingleSetup(BaseSetup, GeometryMixin):
         names: typing.Optional[typing.List[str]] = None,
         unit: str = "unit",
         show_rms: bool = False,
-    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
+    ) -> typing.Tuple[plt.Figure, np.ndarray]:
         """
         Plots the time histories of the data channels in a subplot format.
 
@@ -156,7 +156,7 @@ class SingleSetup(BaseSetup, GeometryMixin):
         freqlim: typing.Optional[tuple[float, float]] = None,
         logscale: bool = True,
         unit: str = "unit",
-    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
+    ) -> typing.Tuple[plt.Figure, np.ndarray]:
         """
         Plot channel information including time history, normalized auto-correlation,
         power spectral density (PSD), probability density function, and normal probability
@@ -208,7 +208,7 @@ class SingleSetup(BaseSetup, GeometryMixin):
         ch_idx: typing.Union[str, typing.List[int]] = "all",
         freqlim: typing.Optional[tuple[float, float]] = None,
         win: str = "hann",
-    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
+    ) -> typing.Tuple[plt.Figure, np.ndarray]:
         """
         Plot the Short-Time Fourier Transform (STFT) magnitude spectrogram for the specified channels.
 
