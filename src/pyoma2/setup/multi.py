@@ -52,13 +52,15 @@ class MultiSetup_PoSER(GeometryMixin):
 
     Attributes
     ----------
+    ref_ind : List[List[int]]
+        Indices of reference sensors for each dataset, as a list of lists.
+    setups : List[SingleSetup]
+        A list of SingleSetup instances representing individual measurement setups.
+    names : List[str]
+        A list of names for the algorithms used in each setup. Used to retrieve results.
     __result : Optional[Dict[str, MsPoserResult]]
         Private attribute to store the merged results from multiple setups. Each entry in the
         dictionary corresponds to a specific algorithm used across setups, with its results.
-    __alg_ref : Optional[Dict[type[BaseAlgorithm], str]]
-        Private attribute to store references to the algorithms used in the setups. It maps
-        each algorithm type to its corresponding name.
-
     Warning
     -------
     The PoSER approach assumes that the setups used are compatible in terms of their experimental
@@ -66,7 +68,6 @@ class MultiSetup_PoSER(GeometryMixin):
     """
 
     __result: typing.Optional[typing.Dict[str, MsPoserResult]] = None
-    __alg_ref: typing.Optional[typing.Dict[type[BaseAlgorithm], str]] = None
 
     def __init__(
         self,
@@ -83,6 +84,9 @@ class MultiSetup_PoSER(GeometryMixin):
             Reference indices for merging results from different setups.
         single_setups : List[SingleSetup]
             A list of SingleSetup instances to be merged using the PoSER approach.
+        names : List[str]
+            A list of names for the algorithms used in each setup. Used to retrieve results.
+            Te list must be len as the number of algorithms in each setup.
 
         Raises
         ------
@@ -160,10 +164,20 @@ class MultiSetup_PoSER(GeometryMixin):
 
         algo_instances = [setup.algorithms.values() for setup in setups]
 
+        # The following validation ensures that each list of algorithms has the same set of algorithm classes.
+        # This means that the order and presence of each class must be consistent across all lists.
+        # For example:
+        # [[fdd, ssi], [fdd, ssi], [fdd, ssi]] is valid (same order and presence)
+        # [[fdd, fdd], [fdd, fdd], [fdd, fdd]] is valid (same order and presence)
+        # [[fdd, ssi], [fdd, ssi], [fdd, fdd]] is not valid (different presence in the last list)
+        # [[fdd, ssi], [fdd, ssi], [ssi, fdd]] is not valid (different order in the last list)
+        # [[fdd, ssi], [fdd, ], [ssi, fdd]] is not valid (different presence in the second list)
         if not all(
-            algos.__class__ == algo_instances[0].__class__ for algos in algo_instances[1:]
+            [type(algo) for algo in algos] == [type(algo) for algo in algo_instances[0]]
+            for algos in algo_instances
         ):
             raise ValueError("The algorithms must be consistent between setups")
+
         if len(self.names) != len(setups[0].algorithms):
             raise ValueError("The number of names must match the number of algorithms")
 

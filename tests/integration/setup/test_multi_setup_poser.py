@@ -22,8 +22,13 @@ def test_geo1(ms_poser: MultiSetup_PoSER) -> None:
 
     # Merging results from single setups
     result = ms_poser.merge_results()
+
+    # access the result with custom names defined on initialization
+    NR_ALG_IN_EACH_SETUP = 1
+    assert "the_coolest_algo" in result
+    assert len(result) == NR_ALG_IN_EACH_SETUP
     # define results variable
-    algo_res = result["SSIcov"]
+    algo_res = result["the_coolest_algo"]
 
     # PLOTE_MODE_G1
     try:
@@ -57,12 +62,16 @@ def test_geo2(ms_poser: MultiSetup_PoSER) -> None:
     # Merging results from single setups
     result = ms_poser.merge_results()
     # define results variable
-    # algoRes = result[SSIcov.__name__]
-    algoRes = result["SSIcov"]
+    # access the result with custom names defined on initialization
+    NR_ALG_IN_EACH_SETUP = 1
+    assert "the_coolest_algo" in result
+    assert len(result) == NR_ALG_IN_EACH_SETUP
+    # define results variable
+    algo_res = result["the_coolest_algo"]
 
     # PLOTE_MODE_G2
     try:
-        _ = ms_poser.plot_mode_geo2(algo_res=algoRes, mode_nr=1, scaleF=3, notebook=True)
+        _ = ms_poser.plot_mode_geo2(algo_res=algo_res, mode_nr=1, scaleF=3, notebook=True)
         # assert isinstance(fig, Figure)
         # assert isinstance(ax, Axes)
     except Exception as e:
