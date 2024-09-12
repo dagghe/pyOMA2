@@ -12,9 +12,10 @@ variable
     import matplotlib.pyplot as plt
     from pyoma2.algorithms import pLSCF,FSDD,SSIcov
     from pyoma2.setup import SingleSetup
+    from pyoma2.support.utils.example_data import get_sample_data
 
     # load example dataset for single setup
-    data = np.load("./src/pyoma2/test_data/palisaden/Palisaden_dataset.npy", allow_pickle=True)
+    data = np.load(get_sample_data(filename="Palisaden_dataset.npy", folder="palisaden"), allow_pickle=True)
 
 Now we can proceed to instantiate the SingleSetup class, passing the
 dataset and the sampling frequency as parameters
@@ -38,8 +39,8 @@ different method available that offers unique plotting capabilities:
 
 .. code:: python
 
-    _geo1 =  r"../src/pyoma2/test_data/palisaden/Geo1.xlsx"
-    _geo2 =  r"../src/pyoma2/test_data/palisaden/Geo2.xlsx"
+    _geo1 =  get_sample_data(filename="Geo1.xlsx", folder="palisaden")
+    _geo2 =  get_sample_data(filename="Geo2.xlsx", folder="palisaden")
 
     Pali_ss.def_geo1_by_file(_geo1)
     Pali_ss.def_geo2_by_file(_geo2)

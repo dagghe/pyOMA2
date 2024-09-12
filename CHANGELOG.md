@@ -84,26 +84,27 @@ to help running the migration to new version.
 ### Removed
 
 - file `src/pyoma2/plot/anim_mode.py` now handled by pyvista
-- file `src/pyoma2/test_data/3SL/BG_lines.txt`
-- file `src/pyoma2/test_data/3SL/BG_nodes.txt`
-- file `src/pyoma2/test_data/3SL/geom.xlsx`
-- file `src/pyoma2/test_data/3SL/pts_coord.txt`
-- file `src/pyoma2/test_data/3SL/sens_coord.txt`
-- file `src/pyoma2/test_data/3SL/sens_dir.txt`
-- file `src/pyoma2/test_data/3SL/sens_lines.txt`
-- file `src/pyoma2/test_data/3SL/sens_map.txt`
-- file `src/pyoma2/test_data/3SL/sens_sign.txt`
-- file `src/pyoma2/test_data/palisaden/BG_lines.txt'`
-- file `src/pyoma2/test_data/palisaden/BG_nodes.txt`
-- file `src/pyoma2/test_data/palisaden/geom_pali.xlsx`
-- file `src/pyoma2/test_data/palisaden/pts_coord.txt`
-- file `src/pyoma2/test_data/palisaden/sens_dir.txt`
-- file `src/pyoma2/test_data/palisaden/sens_lines.txt`
-- file `src/pyoma2/test_data/palisaden/sens_map.txt`
-- file `src/pyoma2/test_data/palisaden/sens_sign.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/3SL/BG_lines.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/3SL/BG_nodes.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/3SL/geom.xlsx`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/3SL/pts_coord.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/3SL/sens_coord.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/3SL/sens_dir.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/3SL/sens_lines.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/3SL/sens_map.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/3SL/sens_sign.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/palisaden/BG_lines.txt'`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/palisaden/BG_nodes.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/palisaden/geom_pali.xlsx`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/palisaden/pts_coord.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/palisaden/sens_dir.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/palisaden/sens_lines.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/palisaden/sens_map.txt`
+- file `https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/palisaden/sens_sign.txt`
 - function `pyoma2/functions/ssi.py::Lab_stab_SSI`
 - function `pyoma2/functions/gen.py::lab_stab`
 - support in testing for `python3.8` and `macos` due to `vtk` dependency that is not compatible with platform using during tests action
+- File for example are now retrieved from the online repo https://github.com/dagghe/pyOMA-test-data/tree/main/test_data and removed from the repo
 
 ## [0.6.0] - 2024-09-06
 

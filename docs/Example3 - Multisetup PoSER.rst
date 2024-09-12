@@ -9,6 +9,7 @@ Example3 - Multisetup with Post Separate Estimation Re-scaling (PoSER) method
 
    from pyoma2.algorithms import SSIcov
    from pyoma2.setup import MultiSetup_PoSER, SingleSetup
+   from pyoma2.support.utils.example_data import get_sample_data
 
 For the **PoSER** approach, after importing the necessary modules and loading
 the data, the next step is to create a separate instance of the single setup
@@ -25,9 +26,9 @@ The exact natural frequencies of the system are:
 .. code:: python
 
    # import data files
-   set1 = np.load("./src/pyoma2/test_data/3SL/set1.npy", allow_pickle=True)
-   set2 = np.load("./src/pyoma2/test_data/3SL/set2.npy", allow_pickle=True)
-   set3 = np.load("./src/pyoma2/test_data/3SL/set3.npy", allow_pickle=True)
+   set1 = np.load(get_sample_data(filename="set1.npy", folder="3SL"), allow_pickle=True)
+   set2 = np.load(get_sample_data(filename="set2.npy", folder="3SL"), allow_pickle=True)
+   set3 = np.load(get_sample_data(filename="set3.npy", folder="3SL"), allow_pickle=True)
 
    # create single setup
    ss1 = SingleSetup(set1, fs=100)
@@ -115,9 +116,9 @@ geometry on it and then plot or animate the mode shapes
 .. code:: python
 
    # Geometry 1
-   _geo1 = "./src/pyoma2/test_data/3SL/Geo1.xlsx"
+   _geo1 = get_sample_data(filename="Geo1.xlsx", folder="3SL")
    # Geometry 2
-   _geo2 = "./src/pyoma2/test_data/3SL/Geo2.xlsx"
+   _geo2 = get_sample_data(filename="Geo2.xlsx", folder="3SL")
 
    # Define geometry1
    msp.def_geo1_by_file(_geo1)
