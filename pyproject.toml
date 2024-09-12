@@ -1,6 +1,6 @@
 [project]
 name = "pyOMA_2"
-version = "0.6.0"
+version = "1.0.0"
 description = "Python module for conducting Operational Modal Analysis"
 authors = [
     {name = "Dag Pasca", email = "dpa@treteknisk.no"},
@@ -38,7 +38,8 @@ pyvista = [
     "PyQt5-Qt5==5.15.2; sys_platform != 'darwin'",
     "PyQt5-Qt5==5.15.14; sys_platform == 'darwin'",
     "PyQt5-sip==12.15.0",
-    "vtk @ https://files.pythonhosted.org/packages/b3/15/40f8264f1b5379f12caf0e5153006a61c1f808937877c996e907610e8f23/vtk-9.3.1-cp38-cp38-macosx_10_10_x86_64.whl ; python_version == '3.8' and sys_platform == 'darwin'",
+    # # For macOS with Python 3.8, users will need to manually install the specific vtk wheel
+    # "vtk @ https://files.pythonhosted.org/packages/b3/15/40f8264f1b5379f12caf0e5153006a61c1f808937877c996e907610e8f23/vtk-9.3.1-cp38-cp38-macosx_10_10_x86_64.whl ; python_version == '3.8' and sys_platform == 'darwin'",
     "vtk==9.3.1; python_version != '3.8' or sys_platform != 'darwin'",
 ]
 openpyxl = [
