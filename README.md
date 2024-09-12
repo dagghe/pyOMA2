@@ -5,7 +5,7 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Test Pyoma2](https://github.com/dagghe/pyOMA2/actions/workflows/main.yml/badge.svg?branch=main&event=push)](https://github.com/dagghe/pyOMA2/actions/workflows/main.yml)
 ![downloads](https://img.shields.io/pepy/dt/pyOMA-2)
-[![docs](https://img.shields.io/readthedocs/pyoma)](https://pyoma.readthedocs.io/en/main/)
+[![docs](https://readthedocs.org/projects/pyoma/badge/?version=main)](https://pyoma.readthedocs.io/en/main/)
 _______________________
 
 This is the new and updated version of pyOMA module, a Python module designed for conducting operational modal analysis.
