@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import sys
 import typing
 import unittest.mock
@@ -11,6 +12,10 @@ if typing.TYPE_CHECKING:
 import numpy as np
 import pytest
 from pyoma2.algorithms import SSIcov
+from pyoma2.support.utils.sample_data import (
+    SAMPLE_DATA_DEFAULT_LOCAL_DIR,
+    get_sample_data,
+)
 
 from .factory import FakeAlgorithm, FakeAlgorithm2, FakeResult, FakeRunParams
 
@@ -74,10 +79,9 @@ def fake_single_setup_fixture_with_param() -> typing.Generator[SingleSetup, None
 @pytest.fixture(scope="session")
 def single_setup_data_fixture():
     """Fixture for SingleSetup data"""
-    # load example dataset for single setup
-    data = np.load(
-        "./src/pyoma2/test_data/palisaden/Palisaden_dataset.npy", allow_pickle=True
-    )
+    # mock with repeatable random the palisaden/Palisaden_dataset.npy data
+    np.random.seed(42)
+    data = np.random.rand(540_000, 6)
 
     # import geometry files
     # Names of the channels
@@ -124,11 +128,9 @@ def single_setup_fixture(
 @pytest.fixture(scope="session")
 def multi_setup_data_fixture():
     """Fixture for MultiSetup data"""
-    # import data files
-    set1 = np.load("./src/pyoma2/test_data/3SL/set1.npy", allow_pickle=True)
-    set2 = np.load("./src/pyoma2/test_data/3SL/set2.npy", allow_pickle=True)
-    set3 = np.load("./src/pyoma2/test_data/3SL/set3.npy", allow_pickle=True)
-
+    set1 = np.load(get_sample_data(filename="set1.npy", folder="3SL"), allow_pickle=True)
+    set2 = np.load(get_sample_data(filename="set2.npy", folder="3SL"), allow_pickle=True)
+    set3 = np.load(get_sample_data(filename="set3.npy", folder="3SL"), allow_pickle=True)
     yield (
         set1,
         set2,
@@ -260,3 +262,15 @@ def mock_imports():
 
         subplots.side_effect = subplots_side_effect
         yield mock_figure, mock_show, subplots
+
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_sample_data_dir():
+    """
+    Fixture to delete the SAMPLE_DATA_DEFAULT_LOCAL_DIR after all tests have run.
+    """
+    yield
+    # Cleanup code to delete the directory
+    if SAMPLE_DATA_DEFAULT_LOCAL_DIR.exists() and SAMPLE_DATA_DEFAULT_LOCAL_DIR.is_dir():
+        shutil.rmtree(SAMPLE_DATA_DEFAULT_LOCAL_DIR)
+        print(f"Deleted directory: {SAMPLE_DATA_DEFAULT_LOCAL_DIR}")

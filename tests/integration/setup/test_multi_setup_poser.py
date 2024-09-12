@@ -16,7 +16,7 @@ def test_geo1(ms_poser: MultiSetup_PoSER) -> None:
         ms_poser.plot_geo1()
     assert "geo1 is not defined. Call def_geo1 first." in str(e.value)
 
-    ms_poser.def_geo1_by_file(path="./src/pyoma2/test_data/3SL/Geo1.xlsx")
+    ms_poser.def_geo1_by_file(path="./tests/test_data/3SL/Geo1.xlsx")
 
     assert ms_poser.geo1 is not None
 
@@ -50,7 +50,7 @@ def test_geo2(ms_poser: MultiSetup_PoSER) -> None:
         ms_poser.plot_geo2()
     assert "geo2 is not defined. Call def_geo2 first." in str(e.value)
 
-    ms_poser.def_geo2_by_file(path="./src/pyoma2/test_data/3SL/Geo2.xlsx")
+    ms_poser.def_geo2_by_file(path="./tests/test_data/3SL/Geo2.xlsx")
 
     assert ms_poser.geo2 is not None
 

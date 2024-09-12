@@ -13,7 +13,7 @@ def test_geo1(ms_preger: MultiSetup_PreGER) -> None:
     # Test that the geometric is not defined
     assert ms_preger.geo1 is None
 
-    ms_preger.def_geo1_by_file(path="./src/pyoma2/test_data/3SL/Geo1.xlsx")
+    ms_preger.def_geo1_by_file(path="./tests/test_data/3SL/Geo1.xlsx")
 
     assert ms_preger.geo1 is not None
 
@@ -26,7 +26,7 @@ def test_geo2(ms_preger: MultiSetup_PreGER) -> None:
     # Test that the geometric is not defined
     assert ms_preger.geo2 is None
 
-    ms_preger.def_geo2_by_file(path="./src/pyoma2/test_data/3SL/Geo2.xlsx")
+    ms_preger.def_geo2_by_file(path="./tests/test_data/3SL/Geo2.xlsx")
 
     assert ms_preger.geo2 is not None
 
@@ -122,10 +122,10 @@ def test_run(ms_preger: MultiSetup_PreGER) -> None:
     Test the running of the algorithms in the MultiSetup_PreGER class.
     """
     # Define geometry1
-    ms_preger.def_geo1_by_file(path="./src/pyoma2/test_data/3SL/Geo1.xlsx")  # BG lines
+    ms_preger.def_geo1_by_file(path="./tests/test_data/3SL/Geo1.xlsx")  # BG lines
 
     # Define geometry 2
-    ms_preger.def_geo2_by_file(path="./src/pyoma2/test_data/3SL/Geo2.xlsx")
+    ms_preger.def_geo2_by_file(path="./tests/test_data/3SL/Geo2.xlsx")
 
     # Initialise the algorithms
     ssidat = SSIdat_MS(name="SSIdat", br=5, ordmax=5)

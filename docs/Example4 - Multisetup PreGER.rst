@@ -9,6 +9,7 @@ Example4 - Multisetup with Pre Global Estimation Re-scaling (PreGER) method
 
    from pyoma2.algorithms import SSIdat_MS
    from pyoma2.setup import MultiSetup_PreGER
+   from pyoma2.support.utils.example_data import get_sample_data
 
 For the **preGER** merging procedure, we adopt a strategy similar to that used
 for the single setup class. The first step involves instantiating the
@@ -21,9 +22,9 @@ tools to pre-process the data and get more information regarding its quality
 .. code:: python
 
    # import data files
-   set1 = np.load("./src/pyoma2/test_data/3SL/set1.npy", allow_pickle=True)
-   set2 = np.load("./src/pyoma2/test_data/3SL/set2.npy", allow_pickle=True)
-   set3 = np.load("./src/pyoma2/test_data/3SL/set3.npy", allow_pickle=True)
+   set1 = np.load(get_sample_data(filename="set1.npy", folder="3SL")), allow_pickle=True)
+   set2 = np.load(get_sample_data(filename="set2.npy", folder="3SL")), allow_pickle=True)
+   set3 = np.load(get_sample_data(filename="set3.npy", folder="3SL")), allow_pickle=True)
 
    # list of datasets and reference indices
    data = [set1, set2, set3]
@@ -50,9 +51,9 @@ need to define the geometry of the structure.
 .. code:: python
 
    # Geometry 1
-   _geo1 = "./src/pyoma2/test_data/3SL/Geo1.xlsx"
+   _geo1 = get_sample_data(filename="Geo1.xlsx", folder="3SL")
    # Geometry 2
-   _geo2 = "./src/pyoma2/test_data/3SL/Geo2.xlsx"
+   _geo2 = get_sample_data(filename="Geo2.xlsx", folder="3SL")
 
    # Define geometry1
    msp.def_geo1_by_file(_geo1)

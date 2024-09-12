@@ -107,7 +107,7 @@ def test_geo1(single_setup_data_fixture, ss: SingleSetup) -> None:
 
     # DEFINE THE GEOMETRY
     ss.def_geo1_by_file(
-        path="./src/pyoma2/test_data/palisaden/Geo1.xlsx",
+        path="./tests/test_data/palisaden/Geo1.xlsx",
     )
 
     # Test the initialization of the Geometry
@@ -278,7 +278,7 @@ def test_geo2(
     assert "geo2 is not defined. Call def_geo2 first." in str(e.value)
 
     # DEFINE THE GEOMETRY
-    ss.def_geo2_by_file(path="./src/pyoma2/test_data/palisaden/Geo2.xlsx")
+    ss.def_geo2_by_file(path="./tests/test_data/palisaden/Geo2.xlsx")
 
     # Test the initialization of the Geometry
     assert ss.geo2 is not None
@@ -348,7 +348,7 @@ def test_plot_data(
     # test DETREND_DATA method
     initial_shape = ss.data.shape
     ss.detrend_data()
-    assert math.isclose(ss.data[0][0], 0.0026762160166322584)
+    assert math.isclose(ss.data[0][0], -0.12528615865785814)
     assert ss.data.shape == initial_shape
     # rollback the data
     ss.rollback()
@@ -360,7 +360,7 @@ def test_plot_data(
     # test FILTER_DATA method
     initial_shape = ss.data.shape
     ss.filter_data(Wn=1, order=1, btype="lowpass")
-    assert math.isclose(ss.data[0][0], 0.001905473721713953)
+    assert math.isclose(ss.data[0][0], 0.41342428991383917)
     assert ss.data.shape == initial_shape
     # rollback the data
     ss.rollback()
@@ -390,11 +390,11 @@ def test_run(ss: SingleSetup) -> None:
 
     # Define geometry1
     ss.def_geo1_by_file(
-        path="./src/pyoma2/test_data/palisaden/Geo1.xlsx",
+        path="./tests/test_data/palisaden/Geo1.xlsx",
     )
 
     # Define geometry 2
-    ss.def_geo2_by_file(path="./src/pyoma2/test_data/palisaden/Geo2.xlsx")
+    ss.def_geo2_by_file(path="./tests/test_data/palisaden/Geo2.xlsx")
 
     # Initialise the algorithms
     fdd = FDD(name="FDD")
