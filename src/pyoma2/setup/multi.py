@@ -48,10 +48,7 @@ class MultiSetup_PoSER(GeometryMixin):
     """
     Class for conducting Operational Modal Analysis (OMA) on multi-setup experiments using
     the Post Separate Estimation Re-scaling (PoSER) approach. This approach is designed to
-    merge and analyze data from multiple experimental setups for comprehensive modal analysis.
-
-    The PoSER method is particularly useful in situations where data from different setups
-    need to be combined to enhance the understanding of the system's modal properties.
+    merge and analyze data from multiple experimental setups for operational modal analysis.
 
     Attributes
     ----------
@@ -75,6 +72,7 @@ class MultiSetup_PoSER(GeometryMixin):
         self,
         ref_ind: typing.List[typing.List[int]],
         single_setups: typing.List[SingleSetup],
+        names: typing.List[str],
     ):
         """
         Initializes the MultiSetup_PoSER instance with reference indices and a list of SingleSetup instances.
@@ -91,6 +89,7 @@ class MultiSetup_PoSER(GeometryMixin):
         ValueError
             If any of the provided setups are invalid or incompatible.
         """
+        self.names = names
         self._setups = [
             el for el in self._init_setups(setups=single_setups if single_setups else [])
         ]
@@ -154,38 +153,21 @@ class MultiSetup_PoSER(GeometryMixin):
         ValueError
             If there are issues with the provided setups or algorithms.
         """
-        if len(setups) == 0:
-            raise ValueError("You must pass at least one setup")
+        if len(setups) <= 1:
+            raise ValueError("You must pass at least two setup")
         if any(not setup.algorithms for setup in setups):
             raise ValueError("You must pass setups with at least one algorithm")
 
-        self.__alg_ref: typing.Dict[type[BaseAlgorithm], typing.Optional[str]] = {
-            alg.__class__: alg.name for alg in setups[0].algorithms.values()
-        }
+        algo_instances = [setup.algorithms.values() for setup in setups]
+
+        if not all(
+            algos.__class__ == algo_instances[0].__class__ for algos in algo_instances[1:]
+        ):
+            raise ValueError("The algorithms must be consistent between setups")
+        if len(self.names) != len(setups[0].algorithms):
+            raise ValueError("The number of names must match the number of algorithms")
 
         for i, setup in enumerate(setups):
-            tot_alg = len(setup.algorithms)
-            tot__alg_ref = len(self.__alg_ref)
-            if tot_alg > tot__alg_ref:
-                # check for duplicates algorithms in a setup
-                duplicates = [
-                    (alg.__class__, alg.name)
-                    for alg in setup.algorithms.values()
-                    if alg.name not in self.__alg_ref.values()
-                ]
-                raise ValueError(
-                    f"You must pass distinct algorithms for setup {i+1}. Duplicates: {duplicates}"
-                )
-            if tot_alg < tot__alg_ref:
-                # check for missing algorithms in a setup
-                setup_algs = [alg.__class__ for alg in setup.algorithms.values()]
-                missing = [
-                    alg_cl for alg_cl in self.__alg_ref if alg_cl not in setup_algs
-                ]
-                raise ValueError(
-                    f"You must pass all algorithms for setup {i+1}. Missing: {missing}"
-                )
-
             logger.debug("Initializing %s/%s setups", i + 1, len(setups))
             for alg in setup.algorithms.values():
                 if not alg.result or alg.result.Fn is None:
@@ -214,23 +196,23 @@ class MultiSetup_PoSER(GeometryMixin):
             If the method is called before running algorithms on the setups.
         """
         # group algorithms by type
-        alg_groups: typing.Dict[type[BaseAlgorithm], typing.List[BaseAlgorithm]] = {}
+        alg_groups: typing.Dict[str, typing.List[BaseAlgorithm]] = {}
         for setup in self.setups:
-            for alg in setup.algorithms.values():
-                alg_groups.setdefault(alg.__class__, []).append(alg)
+            for ii, alg in enumerate(setup.algorithms.values()):
+                alg_groups.setdefault(self.names[ii], []).append(alg)
 
-        for alg_cl, algs in alg_groups.items():
-            logger.info("Merging %s results", alg_cl.__name__)
+        for alg_name, algs in alg_groups.items():
+            alg_cl = algs[0].__class__
+            logger.info("Merging %s results for %s group", alg_cl.__name__, alg_name)
             # get the reference algorithm
             all_fn = []
             all_xi = []
-            results = []
+            all_phi = []
             for alg in algs:
                 logger.info("Merging %s results", alg.name)
-                assert alg.result, f"Algorithm {alg.name} has no result"
                 all_fn.append(alg.result.Fn)
                 all_xi.append(alg.result.Xi)
-                results.append(alg.result.Phi)
+                all_phi.append(alg.result.Phi)
 
             # Convert lists to numpy arrays
             all_fn = np.array(all_fn)
@@ -242,12 +224,12 @@ class MultiSetup_PoSER(GeometryMixin):
 
             fn_cov = np.std(all_fn, axis=0) / fn_mean
             xi_cov = np.std(all_xi, axis=0) / xi_mean
-            Phi = merge_mode_shapes(MSarr_list=results, reflist=self.ref_ind)
+            Phi = merge_mode_shapes(MSarr_list=all_phi, reflist=self.ref_ind)
 
             if self.__result is None:
                 self.__result = {}
 
-            self.__result[alg_cl.__name__] = MsPoserResult(
+            self.__result[alg_name] = MsPoserResult(
                 Phi=Phi,
                 Fn=fn_mean,
                 Fn_cov=fn_cov,
@@ -453,7 +435,7 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         logscale: bool = True,
         unit: str = "unit",
-    ) -> typing.Tuple[plt.Figure, np.ndarray]:
+    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
         """
         Plot channel information including time history, normalized auto-correlation,
         power spectral density (PSD), probability density function, and normal probability
@@ -508,7 +490,7 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         ch_idx: typing.Union[str, typing.List[int]] = "all",
         freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         win: str = "hann",
-    ) -> typing.Tuple[plt.Figure, np.ndarray]:
+    ) -> typing.Tuple[plt.Figure, np.ndarray[plt.Axes]]:
         """
         Plot the Short-Time Fourier Transform (STFT) magnitude spectrogram for the specified channels.
 

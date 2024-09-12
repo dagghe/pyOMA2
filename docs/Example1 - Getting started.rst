@@ -110,4 +110,14 @@ Now we can now access all the results and compare them to the exact solution
 
     _, _ = plot_mac_matrix(ssidat_res['Phi'].real, ground_truth[1])
 
+    >>> the natural frequencies are: [0.891 2.596 4.097 5.263 5.998]
+    >>> the dampings are: [0.022 0.019 0.025 0.019 0.019]
+    >>> the (column-wise) mode shape matrix:
+        [[ 0.312  0.773  1.     0.926  0.537]
+        [ 0.545  1.     0.279 -0.762 -0.912]
+        [ 0.774  0.541 -0.912 -0.283  1.   ]
+        [ 0.985 -0.285 -0.534  1.    -0.738]
+        [ 1.    -0.942  0.749 -0.544  0.279]]
+
+
 .. image:: /img/Ex1-Fig3.png
