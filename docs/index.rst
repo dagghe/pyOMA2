@@ -135,6 +135,6 @@ References
    :alt: Downloads
    :target: https://img.shields.io/pepy/dt/pyOMA-2
 
-.. |docs| image:: https://img.shields.io/readthedocs/pyoma
-   :alt: docs
-   :target: https://img.shields.io/readthedocs/pyoma
+.. |docs| image:: https://readthedocs.org/projects/pyoma/badge/?version=main
+    :target: https://pyoma.readthedocs.io/en/main/?badge=main
+    :alt: Documentation Status
