@@ -6,24 +6,20 @@ on:
       - main
   pull_request:
     branches:
-        - main
+      - main
   workflow_dispatch:
 
 jobs:
   test:
-
     runs-on: ${{ matrix.os }}
-
     strategy:
+      fail-fast: false  # Continue running jobs even if a previous job fails
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         os: [ubuntu-latest, windows-latest, macos-latest]
         exclude:
-          # fail on installation of pywinpty
-          - os: windows-latest
-            python-version: "3.11"
-          - os: windows-latest
-            python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.8"
 
     steps:
     - uses: actions/checkout@v4
@@ -40,8 +36,55 @@ jobs:
     - name: Install PDM
       run: python -m pip install pdm==2.17.2
 
-    - name: Install dependencies
-      run: pdm install --without docs
+    - name: Install dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        if [ "${{ matrix.python-version }}" == "3.8" ]; then
+          pdm install --lockfile=pdm-py38unix.lock --without docs
+        else
+          pdm install --lockfile=pdm-py39+unix.lock --without docs
+        fi
+      shell: bash
+
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        if [ "${{ matrix.python-version }}" == "3.8" ]; then
+          pdm install --lockfile=pdm-py38macos.lock --without docs
+        else
+          pdm install --lockfile=pdm-py39+macos.lock --without docs
+        fi
+      shell: bash
+
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        if (${{ matrix.python-version }} -eq "3.8") {
+          pdm install --lockfile=pdm-py38win.lock --without docs
+        } else {
+          pdm install --lockfile=pdm-py39+win.lock --without docs
+        }
+      shell: pwsh
 
     - name: Run tests
       run: pdm run pytest
+      continue-on-error: false
+
+    - name: Set job status
+      if: failure()
+      run: echo "job_status=failure" >> $GITHUB_ENV
+      shell: bash
+
+  check_failures:
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check for failures
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "One or more jobs failed"
+            exit 1
+          else
+            echo "All jobs succeeded"
+          fi

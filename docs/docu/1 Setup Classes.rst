@@ -22,7 +22,7 @@ Classes:
 The ``SingleSetup`` class
 -------------------------
 
-.. autoclass:: pyoma2.OMA.SingleSetup
+.. autoclass:: pyoma2.setup.single.SingleSetup
    :members:
    :inherited-members:
    :show-inheritance:
@@ -30,14 +30,14 @@ The ``SingleSetup`` class
 The ``MultiSetup_PoSER`` class
 ------------------------------
 
-.. autoclass:: pyoma2.OMA.MultiSetup_PoSER
+.. autoclass:: pyoma2.setup.multi.MultiSetup_PoSER
    :members:
    :show-inheritance:
 
 The ``MultiSetup_PreGER`` class
 -------------------------------
 
-.. autoclass:: pyoma2.OMA.MultiSetup_PreGER
+.. autoclass:: pyoma2.setup.multi.MultiSetup_PreGER
    :members:
    :inherited-members:
    :show-inheritance:

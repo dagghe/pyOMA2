@@ -1,9 +1,9 @@
 from typing import Any
 
 import pytest
-from pyoma2.algorithm import BaseAlgorithm
-from pyoma2.algorithm.data.run_params import BaseRunParams
-from pyoma2.OMA import SingleSetup
+from pyoma2.algorithms import BaseAlgorithm
+from pyoma2.algorithms.data.run_params import BaseRunParams
+from pyoma2.setup import SingleSetup
 
 
 def test_child_algo_must_define_run_param_cls():
@@ -20,8 +20,8 @@ def test_child_algo_must_define_run_param_cls():
             def mpe(self, *args, **kwargs) -> Any:
                 return super().mpe(*args, **kwargs)
 
-            def mpe_fromPlot(self, *args, **kwargs) -> Any:
-                return super().mpe_fromPlot(*args, **kwargs)
+            def mpe_from_plot(self, *args, **kwargs) -> Any:
+                return super().mpe_from_plot(*args, **kwargs)
 
     assert "RunParamCls must be defined in subclasses of BaseAlgorithm" in str(
         excinfo.value
@@ -44,8 +44,8 @@ def test_run_param_cls_is_subclass_of_base_run_params():
             def mpe(self, *args, **kwargs) -> Any:
                 return super().mpe(*args, **kwargs)
 
-            def mpe_fromPlot(self, *args, **kwargs) -> Any:
-                return super().mpe_fromPlot(*args, **kwargs)
+            def mpe_from_plot(self, *args, **kwargs) -> Any:
+                return super().mpe_from_plot(*args, **kwargs)
 
     assert "RunParamCls must be defined in subclasses of BaseAlgorithm" in str(
         excinfo.value
@@ -67,8 +67,8 @@ def test_child_algo_must_define_result_cls():
             def mpe(self, *args, **kwargs) -> Any:
                 return super().mpe(*args, **kwargs)
 
-            def mpe_fromPlot(self, *args, **kwargs) -> Any:
-                return super().mpe_fromPlot(*args, **kwargs)
+            def mpe_from_plot(self, *args, **kwargs) -> Any:
+                return super().mpe_from_plot(*args, **kwargs)
 
     assert "ResultCls must be defined in subclasses of BaseAlgorithm" in str(
         excinfo.value
@@ -92,8 +92,8 @@ def test_result_cls_is_subclass_of_base_result():
             def mpe(self, *args, **kwargs) -> Any:
                 return super().mpe(*args, **kwargs)
 
-            def mpe_fromPlot(self, *args, **kwargs) -> Any:
-                return super().mpe_fromPlot(*args, **kwargs)
+            def mpe_from_plot(self, *args, **kwargs) -> Any:
+                return super().mpe_from_plot(*args, **kwargs)
 
     assert "ResultCls must be defined in subclasses of BaseAlgorithm" in str(
         excinfo.value

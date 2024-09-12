@@ -19,9 +19,59 @@ repos:
         args: [ --fix ]
         # Run the formatter.
     -   id: ruff-format
+# export python requirements
+# LINUX 3.8
+-   repo: https://github.com/pdm-project/pdm
+    rev: 2.17.2
+    hooks:
+      - id: pdm-export
+        name: pdm-export-py38unix
+        args: ['-o', 'requirements/requirementspy38unix.txt', '--without-hashes', '-L', 'pdm-py38unix.lock']
+        files: ^pdm-py38unix.lock$
+# LINUX 3.9+
+-   repo: https://github.com/pdm-project/pdm
+    rev: 2.17.2
+    hooks:
+      - id: pdm-export
+        name: pdm-export-py39+unix
+        args: ['-o', 'requirements/requirementspy39+unix.txt', '--without-hashes', '-L', 'pdm-py39+unix.lock']
+        files: ^pdm-py39\+unix.lock$
+# WINDOWS 3.8
+-   repo: https://github.com/pdm-project/pdm
+    rev: 2.17.2
+    hooks:
+      - id: pdm-export
+        name: pdm-export-py38win
+        args: ['-o', 'requirements/requirementspy38win.txt', '--without-hashes', '-L', 'pdm-py38win.lock']
+        files: ^pdm-py38win.lock$
+# WINDOWS 3.9+
+-   repo: https://github.com/pdm-project/pdm
+    rev: 2.17.2
+    hooks:
+      - id: pdm-export
+        name: pdm-export-py39+win
+        args: ['-o', 'requirements/requirementspy39+win.txt', '--without-hashes', '-L', 'pdm-py39+win.lock']
+        files: ^pdm-py39\+win.lock$
+# MACOS 3.8
+-   repo: https://github.com/pdm-project/pdm
+    rev: 2.17.2
+    hooks:
+      - id: pdm-export
+        name: pdm-export-py38mac
+        args: ['-o', 'requirements/requirementspy38mac.txt', '--without-hashes', '-L', 'pdm-py38macos.lock']
+        files: ^pdm-py38macos.lock$
+# MACOS 3.9+
+-   repo: https://github.com/pdm-project/pdm
+    rev: 2.17.2
+    hooks:
+      - id: pdm-export
+        name: pdm-export-py39\+mac
+        args: ['-o', 'requirements/requirementspy39+mac.txt', '--without-hashes', '-L', 'pdm-py39+macos.lock']
+        files: ^pdm-py39\+macos.lock$
+
 #     # Mypy
 # -   repo: https://github.com/pre-commit/mirrors-mypy
 #     rev: v1.9.0
 #     hooks:
 #     -   id: mypy
-#         args: [--python-version=3.8, --ignore-missing-imports, --explicit-package-bases, ]
+#         args: [--python-version=38, --ignore-missing-imports, --explicit-package-bases, ]
