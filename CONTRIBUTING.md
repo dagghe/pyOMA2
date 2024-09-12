@@ -37,6 +37,10 @@ pdm install --lockfile=pdm-py38win.lock
 ```
 
 macOS:
+If you are using macOS with Python 3.8, you need to manually install the `vtk` package due to compatibility issues. You can do this by running the following command:
+
+```sh
+pip install https://files.pythonhosted.org/packages/b3/15/40f8264f1b5379f12caf0e5153006a61c1f808937877c996e907610e8f23/vtk-9.3.1-cp38-cp38-macosx_10_10_x86_64.whl
 ```shell
 pdm install --lockfile=pdm-py38macos.lock
 ```
@@ -66,14 +70,24 @@ The corresponding `requirements.txt` files are generated during pre-commit hooks
 
 When adding a new package, make sure to update the correct lock file(s). For example:
 
-For Python 3.8 (all platforms):
+For Python 3.8 Windows
 ```shell
-pdm add <package_name> --lockfile=pdm-py38.lock
+pdm add <package_name> --lockfile=pdm-py38win.lock
 ```
 
-For Python 3.9+ (Linux/Windows):
+For Python 3.8 Linux
 ```shell
-pdm add <package_name> --lockfile=pdm-py39+.lock
+pdm add <package_name> --lockfile=pdm-py38unix.lock
+```
+
+For Python 3.8 (macOS):
+```shell
+pdm add <package_name> --lockfile=pdm-py38macos.lock
+```
+
+For Python 3.9+ Linux
+```shell
+pdm add <package_name> --lockfile=pdm-py39+unix.lock
 ```
 
 For Python 3.9+ (macOS):
