@@ -1,6 +1,0 @@
-The ``result`` module
----------------------
-
-.. automodule:: pyoma2.algorithm.data.result
-   :members:
-   :show-inheritance:

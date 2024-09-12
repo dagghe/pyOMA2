@@ -1,12 +1,15 @@
-The ``plscf`` module
-====================
+The ``plscf`` algorithm module
+==============================
 
-Bla bla bla
+This module implements the Poly-reference Least Square Complex Frequency (pLSCF) algorithm [PAGL04]_,
+a robust identification method in the frequency domain. It is specifically designed for both single and
+multi-setup experimental scenarios. The module includes classes and methods for process measurement data,
+extract modal parameters and visualisation tools.
 
 Classes:
-   :class:`.pLSCF_algo`
+   :class:`.pLSCF`
       Implements the Data-Driven SSI algorithm for single setup.
-   :class:`.pLSCF_algo_MS`
+   :class:`.pLSCF_MS`
       Implements the Covariance-Driven SSI algorithm for single setup.
 
 .. Important::
@@ -17,18 +20,18 @@ Classes:
    Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
 
 
-The ``pLSCF_algo`` class
+The ``pLSCF`` class
 -------------------------
 
-.. autoclass:: pyoma2.algorithm.plscf.pLSCF_algo
+.. autoclass:: pyoma2.algorithms.plscf.pLSCF
    :members:
    :inherited-members:
    :show-inheritance:
 
-The ``pLSCF_algo_MS`` class
+The ``pLSCF_MS`` class
 -------------------------
 
-.. autoclass:: pyoma2.algorithm.plscf.pLSCF_algo_MS
+.. autoclass:: pyoma2.algorithms.plscf.pLSCF_MS
    :members:
    :inherited-members:
    :show-inheritance:

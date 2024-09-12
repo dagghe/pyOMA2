@@ -1,6 +1,0 @@
-The ``BaseSetup`` class
------------------------
-
-.. autoclass:: pyoma2.OMA.BaseSetup
-   :members:
-   :show-inheritance:

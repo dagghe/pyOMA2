@@ -1,6 +1,0 @@
-The ``BaseAlgorithm`` class
----------------------------
-
-.. autoclass:: pyoma2.algorithm.base.BaseAlgorithm
-   :members:
-   :show-inheritance:

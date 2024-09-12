@@ -1,6 +1,0 @@
-The ``geometry`` module
------------------------
-
-.. automodule:: pyoma2.algorithm.data.geometry
-   :members:
-   :show-inheritance:

@@ -8,11 +8,12 @@ Support classes
 .. toctree::
    :maxdepth: 1
 
-   3_1
-   3_2
-   3_3
-   3_4
-   3_5
-   3_6
-   3_7
-   3_8
+   3_1 BaseSetup
+   3_2 BaseAlgorithm
+   3_3 geometry module
+   3_4 result module
+   3_5 run_param module
+   3_6 sel_from_plot module
+   3_7a mpl plotter
+   3_7b pyvista plotter
+   3_8 logging_handler
