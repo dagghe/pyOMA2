@@ -19,36 +19,30 @@ def test_init_single_setup(ss: SingleSetup) -> None:
 
 
 @pytest.mark.parametrize(
-    "init_kwargs, algorithms, run_first, expected_exception, expected_message",
+    "init_kwargs, algorithms, names, run_first, expected_exception, expected_message",
     [
+        # 1. No setups
         (
-            {"ref_ind": [], "single_setups": []},
-            {},
-            False,
-            ValueError,
-            "You must pass at least one setup",
+            {"ref_ind": [], "single_setups": []},  # init_kwargs
+            {},  # algorithms
+            [],  # names
+            False,  # run_first
+            ValueError,  # expected_exception
+            "You must pass at least two setup",  # expected_message
         ),
+        # 2. Only one setup
         (
-            {"ref_ind": [], "single_setups": [SingleSetup(np.zeros((10, 10)), fs=100)]},
-            {},
-            False,
-            ValueError,
-            "You must pass setups with at least one algorithm",
+            {
+                "ref_ind": [],
+                "single_setups": [SingleSetup(np.zeros((10, 10)), fs=100)],
+            },  # init_kwargs
+            {0: [FakeAlgorithm(name="one")]},  # algorithms
+            ["one"],  # names
+            False,  # run_first
+            ValueError,  # expected_exception
+            "You must pass at least two setup",  # expected_message
         ),
-        (
-            {"ref_ind": [], "single_setups": [SingleSetup(np.zeros((10, 10)), fs=100)]},
-            {0: [FakeAlgorithm(name="one"), FakeAlgorithm(name="two")]},
-            False,
-            ValueError,
-            "You must pass distinct algorithms for setup 1. Duplicates: ",
-        ),
-        (
-            {"ref_ind": [], "single_setups": [SingleSetup(np.zeros((10, 10)), fs=100)]},
-            {0: [FakeAlgorithm(name="one")]},
-            False,
-            ValueError,
-            "You must pass Single setups that have already been run",
-        ),
+        # 3. Setups with no algorithms
         (
             {
                 "ref_ind": [],
@@ -56,7 +50,68 @@ def test_init_single_setup(ss: SingleSetup) -> None:
                     SingleSetup(np.zeros((10, 10)), fs=100),
                     SingleSetup(np.zeros((10, 10)), fs=100),
                 ],
-            },
+            },  # init_kwargs
+            {},  # algorithms
+            ["one"],  # names
+            False,  # run_first
+            ValueError,  # expected_exception
+            "You must pass setups with at least one algorithm",  # expected_message
+        ),
+        # 4. Names len different from nr of algorithms
+        (
+            {
+                "ref_ind": [],
+                "single_setups": [
+                    SingleSetup(np.zeros((10, 10)), fs=100),
+                    SingleSetup(np.zeros((10, 10)), fs=100),
+                ],
+            },  # init_kwargs
+            {
+                0: [
+                    FakeAlgorithm(run_params=FakeAlgorithm.RunParamCls(param1=1)),
+                ],
+                1: [
+                    FakeAlgorithm(run_params=FakeAlgorithm.RunParamCls(param1=1)),
+                ],
+            },  # algorithms
+            ["one", "two", "three"],  # names
+            False,  # run_first
+            ValueError,  # expected_exception
+            "The number of names must match the number of algorithms",  # expected_message
+        ),
+        # 5. Algorithm in setup not ran
+        (
+            {
+                "ref_ind": [],
+                "single_setups": [
+                    SingleSetup(np.zeros((10, 10)), fs=100),
+                    SingleSetup(np.zeros((10, 10)), fs=100),
+                ],
+            },  # init_kwargs
+            {
+                0: [
+                    FakeAlgorithm(run_params=FakeAlgorithm.RunParamCls(param1=1)),
+                ],
+                1: [
+                    FakeAlgorithm(run_params=FakeAlgorithm.RunParamCls(param1=1)),
+                ],
+            },  # algorithms
+            [
+                "one",
+            ],  # names
+            False,  # run_first
+            ValueError,  # expected_exception
+            "You must pass Single setups that have already been run",  # expected_message
+        ),
+        # 6. Setup with less algorithms than expected
+        (
+            {
+                "ref_ind": [],
+                "single_setups": [
+                    SingleSetup(np.zeros((10, 10)), fs=100),
+                    SingleSetup(np.zeros((10, 10)), fs=100),
+                ],
+            },  # init_kwargs
             {
                 0: [
                     FakeAlgorithm(run_params=FakeAlgorithm.RunParamCls(param1=1)),
@@ -65,23 +120,78 @@ def test_init_single_setup(ss: SingleSetup) -> None:
                 1: [
                     FakeAlgorithm(run_params=FakeAlgorithm.RunParamCls(param1=1)),
                 ],
-            },
+            },  # algorithms
+            ["one", "two"],
             True,
             ValueError,
-            "You must pass all algorithms for setup ",
+            "The algorithms must be consistent between setups",
+        ),
+        # 7. Setup with different order of algorithms
+        (
+            {
+                "ref_ind": [],
+                "single_setups": [
+                    SingleSetup(np.zeros((10, 10)), fs=100),
+                    SingleSetup(np.zeros((10, 10)), fs=100),
+                ],
+            },  # init_kwargs
+            {
+                0: [
+                    FakeAlgorithm(run_params=FakeAlgorithm.RunParamCls(param1=1)),
+                    FakeAlgorithm2(run_params=FakeAlgorithm2.RunParamCls(param1=1)),
+                ],
+                1: [
+                    # order is inverted
+                    FakeAlgorithm2(run_params=FakeAlgorithm2.RunParamCls(param1=1)),
+                    FakeAlgorithm(run_params=FakeAlgorithm.RunParamCls(param1=1)),
+                ],
+            },  # algorithms
+            ["one", "two"],
+            True,
+            ValueError,
+            "The algorithms must be consistent between setups",
+        ),
+        # 8. Setup with different order of algorithms
+        (
+            {
+                "ref_ind": [],
+                "single_setups": [
+                    SingleSetup(np.zeros((10, 10)), fs=100),
+                    SingleSetup(np.zeros((10, 10)), fs=100),
+                ],
+            },  # init_kwargs
+            {
+                0: [
+                    FakeAlgorithm(run_params=FakeAlgorithm.RunParamCls(param1=1)),
+                    FakeAlgorithm2(run_params=FakeAlgorithm2.RunParamCls(param1=1)),
+                ],
+                1: [
+                    # different set of algorithms
+                    FakeAlgorithm(run_params=FakeAlgorithm2.RunParamCls(param1=1)),
+                    FakeAlgorithm(run_params=FakeAlgorithm.RunParamCls(param1=1)),
+                ],
+            },  # algorithms
+            ["one", "two"],
+            True,
+            ValueError,
+            "The algorithms must be consistent between setups",
         ),
     ],
     ids=[
-        "no setup",
-        "setups with no algorithm",
-        "same setup with duplicate algorithms types",
-        "algorithm in setup not ran",
-        "setup with less algorithms than expected",
+        "1. No setups",
+        "2. Only one setup",
+        "3. Setups with no algorithms",
+        "4. Names len different from nr of algorithms",
+        "5. Algorithm in setup not ran",
+        "6. Setup with less algorithms than expected",
+        "7. Setup with different order of algorithms",
+        "8. Setup with different set of algorithms",
     ],
 )
 def test_init_multisetup_poser_exc(
     init_kwargs: typing.Dict,
     algorithms: typing.Dict[int, typing.List[BaseAlgorithm]],
+    names: typing.List[str],
     run_first: bool,
     expected_exception: Exception,
     expected_message: str,
@@ -97,7 +207,7 @@ def test_init_multisetup_poser_exc(
 
     # Test the exception
     with pytest.raises(expected_exception) as excinfo:
-        MultiSetup_PoSER(**init_kwargs)
+        MultiSetup_PoSER(**init_kwargs, names=names)
     assert expected_message in str(excinfo.value)
 
 
@@ -126,14 +236,13 @@ def test_init_multisetup_poser(multi_setup_data_fixture) -> None:
     ss3.run_all()
 
     # initialize MultiSetup_PoSER
-    msp = MultiSetup_PoSER(ref_ind=[0, 1, 2], single_setups=[ss1, ss2, ss3])
-    assert msp.ref_ind == [0, 1, 2]
+    msp = MultiSetup_PoSER(
+        ref_ind=[[0, 1, 2], [0, 1, 2], [0, 1, 2]],
+        single_setups=[ss1, ss2, ss3],
+        names=["one", "two"],
+    )
+    assert msp.ref_ind == [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
     assert msp.setups == [ss1, ss2, ss3]
-
-    # access hidden attribute __alg_ref
-    assert msp._MultiSetup_PoSER__alg_ref == {
-        alg.__class__: alg.name for alg in msp.setups[0].algorithms.values()
-    }
 
     # set setups after initialization
     with pytest.raises(AttributeError) as excinfo:

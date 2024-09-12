@@ -189,7 +189,9 @@ def multi_setup_poser_fixture(
     # reference indices
     ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
     # Creating Multi setup
-    msp = MultiSetup_PoSER(ref_ind=ref_ind, single_setups=[ss1, ss2, ss3])
+    msp = MultiSetup_PoSER(
+        ref_ind=ref_ind, single_setups=[ss1, ss2, ss3], names=["the_coolest_algo"]
+    )
     yield msp
 
 
