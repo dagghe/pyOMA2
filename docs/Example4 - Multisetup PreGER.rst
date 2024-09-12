@@ -1,6 +1,13 @@
 Example4 - Multisetup with Pre Global Estimation Re-scaling (PreGER) method
 ===========================================================================
 
+In this example, we'll be working with a simulated dataset generated from a finite
+element model of a fictitious three-story, L-shaped building. This model was created
+using OpenSeesPy, and the corresponding Python script can be found `here <https://github.com/dagghe/pyOMA-test-data/blob/main/test_data/3SL/model.py>`_.
+
+As always, first we import the necessary modules. All the files needed to run this
+example are available `here <https://github.com/dagghe/pyOMA-test-data/tree/main/test_data/3SL>`_.
+
 .. code:: python
 
    import numpy as np

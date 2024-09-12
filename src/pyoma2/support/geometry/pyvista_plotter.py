@@ -440,11 +440,18 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
             n_frames = 30
             pl.open_gif(f"Mode nr. {mode_nr}.gif")
             for phase in np.linspace(0, 2 * np.pi, n_frames, endpoint=False):
-                def_pts.mapper.dataset.points = points + df_phi_map.to_numpy() * np.cos(
-                    phase
+                def_pts.mapper.dataset.points = (
+                    points
+                    + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
                 )
-                line_mesh.points = points + df_phi_map.to_numpy() * np.cos(phase)
-                face_mesh.points = points + df_phi_map.to_numpy() * np.cos(phase)
+                line_mesh.points = (
+                    points
+                    + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
+                )
+                face_mesh.points = (
+                    points
+                    + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
+                )
                 pl.add_axes(line_width=5, labels_off=False)
                 pl.write_frame()
             pl.show(auto_close=False)
@@ -454,10 +461,17 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
                 n_frames = 30
                 for phase in np.linspace(0, 2 * np.pi, n_frames, endpoint=False):
                     def_pts.mapper.dataset.points = (
-                        points + df_phi_map.to_numpy() * np.cos(phase)
+                        points
+                        + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
                     )
-                    line_mesh.points = points + df_phi_map.to_numpy() * np.cos(phase)
-                    face_mesh.points = points + df_phi_map.to_numpy() * np.cos(phase)
+                    line_mesh.points = (
+                        points
+                        + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
+                    )
+                    face_mesh.points = (
+                        points
+                        + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
+                    )
                     pl.add_axes(line_width=5, labels_off=False)
                     pl.update()
 
