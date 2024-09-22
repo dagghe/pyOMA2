@@ -44,7 +44,7 @@ class FDDRunParams(BaseRunParams):
 
     # METODO 1: run
     nxseg: int = 1024
-    method_SD: str = "per"
+    method_SD: typing.Literal["per", "cor"] = "per"
     pov: float = 0.5
     # METODO 2: mpe e mpe_from_plot
     sel_freq: typing.Optional[npt.NDArray[np.float64]] = None
@@ -85,7 +85,7 @@ class EFDDRunParams(BaseRunParams):
 
     # METODO 1: run
     nxseg: int = 1024
-    method_SD: str = "per"
+    method_SD: typing.Literal["per", "cor"] = "per"
     pov: float = 0.5
     # METODO 2: mpe e mpe_from_plot
     sel_freq: typing.Optional[npt.NDArray[np.float64]] = None
@@ -154,8 +154,8 @@ class SSIRunParams(BaseRunParams):
     ordmin: int = 0
     ordmax: typing.Optional[int] = None
     step: int = 1
-    sc: dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)  # soft criteria
-    hc: dict = dict(
+    sc: typing.Dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)  # soft criteria
+    hc: typing.Dict = dict(
         conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3, cov_max=0.2
     )  # hard criteria
     calc_unc: bool = False  # uncertainty calculations
@@ -217,12 +217,12 @@ class pLSCFRunParams(BaseRunParams):
     ordmax: int
     ordmin: int = 0
     nxseg: int = 1024
-    method_SD: str = "per"
+    method_SD: typing.Literal["per", "cor"] = "per"
     pov: float = 0.5
     # sgn_basf: int = -1
     # step: int = 1
-    sc: dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)
-    hc: dict = dict(conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
+    sc: typing.Dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)
+    hc: typing.Dict = dict(conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
     # METODO 2: mpe e mpe_from_plot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, str] = "find_min"

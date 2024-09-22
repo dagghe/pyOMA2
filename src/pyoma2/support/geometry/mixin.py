@@ -708,7 +708,7 @@ class GeometryMixin:
         return fig, ax
 
     # PLOT MODI - PyVista plotter
-    def anim_mode_g2(
+    def anim_mode_geo2(
         self,
         algo_res: BaseResult,
         mode_nr: int = 1,
