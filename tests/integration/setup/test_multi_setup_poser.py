@@ -69,7 +69,7 @@ def test_geo2(ms_poser: MultiSetup_PoSER) -> None:
     # define results variable
     algo_res = result["the_coolest_algo"]
 
-    # PLOTE_MODE_G2
+    # PLOTE_MODE_geo2
     try:
         _ = ms_poser.plot_mode_geo2(algo_res=algo_res, mode_nr=1, scaleF=3, notebook=True)
         # assert isinstance(fig, Figure)

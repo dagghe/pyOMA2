@@ -54,7 +54,7 @@ class FDDResult(BaseResult):
     S_vec: typing.Optional[npt.NDArray[np.float64]] = None
 
 
-class EFDDResult(BaseResult):
+class EFDDResult(FDDResult):
     """
     Class for storing results data from Enhanced Frequency Domain Decomposition (EFDD)
     and Frequency Spatial Domain Decomposition (FSDD).
@@ -75,10 +75,6 @@ class EFDDResult(BaseResult):
         A list to store data for plotting purposes.
     """
 
-    freq: typing.Optional[npt.NDArray[np.float64]] = None
-    Sy: typing.Optional[npt.NDArray[np.float64]] = None
-    S_val: typing.Optional[npt.NDArray[np.float64]] = None
-    S_vec: typing.Optional[npt.NDArray[np.float64]] = None
     # dopo mpe, MPE_forPlot
     Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
     forPlot: typing.Optional[typing.List] = None
@@ -193,7 +189,7 @@ class pLSCFResult(BaseResult):
     order_out: typing.Union[typing.List[int], int, None] = None
 
 
-class MsPoserResult(BaseModel):
+class MsPoserResult(BaseResult):
     """
     Base class for MultiSetup Poser result data.
 
@@ -211,9 +207,6 @@ class MsPoserResult(BaseModel):
         Covariance of damping ratios.
     """
 
-    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
-    Phi: npt.NDArray[np.float64]
-    Fn: npt.NDArray[np.float64]
     Fn_cov: npt.NDArray[np.float64]
     Xi: npt.NDArray[np.float64]
     Xi_cov: npt.NDArray[np.float64]

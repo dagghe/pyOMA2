@@ -489,7 +489,7 @@ def test_run(ss: SingleSetup) -> None:
     except Exception as e:
         assert False, f"plot_mode_geo1 raised an exception {e} for FDD"
 
-    # PLOTE_MODE_G2
+    # PLOTE_MODE_geo2
     try:
         _ = ss.plot_mode_geo2(algo_res=fsdd.result, mode_nr=2, view="3D", scaleF=2)
     except Exception as e:

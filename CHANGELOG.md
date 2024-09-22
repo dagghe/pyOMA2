@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed `anim_mode_g2` to `anim_mode_geo2` in `GeometryMixin` class
+- Updated hierarchy for results and run_params classes
+
 
 ## [1.0.0] - 2024-09-12
 

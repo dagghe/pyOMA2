@@ -248,7 +248,7 @@ the analysis
 .. code:: python
 
     # Animate mode 1 (geometry 2)
-    Pali_ss.anim_mode_g2(
+    Pali_ss.anim_mode_geo2(
         algo_res=ssicov.result, mode_nr=1, scaleF=3)
 
 .. image:: /img/Ex2-Fig15.gif

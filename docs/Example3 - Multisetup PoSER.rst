@@ -148,7 +148,7 @@ geometry on it and then plot or animate the mode shapes
    _, _ = msp.plot_mode_geo2_mpl(
          algo_res=algoRes, mode_nr=4, view="xz", scaleF=3)
    # Animate mode 5 (geometry 2, pyvista)
-   _ = msp.anim_mode_g2(
+   _ = msp.anim_mode_geo2(
          algo_res=algoRes, mode_nr=5, scaleF=3)
 
 .. figure:: /img/Ex3-Fig4.png
