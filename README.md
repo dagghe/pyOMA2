@@ -72,10 +72,10 @@ ____
 - **Dag Pasquale Pasca** *(Ph.D., Norwegian Institute of Wood Technology, Norsk Treteknisk Institutt, Norway)*
 
   [ResearchGate](https://www.researchgate.net/profile/Dag-Pasquale-Pasca) • [GitHub](https://github.com/dagghe) • [Linkedin](https://www.linkedin.com/in/dag-pasca-33a947a7/)
-  
+
 - **Diego Federico Margoni** *(Eng. M.Sc., Politecnico di Torino University, Italy)*
 
-  [GitHub](https://github.com/dfm88) • [Linkedin](https://www.linkedin.com/in/diego-federico-margoni-7568061a2)  
+  [GitHub](https://github.com/dfm88) • [Linkedin](https://www.linkedin.com/in/diego-federico-margoni-7568061a2)
 
 # Other Contributors
 
@@ -91,7 +91,6 @@ ____
 
 - **Prof. Giuseppe Carlo Marano** *(Politecnico di Torino University, Italy)*
 
-  [PoliTO](https://www.polito.it/personale?p=giuseppe.marano) • [ArtIStE](http://www.civilml.polito.it/) 
+  [PoliTO](https://www.polito.it/personale?p=giuseppe.marano) • [ArtIStE](http://www.civilml.polito.it/)
 
 ![loghi per pyoma](https://github.com/user-attachments/assets/8ca0356a-ecb5-4e4e-9302-8df89ed37951)
-
