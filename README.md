@@ -64,3 +64,34 @@ ____
 # Schematic organisation of the module showing inheritance between classes.
 
 ![](docs/img/info.svg "")
+
+____
+
+# Main Developers
+
+- **Dag Pasquale Pasca** *(Ph.D., Norwegian Institute of Wood Technology, Norsk Treteknisk Institutt, Norway)*
+
+  [ResearchGate](https://www.researchgate.net/profile/Dag-Pasquale-Pasca) • [GitHub](https://github.com/dagghe) • [Linkedin](https://www.linkedin.com/in/dag-pasca-33a947a7/)
+  
+- **Diego Federico Margoni** *(Eng. M.Sc., Politecnico di Torino University, Italy)*
+
+  [GitHub](https://github.com/dfm88) • [Linkedin](https://www.linkedin.com/in/diego-federico-margoni-7568061a2)  
+
+# Other Contributors
+
+- **Marco Martino Rosso** *(Ph.D., Politecnico di Torino University, Italy)*
+
+  [PoliTO](https://www.polito.it/personale?p=marco.rosso) • [ResearchGate](https://www.researchgate.net/profile/Marco-Martino-Rosso) • [GitHub](https://github.com/marco-rosso-m) • [Linkedin](https://www.linkedin.com/in/marco-martino-rosso-01952a201/)
+
+- **Angelo Aloisio** *(Ph.D., University of L’Aquila, Italy)*
+
+  [UnivAQ](https://www.ing.univaq.it/personale/scheda_personale.php?codice=693) • [ResearchGate](https://www.researchgate.net/profile/Angelo-Aloisio) • [Linkedin](https://www.linkedin.com/in/angelo-aloisio-3b344b148/)
+
+# Supervision and promotion
+
+- **Prof. Giuseppe Carlo Marano** *(Politecnico di Torino University, Italy)*
+
+  [PoliTO](https://www.polito.it/personale?p=giuseppe.marano) • [ArtIStE](http://www.civilml.polito.it/) 
+
+![loghi per pyoma](https://github.com/user-attachments/assets/8ca0356a-ecb5-4e4e-9302-8df89ed37951)
+
