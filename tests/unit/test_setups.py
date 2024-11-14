@@ -275,3 +275,9 @@ def test_init_multisetup_preger(multi_setup_data_fixture) -> None:
     assert all(([k for k in d] == ["ref", "mov"] for d in msp.data))
     assert all(([isinstance(v, np.ndarray) for v in d.values()] for d in msp.data))
     assert msp.Ts == [600.0, 600.0, 600.0]
+
+
+def test_plot_data_single_column(ss):
+    ss.data = ss.data[:, 0]
+    ss.plot_data()
+    assert False
