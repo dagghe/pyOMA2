@@ -154,10 +154,8 @@ class SSIRunParams(BaseRunParams):
     ordmin: int = 0
     ordmax: typing.Optional[int] = None
     step: int = 1
-    sc: typing.Dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)  # soft criteria
-    hc: typing.Dict = dict(
-        conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3, cov_max=0.2
-    )  # hard criteria
+    sc: dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)  # soft criteria
+    hc: dict = dict(xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3, CoV_max=None)  # hard criteria
     calc_unc: bool = False  # uncertainty calculations
     nb: int = 100  # number of dataset blocks
     # METODO 2: mpe e mpe_from_plot

@@ -248,7 +248,7 @@ def stab_plot(
     hide_poles: bool = True,
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
-    Fn_cov=None,
+    Fn_std=None,
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plots a stabilization chart of the poles of a system.
@@ -273,7 +273,7 @@ def stab_plot(
         A matplotlib Figure object, by default None.
     ax : plt.Axes, optional
         A matplotlib Axes object, by default None.
-    Fn_cov : np.ndarray, optional
+    Fn_std : np.ndarray, optional
         The covariance of the frequencies, used for error bars, by default None.
 
     Returns
@@ -301,15 +301,10 @@ def stab_plot(
         y = np.array([i // len(Fns_stab) for i in range(len(x))]) * step
         ax.plot(x, y, "go", markersize=7)
 
-        if Fn_cov is not None:
-            xerr = abs(Fn_cov * Fn).flatten(order="f")
-            xerr1 = np.where(xerr <= 0.5, xerr, np.nan)
-            xerr2 = np.where(xerr > 0.5, 0.5, np.nan)
-            ax.errorbar(x, y, xerr=xerr1, fmt="None", capsize=5, ecolor="gray")
-            ax.errorbar(
-                x, y, xerr=xerr2, fmt="None", capsize=5, ecolor="red", label="std > 0.5"
-            )
-            ax.legend(loc="lower center", ncol=2)
+        if Fn_std is not None:
+            xerr = Fn_std.flatten(order="f")
+
+            ax.errorbar(x, y, xerr=xerr, fmt="None", capsize=5, ecolor="gray")
 
     else:
         x = Fns_stab.flatten(order="f")
@@ -321,27 +316,15 @@ def stab_plot(
         ax.plot(x, y, "go", markersize=7, label="Stable pole")
         ax.scatter(x1, y1, marker="o", s=4, c="r", label="Unstable pole")
 
-        if Fn_cov is not None:
-            xerr = abs(Fn_cov * Fn)
-            xerr1 = np.where(xerr <= 0.5, xerr, np.nan)
-            xerr2 = np.where(xerr > 0.5, 0.5, np.nan)
+        if Fn_std is not None:
+            xerr = abs(Fn_std).flatten(order="f")
+
             ax.errorbar(
-                x, y, xerr=xerr1.flatten(order="f"), fmt="None", capsize=5, ecolor="gray"
+                x, y, xerr=xerr.flatten(order="f"), fmt="None", capsize=5, ecolor="gray"
             )
+
             ax.errorbar(
-                x, y, xerr=xerr2.flatten(order="f"), fmt="None", capsize=5, ecolor="red"
-            )
-            ax.errorbar(
-                x1, y1, xerr=xerr1.flatten(order="f"), fmt="None", capsize=5, ecolor="red"
-            )
-            ax.errorbar(
-                x1,
-                y1,
-                xerr=xerr2.flatten(order="f"),
-                fmt="None",
-                capsize=5,
-                ecolor="red",
-                label="std>0.5",
+                x1, y1, xerr=xerr.flatten(order="f"), fmt="None", capsize=5, ecolor="gray"
             )
 
         ax.legend(loc="lower center", ncol=2)

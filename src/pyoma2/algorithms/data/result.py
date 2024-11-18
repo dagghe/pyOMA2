@@ -104,21 +104,21 @@ class SSIResult(BaseResult):
         Array of all mode shape vectors.
     Lab : numpy.typing.NDArray, optional
         Array of labels for all the poles.
-    Fn_poles_cov : numpy.typing.NDArray, optional
+    Fn_poles_std : numpy.typing.NDArray, optional
         Covariance of all natural frequencies.
-    Xi_poles_cov : numpy.typing.NDArray, optional
+    Xi_poles_std : numpy.typing.NDArray, optional
         Covariance of all damping ratios.
-    Phi_poles_cov : numpy.typing.NDArray, optional
+    Phi_poles_std : numpy.typing.NDArray, optional
         Covariance of all mode shape vectors.
     Xi : numpy.typing.NDArray, optional
         Array of damping ratios.
     order_out : Union[list[int], int], optional
         Output order after modal parameter estimation. Can be a list of integers or a single integer.
-    Fn_cov : numpy.typing.NDArray, optional
+    Fn_std : numpy.typing.NDArray, optional
         Covariance of natural frequencies obtained from the analysis.
-    Xi_cov : numpy.typing.NDArray, optional
+    Xi_std : numpy.typing.NDArray, optional
         Covariance of damping ratios obtained from the analysis.
-    Phi_cov : numpy.typing.NDArray, optional
+    Phi_std : numpy.typing.NDArray, optional
         Covariance of mode shape vectors obtained from the analysis.
     """
 
@@ -132,19 +132,19 @@ class SSIResult(BaseResult):
     Xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
     Phi_poles: typing.Optional[npt.NDArray[np.float64]] = None
     Lab: typing.Optional[npt.NDArray[np.float64]] = None
-    Fn_poles_cov: typing.Optional[npt.NDArray[np.float64]] = None
-    Xi_poles_cov: typing.Optional[npt.NDArray[np.float64]] = None
-    Phi_poles_cov: typing.Optional[npt.NDArray[np.float64]] = None
+    Fn_poles_std: typing.Optional[npt.NDArray[np.float64]] = None
+    Xi_poles_std: typing.Optional[npt.NDArray[np.float64]] = None
+    Phi_poles_std: typing.Optional[npt.NDArray[np.float64]] = None
     # dopo mpe, MPE_forPlot
     Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
     order_out: typing.Union[typing.List[int], int, None] = None
-    Fn_cov: typing.Optional[npt.NDArray[np.float64]] = (
+    Fn_std: typing.Optional[npt.NDArray[np.float64]] = (
         None  # covariance of natural frequencies
     )
-    Xi_cov: typing.Optional[npt.NDArray[np.float64]] = (
+    Xi_std: typing.Optional[npt.NDArray[np.float64]] = (
         None  # covariance of damping ratios
     )
-    Phi_cov: typing.Optional[npt.NDArray[np.float64]] = None  # covariance of mode shapes
+    Phi_std: typing.Optional[npt.NDArray[np.float64]] = None  # covariance of mode shapes
 
 
 class pLSCFResult(BaseResult):
@@ -199,14 +199,17 @@ class MsPoserResult(BaseResult):
         Array of mode shape vectors obtained from MultiSetup Poser analysis.
     Fn : numpy.typing.NDArray
         Array of natural frequencies obtained from MultiSetup Poser analysis (mean value).
-    Fn_cov : numpy.typing.NDArray
+    Fn_std : numpy.typing.NDArray
         Covariance of natural frequencies between setups.
     Xi : numpy.typing.NDArray
         Array of damping ratios obtained from MultiSetup Poser analysis (mean value).
-    Xi_cov : numpy.typing.NDArray
+    Xi_std : numpy.typing.NDArray
         Covariance of damping ratios.
     """
 
-    Fn_cov: npt.NDArray[np.float64]
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+    Phi: npt.NDArray[np.float64]
+    Fn: npt.NDArray[np.float64]
+    Fn_std: npt.NDArray[np.float64]
     Xi: npt.NDArray[np.float64]
-    Xi_cov: npt.NDArray[np.float64]
+    Xi_std: npt.NDArray[np.float64]

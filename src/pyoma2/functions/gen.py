@@ -187,31 +187,33 @@ def HC_phi_comp(phi, mpc_lim, mpd_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
 # -----------------------------------------------------------------------------
 
 
-def HC_cov(Fn_cov, max_cov) -> typing.Tuple[np.ndarray, np.ndarray]:
+def HC_cov(Fn, Fn_std, CoV_max) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
     Apply Hard validation Criteria (HC), retaining only those elements which have a covariance less than a specified maximum.
 
     Parameters
     ----------
-    Fn_cov : np.ndarray
-        Array of frequency covariances.
-    max_cov : float
-        Maximum allowed covariance.
+    Fn : np.ndarray
+        Array of frequencies.
+    Fn_std : np.ndarray
+        Array of frequency covariances (standard deviation).
+    CoV_max : float
+        Maximum allowed Coefficient of Variation (standard deviation/mean value).
 
     Returns
     -------
     filt_cov : np.ndarray
-        Array of the same shape as `Fn_cov` with elements that do not satisfy the condition set to NaN.
+        Array of the same shape as `Fn_std` with elements that do not satisfy the condition set to NaN.
     mask : np.ndarray
-        Boolean array of the same shape as `Fn_cov`, where True indicates that the element is less than `max_cov`.
+        Boolean array of the same shape as `Fn_std`, where True indicates that the element is less than `max_cov`.
 
     """
-    mask = (Fn_cov < max_cov).astype(int)
-    filt_cov = Fn_cov * mask
-    filt_cov[filt_cov == 0] = np.nan
+    mask = (Fn_std < CoV_max * Fn).astype(int)
+    filt_std = Fn_std * mask
+    filt_std[filt_std == 0] = np.nan
     # should be the same as
     # filt_damp = np.where(damp, np.logical_and(damp < max_damp, damp > 0), damp, np.nan)
-    return filt_cov, mask
+    return filt_std, mask
 
 
 # -----------------------------------------------------------------------------
@@ -253,7 +255,7 @@ def SC_apply(Fn, Xi, Phi, ordmin, ordmax, step, err_fn, err_xi, err_phi) -> np.n
     # SOFT CONDITIONS
     # STABILITY BETWEEN CONSECUTIVE ORDERS
     for oo in range(ordmin, ordmax + 1, step):
-        o = int(oo / step)
+        o = int(oo / step - 1)
 
         f_n = Fn[:, o].reshape(-1, 1)
         xi_n = Xi[:, o].reshape(-1, 1)

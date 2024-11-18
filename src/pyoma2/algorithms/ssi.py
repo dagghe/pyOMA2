@@ -80,13 +80,17 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         H, T = ssi.build_hank(
             Y=Y, Yref=Yref, br=br, method=method_hank, calc_unc=calc_unc, nb=nb
         )
-        # Get state matrix and output matrix
-        Obs, A, C, Q1, Q2, Q3, Q4 = ssi.SSI_fast(
-            H, br, ordmax, step=step, calc_unc=calc_unc, T=T, nb=nb
-        )
 
+        # Get state matrix and output matrix
+        (
+            Obs,
+            A,
+            C,
+        ) = ssi.SSI_fast(H, br, ordmax, step=step)
+
+        hc_xi_max = hc["xi_max"]
         # Get frequency poles (and damping and mode shapes)
-        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = ssi.SSI_poles(
+        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = ssi.SSI_poles(
             Obs,
             A,
             C,
@@ -94,49 +98,31 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             self.dt,
             step=step,
             calc_unc=calc_unc,
-            Q1=Q1,
-            Q2=Q2,
-            Q3=Q3,
-            Q4=Q4,
+            H=H,
+            T=T,
+            xi_max=hc_xi_max,
+            nb=nb,
         )
 
-        hc_conj = hc["conj"]
-        hc_xi_max = hc["xi_max"]
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
-        hc_cov_max = hc["cov_max"]
-
-        # Apply HARD CRITERIA
-        # HC - presence of complex conjugate
-        if hc_conj:
-            Lambds, mask1 = gen.HC_conj(Lambds)
-            lista = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
-            Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-                lista, mask1, Phis.shape[2]
-            )
-
-        # HC - damping
-        Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
-        lista = [Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov]
-        Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-            lista, mask2, Phis.shape[2]
-        )
+        hc_CoV_max = hc["CoV_max"]
 
         # HC - MPC and MPD
         mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
-        lista = [Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov]
-        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
+        lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
             lista, mask3, Phis.shape[2]
         )
-        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
+        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
             lista, mask4, Phis.shape[2]
         )
 
         # HC - maximum covariance
-        if Fn_cov is not None:
-            Fn_cov, mask5 = gen.HC_cov(Fn_cov, hc_cov_max)
-            lista = [Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov]
-            Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov = gen.applymask(
+        if Fn_std is not None and hc_CoV_max is not None:
+            Fn_std, mask5 = gen.HC_cov(Fns, Fn_std, hc_CoV_max)
+            lista = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
+            Fns, Xis, Phis, Lambds, Xi_std, Phi_std = gen.applymask(
                 lista, mask5, Phis.shape[2]
             )
 
@@ -164,9 +150,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Xi_poles=Xis,
             Phi_poles=Phis,
             Lab=Lab,
-            Fn_poles_cov=Fn_cov,
-            Xi_poles_cov=Xi_cov,
-            Phi_poles_cov=Phi_cov,
+            Fn_poles_std=Fn_std,
+            Xi_poles_std=Xi_std,
+            Phi_poles_std=Phi_std,
         )
 
     def mpe(
@@ -206,11 +192,11 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         Phi_pol = self.result.Phi_poles
         Lab = self.result.Lab
         # Get cov
-        Fn_pol_cov = self.result.Fn_poles_cov
-        Xi_pol_cov = self.result.Xi_poles_cov
-        Phi_pol_cov = self.result.Phi_poles_cov
+        Fn_pol_std = self.result.Fn_poles_std
+        Xi_pol_std = self.result.Xi_poles_std
+        Phi_pol_std = self.result.Phi_poles_std
         # Extract modal results
-        Fn, Xi, Phi, order_out, Fn_cov, Xi_cov, Phi_cov = ssi.SSI_mpe(
+        Fn, Xi, Phi, order_out, Fn_std, Xi_std, Phi_std = ssi.SSI_mpe(
             sel_freq,
             Fn_pol,
             Xi_pol,
@@ -218,9 +204,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             order,
             Lab=Lab,
             rtol=rtol,
-            Fn_cov=Fn_pol_cov,
-            Xi_cov=Xi_pol_cov,
-            Phi_cov=Phi_pol_cov,
+            Fn_std=Fn_pol_std,
+            Xi_std=Xi_pol_std,
+            Phi_std=Phi_pol_std,
         )
 
         # Save results
@@ -228,9 +214,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         self.result.Fn = Fn
         self.result.Xi = Xi
         self.result.Phi = Phi
-        self.result.Fn_cov = Fn_cov
-        self.result.Xi_cov = Xi_cov
-        self.result.Phi_cov = Phi_cov
+        self.result.Fn_std = Fn_std
+        self.result.Xi_std = Xi_std
+        self.result.Phi_std = Phi_std
 
     def mpe_from_plot(
         self,
@@ -263,9 +249,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         Xi_pol = self.result.Xi_poles
         Phi_pol = self.result.Phi_poles
         # Get cov
-        Fn_pol_cov = self.result.Fn_poles_cov
-        Xi_pol_cov = self.result.Xi_poles_cov
-        Phi_pol_cov = self.result.Phi_poles_cov
+        Fn_pol_std = self.result.Fn_poles_std
+        Xi_pol_std = self.result.Xi_poles_std
+        Phi_pol_std = self.result.Phi_poles_std
 
         # call interactive plot
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
@@ -273,7 +259,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         order = SFP.result[1]
 
         # and then extract results
-        Fn, Xi, Phi, order_out, Fn_cov, Xi_cov, Phi_cov = ssi.SSI_mpe(
+        Fn, Xi, Phi, order_out, Fn_std, Xi_std, Phi_std = ssi.SSI_mpe(
             sel_freq,
             Fn_pol,
             Xi_pol,
@@ -281,9 +267,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             order,
             Lab=None,
             rtol=rtol,
-            Fn_cov=Fn_pol_cov,
-            Xi_cov=Xi_pol_cov,
-            Phi_cov=Phi_pol_cov,
+            Fn_std=Fn_pol_std,
+            Xi_std=Xi_pol_std,
+            Phi_std=Phi_pol_std,
         )
 
         # Save results
@@ -291,9 +277,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         self.result.Fn = Fn
         self.result.Xi = Xi
         self.result.Phi = Phi
-        self.result.Fn_cov = Fn_cov
-        self.result.Xi_cov = Xi_cov
-        self.result.Phi_cov = Phi_cov
+        self.result.Fn_std = Fn_std
+        self.result.Xi_std = Xi_std
+        self.result.Phi_std = Phi_std
 
     def plot_stab(
         self,
@@ -331,7 +317,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             hide_poles=hide_poles,
             fig=None,
             ax=None,
-            Fn_cov=self.result.Fn_poles_cov,
+            Fn_std=self.result.Fn_poles_std,
         )
         return fig, ax
 
@@ -485,7 +471,7 @@ class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
         )
 
         # Get frequency poles (and damping and mode shapes)
-        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = ssi.SSI_poles(
+        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = ssi.SSI_poles(
             Obs, A, C, ordmax, self.dt, step=step, calc_unc=False
         )
 
@@ -494,39 +480,39 @@ class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
         hc_xi_max = hc["xi_max"]
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
-        hc_cov_max = hc["cov_max"]
+        hc_CoV_max = hc["CoV_max"]
 
         # Apply HARD CRITERIA
         # HC - presence of complex conjugate
         if hc_conj:
             Lambds, mask1 = gen.HC_conj(Lambds)
-            lista = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
-            Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
+            lista = [Fns, Xis, Phis, Fn_std, Xi_std, Phi_std]
+            Fns, Xis, Phis, Fn_std, Xi_std, Phi_std = gen.applymask(
                 lista, mask1, Phis.shape[2]
             )
 
         # HC - damping
         Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
-        lista = [Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov]
-        Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
+        lista = [Fns, Lambds, Phis, Fn_std, Xi_std, Phi_std]
+        Fns, Lambds, Phis, Fn_std, Xi_std, Phi_std = gen.applymask(
             lista, mask2, Phis.shape[2]
         )
 
         # HC - MPC and MPD
         mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
-        lista = [Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov]
-        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
+        lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
             lista, mask3, Phis.shape[2]
         )
-        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
+        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
             lista, mask4, Phis.shape[2]
         )
 
         # HC - maximum covariance
-        if Fn_cov is not None:
-            Fn_cov, mask5 = gen.HC_cov(Fn_cov, hc_cov_max)
-            lista = [Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov]
-            Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov = gen.applymask(
+        if Fn_std is not None:
+            Fn_std, mask5 = gen.HC_cov(Fn_std, hc_CoV_max)
+            lista = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
+            Fns, Xis, Phis, Lambds, Xi_std, Phi_std = gen.applymask(
                 lista, mask5, Phis.shape[2]
             )
 
@@ -555,9 +541,9 @@ class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
             Xi_poles=Xis,
             Phi_poles=Phis,
             Lab=Lab,
-            Fn_poles_cov=Fn_cov,
-            Xi_poles_cov=Xi_cov,
-            Phi_poles_cov=Phi_cov,
+            Fn_poles_std=Fn_std,
+            Xi_poles_std=Xi_std,
+            Phi_poles_std=Phi_std,
         )
 
 
