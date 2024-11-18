@@ -1289,7 +1289,7 @@ def plt_data(
         ax.grid()
     plt.tight_layout()
 
-    return fig, ax
+    return fig, axs
 
 
 # -----------------------------------------------------------------------------
