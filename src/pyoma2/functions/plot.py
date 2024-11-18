@@ -1230,7 +1230,13 @@ def plt_data(
 
     nr = round(Nch / nc)  # number of rows in the subplot
     fig, axs = plt.subplots(
-        figsize=(8, 6), nrows=nr, ncols=nc, sharex=True, sharey=True, tight_layout=True
+        figsize=(8, 6),
+        nrows=nr,
+        ncols=nc,
+        sharex=True,
+        sharey=True,
+        tight_layout=True,
+        squeeze=False,
     )
     fig.suptitle("Time Histories of all channels")
 
@@ -1264,7 +1270,7 @@ def plt_data(
                 kk += 1
         # if there is only 1 column
         else:
-            ax = axs[ii]
+            ax = axs[ii, 0]
             ax.plot(time, data[:, kk], c="k")
             if names is not None:
                 ax.set_title(f"{names[kk]}")
