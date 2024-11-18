@@ -109,18 +109,22 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         hc_CoV_max = hc["CoV_max"]
 
         # HC - MPC and MPD
-        mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
-        lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
-        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-            lista, mask3, Phis.shape[2]
-        )
-        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-            lista, mask4, Phis.shape[2]
-        )
+        if hc_mpc_lim is not None:
+            mask3 = gen.HC_MPC(Phis, hc_mpc_lim)
+            lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+            Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
+                lista, mask3, Phis.shape[2]
+            )
+        if hc_mpd_lim is not None:
+            mask4 = gen.HC_MPD(Phis, hc_mpd_lim)
+            lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+            Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
+                lista, mask4, Phis.shape[2]
+            )
 
         # HC - maximum covariance
         if Fn_std is not None and hc_CoV_max is not None:
-            Fn_std, mask5 = gen.HC_cov(Fns, Fn_std, hc_CoV_max)
+            Fn_std, mask5 = gen.HC_CoV(Fns, Fn_std, hc_CoV_max)
             lista = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
             Fns, Xis, Phis, Lambds, Xi_std, Phi_std = gen.applymask(
                 lista, mask5, Phis.shape[2]
@@ -158,7 +162,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
     def mpe(
         self,
         sel_freq: typing.List[float],
-        order: typing.Union[int, str] = "find_min",
+        order_in: typing.Union[int, str] = "find_min",
         rtol: float = 5e-2,
     ) -> typing.Any:
         """
@@ -179,11 +183,11 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         typing.Any
             The extracted modal parameters. The format and content depend on the algorithm's implementation.
         """
-        super().mpe(sel_freq=sel_freq, order=order, rtol=rtol)
+        super().mpe(sel_freq=sel_freq, order_in=order_in, rtol=rtol)
 
         # Save run parameters
         self.run_params.sel_freq = sel_freq
-        self.run_params.order_in = order
+        self.run_params.order_in = order_in
         self.run_params.rtol = rtol
 
         # Get poles
@@ -201,7 +205,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Fn_pol,
             Xi_pol,
             Phi_pol,
-            order,
+            order_in,
             Lab=Lab,
             rtol=rtol,
             Fn_std=Fn_pol_std,
@@ -407,7 +411,7 @@ class SSIcov(SSIdat):
     Attributes
     ----------
     method : str
-        The method used in this SSI algorithm, overridden to 'cov_bias', 'cov_mm', or 'cov_unb' for
+        The method used in this SSI algorithm, overridden to 'cov' or 'cov_R' for
         covariance-based analysis.
 
     Methods
@@ -415,7 +419,7 @@ class SSIcov(SSIdat):
     Inherits all methods from SSIdat with covariance-specific implementations.
     """
 
-    method: typing.Literal["cov_R", "cov_mm"] = "cov_mm"
+    method: typing.Literal["cov_R", "cov"] = "cov"
 
 
 # =============================================================================
@@ -476,45 +480,31 @@ class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
         )
 
         # VALIDATION CRITERIA FOR POLES
-        hc_conj = hc["conj"]
-        hc_xi_max = hc["xi_max"]
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
-        hc_CoV_max = hc["CoV_max"]
-
-        # Apply HARD CRITERIA
-        # HC - presence of complex conjugate
-        if hc_conj:
-            Lambds, mask1 = gen.HC_conj(Lambds)
-            lista = [Fns, Xis, Phis, Fn_std, Xi_std, Phi_std]
-            Fns, Xis, Phis, Fn_std, Xi_std, Phi_std = gen.applymask(
-                lista, mask1, Phis.shape[2]
-            )
-
-        # HC - damping
-        Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
-        lista = [Fns, Lambds, Phis, Fn_std, Xi_std, Phi_std]
-        Fns, Lambds, Phis, Fn_std, Xi_std, Phi_std = gen.applymask(
-            lista, mask2, Phis.shape[2]
-        )
+        # hc_CoV_max = hc["CoV_max"]
 
         # HC - MPC and MPD
-        mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
-        lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
-        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-            lista, mask3, Phis.shape[2]
-        )
-        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-            lista, mask4, Phis.shape[2]
-        )
-
-        # HC - maximum covariance
-        if Fn_std is not None:
-            Fn_std, mask5 = gen.HC_cov(Fn_std, hc_CoV_max)
-            lista = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
-            Fns, Xis, Phis, Lambds, Xi_std, Phi_std = gen.applymask(
-                lista, mask5, Phis.shape[2]
+        if hc_mpc_lim is not None:
+            mask3 = gen.HC_MPC(Phis, hc_mpc_lim)
+            lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+            Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
+                lista, mask3, Phis.shape[2]
             )
+        if hc_mpd_lim is not None:
+            mask4 = gen.HC_MPD(Phis, hc_mpd_lim)
+            lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+            Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
+                lista, mask4, Phis.shape[2]
+            )
+
+        # # HC - maximum covariance
+        # if Fn_std is not None:
+        #     Fn_std, mask5 = gen.HC_CoV(Fn_std, hc_CoV_max)
+        #     lista = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
+        #     Fns, Xis, Phis, Lambds, Xi_std, Phi_std = gen.applymask(
+        #         lista, mask5, Phis.shape[2]
+        #     )
 
         # Apply SOFT CRITERIA
         # Get the labels of the poles
@@ -569,4 +559,4 @@ class SSIcov_MS(SSIdat_MS):
     Inherits all methods from SSIdat_MS, adapted for covariance-based analysis.
     """
 
-    method: typing.Literal["cov_R", "cov_mm"] = "cov_mm"
+    method: typing.Literal["cov_R", "cov"] = "cov"

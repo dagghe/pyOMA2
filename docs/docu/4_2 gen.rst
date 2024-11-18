@@ -11,7 +11,7 @@ Functions:
     - :func:`.HC_conj`: Apply Hard validation Criteria, complex conjugates.
     - :func:`.HC_damp`: Apply Hard validation Criteria, damping.
     - :func:`.HC_phi_comp`: Apply Hard validation Criteria, mode shapes complexity.
-    - :func:`.HC_cov`: Apply Hard validation Criteria, covariance.
+    - :func:`.HC_CoV`: Apply Hard validation Criteria, covariance.
     - :func:`.SC_apply`: Apply Soft validation Criteria.
     - :func:`.dfphi_map_func`: Maps mode shapes to sensor locations and constraints.
     - :func:`.check_on_geo1`: Validates geometry1 data.

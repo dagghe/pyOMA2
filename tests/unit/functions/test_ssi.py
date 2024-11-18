@@ -14,7 +14,7 @@ from tests.factory import assert_array_equal_with_nan
             np.array([[1, 2, 3, 4, 5]]),
             np.array([[1, 2, 3, 4, 5]]),
             1,
-            "cov_mm",
+            "cov",
             True,
             np.array([[6.0, 4.0], [7.5, 5.0]]),
             None,
@@ -24,7 +24,7 @@ from tests.factory import assert_array_equal_with_nan
             np.array([[1, 2, 3, 4, 5]]),
             np.array([[1, 2, 3, 4, 5]]),
             1,
-            "cov_mm",
+            "cov",
             False,
             np.array([[6.0, 4.0], [7.5, 5.0]]),
             True,
@@ -99,8 +99,7 @@ def test_build_hank(
                 Y=Y, Yref=Yref, br=br, method=method, calc_unc=calc_unc, nb=100
             )
             assert (
-                e.value
-                == "Uncertainty calculations are only available for 'cov_mm' method"
+                e.value == "Uncertainty calculations are only available for 'cov' method"
             )
     else:
         hank, uncertainty = ssi.build_hank(
@@ -124,9 +123,7 @@ def test_build_hank_invalid_method() -> None:
             calc_unc=False,
             nb=100,
         )
-        assert (
-            e.value == "Uncertainty calculations are only available for 'cov_mm' method"
-        )
+        assert e.value == "Uncertainty calculations are only available for 'cov' method"
 
 
 def test_ac2mp() -> None:
@@ -314,7 +311,7 @@ def test_SSI_multi_setup() -> None:
     fs = 1.0
     br = 2
     ordmax = 3
-    methodHank = "cov_mm"
+    methodHank = "cov"
 
     # Test with default step and method
     A, C, *_ = ssi.SSI_multi_setup(Y, fs, br, ordmax, methodHank)
@@ -324,7 +321,7 @@ def test_SSI_multi_setup() -> None:
     )
 
     # Test with non-default step and method
-    Obs_all, A, C = ssi.SSI_multi_setup(Y, fs, br, ordmax, step=2, method_hank="cov_mm")
+    Obs_all, A, C = ssi.SSI_multi_setup(Y, fs, br, ordmax, step=2, method_hank="cov")
 
     assert isinstance(Obs_all, np.ndarray) and isinstance(A, list) and isinstance(C, list)
     assert all(isinstance(a, np.ndarray) for a in A) and all(

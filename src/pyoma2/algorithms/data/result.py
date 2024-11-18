@@ -182,7 +182,6 @@ class pLSCFResult(BaseResult):
     Fn_poles: typing.Optional[npt.NDArray[np.float64]] = None
     Xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
     Phi_poles: typing.Optional[npt.NDArray[np.float64]] = None
-    # lam_poles: npt.NDArray[np.float64]
     Lab: typing.Optional[npt.NDArray[np.float64]] = None
     # dopo mpe, MPE_forPlot
     Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
@@ -200,11 +199,11 @@ class MsPoserResult(BaseResult):
     Fn : numpy.typing.NDArray
         Array of natural frequencies obtained from MultiSetup Poser analysis (mean value).
     Fn_std : numpy.typing.NDArray
-        Covariance of natural frequencies between setups.
+        Standard deviation of natural frequencies between setups.
     Xi : numpy.typing.NDArray
         Array of damping ratios obtained from MultiSetup Poser analysis (mean value).
     Xi_std : numpy.typing.NDArray
-        Covariance of damping ratios.
+        Standard deviation of damping ratios.
     """
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)

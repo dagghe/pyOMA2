@@ -92,7 +92,7 @@ class EFDDRunParams(BaseRunParams):
     DF1: float = 0.1
     DF2: float = 1.0
     cm: int = 1
-    MAClim: float = 0.85
+    MAClim: float = 0.95
     sppk: int = 3
     npmax: int = 20
 
@@ -106,7 +106,7 @@ class SSIRunParams(BaseRunParams):
     br : int
         Number of block rows in the Hankel matrix.
     method_hank : str or None, optional
-        Method used in the SSI algorithm. Options are ['data', 'cov_mm', 'cov_R'].
+        Method used in the SSI algorithm. Options are ['data', 'cov', 'cov_R'].
         Default is None.
     ref_ind : list of int or None, optional
         List of reference indices used for subspace identification. Default is None.
@@ -155,9 +155,9 @@ class SSIRunParams(BaseRunParams):
     ordmax: typing.Optional[int] = None
     step: int = 1
     sc: dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)  # soft criteria
-    hc: dict = dict(xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3, CoV_max=None)  # hard criteria
+    hc: dict = dict(xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3, CoV_max=0.02)  # hard criteria
     calc_unc: bool = False  # uncertainty calculations
-    nb: int = 100  # number of dataset blocks
+    nb: int = 50  # number of dataset blocks
     # METODO 2: mpe e mpe_from_plot
     sel_freq: typing.Optional[typing.List[float]] = None
     order_in: typing.Union[int, list, str] = "find_min"

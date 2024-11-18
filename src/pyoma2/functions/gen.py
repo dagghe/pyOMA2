@@ -135,9 +135,9 @@ def HC_damp(damp, max_damp) -> typing.Tuple[np.ndarray, np.ndarray]:
 # -----------------------------------------------------------------------------
 
 
-def HC_phi_comp(phi, mpc_lim, mpd_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
+def HC_MPC(phi, mpc_lim) -> np.ndarray:
     """
-    Apply Hard validation Criteria (HC), based on modal phase collinearity (MPC) and modal phase deviation (MPD) limits.
+    Apply Hard validation Criteria (HC), based on modal phase collinearity (MPC) limit.
 
     Parameters
     ----------
@@ -145,6 +145,36 @@ def HC_phi_comp(phi, mpc_lim, mpd_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
         Array of mode shapes with shape (number of modes, number of channels, mode shape length).
     mpc_lim : float
         Minimum allowed value for modal phase collinearity.
+
+    Returns
+    -------
+    mask_mpc : np.ndarray
+        Boolean array indicating elements that satisfy the MPC condition.
+    """
+    mask2 = []
+    for o in range(phi.shape[0]):
+        for i in range(phi.shape[1]):
+            try:
+                mask2.append((MPC(phi[o, i, :]) >= mpc_lim).astype(int))
+            except Exception:
+                mask2.append(0)
+    mask2 = np.array(mask2).reshape((phi.shape[0], phi.shape[1]))
+    mask3 = np.expand_dims(mask2, axis=-1)
+    mask3 = np.repeat(mask3, phi.shape[2], axis=-1)
+    return mask3[:, :, 0]
+
+
+# -----------------------------------------------------------------------------
+
+
+def HC_MPD(phi, mpd_lim) -> np.ndarray:
+    """
+    Apply Hard validation Criteria (HC), based on modal phase deviation (MPD) limit.
+
+    Parameters
+    ----------
+    phi : np.ndarray
+        Array of mode shapes with shape (number of modes, number of channels, mode shape length).
     mpd_lim : float
         Maximum allowed value for modal phase deviation.
 
@@ -152,8 +182,7 @@ def HC_phi_comp(phi, mpc_lim, mpd_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
     -------
     mask_mpd : np.ndarray
         Boolean array indicating elements that satisfy the MPD condition.
-    mask_mpc : np.ndarray
-        Boolean array indicating elements that satisfy the MPC condition.
+
     """
     mask = []
     for o in range(phi.shape[0]):
@@ -165,29 +194,13 @@ def HC_phi_comp(phi, mpc_lim, mpd_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
     mask = np.array(mask).reshape((phi.shape[0], phi.shape[1]))
     mask1 = np.expand_dims(mask, axis=-1)
     mask1 = np.repeat(mask1, phi.shape[2], axis=-1)
-    Phi = phi * mask1
-    Phi[Phi == 0] = np.nan
-
-    mask2 = []
-    for o in range(phi.shape[0]):
-        for i in range(phi.shape[1]):
-            try:
-                mask2.append((MPC(phi[o, i, :]) >= mpc_lim).astype(int))
-            except Exception:
-                mask2.append(0)
-    mask2 = np.array(mask2).reshape((phi.shape[0], phi.shape[1]))
-    mask3 = np.expand_dims(mask2, axis=-1)
-    mask3 = np.repeat(mask3, phi.shape[2], axis=-1)
-    Phi = phi * mask3
-    Phi[Phi == 0] = np.nan
-
-    return mask1[:, :, 0], mask3[:, :, 0]
+    return mask1[:, :, 0]
 
 
 # -----------------------------------------------------------------------------
 
 
-def HC_cov(Fn, Fn_std, CoV_max) -> typing.Tuple[np.ndarray, np.ndarray]:
+def HC_CoV(Fn, Fn_std, CoV_max) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
     Apply Hard validation Criteria (HC), retaining only those elements which have a covariance less than a specified maximum.
 

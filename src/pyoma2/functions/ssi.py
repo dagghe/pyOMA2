@@ -25,7 +25,7 @@ def build_hank(
     Y: np.ndarray,
     Yref: np.ndarray,
     br: int,
-    method: typing.Literal["cov_mm", "cov_R", "dat"],
+    method: typing.Literal["cov", "cov_R", "dat"],
     calc_unc: bool = False,
     nb: int = 100,
 ) -> typing.Tuple[np.ndarray, typing.Optional[np.ndarray]]:
@@ -42,9 +42,9 @@ def build_hank(
         The number of block rows to use in the Hankel matrix.
     method : str
         The method to use for constructing the Hankel matrix.
-        Options are 'cov_mm', 'cov_R', 'dat'
+        Options are 'cov', 'cov_R', 'dat'
     calc_unc : bool, optional
-        Whether to calculate uncertainties (default is False). Only applicable for the 'cov_mm' method.
+        Whether to calculate uncertainties (default is False). Only applicable for the 'cov' method.
     nb : int, optional
         The number of data blocks to use for uncertainty calculations (default is 100).
 
@@ -58,7 +58,7 @@ def build_hank(
     Raises
     ------
     AttributeError
-        If `method` is not one of 'cov_mm', 'cov_R', 'dat'
+        If `method` is not one of 'cov', 'cov_R', 'dat'
     """
     Ndat = Y.shape[1]  # number of data points
     l = Y.shape[0]  # number of channels # noqa E741 (ambiguous variable name 'l')
@@ -70,7 +70,7 @@ def build_hank(
     T = None
     logger.info("Assembling Hankel matrix method: %s...", method)
 
-    if method == "cov_mm":
+    if method == "cov":
         # Future and past Output (Y^+ and Y^-)
         Yf = np.vstack([Y[:, q + i : N + q + i] for i in range(p + 1)])
         Yp = np.vstack([Yref[:, (q - 1) + i : N + (q - 1) + i] for i in range(0, -q, -1)])
@@ -154,7 +154,7 @@ def build_hank(
     else:
         raise AttributeError(
             f'{method} is not a valid argument. "method" must be '
-            f'one of: "cov_mm", "cov_R", "dat"'
+            f'one of: "cov", "cov_R", "dat"'
         )
 
     logger.debug("... Hankel and SIGMA_H Done!")
@@ -642,7 +642,7 @@ def SSI_multi_setup(
     ordmax : int
         Maximum order for the system identification process.
     methodHank : str
-        Method for Hankel matrix construction. Can be 'cov_mm', 'cov_R', 'dat'.
+        Method for Hankel matrix construction. Can be 'cov', 'cov_R', 'dat'.
     step : int, optional
         Step size for increasing the order in the identification process. Default is 1.
 
