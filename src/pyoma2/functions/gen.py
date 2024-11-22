@@ -1115,9 +1115,12 @@ def MPC(phi: np.ndarray) -> float:
     float
         MPC value, ranging between 0 and 1, where 1 indicates perfect collinearity.
     """
-    S = np.cov(phi.real, phi.imag)
-    lambd = np.linalg.eigvals(S)
-    MPC = (lambd[0] - lambd[1]) ** 2 / (lambd[0] + lambd[1]) ** 2
+    try:
+        S = np.cov(phi.real, phi.imag)
+        lambd = np.linalg.eigvals(S)
+        MPC = (lambd[0] - lambd[1]) ** 2 / (lambd[0] + lambd[1]) ** 2
+    except Exception:
+        MPC = np.nan
     return MPC
 
 
@@ -1142,13 +1145,15 @@ def MPD(phi: np.ndarray) -> float:
         MPD value, representing the average deviation of the phase from a
         purely real mode.
     """
-
-    U, s, VT = np.linalg.svd(np.c_[phi.real, phi.imag])
-    V = VT.T
-    w = np.abs(phi)
-    num = phi.real * V[1, 1] - phi.imag * V[0, 1]
-    den = np.sqrt(V[0, 1] ** 2 + V[1, 1] ** 2) * np.abs(phi)
-    MPD = np.sum(w * np.arccos(np.abs(num / den))) / np.sum(w)
+    try:
+        U, s, VT = np.linalg.svd(np.c_[phi.real, phi.imag])
+        V = VT.T
+        w = np.abs(phi)
+        num = phi.real * V[1, 1] - phi.imag * V[0, 1]
+        den = np.sqrt(V[0, 1] ** 2 + V[1, 1] ** 2) * np.abs(phi)
+        MPD = np.sum(w * np.arccos(np.abs(num / den))) / np.sum(w)
+    except Exception:
+        MPD = np.nan
     return MPD
 
 

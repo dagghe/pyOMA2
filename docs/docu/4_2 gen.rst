@@ -10,7 +10,8 @@ Functions:
     - :func:`.applymask`: Apply a mask to a list of arrays, filtering their values based on the mask.
     - :func:`.HC_conj`: Apply Hard validation Criteria, complex conjugates.
     - :func:`.HC_damp`: Apply Hard validation Criteria, damping.
-    - :func:`.HC_phi_comp`: Apply Hard validation Criteria, mode shapes complexity.
+    - :func:`.HC_MPD`: Apply Hard validation Criteria, modal phase deviation.
+    - :func:`.HC_MPC`: Apply Hard validation Criteria, modal phase complexity.
     - :func:`.HC_CoV`: Apply Hard validation Criteria, covariance.
     - :func:`.SC_apply`: Apply Soft validation Criteria.
     - :func:`.dfphi_map_func`: Maps mode shapes to sensor locations and constraints.

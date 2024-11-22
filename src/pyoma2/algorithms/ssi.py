@@ -101,7 +101,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             H=H,
             T=T,
             xi_max=hc_xi_max,
-            nb=nb,
+            HC=True,
         )
 
         hc_mpc_lim = hc["mpc_lim"]
@@ -474,9 +474,18 @@ class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
             Y, self.fs, br, ordmax, step=1, method_hank=method_hank
         )
 
+        hc_xi_max = hc["xi_max"]
         # Get frequency poles (and damping and mode shapes)
         Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = ssi.SSI_poles(
-            Obs, A, C, ordmax, self.dt, step=step, calc_unc=False
+            Obs,
+            A,
+            C,
+            ordmax,
+            self.dt,
+            step=step,
+            calc_unc=False,
+            HC=True,
+            xi_max=hc_xi_max,
         )
 
         # VALIDATION CRITERIA FOR POLES
@@ -497,14 +506,6 @@ class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
             Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
                 lista, mask4, Phis.shape[2]
             )
-
-        # # HC - maximum covariance
-        # if Fn_std is not None:
-        #     Fn_std, mask5 = gen.HC_CoV(Fn_std, hc_CoV_max)
-        #     lista = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
-        #     Fns, Xis, Phis, Lambds, Xi_std, Phi_std = gen.applymask(
-        #         lista, mask5, Phis.shape[2]
-        #     )
 
         # Apply SOFT CRITERIA
         # Get the labels of the poles

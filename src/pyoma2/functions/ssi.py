@@ -27,10 +27,13 @@ def build_hank(
     br: int,
     method: typing.Literal["cov", "cov_R", "dat"],
     calc_unc: bool = False,
-    nb: int = 100,
+    nb: int = 50,
 ) -> typing.Tuple[np.ndarray, typing.Optional[np.ndarray]]:
     """
-    Construct a Hankel matrix using various methods with optional uncertainty calculations.
+    Construct a Hankel matrix with optional uncertainty calculations.
+
+    This function constructs a Hankel matrix using various methods, such as covariance-based
+    or data-driven approaches, and optionally computes uncertainty matrices.
 
     Parameters
     ----------
@@ -39,27 +42,35 @@ def build_hank(
     Yref : np.ndarray
         The reference data matrix with shape (number of reference channels, number of data points).
     br : int
-        The number of block rows to use in the Hankel matrix.
-    method : str
-        The method to use for constructing the Hankel matrix.
-        Options are 'cov', 'cov_R', 'dat'
+        The number of block rows in the Hankel matrix.
+    method : {'cov', 'cov_R', 'dat'}
+        The method for constructing the Hankel matrix:
+        - 'cov': Covariance-based.
+        - 'cov_R': Covariance-based with auto-correlations.
+        - 'dat': Data-driven.
     calc_unc : bool, optional
-        Whether to calculate uncertainties (default is False). Only applicable for the 'cov' method.
+        Whether to calculate uncertainty matrices. Default is False.
     nb : int, optional
-        The number of data blocks to use for uncertainty calculations (default is 100).
+        The number of data blocks to use for uncertainty calculations. Default is 50.
 
     Returns
     -------
     Hank : np.ndarray
         The constructed Hankel matrix.
-    T : np.ndarray, optional
-        The uncertainty matrix. Only returned if `calc_unc` is True.
+    T : np.ndarray or None
+        The uncertainty matrix, returned only if `calc_unc` is True. None otherwise.
 
     Raises
     ------
     AttributeError
-        If `method` is not one of 'cov', 'cov_R', 'dat'
+        If `method` is not one of {'cov', 'cov_R', 'dat'}, or if data is insufficient for
+        uncertainty calculation.
+
+    Notes
+    -----
+    Uncertainty calculations follow the approach detailed in
     """
+
     Ndat = Y.shape[1]  # number of data points
     l = Y.shape[0]  # number of channels # noqa E741 (ambiguous variable name 'l')
     r = Yref.shape[0]  # number of reference channels
@@ -91,7 +102,13 @@ def build_hank(
                 Hcov_k = np.dot(Yf_k, Yp_k.T) / Nb
 
                 Hcov_vec_k = Hcov_k.reshape(-1, order="F")
-                T[:, k] = (Hcov_vec_k - Hvec0) / np.sqrt(nb * (nb - 1))
+                if Hcov_vec_k.shape[0] < T.shape[0]:
+                    raise AttributeError(
+                        "Not enough data points per data block."
+                        "Try reducing the number of data blocks, nb and/or the number of block-rows, br"
+                    )
+                else:
+                    T[:, k] = (Hcov_vec_k - Hvec0) / np.sqrt(nb * (nb - 1))
 
     elif method == "cov_R":
         # Correlations
@@ -122,7 +139,13 @@ def build_hank(
                 )
 
                 Hcov_vec_j = Hcov_j.reshape(-1, 1, order="f")
-                T[:, j - 1] = (Hcov_vec_j - Hvec0).flatten() / np.sqrt(nb * (nb - 1))
+                if Hcov_vec_j.shape[0] < T.shape[0]:
+                    raise AttributeError(
+                        "Not enough data points per data block."
+                        "Try reducing the number of data blocks, nb and/or the number of block-rows, br"
+                    )
+                else:
+                    T[:, j - 1] = (Hcov_vec_j - Hvec0).flatten() / np.sqrt(nb * (nb - 1))
 
     elif method == "dat":
         # Efficient method for assembling the Hankel matrix for data-driven SSI
@@ -149,7 +172,13 @@ def build_hank(
                 Hdat_j = R[r * (p + 1) :, : r * (p + 1)]
 
                 Hdat_vec_j = Hdat_j.reshape(-1, order="F")
-                T[:, j] = (Hdat_vec_j - Hvec0) / np.sqrt(nb * (nb - 1))
+                if Hdat_vec_j.shape[0] < T.shape[0]:
+                    raise AttributeError(
+                        "Not enough data points per data block."
+                        "Try reducing the number of data blocks, nb and/or the number of block-rows, br"
+                    )
+                else:
+                    T[:, j] = (Hdat_vec_j - Hvec0) / np.sqrt(nb * (nb - 1))
 
     else:
         raise AttributeError(
@@ -169,32 +198,37 @@ def SSI(
     H: np.ndarray, br: int, ordmax: int, step: int = 1
 ) -> typing.Tuple[typing.List[np.ndarray], typing.List[np.ndarray]]:
     """
-    Perform System Identification using Stochastic Subspace Identification (SSI) method.
+    Perform System Identification using the Stochastic Subspace Identification (SSI) method.
+
+    The SSI algorithm estimates system matrices and output influence matrices for increasing
+    model orders, based on a provided Hankel matrix.
 
     Parameters
     ----------
-    H : numpy.ndarray
-        Hankel matrix of the system.
+    H : np.ndarray
+        The Hankel matrix of the system.
     br : int
         Number of block rows in the Hankel matrix.
     ordmax : int
-        Maximum order to consider for system identification.
+        Maximum system order to consider for identification.
     step : int, optional
         Step size for increasing system order. Default is 1.
 
     Returns
     -------
-    tuple
-        - A : list of numpy arrays
-            Estimated system matrices A for various system orders.
-        - C : list of numpy arrays
-            Estimated output influence matrices C for various system orders.
+    Obs : np.ndarray
+        The observability matrix for the system.
+    A : list of np.ndarray
+        Estimated system matrices for various system orders.
+    C : list of np.ndarray
+        Estimated output influence matrices for various system orders.
 
-    Note
+    Notes
     -----
-    Classical implementation of the SSI algorithm using the shift structure of the observability matrix.
-    For more efficient implementation, consider using SSI_FAST function.
+    This is a classical implementation of SSI using the shift structure of the observability
+    matrix. For faster implementations, consider using `SSI_fast`.
     """
+
     Nch = int(H.shape[0] / (br))
     # SINGULAR VALUE DECOMPOSITION
     U1, S1, V1_t = np.linalg.svd(H)
@@ -206,7 +240,7 @@ def SSI(
     C = []
     # loop for increasing order of the system
     logger.info("SSI for increasing model order...")
-    for ii in trange(1, ordmax + 1, step):
+    for ii in trange(0, ordmax + 1, step):
         Obs = np.dot(U1[:, :ii], S1rad[:ii, :ii])  # Observability matrix
         # Con = np.dot(S1rad[:ii, :ii], V1_t[: ii, :]) # Controllability matrix
         # System Matrix
@@ -232,28 +266,35 @@ def SSI_fast(
     typing.List[np.ndarray],
 ]:
     """
-    Perform Subspace System Identification (SSI) with optional uncertainty calculations.
+    Perform a fast implementation of Stochastic Subspace Identification (SSI).
+
+    This optimized SSI method uses QR decomposition to accelerate the extraction of system
+    and output matrices for varying model orders.
 
     Parameters
     ----------
     H : np.ndarray
         The Hankel matrix.
     br : int
-        The number of block rows.
+        Number of block rows in the Hankel matrix.
     ordmax : int
-        The maximum model order.
+        Maximum system order for identification.
     step : int, optional
-        The step size for increasing model order (default is 1).
+        Step size for increasing system order. Default is 1.
 
     Returns
     -------
     Obs : np.ndarray
-        The observability matrix.
+        The global observability matrix of the system.
     A : list of np.ndarray
-        List of system matrices for each model order.
+        List of estimated system matrices for each model order.
     C : list of np.ndarray
-        List of output influence matrices for each model order.
+        List of estimated output influence matrices for each model order.
 
+    Notes
+    -----
+    This method is computationally more efficient than the classical SSI approach,
+    leveraging QR decomposition for rapid estimation, see.
     """
 
     l = int(H.shape[0] / (br))  # noqa E741 (ambiguous variable name 'l')  Number of channels
@@ -273,14 +314,14 @@ def SSI_fast(
     S = np.dot(Q.T, Odw)
     # Con = np.dot(S1rad[:ordmax, :ordmax], V1_t[: ordmax, :]) # Controllability matrix
     # Initialize A and C matrices
-    AA, CC = [], []
+    A, C = [], []
     # loop for increasing order of the system
     logger.info("SSI for increasing model order...")
-    for n in trange(1, ordmax + 1, step):
-        AA.append(np.dot(np.linalg.inv(R[:n, :n]), S[:n, :n]))
-        CC.append(Obs[:l, :n])
+    for n in trange(0, ordmax + 1, step):
+        A.append(np.dot(np.linalg.inv(R[:n, :n]), S[:n, :n]))
+        C.append(Obs[:l, :n])
     logger.debug("... Done!")
-    return Obs, AA, CC
+    return Obs, A, C
 
 
 # -----------------------------------------------------------------------------
@@ -293,11 +334,11 @@ def SSI_poles(
     ordmax: int,
     dt: float,
     step: int = 1,
+    HC: bool = True,
+    xi_max: float = 0.1,
     calc_unc: bool = False,
     H: np.ndarray = None,
     T: np.ndarray = None,
-    xi_max: float = 0.1,
-    nb: int = 100,
 ) -> typing.Tuple[
     np.ndarray,
     np.ndarray,
@@ -309,52 +350,54 @@ def SSI_poles(
     typing.Optional[np.ndarray],
 ]:
     """
-    Calculate modal parameters (natural frequencies, damping ratios, mode shapes) for increasing model orders
-    using Subspace System Identification (SSI) with optional uncertainty calculations.
+    Calculate modal parameters using the Stochastic Subspace Identification (SSI) method.
+
+    The function computes natural frequencies, damping ratios, and mode shapes for a range
+    of system orders. Optional uncertainty propagation can be performed.
 
     Parameters
     ----------
     Obs : np.ndarray
-        The observability matrix.
+        The global observability matrix.
     AA : list of np.ndarray
-        List of system matrices for each model order.
+        List of estimated system matrices for each model order.
     CC : list of np.ndarray
         List of output matrices for each model order.
     ordmax : int
         The maximum model order.
     dt : float
-        The time step for discrete-time to continuous-time conversion.
+        Sampling time step.
     step : int, optional
-        The step size for increasing model order (default is 1).
-    calc_unc : bool, optional
-        Whether to calculate uncertainties (default is False).
-    H : np.ndarray, optional
-        The Hankel matrix.
-    T : np.ndarray, optional
-        Auxiliary matrix cov(H).
+        Step size for increasing model order. Default is 1.
+    HC : bool, optional
+        Whether to apply modal filtering to remove unstable poles. Default is True.
     xi_max : float, optional
-        Maximum allowed damping (default is 0.1).
-    nb : int, optional
-        The number of data blocks to use for uncertainty calculations (default is 100).
-
+        Maximum allowed damping ratio. Default is 0.1.
+    calc_unc : bool, optional
+        Whether to calculate uncertainties for modal parameters. Default is False.
+    H : np.ndarray, optional
+        The Hankel matrix, required for uncertainty propagation. Default is None.
+    T : np.ndarray, optional
+        Auxiliary uncertainty matrix `cov(H)` used in uncertainty propagation.
 
     Returns
     -------
     Fn : np.ndarray
-        Natural frequencies.
+        Array of natural frequencies for each system order.
     Xi : np.ndarray
-        Damping ratios.
+        Array of damping ratios for each system order.
     Phi : np.ndarray
-        Normalized mode shapes.
+        Normalised (to unity) mode shapes for each system order.
     Lambdas : np.ndarray
-        Continuous-time eigenvalues.
+        Continuous-time eigenvalues for each system order.
     Fn_std : np.ndarray, optional
-        Covariances of natural frequencies. Returned only if `calc_unc` is True.
+        Standard deviations of natural frequencies, returned if `calc_unc` is True.
     Xi_std : np.ndarray, optional
-        Covariances of damping ratios. Returned only if `calc_unc` is True.
+        Standard deviations of damping ratios, returned if `calc_unc` is True.
     Phi_std : np.ndarray, optional
-        Covariances of mode shapes. Returned only if `calc_unc` is True.
+        Standard deviations of mode shapes, returned if `calc_unc` is True.
     """
+
     # NB Nch = l
 
     l = int(CC[0].shape[0])  # noqa E741 (ambiguous variable name 'l')
@@ -366,27 +409,28 @@ def SSI_poles(
     S2 = np.hstack([np.zeros((p * l, l)), np.eye(p * l)])
 
     # initialization of the matrix that contains the frequencies
-    Lambdas = np.full((ordmax, int((ordmax) / 1)), np.nan, dtype=complex)
+    Lambdas = np.full((ordmax, int((ordmax) / step + 1)), np.nan, dtype=complex)
     # initialization of the matrix that contains the frequencies
-    Fn = np.full((ordmax, int((ordmax) / 1)), np.nan)
+    Fn = np.full((ordmax, int((ordmax) / step + 1)), np.nan)
     # initialization of the matrix that contains the damping ratios
-    Xi = np.full((ordmax, int((ordmax) / 1)), np.nan)
+    Xi = np.full((ordmax, int((ordmax) / step + 1)), np.nan)
     # initialization of the matrix that contains the mode shapes
-    Phi = np.full((ordmax, int((ordmax) / 1), l), np.nan, dtype=complex)
+    Phi = np.full((ordmax, int((ordmax) / step + 1), l), np.nan, dtype=complex)
 
     if calc_unc:
+        nb = T.shape[1]
         r = int(H.shape[1] / (p + 1))  # Number of reference channels
 
         # Calculate SVD and truncate at nth order
         U, S, VT = np.linalg.svd(H)
 
         # initialization of the matrix that contains the frequencies
-        Fn_std = np.full((ordmax, int((ordmax) / 1)), np.nan)
+        Fn_std = np.full((ordmax, int((ordmax) / step + 1)), np.nan)
         # initialization of the matrix that contains the damping ratios
-        Xi_std = np.full((ordmax, int((ordmax) / 1)), np.nan)
+        Xi_std = np.full((ordmax, int((ordmax) / step + 1)), np.nan)
         # initialization of the matrix that contains the mode shapes
         Phi_std = np.full(
-            (ordmax, int((ordmax) / 1), l),
+            (ordmax, int((ordmax) / step + 1), l),
             np.nan,
         )
 
@@ -400,7 +444,7 @@ def SSI_poles(
         Q3 = np.zeros_like(Q1)
         Q4 = np.zeros((l * ordmax, nb))
         logger.info("... propagating uncertainty...")
-        for ii in trange(1, ordmax + 1):
+        for ii in trange(1, ordmax + 1, step):
             sn_k = Sn[ii - 1, ii - 1]
             Vn_k = Vn[:, ii - 1].reshape(-1, 1)
             Un_k = Un[:, ii - 1].reshape(-1, 1)
@@ -438,12 +482,13 @@ def SSI_poles(
             )
 
     logger.info("Calculating modal parameters for increasing model order...")
-    for n in trange(1, ordmax + 1):
-        Oi = Obs[:, :n]
+    for nn in trange(0, ordmax + 1, step):
+        n = nn // step
+        Oi = Obs[:, :nn]
         Oup = np.dot(S1, Oi)
         # Odw = np.dot(S2, Oi)
-        A = AA[n - 1]
-        C = CC[n - 1]
+        A = AA[n]
+        C = CC[n]
         # Compute modal parameters
         lam_d, l_eigvt, r_eigvt = linalg.eig(A, left=True)  # l_eigvt=chi, r_eigvt=phi
         lam_c = (np.log(lam_d)) * (1 / dt)  # to continous time
@@ -451,27 +496,37 @@ def SSI_poles(
         phi = np.dot(C, r_eigvt)  # N.B. this is \varphi
         fn = abs(lam_c) / (2 * np.pi)  # natural frequencies
 
-        # REMOVING UNSTABLE POLES to speed up loop on lam_c
-        # Identify elements that have their conjugate in lam_c
-        mask_conj = np.isin(lam_c, np.conj(lam_c))
-        # Remove conjugate duplicates by keeping only one element from each pair
-        unique_mask = mask_conj.copy()
-        processed = set()
-        for i, elem in enumerate(lam_c):
-            if unique_mask[i]:
-                conj = np.conj(elem)
-                if conj in processed:
-                    unique_mask[i] = False  # Remove the conjugate duplicate
-                else:
-                    processed.add(elem)  # Mark the element as processed
-        # Filter lam_c based on unique_mask
-        filtered_lam_c = np.where(unique_mask, lam_c, np.nan)
-        # Apply damping mask
-        mask_damp = (xi > 0) & (xi < xi_max)
-        filtered_lam_c = np.where(mask_damp, filtered_lam_c, np.nan)
-        # Filtered frequencies and damping
-        fn = abs(filtered_lam_c) / (2 * np.pi)  # natural frequencies
-        xi = -((np.real(filtered_lam_c)) / (abs(filtered_lam_c)))  # damping ratios
+        if HC is not False:
+            # REMOVING UNSTABLE POLES to speed up loop on lam_c
+            # Identify elements that have their conjugate in lam_c
+            mask_conj = np.isin(lam_c, np.conj(lam_c))
+            # Remove conjugate duplicates by keeping only one element from each pair
+            unique_mask = mask_conj.copy()
+            processed = set()
+            for i, elem in enumerate(lam_c):
+                if unique_mask[i]:
+                    conj = np.conj(elem)
+                    if conj in processed:
+                        unique_mask[i] = False  # Remove the conjugate duplicate
+                    else:
+                        processed.add(elem)  # Mark the element as processed
+            # Filter lam_c based on unique_mask
+            filtered_lam_c = np.where(unique_mask, lam_c, np.nan)
+            # Apply damping mask
+            mask_damp = (xi > 0) & (xi < xi_max)
+            filtered_lam_c = np.where(mask_damp, filtered_lam_c, np.nan)
+            # Filtered frequencies and damping
+            fn = abs(filtered_lam_c) / (2 * np.pi)  # natural frequencies
+            xi = -((np.real(filtered_lam_c)) / (abs(filtered_lam_c)))  # damping ratios
+            # Expand the mask to 3D by adding a new axis (for mode shape)
+            expandedmask1 = np.expand_dims(unique_mask, axis=-1)
+            expandedmask2 = np.expand_dims(mask_damp, axis=-1)
+            # Repeat the mask along the new dimension
+            expandedmask1 = np.repeat(expandedmask1, Phi.shape[2], axis=-1)
+            expandedmask2 = np.repeat(expandedmask2, Phi.shape[2], axis=-1)
+            # mask the values
+            phi1 = np.where(expandedmask1, phi.T, np.nan)
+            phi1 = np.where(expandedmask2, phi1, np.nan)
 
         # Normalisation to unity
         idx = np.argmax(abs(phi), axis=0)
@@ -487,16 +542,19 @@ def SSI_poles(
         )
         vmaxs = [phi[idx[k1], k1] for k1 in range(len(idx))]
 
-        Fn[: len(fn), n - 1] = fn  # save the frequencies
-        Xi[: len(fn), n - 1] = xi  # save the damping ratios
-        Phi[: len(fn), n - 1, :] = phi.T
-        Lambdas[: len(fn), n - 1] = lam_c
+        Fn[: len(fn), n] = fn  # save the frequencies
+        Xi[: len(fn), n] = xi  # save the damping ratios
+        if HC is not False:
+            Phi[: len(fn), n, :] = phi1
+        else:
+            Phi[: len(fn), n, :] = phi.T
+        Lambdas[: len(fn), n] = lam_c
 
         if calc_unc:
-            In = np.eye(n)
-            Inl = np.eye(n * l)
-            Zero = np.zeros((n, (ordmax) - n))
-            Zero1 = np.zeros((n * l, l * ((ordmax) - n)))
+            In = np.eye(nn)
+            Inl = np.eye(nn * l)
+            Zero = np.zeros((nn, (ordmax) - nn))
+            Zero1 = np.zeros((nn * l, l * ((ordmax) - nn)))
             matr = np.hstack((In, Zero))
             matr1 = np.hstack((Inl, Zero1))
 
@@ -508,18 +566,18 @@ def SSI_poles(
             Q3n = np.dot(S4_n, Q3)
             Q4n = np.dot(matr1, Q4)
 
-            Un = U[:, :n]
-            Vn = VT.T[:, :n]
-            Sn = np.diag(S[:n])
+            Un = U[:, :nn]
+            Vn = VT.T[:, :nn]
+            Sn = np.diag(S[:nn])
 
-            Pnn = np.zeros((n**2, n**2))
-            for jj in range(n):
-                ek = np.zeros(n).reshape(-1, 1)
+            Pnn = np.zeros((nn**2, nn**2))
+            for jj in range(nn):
+                ek = np.zeros(nn).reshape(-1, 1)
                 ek[jj, 0] = 1
-                Pnn[:, jj * n : (jj + 1) * n] = np.kron(np.eye(n), ek)
+                Pnn[:, jj * nn : (jj + 1) * nn] = np.kron(np.eye(nn), ek)
 
             OO = np.linalg.pinv(np.dot(Oup.T, Oup))
-            PnQ1 = (Pnn + np.eye(n**2)) @ Q1n
+            PnQ1 = (Pnn + np.eye(nn**2)) @ Q1n
             PnQ23 = Pnn @ Q2n + Q3n
 
             # step 3 algo 2
@@ -528,7 +586,7 @@ def SSI_poles(
                     # step 4 algo 2
                     # Eq. 44
                     Qi = np.dot(
-                        np.kron(r_eigvt[:, jj].T, np.eye(n)), (-lam_d[jj] * PnQ1 + PnQ23)
+                        np.kron(r_eigvt[:, jj].T, np.eye(nn)), (-lam_d[jj] * PnQ1 + PnQ23)
                     )
                     # Lemma 5 - fn and xi
                     Mat1 = np.array(
@@ -565,12 +623,12 @@ def SSI_poles(
                     # Eq. 40
                     cov_fx = np.dot(Ufx, Ufx.T)
                     # standard deviation
-                    Fn_std[jj, n - 1] = cov_fx[0, 0] ** 0.5
-                    Xi_std[jj, n - 1] = cov_fx[1, 1] ** 0.5
+                    Fn_std[jj, n] = cov_fx[0, 0] ** 0.5
+                    Xi_std[jj, n] = cov_fx[1, 1] ** 0.5
 
                     # Lemma 5 - phi
-                    Mat1_1 = np.linalg.pinv(lam_d[jj] * np.eye(n) - A)
-                    Mat2_1 = np.eye(n) - np.dot(
+                    Mat1_1 = np.linalg.pinv(lam_d[jj] * np.eye(nn) - A)
+                    Mat2_1 = np.eye(nn) - np.dot(
                         r_eigvt[:, jj].reshape(-1, 1),
                         l_eigvt[:, jj].reshape(-1, 1).conj().T,
                     ) / np.dot(
@@ -603,7 +661,7 @@ def SSI_poles(
                     # Eq. 40
                     cov_phi = np.dot(Uph, Uph.T)
                     # standard deviation
-                    Phi_std[jj, n - 1, :] = abs(np.diag(cov_phi[:l, :l])) ** 0.5
+                    Phi_std[jj, n, :] = abs(np.diag(cov_phi[:l, :l])) ** 0.5
             logger.debug("... uncertainty calculations done!")
     if calc_unc is True:
         return Fn, Xi, Phi, Lambdas, Fn_std, Xi_std, Phi_std

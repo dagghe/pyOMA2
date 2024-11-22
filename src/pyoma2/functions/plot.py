@@ -1324,6 +1324,8 @@ def plt_ch_info(
 
     ndat, nch = data.shape
 
+    figs = []
+    axs = []
     for ii in range(nch):
         fig = plt.figure(figsize=(8, 6), layout="constrained")
         spec = fig.add_gridspec(3, 2)
@@ -1431,8 +1433,10 @@ def plt_ch_info(
             fig.suptitle(f"Info plot channel nr.{ch_idx[ii]}")
         else:
             fig.suptitle(f"Info plot channel nr.{ii}")
-
-    return fig, [ax0, ax10, ax20, ax11, ax21]
+        figs.append(fig)
+        axs.append([ax0, ax10, ax20, ax11, ax21])
+    # return fig, [ax0, ax10, ax20, ax11, ax21]
+    return figs, axs
 
 
 # -----------------------------------------------------------------------------
