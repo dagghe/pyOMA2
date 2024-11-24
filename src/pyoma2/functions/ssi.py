@@ -419,7 +419,7 @@ def SSI_poles(
 
     if calc_unc:
         nb = T.shape[1]
-        r = int(H.shape[1] / (p + 1))  # Number of reference channels
+        r = int(H.shape[1] / q)  # Number of reference channels
 
         # Calculate SVD and truncate at nth order
         U, S, VT = np.linalg.svd(H)
@@ -511,13 +511,13 @@ def SSI_poles(
                     else:
                         processed.add(elem)  # Mark the element as processed
             # Filter lam_c based on unique_mask
-            filtered_lam_c = np.where(unique_mask, lam_c, np.nan)
+            lam_c = np.where(unique_mask, lam_c, np.nan)
             # Apply damping mask
             mask_damp = (xi > 0) & (xi < xi_max)
-            filtered_lam_c = np.where(mask_damp, filtered_lam_c, np.nan)
+            lam_c = np.where(mask_damp, lam_c, np.nan)
             # Filtered frequencies and damping
-            fn = abs(filtered_lam_c) / (2 * np.pi)  # natural frequencies
-            xi = -((np.real(filtered_lam_c)) / (abs(filtered_lam_c)))  # damping ratios
+            fn = abs(lam_c) / (2 * np.pi)  # natural frequencies
+            xi = -((np.real(lam_c)) / (abs(lam_c)))  # damping ratios
             # Expand the mask to 3D by adding a new axis (for mode shape)
             expandedmask1 = np.expand_dims(unique_mask, axis=-1)
             expandedmask2 = np.expand_dims(mask_damp, axis=-1)
@@ -527,27 +527,34 @@ def SSI_poles(
             # mask the values
             phi1 = np.where(expandedmask1, phi.T, np.nan)
             phi1 = np.where(expandedmask2, phi1, np.nan)
+            phi = phi1.T
 
-        # Normalisation to unity
-        idx = np.argmax(abs(phi), axis=0)
-        phi = (
-            np.array(
-                [
-                    phi[:, ii] / phi[np.argmax(abs(phi[:, ii])), ii]
-                    for ii in range(phi.shape[1])
-                ]
+        try:
+            # Normalisation to unity
+            idx = np.argmax(abs(phi), axis=0)
+            phi = (
+                np.array(
+                    [
+                        phi[:, ii] / phi[np.argmax(abs(phi[:, ii])), ii]
+                        for ii in range(phi.shape[1])
+                    ]
+                )
+                .reshape(-1, l)
+                .T
             )
-            .reshape(-1, l)
-            .T
-        )
-        vmaxs = [phi[idx[k1], k1] for k1 in range(len(idx))]
+            vmaxs = [phi[idx[k1], k1] for k1 in range(len(idx))]
+        except Exception as e:
+            logging.debug(f"Ignored exception during normalization: {e}")
+            pass
 
         Fn[: len(fn), n] = fn  # save the frequencies
         Xi[: len(fn), n] = xi  # save the damping ratios
-        if HC is not False:
-            Phi[: len(fn), n, :] = phi1
-        else:
-            Phi[: len(fn), n, :] = phi.T
+        # if HC is not False:
+        #     Phi[: len(fn), n, :] = phi1
+        # else:
+        #     Phi[: len(fn), n, :] = phi.T
+
+        Phi[: len(fn), n, :] = phi.T
         Lambdas[: len(fn), n] = lam_c
 
         if calc_unc:
@@ -801,6 +808,7 @@ def SSI_mpe(
     Xi_pol: np.ndarray,
     Phi_pol: np.ndarray,
     order: typing.Union[int, list, str],
+    step: int,
     Lab: typing.Optional[np.ndarray] = None,
     rtol: float = 5e-2,
     Fn_std: np.ndarray = None,
@@ -915,7 +923,7 @@ def SSI_mpe(
                         sel_freq_cov.append(Fn_std[index, i])
                         sel_Xi_std.append(Xi_std[index, i])
                         sel_Phi_std.append(Phi_std[index, i, :])
-                order_out = i
+                order_out = i * step
                 break
 
         if not found:
@@ -925,6 +933,7 @@ def SSI_mpe(
     # OPZIONE 2 order = int
     # -----------------------------------------------------------------------------
     elif isinstance(order, int):
+        order = int(order / step)
         for fj in tqdm(freq_ref):
             sel = np.nanargmin(np.abs(Fn_pol[:, order] - fj))
             fns_at_ord_ii = Fn_pol[:, order][sel]
@@ -940,11 +949,12 @@ def SSI_mpe(
                     sel_freq_cov.append(Fn_std[:, order][sel])
                     sel_Xi_std.append(Xi_std[:, order][sel])
                     sel_Phi_std.append(Phi_std[:, order][sel, :])
-                order_out = order
+                order_out = order * step
     # =============================================================================
     # OPZIONE 3 order = list[int]
     # -----------------------------------------------------------------------------
     elif isinstance(order, list):
+        order = int(order / step)
         order_out = np.array(order)
         for ii, fj in enumerate(tqdm(freq_ref)):
             sel = np.nanargmin(np.abs(Fn_pol[:, order[ii]] - fj))
@@ -961,7 +971,7 @@ def SSI_mpe(
                     sel_freq_cov.append(Fn_std[:, order[ii]][sel])
                     sel_Xi_std.append(Xi_std[:, order[ii]][sel])
                     sel_Phi_std.append(Phi_std[:, order[ii]][sel, :])
-                order_out[ii] = order[ii]
+                order_out[ii] = order[ii] * step
     else:
         raise AttributeError(
             'order must be either of type(int), type(list(int)) or "find_min"'

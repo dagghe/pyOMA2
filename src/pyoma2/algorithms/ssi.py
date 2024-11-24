@@ -195,6 +195,8 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         Xi_pol = self.result.Xi_poles
         Phi_pol = self.result.Phi_poles
         Lab = self.result.Lab
+        step = self.run_params.step
+
         # Get cov
         Fn_pol_std = self.result.Fn_poles_std
         Xi_pol_std = self.result.Xi_poles_std
@@ -206,6 +208,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Xi_pol,
             Phi_pol,
             order_in,
+            step,
             Lab=Lab,
             rtol=rtol,
             Fn_std=Fn_pol_std,
@@ -252,6 +255,8 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         Fn_pol = self.result.Fn_poles
         Xi_pol = self.result.Xi_poles
         Phi_pol = self.result.Phi_poles
+        step = self.run_params.step
+
         # Get cov
         Fn_pol_std = self.result.Fn_poles_std
         Xi_pol_std = self.result.Xi_poles_std
@@ -269,6 +274,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Xi_pol,
             Phi_pol,
             order,
+            step,
             Lab=None,
             rtol=rtol,
             Fn_std=Fn_pol_std,

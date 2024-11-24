@@ -148,7 +148,7 @@ class SSIRunParams(BaseRunParams):
     """
 
     # METODO 1: run
-    br: int
+    br: int = 20
     method: str = None
     ref_ind: typing.Optional[typing.List[int]] = None
     ordmin: int = 0

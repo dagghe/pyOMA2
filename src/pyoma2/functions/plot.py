@@ -246,9 +246,9 @@ def stab_plot(
     ordmin: int = 0,
     freqlim: typing.Optional[typing.Tuple] = None,
     hide_poles: bool = True,
+    Fn_std: np.array = None,
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
-    Fn_std=None,
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plots a stabilization chart of the poles of a system.
