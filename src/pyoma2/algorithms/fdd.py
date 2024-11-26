@@ -389,8 +389,12 @@ class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
             If the algorithm has not been run and no results are available.
         """
 
-        if not self.result:
-            raise ValueError("Run algorithm first")
+        if (
+            self.result is None
+            or self.result.Fn is None
+            or (isinstance(self.result, EFDDResult) and self.result.Xi is None)
+        ):
+            raise ValueError(f"Run {self.name} algorithm first and mpe method")
 
         fig, ax = plot.EFDD_FIT_plot(
             Fn=self.result.Fn,
