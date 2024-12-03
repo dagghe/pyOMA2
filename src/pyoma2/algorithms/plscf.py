@@ -300,7 +300,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
 
         fig, ax = plot.cluster_plot(
             Fn=self.result.Fn_poles,
-            Sm=self.result.Xi_poles,
+            Xi=self.result.Xi_poles,
             Lab=self.result.Lab,
             ordmin=self.run_params.ordmin,
             freqlim=freqlim,
