@@ -898,7 +898,7 @@ def example_data() -> dict:
     """
 
     rng = np.random.RandomState(12345)  # Set the seed
-    fs = 200  # [Hz] Sampling freqiency
+    fs = 600  # [Hz] Sampling freqiency
     T = 900  # [sec] Period of the time series
 
     dt = 1 / fs  # [sec] time resolution
@@ -1003,7 +1003,7 @@ def example_data() -> dict:
     # Adding noise
     # SNR = 10*np.log10(_af/_ar)
     SNR = 10  # Signal-to-Noise ratio
-    ar = af / (10 ** (SNR / 10))  # Noise amplitude
+    ar = af / (10 ** (SNR / 20))  # Noise amplitude
 
     # Initialize the arrays (copy of accelerations)
     acc = a.copy()

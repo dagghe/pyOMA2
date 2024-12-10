@@ -7,14 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- unc_calc for SSI should now work properly
+- animation problem in pyvista
+- small fix (moved ax.grid()) in plt_data
+
 ### Changed
 
 - Renamed `anim_mode_g2` to `anim_mode_geo2` in `GeometryMixin` class
 - Updated hierarchy for results and run_params classes
+- Renamed `plot_cluster()` function to `plot_freqvsdamp()`
 
 ### Added
 
 - pre commit in github workflow
+- clus.py file for clustering functions
+- autossi.py file for new class `AutoSSI`
+- `AutoSSIRunParams`, `Step1`, `Step2`, `Step3` and `Clustering` classes to run_params.py
+- `AutoSSIResult` class to result.py
+- clustering plotting functions to plot.py
 
 
 ## [1.0.0] - 2024-09-12

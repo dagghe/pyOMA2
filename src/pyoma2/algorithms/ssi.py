@@ -82,11 +82,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         )
 
         # Get state matrix and output matrix
-        (
-            Obs,
-            A,
-            C,
-        ) = ssi.SSI_fast(H, br, ordmax, step=step)
+        Obs, A, C = ssi.SSI_fast(H, br, ordmax, step=step)
 
         hc_xi_max = hc["xi_max"]
         # Get frequency poles (and damping and mode shapes)
@@ -331,7 +327,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         )
         return fig, ax
 
-    def plot_cluster(
+    def plot_freqvsdamp(
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,

@@ -5,13 +5,11 @@ related to the pyOMA2 module.
 
 from __future__ import annotations
 
-import typing
+from typing import List, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
 from pydantic import BaseModel, ConfigDict
-
-"""TODO fix type"""
 
 
 class BaseResult(BaseModel):
@@ -20,16 +18,16 @@ class BaseResult(BaseModel):
 
     Attributes
     ----------
-    Fn : numpy.typing.NDArray
+    Fn : numpy.NDArray
         Array of natural frequencies obtained from modal analysis.
-    Phi : numpy.typing.NDArray
+    Phi : numpy.NDArray
         Array of mode shape vectors obtained from modal analysis.
     """
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # dopo mpe o mpe_from_plot
-    Fn: typing.Optional[npt.NDArray[np.float64]] = None  # array of natural frequencies
-    Phi: typing.Optional[npt.NDArray[np.float64]] = None  # array of Mode shape vectors
+    Fn: Optional[npt.NDArray[np.float64]] = None  # array of natural frequencies
+    Phi: Optional[npt.NDArray[np.float64]] = None  # array of Mode shape vectors
 
 
 class FDDResult(BaseResult):
@@ -38,20 +36,20 @@ class FDDResult(BaseResult):
 
     Attributes
     ----------
-    freq : numpy.typing.NDArray
+    freq : numpy.NDArray
         Array of frequencies.
-    Sy : numpy.typing.NDArray
+    Sy : numpy.NDArray
         PSD obtained from the FDD analysis.
-    S_val : numpy.typing.NDArray
+    S_val : numpy.NDArray
         Singular values of the PSD.
-    S_vec : numpy.typing.NDArray
+    S_vec : numpy.NDArray
         Singular vectors of the PSD.
     """
 
-    freq: typing.Optional[npt.NDArray[np.float64]] = None
-    Sy: typing.Optional[npt.NDArray[np.float64]] = None
-    S_val: typing.Optional[npt.NDArray[np.float64]] = None
-    S_vec: typing.Optional[npt.NDArray[np.float64]] = None
+    freq: Optional[npt.NDArray[np.float64]] = None
+    Sy: Optional[npt.NDArray[np.float64]] = None
+    S_val: Optional[npt.NDArray[np.float64]] = None
+    S_vec: Optional[npt.NDArray[np.float64]] = None
 
 
 class EFDDResult(FDDResult):
@@ -61,23 +59,23 @@ class EFDDResult(FDDResult):
 
     Attributes
     ----------
-    freq : numpy.typing.NDArray
+    freq : numpy.NDArray
         Array of frequencies.
-    Sy : numpy.typing.NDArray
+    Sy : numpy.NDArray
         PSD obtained from the analysis.
-    S_val : numpy.typing.NDArray
+    S_val : numpy.NDArray
         Singular values of the PSD.
-    S_vec : numpy.typing.NDArray
+    S_vec : numpy.NDArray
         Singular vectors of the PSD.
-    Xi : numpy.typing.NDArray
+    Xi : numpy.NDArray
         Array of damping ratios obtained from modal analysis.
     forPlot : list
         A list to store data for plotting purposes.
     """
 
     # dopo mpe, MPE_forPlot
-    Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
-    forPlot: typing.Optional[typing.List] = None
+    Xi: Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
+    forPlot: Optional[List] = None
 
 
 class SSIResult(BaseResult):
@@ -86,65 +84,61 @@ class SSIResult(BaseResult):
 
     Attributes
     ----------
-    Obs : numpy.typing.NDArray, optional
+    Obs : numpy.NDArray, optional
         Observability matrix obtained from the SSI analysis.
-    A : list of numpy.typing.NDArray, optional
+    A : list of numpy.NDArray, optional
         List of system matrices A from the SSI analysis.
-    C : list of numpy.typing.NDArray, optional
+    C : list of numpy.NDArray, optional
         List of system matrices C from the SSI analysis.
-    H : numpy.typing.NDArray, optional
+    H : numpy.NDArray, optional
         Hankel matrix used in SSI analysis.
-    Lambds : numpy.typing.NDArray, optional
+    Lambds : numpy.NDArray, optional
         Array of eigenvalues from the SSI analysis.
-    Fn_poles : numpy.typing.NDArray, optional
+    Fn_poles : numpy.NDArray, optional
         Array of all natural frequencies.
-    Xi_poles : numpy.typing.NDArray, optional
+    Xi_poles : numpy.NDArray, optional
         Array of all damping ratios.
-    Phi_poles : numpy.typing.NDArray, optional
+    Phi_poles : numpy.NDArray, optional
         Array of all mode shape vectors.
-    Lab : numpy.typing.NDArray, optional
+    Lab : numpy.NDArray, optional
         Array of labels for all the poles.
-    Fn_poles_std : numpy.typing.NDArray, optional
+    Fn_poles_std : numpy.NDArray, optional
         Covariance of all natural frequencies.
-    Xi_poles_std : numpy.typing.NDArray, optional
+    Xi_poles_std : numpy.NDArray, optional
         Covariance of all damping ratios.
-    Phi_poles_std : numpy.typing.NDArray, optional
+    Phi_poles_std : numpy.NDArray, optional
         Covariance of all mode shape vectors.
-    Xi : numpy.typing.NDArray, optional
+    Xi : numpy.NDArray, optional
         Array of damping ratios.
     order_out : Union[list[int], int], optional
         Output order after modal parameter estimation. Can be a list of integers or a single integer.
-    Fn_std : numpy.typing.NDArray, optional
+    Fn_std : numpy.NDArray, optional
         Covariance of natural frequencies obtained from the analysis.
-    Xi_std : numpy.typing.NDArray, optional
+    Xi_std : numpy.NDArray, optional
         Covariance of damping ratios obtained from the analysis.
-    Phi_std : numpy.typing.NDArray, optional
+    Phi_std : numpy.NDArray, optional
         Covariance of mode shape vectors obtained from the analysis.
     """
 
-    Obs: typing.Optional[npt.NDArray[np.float64]] = None
-    A: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
-    C: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
-    H: typing.Optional[npt.NDArray[np.float64]] = None
+    Obs: Optional[npt.NDArray[np.float64]] = None
+    A: Optional[List[npt.NDArray[np.float64]]] = None
+    C: Optional[List[npt.NDArray[np.float64]]] = None
+    H: Optional[npt.NDArray[np.float64]] = None
 
-    Lambds: typing.Optional[npt.NDArray[np.float64]] = None
-    Fn_poles: typing.Optional[npt.NDArray[np.float64]] = None
-    Xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
-    Phi_poles: typing.Optional[npt.NDArray[np.float64]] = None
-    Lab: typing.Optional[npt.NDArray[np.float64]] = None
-    Fn_poles_std: typing.Optional[npt.NDArray[np.float64]] = None
-    Xi_poles_std: typing.Optional[npt.NDArray[np.float64]] = None
-    Phi_poles_std: typing.Optional[npt.NDArray[np.float64]] = None
+    Lambds: Optional[npt.NDArray[np.float64]] = None
+    Fn_poles: Optional[npt.NDArray[np.float64]] = None
+    Xi_poles: Optional[npt.NDArray[np.float64]] = None
+    Phi_poles: Optional[npt.NDArray[np.float64]] = None
+    Lab: Optional[npt.NDArray[np.float64]] = None
+    Fn_poles_std: Optional[npt.NDArray[np.float64]] = None
+    Xi_poles_std: Optional[npt.NDArray[np.float64]] = None
+    Phi_poles_std: Optional[npt.NDArray[np.float64]] = None
     # dopo mpe, MPE_forPlot
-    Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
-    order_out: typing.Union[typing.List[int], int, None] = None
-    Fn_std: typing.Optional[npt.NDArray[np.float64]] = (
-        None  # covariance of natural frequencies
-    )
-    Xi_std: typing.Optional[npt.NDArray[np.float64]] = (
-        None  # covariance of damping ratios
-    )
-    Phi_std: typing.Optional[npt.NDArray[np.float64]] = None  # covariance of mode shapes
+    Xi: Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
+    order_out: Optional[Union[int, List[int]]] = None
+    Fn_std: Optional[npt.NDArray[np.float64]] = None  # covariance of natural frequencies
+    Xi_std: Optional[npt.NDArray[np.float64]] = None  # covariance of damping ratios
+    Phi_std: Optional[npt.NDArray[np.float64]] = None  # covariance of mode shapes
 
 
 class pLSCFResult(BaseResult):
@@ -153,39 +147,39 @@ class pLSCFResult(BaseResult):
 
     Attributes
     ----------
-    freq : numpy.typing.NDArray
+    freq : numpy.NDArray
         Array of frequencies.
-    Sy : numpy.typing.NDArray
+    Sy : numpy.NDArray
         PSD obtained from the analysis.
-    Ad : list of numpy.typing.NDArray
+    Ad : list of numpy.NDArray
         Denominator polynomial coefficients from pLSCF analysis.
-    Bn : list of numpy.typing.NDArray
+    Bn : list of numpy.NDArray
         Numerator polynomial coefficients from pLSCF analysis.
-    Fn_poles : numpy.typing.NDArray
+    Fn_poles : numpy.NDArray
         Array of identified natural frequencies (poles) from pLSCF analysis.
-    xi_poles : numpy.typing.NDArray
+    xi_poles : numpy.NDArray
         Array of damping ratios corresponding to identified poles.
-    Phi_poles : numpy.typing.NDArray
+    Phi_poles : numpy.NDArray
         Array of mode shape vectors corresponding to identified poles.
-    Lab : numpy.typing.NDArray
+    Lab : numpy.NDArray
         Array of labels for the identified poles.
-    Xi : numpy.typing.NDArray
+    Xi : numpy.NDArray
         Array of damping ratios obtained after modal parameter estimation.
     order_out : Union[list[int], int]
         Output order after modal parameter estimation. Can be a list of integers, or a single integer.
     """
 
-    freq: typing.Optional[npt.NDArray[np.float64]] = None
-    Sy: typing.Optional[npt.NDArray[np.float64]] = None
-    Ad: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
-    Bn: typing.Optional[typing.List[npt.NDArray[np.float64]]] = None
-    Fn_poles: typing.Optional[npt.NDArray[np.float64]] = None
-    Xi_poles: typing.Optional[npt.NDArray[np.float64]] = None
-    Phi_poles: typing.Optional[npt.NDArray[np.float64]] = None
-    Lab: typing.Optional[npt.NDArray[np.float64]] = None
+    freq: Optional[npt.NDArray[np.float64]] = None
+    Sy: Optional[npt.NDArray[np.float64]] = None
+    Ad: Optional[List[npt.NDArray[np.float64]]] = None
+    Bn: Optional[List[npt.NDArray[np.float64]]] = None
+    Fn_poles: Optional[npt.NDArray[np.float64]] = None
+    Xi_poles: Optional[npt.NDArray[np.float64]] = None
+    Phi_poles: Optional[npt.NDArray[np.float64]] = None
+    Lab: Optional[npt.NDArray[np.float64]] = None
     # dopo mpe, MPE_forPlot
-    Xi: typing.Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
-    order_out: typing.Union[typing.List[int], int, None] = None
+    Xi: Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
+    order_out: Optional[Union[List[int], int]] = None
 
 
 class MsPoserResult(BaseResult):
@@ -194,15 +188,15 @@ class MsPoserResult(BaseResult):
 
     Attributes
     ----------
-    Phi : numpy.typing.NDArray
+    Phi : numpy.NDArray
         Array of mode shape vectors obtained from MultiSetup Poser analysis.
-    Fn : numpy.typing.NDArray
+    Fn : numpy.NDArray
         Array of natural frequencies obtained from MultiSetup Poser analysis (mean value).
-    Fn_std : numpy.typing.NDArray
+    Fn_std : numpy.NDArray
         Standard deviation of natural frequencies between setups.
-    Xi : numpy.typing.NDArray
+    Xi : numpy.NDArray
         Array of damping ratios obtained from MultiSetup Poser analysis (mean value).
-    Xi_std : numpy.typing.NDArray
+    Xi_std : numpy.NDArray
         Standard deviation of damping ratios.
     """
 
@@ -212,3 +206,68 @@ class MsPoserResult(BaseResult):
     Fn_std: npt.NDArray[np.float64]
     Xi: npt.NDArray[np.float64]
     Xi_std: npt.NDArray[np.float64]
+
+
+class AutoSSIResult(SSIResult):
+    """
+    Result class for automated Structural System Identification (SSI) with clustering.
+
+    Attributes
+    ----------
+    clustering_results : dict, optional
+        Dictionary storing clustering results, if available.
+    """
+
+    clustering_results: Optional[dict] = {}
+
+
+class ClusteringResult(BaseResult):
+    """
+    Class to store clustering results and related metadata.
+
+    Attributes
+    ----------
+    Fn : ndarray of shape (n_modes,)
+        Natural frequencies of the modes.
+    Xi : ndarray of shape (n_modes,)
+        Damping ratios of the modes.
+    Phi : ndarray of shape (n_channels, n_modes)
+        Mode shapes.
+    Fn_fl : ndarray of shape (n_samples,)
+        Flattened array of natural frequencies from clustering.
+    Xi_fl : ndarray of shape (n_samples,)
+        Flattened array of damping ratios from clustering.
+    Phi_fl : ndarray of shape (n_samples, n_channels)
+        Flattened array of mode shapes from clustering.
+    Fn_std_fl : ndarray of shape (n_samples,), optional
+        Standard deviation of natural frequencies.
+    Xi_std_fl : ndarray of shape (n_samples,), optional
+        Standard deviation of damping ratios.
+    Phi_std_fl : ndarray of shape (n_samples, n_channels), optional
+        Standard deviation of mode shapes.
+    order_fl : ndarray of shape (n_samples,)
+        Orders corresponding to the flattened data.
+    labels : ndarray of shape (n_samples,)
+        Cluster labels for each sample.
+    dtot : ndarray of shape (n_samples, n_samples)
+        Pairwise distance matrix.
+    medoid_distances : ndarray of shape (n_clusters,)
+        Distance of each sample to its cluster medoid.
+    order_out : ndarray of shape (n_modes,), optional
+        Final order values of the selected modes.
+    """
+
+    Fn: Optional[npt.NDArray[np.float64]] = (None,)
+    Xi: Optional[npt.NDArray[np.float64]] = (None,)
+    Phi: Optional[npt.NDArray[np.float64]] = (None,)
+    Fn_fl: Optional[npt.NDArray[np.float64]] = (None,)
+    Xi_fl: Optional[npt.NDArray[np.float64]] = (None,)
+    Phi_fl: Optional[npt.NDArray[np.float64]] = (None,)
+    Fn_std_fl: Optional[npt.NDArray[np.float64]] = (None,)
+    Xi_std_fl: Optional[npt.NDArray[np.float64]] = (None,)
+    Phi_std_fl: Optional[npt.NDArray[np.float64]] = (None,)
+    order_fl: Optional[npt.NDArray[np.int64]] = (None,)
+    labels: Optional[npt.NDArray[np.int64]] = (None,)
+    dtot: Optional[npt.NDArray[np.float64]] = (None,)
+    medoid_distances: Optional[npt.NDArray[np.float64]] = (None,)
+    order_out: Optional[npt.NDArray[np.int64]] = (None,)

@@ -12,7 +12,10 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 import numpy as np
-from scipy import signal
+from matplotlib.colors import to_rgba
+from matplotlib.lines import Line2D
+from matplotlib.ticker import MultipleLocator
+from scipy import signal, stats
 from scipy.interpolate import interp1d
 
 from .gen import MAC
@@ -22,6 +25,598 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # PLOT ALGORITMI
 # =============================================================================
+
+
+def plot_dtot_hist(dtot, bins="auto", sugg_co=True):
+    """
+    Plot a histogram of the total distance matrix with optional suggested cut-off distances.
+
+    This function plots a histogram of the values in the input distance matrix or vector `dtot`.
+    It overlays a kernel density estimate (KDE) and optionally indicates suggested cut-off distances
+    for clustering using single-linkage and average-linkage methods.
+
+    Parameters
+    ----------
+    dtot : ndarray
+        The input distance data. If a 2D array is provided, the upper triangular elements
+        (excluding the diagonal) are extracted. If a 1D array is provided, it is used as is.
+    bins : int or str, optional
+        The number of bins for the histogram. Defaults to "auto".
+    sugg_co : bool, optional
+        Whether to compute and display suggested cut-off distances for clustering.
+        Defaults to True.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the plot.
+    ax : matplotlib.axes.Axes
+        The axes object for the histogram plot.
+    """
+    if dtot.ndim == 2:
+        # Extract upper triangular indices and values
+        upper_tri_indices = np.triu_indices_from(dtot, k=0)
+        x = dtot[upper_tri_indices]
+    elif dtot.ndim == 1:
+        x = dtot
+
+    xs = np.linspace(dtot.min(), dtot.max(), 500)
+
+    kde = stats.gaussian_kde(x)
+    # Evaluate the KDE to get the PDF
+    pdf = kde(xs)
+
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plot the histogram on the axis
+    ax.hist(x, bins=bins, color="skyblue", edgecolor="black")
+    ax1 = ax.twinx()
+    ax1.plot(xs, kde(xs), "k-", label="Kernel density estimate")
+
+    if sugg_co:
+        minima_in = signal.argrelmin(pdf)[0]
+        minima = pdf[minima_in]
+        min_abs = minima.argmin()
+        min_abs_ind = minima_in[min_abs]
+        maxima_in = signal.argrelmax(pdf)
+        dc2_ind = maxima_in[0][0]
+        dc2 = xs[dc2_ind]
+        dc1 = xs[min_abs_ind]
+
+        ax1.axvline(
+            dc2,
+            color="red",
+            linestyle="dashed",
+            linewidth=2,
+            label=f"Suggested cut-off distance single-linkage: {dc2:.4f}",
+        )
+        ax1.axvline(
+            dc1,
+            color="red",
+            linestyle="dotted",
+            linewidth=2,
+            label=f"Suggested cut-off distance average-linkage: {dc1:.4f}",
+        )
+
+    # Customize plot
+    ax.set_xlabel("dtot")
+    ax.set_ylabel("Frequency")
+    ax.set_title("Histogram of distances")
+    ax.xaxis.set_major_locator(MultipleLocator(0.1))  # Major ticks every 0.1
+    ax.xaxis.set_minor_locator(
+        MultipleLocator(0.02)
+    )  # Minor ticks every 1/5 of major (0.02)
+
+    # Add grid only for the x-axis
+    ax.grid(which="major", axis="x", color="gray", linestyle="-", linewidth=0.5)
+    ax.grid(
+        which="minor", axis="x", color="gray", linestyle=":", linewidth=0.5, alpha=0.7
+    )
+    ax1.legend(framealpha=1)
+    plt.tight_layout()
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
+# Helper function to adjust alpha of colors
+def adjust_alpha(color, alpha):
+    """
+    Adjust the alpha (opacity) of a given color.
+
+    Parameters
+    ----------
+    color : str or tuple
+        The input color in any valid Matplotlib format (e.g., string name, hex code, or RGB tuple).
+    alpha : float
+        The desired alpha value, between 0 (completely transparent) and 1 (completely opaque).
+
+    Returns
+    -------
+    tuple
+        The RGBA representation of the input color with the specified alpha value.
+    """
+    rgba = to_rgba(color)
+    return rgba[:3] + (alpha,)
+
+
+# Rearrange legend elements for column-wise ordering
+def rearrange_legend_elements(legend_elements, ncols):
+    """
+    Rearrange legend elements into a column-wise ordering.
+
+    Parameters
+    ----------
+    legend_elements : list of matplotlib.lines.Line2D
+        A list of legend elements to be rearranged.
+    ncols : int
+        The number of columns to arrange the legend elements into.
+
+    Returns
+    -------
+    list
+        A reordered list of legend elements arranged column-wise.
+    """
+    n = len(legend_elements)
+    nrows = int(np.ceil(n / ncols))
+    total_entries = nrows * ncols
+    legend_elements_padded = legend_elements + [None] * (total_entries - n)
+    legend_elements_array = np.array(legend_elements_padded).reshape(nrows, ncols)
+    rearranged_elements = legend_elements_array.flatten(order="F")
+    rearranged_elements = [elem for elem in rearranged_elements if elem is not None]
+    return rearranged_elements
+
+
+# -----------------------------------------------------------------------------
+
+
+def freq_vs_damp_plot(
+    Fn_fl: np.ndarray,
+    Xi_fl: np.ndarray,
+    labels: np.ndarray,
+    freqlim: typing.Optional[typing.Tuple] = None,
+    plot_noise: bool = False,
+    name: str = None,
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
+) -> typing.Tuple[plt.Figure, plt.Axes]:
+    """
+    Plot frequency versus damping, with points grouped by clusters.
+
+    Parameters
+    ----------
+    Fn_fl : np.ndarray
+        Array of natural frequencies (flattened, 1d).
+    Xi_fl : np.ndarray
+        Array of damping ratios (flattened, 1d).
+    labels : np.ndarray
+        Cluster labels for each data point. Use `-1` for noise.
+    freqlim : tuple of float, optional
+        Tuple specifying the (min, max) limits for the frequency axis, by default None.
+    plot_noise : bool, optional
+        Whether to include points labeled as noise (`-1`) in the plot, by default False.
+    fig : plt.Figure, optional
+        Existing Matplotlib figure to plot on, by default None.
+    ax : plt.Axes, optional
+        Existing Matplotlib axes to plot on, by default None.
+
+    Returns
+    -------
+    fig : plt.Figure
+        The Matplotlib figure object containing the plot.
+    ax : plt.Axes
+        The Matplotlib axes object containing the plot.
+    """
+    # Initialize figure and axes if not provided
+    if fig is None and ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        fig.subplots_adjust(
+            right=0.75
+        )  # Adjust the right margin to make room for the legend
+    elif fig is not None and ax is None:
+        ax = fig.add_subplot(1, 1, 1)
+    elif fig is None and ax is not None:
+        fig = ax.figure
+
+    # Assign x and y
+    x = Fn_fl
+    y = Xi_fl * 100  # N.B. Transform to percent
+
+    # Filter out noise points if plot_noise is False
+    if not plot_noise:
+        mask = labels != -1
+        x = x[mask]
+        y = y[mask]
+        labels_filtered = labels[mask]
+
+    else:
+        labels_filtered = labels
+
+    # Identify unique labels (after filtering)
+    unique_labels = np.unique(labels_filtered)
+
+    # Separate noise label
+    labels_without_noise = unique_labels[unique_labels != -1]
+    n_labels = len(labels_without_noise)
+
+    # Choose a colormap with enough distinct colors, excluding greys
+    if n_labels <= 9:  # Exclude grey from tab10
+        cmap = plt.get_cmap("tab10")
+        colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i != 7]
+    elif n_labels <= 18:  # Exclude greys from tab20
+        cmap = plt.get_cmap("tab20")
+        colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i not in [14, 15]]
+    else:
+        # Generate a colormap with n_labels distinct colors
+        cmap = plt.cm.get_cmap("hsv", n_labels)
+        colors = cmap(np.linspace(0, 1, n_labels))
+
+    # Create a mapping from label to color for clusters (excluding noise)
+    color_map = {label: colors[i] for i, label in enumerate(labels_without_noise)}
+
+    # Assign grey color to noise label
+    if -1 in unique_labels:
+        color_map[-1] = "grey"
+
+    point_colors = [color_map[label] for label in labels_filtered]
+
+    # Create masks for noise and cluster data
+    noise_mask = labels_filtered == -1
+    cluster_mask = labels_filtered != -1
+
+    # Plot the scatter points for clusters
+    ax.scatter(
+        x[cluster_mask],
+        y[cluster_mask],
+        c=[point_colors[i] for i in range(len(point_colors)) if cluster_mask[i]],
+        s=70,
+        alpha=0.5,
+        edgecolors="k",
+        linewidth=0.9,
+    )
+
+    # Plot the scatter points for noise cluster
+    if plot_noise and noise_mask.any():
+        ax.scatter(
+            x[noise_mask],
+            y[noise_mask],
+            c=[point_colors[i] for i in range(len(point_colors)) if noise_mask[i]],
+            s=70,
+            alpha=0.2,
+            edgecolors="k",
+            linewidth=0.5,
+        )
+
+    # Prepare legend labels
+    legend_labels = {}
+    cluster_counter = 1
+    for label in unique_labels:
+        if label == -1 and plot_noise:
+            legend_labels[label] = "Noise"
+        elif label == -1 and not plot_noise:
+            continue  # Skip noise label
+        else:
+            legend_labels[label] = f"Cluster {cluster_counter}"
+            cluster_counter += 1
+
+    # Create custom legend handles with formatted labels
+    legend_elements = []
+    for label in unique_labels:
+        if label == -1 and not plot_noise:
+            continue  # Skip adding Noise to legend if plot_noise is False
+        if label == -1:
+            facecolor = adjust_alpha(color_map[label], 0.5)
+        else:
+            facecolor = adjust_alpha(color_map[label], 0.9)
+        legend_elements.append(
+            Line2D(
+                [0],
+                [0],
+                marker="o",
+                color="w",
+                markerfacecolor=facecolor,
+                markeredgecolor="k",
+                markeredgewidth=0.5,
+                markersize=10,
+                label=legend_labels[label],
+            )
+        )
+
+    # Determine the number of columns for the legend
+    ncols = 1 if len(legend_elements) <= 20 else 2
+
+    legend_elements = rearrange_legend_elements(legend_elements, ncols)
+
+    # Add the legend to the plot
+    ax.legend(
+        handles=legend_elements,
+        title="Clusters",
+        loc="center left",
+        bbox_to_anchor=(1, 0.5),
+        frameon=True,
+        ncol=ncols,
+        borderaxespad=0.0,
+    )
+
+    # Add cross for each cluster (excluding Noise)
+    for label in labels_without_noise:
+        # Extract x-values for the current cluster
+        cluster_x = x[labels_filtered == label]
+        cluster_y = y[labels_filtered == label]
+        if len(cluster_x) == 0:
+            continue  # Skip if no points in cluster
+        median_x = np.median(cluster_x)
+        median_y = np.median(cluster_y)
+
+        ax.plot(
+            median_x,
+            median_y,
+            marker="x",  # 'x' marker for cross
+            markersize=12,  # Larger size than cluster circles
+            markeredgewidth=2,  # Thin lines for the cross
+            markeredgecolor="red",  # Red color for visibility
+            linestyle="None",  # No connecting lines
+        )
+
+    # Set plot titles and labels
+    ax.set_title(f"Frequency vs Damping - Clusters {name}")
+    ax.set_xlabel("Frequency [Hz]")
+    ax.set_ylabel("Damping [%]")
+
+    # Set x-axis limits if freqlim is provided
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
+
+    # Add grid for better readability
+    ax.grid(True, linestyle="--", alpha=0.6)
+    plt.tight_layout()
+
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
+def stab_clus_plot(
+    Fn_fl: np.ndarray,
+    order_fl: np.ndarray,
+    labels: np.ndarray,
+    step: int,
+    ordmax: int,
+    ordmin: int = 0,
+    freqlim: typing.Optional[typing.Tuple[float, float]] = None,
+    Fn_std: np.ndarray = None,
+    plot_noise: bool = False,
+    name: str = None,
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
+) -> typing.Tuple[plt.Figure, plt.Axes]:
+    """
+    Plots a stabilization chart of the poles of a system with clusters indicated by colors.
+    The legend labels clusters as "Cluster 1", "Cluster 2", ..., "Cluster N", and "-1" as "Noise".
+    Additionally, adds a vertical line at the median frequency of each cluster.
+    Optionally, the noise cluster can be excluded from the plot.
+
+    Parameters
+    ----------
+    Fn_fl : np.ndarray
+        Frequency values.
+    order_fl : np.ndarray
+        Model order values.
+    labels : np.ndarray
+        Cluster labels for each point.
+    step : int
+        Step parameter (usage not shown in the plot).
+    ordmax : int
+        Maximum order for y-axis limit.
+    ordmin : int, optional
+        Minimum order for y-axis limit, by default 0.
+    freqlim : tuple of float, optional
+        Frequency limits for x-axis, by default None.
+    Fn_std : np.ndarray, optional
+        Standard deviation for frequency, by default None.
+    fig : plt.Figure, optional
+        Existing figure to plot on, by default None.
+    ax : plt.Axes, optional
+        Existing axes to plot on, by default None.
+    plot_noise : bool, optional
+        Whether to include the noise cluster in the plot, by default False.
+
+    Returns
+    -------
+    fig : plt.Figure
+        The matplotlib Figure object containing the plot.
+    ax : plt.Axes
+        The matplotlib Axes object containing the plot.
+    """
+
+    # Initialize figure and axes if not provided
+    if fig is None and ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        fig.subplots_adjust(
+            right=0.75
+        )  # Adjust the right margin to make room for the legend
+    elif fig is not None and ax is None:
+        ax = fig.add_subplot(1, 1, 1)
+    elif fig is None and ax is not None:
+        fig = ax.figure
+
+    # Assign x and y
+    x = Fn_fl
+    y = order_fl
+
+    # Filter out noise points if plot_noise is False
+    if not plot_noise:
+        mask = labels != -1
+        x = x[mask]
+        y = y[mask]
+        labels_filtered = labels[mask]
+        if Fn_std is not None:
+            Fn_std = Fn_std[mask]
+    else:
+        labels_filtered = labels
+
+    # Identify unique labels (after filtering)
+    unique_labels = np.unique(labels_filtered)
+
+    # Separate noise label
+    labels_without_noise = unique_labels[unique_labels != -1]
+    n_labels = len(labels_without_noise)
+
+    # Choose a colormap with enough distinct colors, excluding greys
+    if n_labels <= 9:  # Exclude grey from tab10
+        cmap = plt.get_cmap("tab10")
+        colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i != 7]
+    elif n_labels <= 18:  # Exclude greys from tab20
+        cmap = plt.get_cmap("tab20")
+        colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i not in [14, 15]]
+    else:
+        # Generate a colormap with n_labels distinct colors
+        cmap = plt.cm.get_cmap("hsv", n_labels)
+        colors = cmap(np.linspace(0, 1, n_labels))
+
+    # Create a mapping from label to color for clusters (excluding noise)
+    color_map = {label: colors[i] for i, label in enumerate(labels_without_noise)}
+
+    # Assign grey color to noise label
+    if -1 in unique_labels:
+        color_map[-1] = "grey"
+
+    point_colors = [color_map[label] for label in labels_filtered]
+
+    # Create masks for noise and cluster data
+    noise_mask = labels_filtered == -1
+    cluster_mask = labels_filtered != -1
+
+    # Plot the scatter points for clusters
+    ax.scatter(
+        x[cluster_mask],
+        y[cluster_mask],
+        c=[point_colors[i] for i in range(len(point_colors)) if cluster_mask[i]],
+        s=70,
+        alpha=0.9,
+        edgecolors="k",
+        linewidth=0.9,
+    )
+
+    # Plot the scatter points for noise cluster
+    if plot_noise and noise_mask.any():
+        ax.scatter(
+            x[noise_mask],
+            y[noise_mask],
+            c=[point_colors[i] for i in range(len(point_colors)) if noise_mask[i]],
+            s=70,
+            alpha=0.2,
+            edgecolors="k",
+            linewidth=0.5,
+        )
+
+    # If Fn_std is provided, add error bars
+    if Fn_std is not None:
+        # For cluster data
+        if cluster_mask.any():
+            ax.errorbar(
+                x[cluster_mask].squeeze(),
+                y[cluster_mask].squeeze(),
+                xerr=Fn_std[cluster_mask].squeeze(),
+                fmt="none",
+                ecolor="gray",
+                alpha=0.7,
+                capsize=5,
+            )
+        # For noise data
+        if plot_noise and noise_mask.any():
+            ax.errorbar(
+                x[noise_mask].squeeze(),
+                y[noise_mask].squeeze(),
+                xerr=Fn_std[noise_mask].squeeze(),
+                fmt="none",
+                ecolor="gray",
+                alpha=0.5,
+                capsize=5,
+            )
+
+    # Prepare legend labels
+    legend_labels = {}
+    cluster_counter = 1
+    for label in unique_labels:
+        if label == -1 and plot_noise:
+            legend_labels[label] = "Noise"
+        elif label == -1 and not plot_noise:
+            continue  # Skip noise label
+        else:
+            legend_labels[label] = f"Cluster {cluster_counter}"
+            cluster_counter += 1
+
+    # Create custom legend handles with formatted labels
+    legend_elements = []
+    for label in unique_labels:
+        if label == -1 and not plot_noise:
+            continue  # Skip adding Noise to legend if plot_noise is False
+        if label == -1:
+            facecolor = adjust_alpha(color_map[label], 0.5)
+        else:
+            facecolor = adjust_alpha(color_map[label], 0.9)
+        legend_elements.append(
+            Line2D(
+                [0],
+                [0],
+                marker="o",
+                color="w",
+                markerfacecolor=facecolor,
+                markeredgecolor="k",
+                markeredgewidth=0.5,
+                markersize=10,
+                label=legend_labels[label],
+            )
+        )
+
+    # Determine the number of columns for the legend
+    ncols = 1 if len(legend_elements) <= 20 else 2
+
+    legend_elements = rearrange_legend_elements(legend_elements, ncols)
+
+    # Add the legend to the plot
+    ax.legend(
+        handles=legend_elements,
+        title="Clusters",
+        loc="center left",
+        bbox_to_anchor=(1, 0.5),
+        frameon=True,
+        ncol=ncols,
+        borderaxespad=0.0,
+    )
+
+    # Add vertical lines for each cluster (excluding Noise)
+    for label in labels_without_noise:
+        # Extract x-values for the current cluster
+        cluster_x = x[labels_filtered == label]
+        if len(cluster_x) == 0:
+            continue  # Skip if no points in cluster
+        median_x = np.median(cluster_x)
+        ax.axvline(
+            x=median_x, color=color_map[label], alpha=0.8, linestyle="--", linewidth=2
+        )
+
+    # Set plot titles and labels
+    ax.set_title(f"Stabilization Chart with Clusters {name}")
+    ax.set_xlabel("Frequency [Hz]")
+    ax.set_ylabel("Model Order")
+
+    # Set y-axis limits
+    ax.set_ylim(ordmin, ordmax + 1)
+
+    # Set x-axis limits if freqlim is provided
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
+
+    # Add grid for better readability
+    ax.grid(True, linestyle="--", alpha=0.6)
+    plt.tight_layout()
+
+    return fig, ax
 
 
 def CMIF_plot(
@@ -1224,6 +1819,7 @@ def plt_data(
             # loop over the columns
             for jj in range(nc):
                 ax = axs[ii, jj]
+                ax.grid()
                 try:
                     # while kk < data.shape[1]
                     ax.plot(time, data[:, kk], c="k")
@@ -1263,7 +1859,7 @@ def plt_data(
                 ax.legend()
             ax.set_ylabel(f"{unit}")
             kk += 1
-        ax.grid()
+        # ax.grid()
     plt.tight_layout()
 
     return fig, ax

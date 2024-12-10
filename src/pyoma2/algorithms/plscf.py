@@ -272,7 +272,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         )
         return fig, ax
 
-    def plot_cluster(
+    def plot_freqvsdamp(
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
