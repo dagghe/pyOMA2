@@ -620,7 +620,7 @@ class AutoSSI(BaseAlgorithm[AutoSSIRunParams, AutoSSIResult, typing.Iterable[flo
         ordmax = self.run_params.ordmax
         step = self.run_params.step
 
-        fig, ax = clus.stab_clus_plot(
+        fig, ax = plot.stab_clus_plot(
             Fn_fl,
             order_fl,
             labels,
@@ -653,7 +653,7 @@ class AutoSSI(BaseAlgorithm[AutoSSIRunParams, AutoSSIResult, typing.Iterable[flo
         Xi_fl = clus_res.Xi_fl
         labels = clus_res.labels
 
-        fig, ax = clus.freq_vs_damp_plot(
+        fig, ax = plot.freq_vs_damp_plot(
             Fn_fl, Xi_fl, labels, plot_noise=plot_noise, name=name
         )
         return fig, ax
@@ -676,7 +676,7 @@ class AutoSSI(BaseAlgorithm[AutoSSIRunParams, AutoSSIResult, typing.Iterable[flo
         clus_res = self.result.clustering_results[name]
         dtot = clus_res.dtot
 
-        fig, ax = clus.plot_dtot_hist(dtot, bins=bins)
+        fig, ax = plot.plot_dtot_hist(dtot, bins=bins)
         return fig, ax
 
     def mpe(
