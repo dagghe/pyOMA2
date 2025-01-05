@@ -87,7 +87,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         )
 
         # Apply HARD CRITERIA
-        hc_conj = hc["conj"]
+        hc_conj = hc.get("conj")
         hc_xi_max = hc["xi_max"]
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
