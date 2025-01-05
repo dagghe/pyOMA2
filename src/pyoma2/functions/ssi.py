@@ -486,9 +486,13 @@ def SSI_poles(
         n = nn // step
         Oi = Obs[:, :nn]
         Oup = np.dot(S1, Oi)
-        # Odw = np.dot(S2, Oi)
         A = AA[n]
         C = CC[n]
+
+        # Check if A is an empty array and continue if it is
+        if A.size == 0:
+            continue
+
         # Compute modal parameters
         lam_d, l_eigvt, r_eigvt = linalg.eig(A, left=True)  # l_eigvt=chi, r_eigvt=phi
         lam_c = (np.log(lam_d)) * (1 / dt)  # to continous time
