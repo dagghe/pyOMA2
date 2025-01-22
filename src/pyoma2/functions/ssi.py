@@ -553,11 +553,6 @@ def SSI_poles(
 
         Fn[: len(fn), n] = fn  # save the frequencies
         Xi[: len(fn), n] = xi  # save the damping ratios
-        # if HC is not False:
-        #     Phi[: len(fn), n, :] = phi1
-        # else:
-        #     Phi[: len(fn), n, :] = phi.T
-
         Phi[: len(fn), n, :] = phi.T
         Lambdas[: len(fn), n] = lam_c
 

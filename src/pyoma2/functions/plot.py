@@ -619,6 +619,9 @@ def stab_clus_plot(
     return fig, ax
 
 
+# -----------------------------------------------------------------------------
+
+
 def CMIF_plot(
     S_val: np.ndarray,
     freq: np.ndarray,
@@ -670,8 +673,9 @@ def CMIF_plot(
         try:
             assert int(nSv) < S_val.shape[1]
         except Exception as e:
-            # DA SISTEMARE!!!
-            raise ValueError("ERROR") from e
+            raise ValueError(
+                f"ERROR: nSV must be less or equal to {S_val.shape[1]}. nSV={int(nSv)}"
+            ) from e
 
     for k in range(nSv):
         if k == 0:
@@ -932,144 +936,6 @@ def stab_plot(
     return fig, ax
 
 
-# LEGACY
-def Stab_plot(
-    Fn: np.ndarray,
-    Lab: np.ndarray,
-    step: int,
-    ordmax: int,
-    ordmin: int = 0,
-    freqlim: typing.Optional[typing.Tuple] = None,
-    hide_poles: bool = True,
-    fig: typing.Optional[plt.Figure] = None,
-    ax: typing.Optional[plt.Axes] = None,
-) -> typing.Tuple[plt.Figure, plt.Axes]:
-    """
-    Plot the stabilization chart for modal analysis.
-
-    This function creates a stabilization chart, which is a graphical representation used in
-    system identification to assess the stability of identified modes across different model
-    orders.
-
-    Parameters
-    ----------
-    Fn : ndarray
-        An array containing the frequencies for each model order and identification step.
-    Lab : ndarray
-        An array of labels indicating the stability status of each pole. Different numbers represent
-        different stability statuses such as stable pole, stable frequency, stable mode shape, etc.
-    step : int
-        The step size between model orders in the identification process.
-    ordmax : int
-        The maximum model order to be displayed on the plot.
-    ordmin : int, optional
-        The minimum model order to be displayed on the plot, by default 0.
-    freqlim : tuple of float, optional
-        A tuple defining the frequency limits for the plot. If None, includes all frequencies.
-        Default is None.
-    hide_poles : bool, optional
-        If True, only stable poles are plotted; if False, all types of poles are plotted.
-        Default is True.
-    fig : matplotlib.figure.Figure, optional
-        An existing matplotlib figure object to plot on. If None, a new figure is created.
-        Default is None.
-    ax : matplotlib.axes.Axes, optional
-        An existing axes object to plot on. If None, new axes are created on the provided
-        or new figure. Default is None.
-
-    Returns
-    -------
-    tuple
-        - fig : matplotlib.figure.Figure
-            The matplotlib figure object containing the plot.
-        - ax : matplotlib.axes.Axes
-            The axes object with the stabilization chart.
-
-    Notes
-    -----
-    The stabilization chart helps in identifying the number of physical modes and their
-    stability by observing how poles behave across different model orders. Stable poles are
-    typically considered as indicators of physical modes.
-    """
-    if fig is None and ax is None:
-        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
-
-    # Stable pole
-    a = np.where(Lab == 7, Fn, np.nan)
-
-    # Stable frequency, stable mode shape
-    b = np.where(Lab == 6, Fn, np.nan)
-    # Stable frequency, stable damping
-    c = np.where(Lab == 5, Fn, np.nan)
-    # Stable damping, stable mode shape
-    d = np.where(Lab == 4, Fn, np.nan)
-    # Stable damping
-    e = np.where(Lab == 3, Fn, np.nan)
-    # Stable mode shape
-    f = np.where(Lab == 2, Fn, np.nan)
-    # Stable frequency
-    g = np.where(Lab == 1, Fn, np.nan)
-    # new or unstable
-    h = np.where(Lab == 0, Fn, np.nan)
-
-    ax.set_title("Stabilisation Chart")
-    ax.set_ylabel("Model Order")
-    ax.set_xlabel("Frequency [Hz]")
-    if hide_poles:
-        x = a.flatten(order="f")
-        y = np.array([i // len(a) for i in range(len(x))]) * step
-        ax.plot(x, y, "go", markersize=7, label="Stable pole")
-
-    else:
-        x = a.flatten(order="f")
-        y = np.array([i // len(a) for i in range(len(x))]) * step
-
-        x1 = b.flatten(order="f")
-        y1 = np.array([i // len(a) for i in range(len(x))]) * step
-
-        x2 = c.flatten(order="f")
-        x3 = d.flatten(order="f")
-        x4 = e.flatten(order="f")
-        x5 = f.flatten(order="f")
-        x6 = g.flatten(order="f")
-        x7 = h.flatten(order="f")
-
-        ax.plot(x, y, "go", markersize=7, label="Stable pole")
-
-        ax.scatter(
-            x1,
-            y1,
-            marker="o",
-            s=4,
-            c="#FFFF00",
-            label="Stable frequency, stable mode shape",
-        )
-        ax.scatter(
-            x2, y1, marker="o", s=4, c="#FFFF00", label="Stable frequency, stable damping"
-        )
-        ax.scatter(
-            x3,
-            y1,
-            marker="o",
-            s=4,
-            c="#FFFF00",
-            label="Stable damping, stable mode shape",
-        )
-        ax.scatter(x4, y1, marker="o", s=4, c="#FFA500", label="Stable damping")
-        ax.scatter(x5, y1, marker="o", s=4, c="#FFA500", label="Stable mode shape")
-        ax.scatter(x6, y1, marker="o", s=4, c="#FFA500", label="Stable frequency")
-        ax.scatter(x7, y1, marker="o", s=4, c="r", label="Unstable pole")
-
-        ax.legend(loc="lower center", ncol=2)
-        ax.set_ylim(ordmin, ordmax + 1)
-
-    ax.grid()
-    if freqlim is not None:
-        ax.set_xlim(freqlim[0], freqlim[1])
-    plt.tight_layout()
-    return fig, ax
-
-
 # -----------------------------------------------------------------------------
 
 
@@ -1144,134 +1010,6 @@ def cluster_plot(
     return fig, ax
 
 
-# LEGACY
-def Cluster_plot(
-    Fn: np.ndarray,
-    Sm: np.ndarray,
-    Lab: np.ndarray,
-    ordmin: int = 0,
-    freqlim: typing.Optional[typing.Tuple] = None,
-    hide_poles: bool = True,
-) -> typing.Tuple[plt.Figure, plt.Axes]:
-    """
-    Plots the frequency-damping clusters of the identified poles using the Stochastic Subspace Identification
-    (SSI) method.
-
-    Parameters
-    ----------
-    Fn : ndarray
-        An array containing the frequencies of poles for each model order and identification step.
-    Sm : ndarray
-        An array containing the damping ratios associated with the poles in `Fn`.
-    Lab : ndarray
-        An array of labels indicating the stability status of each pole, where different numbers represent
-        different stability statuses.
-    ordmin : int, optional
-        The minimum model order to be displayed on the plot. Default is 0.
-    freqlim : tuple of float, optional
-        The upper frequency limit for the plot. If None, includes all frequencies. Default is None.
-    hide_poles : bool, optional
-        If True, only stable poles are plotted. If False, all types of poles are plotted. Default is True.
-
-    Returns
-    -------
-    tuple
-        fig : matplotlib.figure.Figure
-            The matplotlib figure object.
-        ax1 : matplotlib.axes.Axes
-            The axes object with the stabilization chart.
-    """
-    # Stable pole
-    a = np.where(Lab == 7, Fn, np.nan)
-    aa = np.where(Lab == 7, Sm, np.nan)
-
-    # Stable frequency, stable mode shape
-    b = np.where(Lab == 6, Fn, np.nan)
-    bb = np.where(Lab == 6, Sm, np.nan)
-    # Stable frequency, stable damping
-    c = np.where(Lab == 5, Fn, np.nan)
-    cc = np.where(Lab == 5, Sm, np.nan)
-    # Stable damping, stable mode shape
-    d = np.where(Lab == 4, Fn, np.nan)
-    dd = np.where(Lab == 4, Sm, np.nan)
-    # Stable damping
-    e = np.where(Lab == 3, Fn, np.nan)
-    ee = np.where(Lab == 3, Sm, np.nan)
-    # Stable mode shape
-    f = np.where(Lab == 2, Fn, np.nan)
-    ff = np.where(Lab == 2, Sm, np.nan)
-    # Stable frequency
-    g = np.where(Lab == 1, Fn, np.nan)
-    gg = np.where(Lab == 1, Sm, np.nan)
-    # new or unstable
-    h = np.where(Lab == 0, Fn, np.nan)
-    hh = np.where(Lab == 0, Sm, np.nan)
-
-    fig, ax1 = plt.subplots(figsize=(8, 6), tight_layout=True)
-    ax1.set_title("Frequency-damping clustering")
-    ax1.set_ylabel("Damping")
-    ax1.set_xlabel("Frequency [Hz]")
-    if hide_poles:
-        x = a.flatten(order="f")
-        y = aa.flatten(order="f")
-        ax1.plot(x, y, "go", markersize=7, label="Stable pole")
-
-    else:
-        x = a.flatten(order="f")
-        y = aa.flatten(order="f")
-
-        x1 = b.flatten(order="f")
-        y1 = bb.flatten(order="f")
-
-        x2 = c.flatten(order="f")
-        y2 = cc.flatten(order="f")
-
-        x3 = d.flatten(order="f")
-        y3 = dd.flatten(order="f")
-        x4 = e.flatten(order="f")
-        y4 = ee.flatten(order="f")
-        x5 = f.flatten(order="f")
-        y5 = ff.flatten(order="f")
-        x6 = g.flatten(order="f")
-        y6 = gg.flatten(order="f")
-        x7 = h.flatten(order="f")
-        y7 = hh.flatten(order="f")
-
-        ax1.plot(x, y, "go", markersize=7, label="Stable pole")
-
-        ax1.scatter(
-            x1,
-            y1,
-            marker="o",
-            s=4,
-            c="#FFFF00",
-            label="Stable frequency, stable mode shape",
-        )
-        ax1.scatter(
-            x2, y2, marker="o", s=4, c="#FFFF00", label="Stable frequency, stable damping"
-        )
-        ax1.scatter(
-            x3,
-            y3,
-            marker="o",
-            s=4,
-            c="#FFFF00",
-            label="Stable damping, stable mode shape",
-        )
-        ax1.scatter(x4, y4, marker="o", s=4, c="#FFA500", label="Stable damping")
-        ax1.scatter(x5, y5, marker="o", s=4, c="#FFA500", label="Stable mode shape")
-        ax1.scatter(x6, y6, marker="o", s=4, c="#FFA500", label="Stable frequency")
-        ax1.scatter(x7, y7, marker="o", s=4, c="r", label="Unstable pole")
-
-        ax1.legend(loc="lower center", ncol=2)
-
-    ax1.grid()
-    if freqlim is not None:
-        ax1.set_xlim(freqlim[0], freqlim[1])
-    plt.tight_layout()
-    return fig, ax1
-
-
 # -----------------------------------------------------------------------------
 
 
@@ -1292,7 +1030,7 @@ def svalH_plot(
 
     ax.stem(S1rad, linefmt="k-")
 
-    ax.set_title(f"Singular values plot, for block-rows(time shift) = {br}")
+    ax.set_title(f"Singular values plot, for block-rows = {br}")
     ax.set_ylabel("Singular values")
     ax.set_xlabel("Index number")
     if iter_n is not None:
@@ -2036,6 +1774,8 @@ def plt_ch_info(
 
 
 # -----------------------------------------------------------------------------
+
+
 # Short time Fourier transform - SPECTROGRAM
 def STFT(
     data: np.ndarray,
@@ -2117,6 +1857,9 @@ def STFT(
     return figs, axs
 
 
+# -----------------------------------------------------------------------------
+
+
 def plot_mac_matrix(
     array1, array2, colormap="plasma", ax=None
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
@@ -2170,3 +1913,48 @@ def plot_mac_matrix(
     ax.set_title("MAC Matrix")
 
     return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
+def plot_mode_complexity(mode_shape):
+    """ """
+
+    # Get angles (in radians) and magnitudes
+    angles = np.angle(mode_shape)
+    magnitudes = np.abs(mode_shape)
+
+    # Create a polar plot
+    fig, ax = plt.subplots(subplot_kw={"projection": "polar"}, figsize=(6, 6))
+    ax.set_theta_zero_location("E")  # Set 0 degrees to East
+    ax.set_theta_direction(1)  # Counterclockwise
+    ax.set_rmax(1.1)  # Set maximum radius slightly above 1 for clarity
+    ax.grid(True, linestyle="--", alpha=0.5)
+
+    # Plot arrows using annotate with fixed head size
+    for angle, magnitude in zip(angles, magnitudes):
+        ax.annotate(
+            "",
+            xy=(angle, magnitude),
+            xytext=(angle, 0),
+            arrowprops=dict(
+                facecolor="blue",
+                edgecolor="blue",
+                arrowstyle="-|>",
+                linewidth=1.5,
+                mutation_scale=20,  # Controls the size of the arrowhead
+            ),
+        )
+    # Highlight directions (0° and 180°)
+    principal_angles = [0, np.pi]
+    for pa in principal_angles:
+        ax.plot([pa, pa], [0, 1.1], color="red", linestyle="--", linewidth=1)
+
+    ax.set_yticklabels([])
+    # Add title
+    ax.set_title(
+        "Mode Shape Complexity Plot", va="bottom", fontsize=14, fontweight="bold"
+    )
+    plt.tight_layout()
+    plt.show()

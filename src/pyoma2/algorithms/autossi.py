@@ -153,10 +153,6 @@ class AutoSSI(BaseAlgorithm[AutoSSIRunParams, AutoSSIResult, typing.Iterable[flo
             self.run_clustering(name=list(self.clusterings.keys())[i])
         logger.info("all done")
 
-        # for clus_name in self.clusterings.keys():
-        #     self.run_clustering(name=clus_name)
-        # logger.info("all done")
-
     def run_clustering(self, name: str) -> None:
         """
         Run a specific clustering method by name.
