@@ -3,9 +3,7 @@ The ``ssi`` algorithm module
 
 This module implements the Stochastic Subspace Identification (SSI) [BPDG99]_, [MiDo11]_ algorithm in various forms,
 tailored for both single and multiple experimental setup scenarios [MiDo11]_, [DOME13]_. It includes classes and methods
-for conducting data-driven and covariance-driven SSI analyses. The primary focus of this module is
-on structural analysis and system identification, providing tools to process measurement data, extract
-modal parameters, and perform comprehensive system dynamics analysis.
+for conducting data-driven and covariance-driven SSI analyses, with optional uncertainty bounds estimation.
 
 Classes:
    :class:`.SSIdat`

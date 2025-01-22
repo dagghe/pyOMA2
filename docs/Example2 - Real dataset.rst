@@ -185,7 +185,7 @@ using the ``mpe()`` method.
     # Pali_ss.mpe_from_plot("SSIcov", freqlim=(0,5))
 
     # or directly
-    Pali_ss.mpe("SSIcov", sel_freq=[1.88, 2.42, 2.68], order=40)
+    Pali_ss.mpe("SSIcov", sel_freq=[1.88, 2.42, 2.68], order_in=40)
 
     # update dict of results
     ssi_res = dict(ssicov.result)
