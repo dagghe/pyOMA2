@@ -96,7 +96,7 @@ poles and plot the mode shapes.
    msp.mpe(
          "SSIdat",
          sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
-         order=80)
+         order_in=80)
 
    # plot mode shapes
    msp.plot_mode_geo1(alg_res=SSIdat.result, mode_nr=1, view="3D", scaleF=2)

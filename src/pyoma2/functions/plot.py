@@ -12,7 +12,10 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 import numpy as np
-from scipy import signal
+from matplotlib.colors import to_rgba
+from matplotlib.lines import Line2D
+from matplotlib.ticker import MultipleLocator
+from scipy import signal, stats
 from scipy.interpolate import interp1d
 
 from .gen import MAC
@@ -22,6 +25,601 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # PLOT ALGORITMI
 # =============================================================================
+
+
+def plot_dtot_hist(dtot, bins="auto", sugg_co=True):
+    """
+    Plot a histogram of the total distance matrix with optional suggested cut-off distances.
+
+    This function plots a histogram of the values in the input distance matrix or vector `dtot`.
+    It overlays a kernel density estimate (KDE) and optionally indicates suggested cut-off distances
+    for clustering using single-linkage and average-linkage methods.
+
+    Parameters
+    ----------
+    dtot : ndarray
+        The input distance data. If a 2D array is provided, the upper triangular elements
+        (excluding the diagonal) are extracted. If a 1D array is provided, it is used as is.
+    bins : int or str, optional
+        The number of bins for the histogram. Defaults to "auto".
+    sugg_co : bool, optional
+        Whether to compute and display suggested cut-off distances for clustering.
+        Defaults to True.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the plot.
+    ax : matplotlib.axes.Axes
+        The axes object for the histogram plot.
+    """
+    if dtot.ndim == 2:
+        # Extract upper triangular indices and values
+        upper_tri_indices = np.triu_indices_from(dtot, k=0)
+        x = dtot[upper_tri_indices]
+    elif dtot.ndim == 1:
+        x = dtot
+
+    xs = np.linspace(dtot.min(), dtot.max(), 500)
+
+    kde = stats.gaussian_kde(x)
+    # Evaluate the KDE to get the PDF
+    pdf = kde(xs)
+
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plot the histogram on the axis
+    ax.hist(x, bins=bins, color="skyblue", edgecolor="black")
+    ax1 = ax.twinx()
+    ax1.plot(xs, kde(xs), "k-", label="Kernel density estimate")
+
+    if sugg_co:
+        minima_in = signal.argrelmin(pdf)[0]
+        minima = pdf[minima_in]
+        min_abs = minima.argmin()
+        min_abs_ind = minima_in[min_abs]
+        maxima_in = signal.argrelmax(pdf)
+        dc2_ind = maxima_in[0][0]
+        dc2 = xs[dc2_ind]
+        dc1 = xs[min_abs_ind]
+
+        ax1.axvline(
+            dc2,
+            color="red",
+            linestyle="dashed",
+            linewidth=2,
+            label=f"Suggested cut-off distance single-linkage: {dc2:.4f}",
+        )
+        ax1.axvline(
+            dc1,
+            color="red",
+            linestyle="dotted",
+            linewidth=2,
+            label=f"Suggested cut-off distance average-linkage: {dc1:.4f}",
+        )
+
+    # Customize plot
+    ax.set_xlabel("dtot")
+    ax.set_ylabel("Frequency")
+    ax.set_title("Histogram of distances")
+    ax.xaxis.set_major_locator(MultipleLocator(0.1))  # Major ticks every 0.1
+    ax.xaxis.set_minor_locator(
+        MultipleLocator(0.02)
+    )  # Minor ticks every 1/5 of major (0.02)
+
+    # Add grid only for the x-axis
+    ax.grid(which="major", axis="x", color="gray", linestyle="-", linewidth=0.5)
+    ax.grid(
+        which="minor", axis="x", color="gray", linestyle=":", linewidth=0.5, alpha=0.7
+    )
+    ax1.legend(framealpha=1)
+    plt.tight_layout()
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
+# Helper function to adjust alpha of colors
+def adjust_alpha(color, alpha):
+    """
+    Adjust the alpha (opacity) of a given color.
+
+    Parameters
+    ----------
+    color : str or tuple
+        The input color in any valid Matplotlib format (e.g., string name, hex code, or RGB tuple).
+    alpha : float
+        The desired alpha value, between 0 (completely transparent) and 1 (completely opaque).
+
+    Returns
+    -------
+    tuple
+        The RGBA representation of the input color with the specified alpha value.
+    """
+    rgba = to_rgba(color)
+    return rgba[:3] + (alpha,)
+
+
+# Rearrange legend elements for column-wise ordering
+def rearrange_legend_elements(legend_elements, ncols):
+    """
+    Rearrange legend elements into a column-wise ordering.
+
+    Parameters
+    ----------
+    legend_elements : list of matplotlib.lines.Line2D
+        A list of legend elements to be rearranged.
+    ncols : int
+        The number of columns to arrange the legend elements into.
+
+    Returns
+    -------
+    list
+        A reordered list of legend elements arranged column-wise.
+    """
+    n = len(legend_elements)
+    nrows = int(np.ceil(n / ncols))
+    total_entries = nrows * ncols
+    legend_elements_padded = legend_elements + [None] * (total_entries - n)
+    legend_elements_array = np.array(legend_elements_padded).reshape(nrows, ncols)
+    rearranged_elements = legend_elements_array.flatten(order="F")
+    rearranged_elements = [elem for elem in rearranged_elements if elem is not None]
+    return rearranged_elements
+
+
+# -----------------------------------------------------------------------------
+
+
+def freq_vs_damp_plot(
+    Fn_fl: np.ndarray,
+    Xi_fl: np.ndarray,
+    labels: np.ndarray,
+    freqlim: typing.Optional[typing.Tuple] = None,
+    plot_noise: bool = False,
+    name: str = None,
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
+) -> typing.Tuple[plt.Figure, plt.Axes]:
+    """
+    Plot frequency versus damping, with points grouped by clusters.
+
+    Parameters
+    ----------
+    Fn_fl : np.ndarray
+        Array of natural frequencies (flattened, 1d).
+    Xi_fl : np.ndarray
+        Array of damping ratios (flattened, 1d).
+    labels : np.ndarray
+        Cluster labels for each data point. Use `-1` for noise.
+    freqlim : tuple of float, optional
+        Tuple specifying the (min, max) limits for the frequency axis, by default None.
+    plot_noise : bool, optional
+        Whether to include points labeled as noise (`-1`) in the plot, by default False.
+    fig : plt.Figure, optional
+        Existing Matplotlib figure to plot on, by default None.
+    ax : plt.Axes, optional
+        Existing Matplotlib axes to plot on, by default None.
+
+    Returns
+    -------
+    fig : plt.Figure
+        The Matplotlib figure object containing the plot.
+    ax : plt.Axes
+        The Matplotlib axes object containing the plot.
+    """
+    # Initialize figure and axes if not provided
+    if fig is None and ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        fig.subplots_adjust(
+            right=0.75
+        )  # Adjust the right margin to make room for the legend
+    elif fig is not None and ax is None:
+        ax = fig.add_subplot(1, 1, 1)
+    elif fig is None and ax is not None:
+        fig = ax.figure
+
+    # Assign x and y
+    x = Fn_fl
+    y = Xi_fl * 100  # N.B. Transform to percent
+
+    # Filter out noise points if plot_noise is False
+    if not plot_noise:
+        mask = labels != -1
+        x = x[mask]
+        y = y[mask]
+        labels_filtered = labels[mask]
+
+    else:
+        labels_filtered = labels
+
+    # Identify unique labels (after filtering)
+    unique_labels = np.unique(labels_filtered)
+
+    # Separate noise label
+    labels_without_noise = unique_labels[unique_labels != -1]
+    n_labels = len(labels_without_noise)
+
+    # Choose a colormap with enough distinct colors, excluding greys
+    if n_labels <= 9:  # Exclude grey from tab10
+        cmap = plt.get_cmap("tab10")
+        colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i != 7]
+    elif n_labels <= 18:  # Exclude greys from tab20
+        cmap = plt.get_cmap("tab20")
+        colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i not in [14, 15]]
+    else:
+        # Generate a colormap with n_labels distinct colors
+        cmap = plt.cm.get_cmap("hsv", n_labels)
+        colors = cmap(np.linspace(0, 1, n_labels))
+
+    # Create a mapping from label to color for clusters (excluding noise)
+    color_map = {label: colors[i] for i, label in enumerate(labels_without_noise)}
+
+    # Assign grey color to noise label
+    if -1 in unique_labels:
+        color_map[-1] = "grey"
+
+    point_colors = [color_map[label] for label in labels_filtered]
+
+    # Create masks for noise and cluster data
+    noise_mask = labels_filtered == -1
+    cluster_mask = labels_filtered != -1
+
+    # Plot the scatter points for clusters
+    ax.scatter(
+        x[cluster_mask],
+        y[cluster_mask],
+        c=[point_colors[i] for i in range(len(point_colors)) if cluster_mask[i]],
+        s=70,
+        alpha=0.5,
+        edgecolors="k",
+        linewidth=0.9,
+    )
+
+    # Plot the scatter points for noise cluster
+    if plot_noise and noise_mask.any():
+        ax.scatter(
+            x[noise_mask],
+            y[noise_mask],
+            c=[point_colors[i] for i in range(len(point_colors)) if noise_mask[i]],
+            s=70,
+            alpha=0.2,
+            edgecolors="k",
+            linewidth=0.5,
+        )
+
+    # Prepare legend labels
+    legend_labels = {}
+    cluster_counter = 1
+    for label in unique_labels:
+        if label == -1 and plot_noise:
+            legend_labels[label] = "Noise"
+        elif label == -1 and not plot_noise:
+            continue  # Skip noise label
+        else:
+            legend_labels[label] = f"Cluster {cluster_counter}"
+            cluster_counter += 1
+
+    # Create custom legend handles with formatted labels
+    legend_elements = []
+    for label in unique_labels:
+        if label == -1 and not plot_noise:
+            continue  # Skip adding Noise to legend if plot_noise is False
+        if label == -1:
+            facecolor = adjust_alpha(color_map[label], 0.5)
+        else:
+            facecolor = adjust_alpha(color_map[label], 0.9)
+        legend_elements.append(
+            Line2D(
+                [0],
+                [0],
+                marker="o",
+                color="w",
+                markerfacecolor=facecolor,
+                markeredgecolor="k",
+                markeredgewidth=0.5,
+                markersize=10,
+                label=legend_labels[label],
+            )
+        )
+
+    # Determine the number of columns for the legend
+    ncols = 1 if len(legend_elements) <= 20 else 2
+
+    legend_elements = rearrange_legend_elements(legend_elements, ncols)
+
+    # Add the legend to the plot
+    ax.legend(
+        handles=legend_elements,
+        title="Clusters",
+        loc="center left",
+        bbox_to_anchor=(1, 0.5),
+        frameon=True,
+        ncol=ncols,
+        borderaxespad=0.0,
+    )
+
+    # Add cross for each cluster (excluding Noise)
+    for label in labels_without_noise:
+        # Extract x-values for the current cluster
+        cluster_x = x[labels_filtered == label]
+        cluster_y = y[labels_filtered == label]
+        if len(cluster_x) == 0:
+            continue  # Skip if no points in cluster
+        median_x = np.median(cluster_x)
+        median_y = np.median(cluster_y)
+
+        ax.plot(
+            median_x,
+            median_y,
+            marker="x",  # 'x' marker for cross
+            markersize=12,  # Larger size than cluster circles
+            markeredgewidth=2,  # Thin lines for the cross
+            markeredgecolor="red",  # Red color for visibility
+            linestyle="None",  # No connecting lines
+        )
+
+    # Set plot titles and labels
+    ax.set_title(f"Frequency vs Damping - Clusters {name}")
+    ax.set_xlabel("Frequency [Hz]")
+    ax.set_ylabel("Damping [%]")
+
+    # Set x-axis limits if freqlim is provided
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
+
+    # Add grid for better readability
+    ax.grid(True, linestyle="--", alpha=0.6)
+    plt.tight_layout()
+
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
+def stab_clus_plot(
+    Fn_fl: np.ndarray,
+    order_fl: np.ndarray,
+    labels: np.ndarray,
+    step: int,
+    ordmax: int,
+    ordmin: int = 0,
+    freqlim: typing.Optional[typing.Tuple[float, float]] = None,
+    Fn_std: np.ndarray = None,
+    plot_noise: bool = False,
+    name: str = None,
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
+) -> typing.Tuple[plt.Figure, plt.Axes]:
+    """
+    Plots a stabilization chart of the poles of a system with clusters indicated by colors.
+    The legend labels clusters as "Cluster 1", "Cluster 2", ..., "Cluster N", and "-1" as "Noise".
+    Additionally, adds a vertical line at the median frequency of each cluster.
+    Optionally, the noise cluster can be excluded from the plot.
+
+    Parameters
+    ----------
+    Fn_fl : np.ndarray
+        Frequency values.
+    order_fl : np.ndarray
+        Model order values.
+    labels : np.ndarray
+        Cluster labels for each point.
+    step : int
+        Step parameter (usage not shown in the plot).
+    ordmax : int
+        Maximum order for y-axis limit.
+    ordmin : int, optional
+        Minimum order for y-axis limit, by default 0.
+    freqlim : tuple of float, optional
+        Frequency limits for x-axis, by default None.
+    Fn_std : np.ndarray, optional
+        Standard deviation for frequency, by default None.
+    fig : plt.Figure, optional
+        Existing figure to plot on, by default None.
+    ax : plt.Axes, optional
+        Existing axes to plot on, by default None.
+    plot_noise : bool, optional
+        Whether to include the noise cluster in the plot, by default False.
+
+    Returns
+    -------
+    fig : plt.Figure
+        The matplotlib Figure object containing the plot.
+    ax : plt.Axes
+        The matplotlib Axes object containing the plot.
+    """
+
+    # Initialize figure and axes if not provided
+    if fig is None and ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        fig.subplots_adjust(
+            right=0.75
+        )  # Adjust the right margin to make room for the legend
+    elif fig is not None and ax is None:
+        ax = fig.add_subplot(1, 1, 1)
+    elif fig is None and ax is not None:
+        fig = ax.figure
+
+    # Assign x and y
+    x = Fn_fl
+    y = order_fl
+
+    # Filter out noise points if plot_noise is False
+    if not plot_noise:
+        mask = labels != -1
+        x = x[mask]
+        y = y[mask]
+        labels_filtered = labels[mask]
+        if Fn_std is not None:
+            Fn_std = Fn_std[mask]
+    else:
+        labels_filtered = labels
+
+    # Identify unique labels (after filtering)
+    unique_labels = np.unique(labels_filtered)
+
+    # Separate noise label
+    labels_without_noise = unique_labels[unique_labels != -1]
+    n_labels = len(labels_without_noise)
+
+    # Choose a colormap with enough distinct colors, excluding greys
+    if n_labels <= 9:  # Exclude grey from tab10
+        cmap = plt.get_cmap("tab10")
+        colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i != 7]
+    elif n_labels <= 18:  # Exclude greys from tab20
+        cmap = plt.get_cmap("tab20")
+        colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i not in [14, 15]]
+    else:
+        # Generate a colormap with n_labels distinct colors
+        cmap = plt.cm.get_cmap("hsv", n_labels)
+        colors = cmap(np.linspace(0, 1, n_labels))
+
+    # Create a mapping from label to color for clusters (excluding noise)
+    color_map = {label: colors[i] for i, label in enumerate(labels_without_noise)}
+
+    # Assign grey color to noise label
+    if -1 in unique_labels:
+        color_map[-1] = "grey"
+
+    point_colors = [color_map[label] for label in labels_filtered]
+
+    # Create masks for noise and cluster data
+    noise_mask = labels_filtered == -1
+    cluster_mask = labels_filtered != -1
+
+    # Plot the scatter points for clusters
+    ax.scatter(
+        x[cluster_mask],
+        y[cluster_mask],
+        c=[point_colors[i] for i in range(len(point_colors)) if cluster_mask[i]],
+        s=70,
+        alpha=0.9,
+        edgecolors="k",
+        linewidth=0.9,
+    )
+
+    # Plot the scatter points for noise cluster
+    if plot_noise and noise_mask.any():
+        ax.scatter(
+            x[noise_mask],
+            y[noise_mask],
+            c=[point_colors[i] for i in range(len(point_colors)) if noise_mask[i]],
+            s=70,
+            alpha=0.2,
+            edgecolors="k",
+            linewidth=0.5,
+        )
+
+    # If Fn_std is provided, add error bars
+    if Fn_std is not None:
+        # For cluster data
+        if cluster_mask.any():
+            ax.errorbar(
+                x[cluster_mask].squeeze(),
+                y[cluster_mask].squeeze(),
+                xerr=Fn_std[cluster_mask].squeeze(),
+                fmt="none",
+                ecolor="gray",
+                alpha=0.7,
+                capsize=5,
+            )
+        # For noise data
+        if plot_noise and noise_mask.any():
+            ax.errorbar(
+                x[noise_mask].squeeze(),
+                y[noise_mask].squeeze(),
+                xerr=Fn_std[noise_mask].squeeze(),
+                fmt="none",
+                ecolor="gray",
+                alpha=0.5,
+                capsize=5,
+            )
+
+    # Prepare legend labels
+    legend_labels = {}
+    cluster_counter = 1
+    for label in unique_labels:
+        if label == -1 and plot_noise:
+            legend_labels[label] = "Noise"
+        elif label == -1 and not plot_noise:
+            continue  # Skip noise label
+        else:
+            legend_labels[label] = f"Cluster {cluster_counter}"
+            cluster_counter += 1
+
+    # Create custom legend handles with formatted labels
+    legend_elements = []
+    for label in unique_labels:
+        if label == -1 and not plot_noise:
+            continue  # Skip adding Noise to legend if plot_noise is False
+        if label == -1:
+            facecolor = adjust_alpha(color_map[label], 0.5)
+        else:
+            facecolor = adjust_alpha(color_map[label], 0.9)
+        legend_elements.append(
+            Line2D(
+                [0],
+                [0],
+                marker="o",
+                color="w",
+                markerfacecolor=facecolor,
+                markeredgecolor="k",
+                markeredgewidth=0.5,
+                markersize=10,
+                label=legend_labels[label],
+            )
+        )
+
+    # Determine the number of columns for the legend
+    ncols = 1 if len(legend_elements) <= 20 else 2
+
+    legend_elements = rearrange_legend_elements(legend_elements, ncols)
+
+    # Add the legend to the plot
+    ax.legend(
+        handles=legend_elements,
+        title="Clusters",
+        loc="center left",
+        bbox_to_anchor=(1, 0.5),
+        frameon=True,
+        ncol=ncols,
+        borderaxespad=0.0,
+    )
+
+    # Add vertical lines for each cluster (excluding Noise)
+    for label in labels_without_noise:
+        # Extract x-values for the current cluster
+        cluster_x = x[labels_filtered == label]
+        if len(cluster_x) == 0:
+            continue  # Skip if no points in cluster
+        median_x = np.median(cluster_x)
+        ax.axvline(
+            x=median_x, color=color_map[label], alpha=0.8, linestyle="--", linewidth=2
+        )
+
+    # Set plot titles and labels
+    ax.set_title(f"Stabilization Chart with Clusters {name}")
+    ax.set_xlabel("Frequency [Hz]")
+    ax.set_ylabel("Model Order")
+
+    # Set y-axis limits
+    ax.set_ylim(ordmin, ordmax + 1)
+
+    # Set x-axis limits if freqlim is provided
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
+
+    # Add grid for better readability
+    ax.grid(True, linestyle="--", alpha=0.6)
+    plt.tight_layout()
+
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
 
 
 def CMIF_plot(
@@ -75,8 +673,9 @@ def CMIF_plot(
         try:
             assert int(nSv) < S_val.shape[1]
         except Exception as e:
-            # DA SISTEMARE!!!
-            raise ValueError("ERROR") from e
+            raise ValueError(
+                f"ERROR: nSV must be less or equal to {S_val.shape[1]}. nSV={int(nSv)}"
+            ) from e
 
     for k in range(nSv):
         if k == 0:
@@ -246,9 +845,9 @@ def stab_plot(
     ordmin: int = 0,
     freqlim: typing.Optional[typing.Tuple] = None,
     hide_poles: bool = True,
+    Fn_std: np.array = None,
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
-    Fn_cov=None,
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plots a stabilization chart of the poles of a system.
@@ -273,7 +872,7 @@ def stab_plot(
         A matplotlib Figure object, by default None.
     ax : plt.Axes, optional
         A matplotlib Axes object, by default None.
-    Fn_cov : np.ndarray, optional
+    Fn_std : np.ndarray, optional
         The covariance of the frequencies, used for error bars, by default None.
 
     Returns
@@ -301,15 +900,10 @@ def stab_plot(
         y = np.array([i // len(Fns_stab) for i in range(len(x))]) * step
         ax.plot(x, y, "go", markersize=7)
 
-        if Fn_cov is not None:
-            xerr = abs(Fn_cov * Fn).flatten(order="f")
-            xerr1 = np.where(xerr <= 0.5, xerr, np.nan)
-            xerr2 = np.where(xerr > 0.5, 0.5, np.nan)
-            ax.errorbar(x, y, xerr=xerr1, fmt="None", capsize=5, ecolor="gray")
-            ax.errorbar(
-                x, y, xerr=xerr2, fmt="None", capsize=5, ecolor="red", label="std > 0.5"
-            )
-            ax.legend(loc="lower center", ncol=2)
+        if Fn_std is not None:
+            xerr = Fn_std.flatten(order="f")
+
+            ax.errorbar(x, y, xerr=xerr, fmt="None", capsize=5, ecolor="gray")
 
     else:
         x = Fns_stab.flatten(order="f")
@@ -321,166 +915,16 @@ def stab_plot(
         ax.plot(x, y, "go", markersize=7, label="Stable pole")
         ax.scatter(x1, y1, marker="o", s=4, c="r", label="Unstable pole")
 
-        if Fn_cov is not None:
-            xerr = abs(Fn_cov * Fn)
-            xerr1 = np.where(xerr <= 0.5, xerr, np.nan)
-            xerr2 = np.where(xerr > 0.5, 0.5, np.nan)
+        if Fn_std is not None:
+            xerr = abs(Fn_std).flatten(order="f")
+
             ax.errorbar(
-                x, y, xerr=xerr1.flatten(order="f"), fmt="None", capsize=5, ecolor="gray"
-            )
-            ax.errorbar(
-                x, y, xerr=xerr2.flatten(order="f"), fmt="None", capsize=5, ecolor="red"
-            )
-            ax.errorbar(
-                x1, y1, xerr=xerr1.flatten(order="f"), fmt="None", capsize=5, ecolor="red"
-            )
-            ax.errorbar(
-                x1,
-                y1,
-                xerr=xerr2.flatten(order="f"),
-                fmt="None",
-                capsize=5,
-                ecolor="red",
-                label="std>0.5",
+                x, y, xerr=xerr.flatten(order="f"), fmt="None", capsize=5, ecolor="gray"
             )
 
-        ax.legend(loc="lower center", ncol=2)
-        ax.set_ylim(ordmin, ordmax + 1)
-
-    ax.grid()
-    if freqlim is not None:
-        ax.set_xlim(freqlim[0], freqlim[1])
-    plt.tight_layout()
-    return fig, ax
-
-
-# LEGACY
-def Stab_plot(
-    Fn: np.ndarray,
-    Lab: np.ndarray,
-    step: int,
-    ordmax: int,
-    ordmin: int = 0,
-    freqlim: typing.Optional[typing.Tuple] = None,
-    hide_poles: bool = True,
-    fig: typing.Optional[plt.Figure] = None,
-    ax: typing.Optional[plt.Axes] = None,
-) -> typing.Tuple[plt.Figure, plt.Axes]:
-    """
-    Plot the stabilization chart for modal analysis.
-
-    This function creates a stabilization chart, which is a graphical representation used in
-    system identification to assess the stability of identified modes across different model
-    orders.
-
-    Parameters
-    ----------
-    Fn : ndarray
-        An array containing the frequencies for each model order and identification step.
-    Lab : ndarray
-        An array of labels indicating the stability status of each pole. Different numbers represent
-        different stability statuses such as stable pole, stable frequency, stable mode shape, etc.
-    step : int
-        The step size between model orders in the identification process.
-    ordmax : int
-        The maximum model order to be displayed on the plot.
-    ordmin : int, optional
-        The minimum model order to be displayed on the plot, by default 0.
-    freqlim : tuple of float, optional
-        A tuple defining the frequency limits for the plot. If None, includes all frequencies.
-        Default is None.
-    hide_poles : bool, optional
-        If True, only stable poles are plotted; if False, all types of poles are plotted.
-        Default is True.
-    fig : matplotlib.figure.Figure, optional
-        An existing matplotlib figure object to plot on. If None, a new figure is created.
-        Default is None.
-    ax : matplotlib.axes.Axes, optional
-        An existing axes object to plot on. If None, new axes are created on the provided
-        or new figure. Default is None.
-
-    Returns
-    -------
-    tuple
-        - fig : matplotlib.figure.Figure
-            The matplotlib figure object containing the plot.
-        - ax : matplotlib.axes.Axes
-            The axes object with the stabilization chart.
-
-    Notes
-    -----
-    The stabilization chart helps in identifying the number of physical modes and their
-    stability by observing how poles behave across different model orders. Stable poles are
-    typically considered as indicators of physical modes.
-    """
-    if fig is None and ax is None:
-        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
-
-    # Stable pole
-    a = np.where(Lab == 7, Fn, np.nan)
-
-    # Stable frequency, stable mode shape
-    b = np.where(Lab == 6, Fn, np.nan)
-    # Stable frequency, stable damping
-    c = np.where(Lab == 5, Fn, np.nan)
-    # Stable damping, stable mode shape
-    d = np.where(Lab == 4, Fn, np.nan)
-    # Stable damping
-    e = np.where(Lab == 3, Fn, np.nan)
-    # Stable mode shape
-    f = np.where(Lab == 2, Fn, np.nan)
-    # Stable frequency
-    g = np.where(Lab == 1, Fn, np.nan)
-    # new or unstable
-    h = np.where(Lab == 0, Fn, np.nan)
-
-    ax.set_title("Stabilisation Chart")
-    ax.set_ylabel("Model Order")
-    ax.set_xlabel("Frequency [Hz]")
-    if hide_poles:
-        x = a.flatten(order="f")
-        y = np.array([i // len(a) for i in range(len(x))]) * step
-        ax.plot(x, y, "go", markersize=7, label="Stable pole")
-
-    else:
-        x = a.flatten(order="f")
-        y = np.array([i // len(a) for i in range(len(x))]) * step
-
-        x1 = b.flatten(order="f")
-        y1 = np.array([i // len(a) for i in range(len(x))]) * step
-
-        x2 = c.flatten(order="f")
-        x3 = d.flatten(order="f")
-        x4 = e.flatten(order="f")
-        x5 = f.flatten(order="f")
-        x6 = g.flatten(order="f")
-        x7 = h.flatten(order="f")
-
-        ax.plot(x, y, "go", markersize=7, label="Stable pole")
-
-        ax.scatter(
-            x1,
-            y1,
-            marker="o",
-            s=4,
-            c="#FFFF00",
-            label="Stable frequency, stable mode shape",
-        )
-        ax.scatter(
-            x2, y1, marker="o", s=4, c="#FFFF00", label="Stable frequency, stable damping"
-        )
-        ax.scatter(
-            x3,
-            y1,
-            marker="o",
-            s=4,
-            c="#FFFF00",
-            label="Stable damping, stable mode shape",
-        )
-        ax.scatter(x4, y1, marker="o", s=4, c="#FFA500", label="Stable damping")
-        ax.scatter(x5, y1, marker="o", s=4, c="#FFA500", label="Stable mode shape")
-        ax.scatter(x6, y1, marker="o", s=4, c="#FFA500", label="Stable frequency")
-        ax.scatter(x7, y1, marker="o", s=4, c="r", label="Unstable pole")
+            ax.errorbar(
+                x1, y1, xerr=xerr.flatten(order="f"), fmt="None", capsize=5, ecolor="gray"
+            )
 
         ax.legend(loc="lower center", ncol=2)
         ax.set_ylim(ordmin, ordmax + 1)
@@ -566,134 +1010,6 @@ def cluster_plot(
     return fig, ax
 
 
-# LEGACY
-def Cluster_plot(
-    Fn: np.ndarray,
-    Sm: np.ndarray,
-    Lab: np.ndarray,
-    ordmin: int = 0,
-    freqlim: typing.Optional[typing.Tuple] = None,
-    hide_poles: bool = True,
-) -> typing.Tuple[plt.Figure, plt.Axes]:
-    """
-    Plots the frequency-damping clusters of the identified poles using the Stochastic Subspace Identification
-    (SSI) method.
-
-    Parameters
-    ----------
-    Fn : ndarray
-        An array containing the frequencies of poles for each model order and identification step.
-    Sm : ndarray
-        An array containing the damping ratios associated with the poles in `Fn`.
-    Lab : ndarray
-        An array of labels indicating the stability status of each pole, where different numbers represent
-        different stability statuses.
-    ordmin : int, optional
-        The minimum model order to be displayed on the plot. Default is 0.
-    freqlim : tuple of float, optional
-        The upper frequency limit for the plot. If None, includes all frequencies. Default is None.
-    hide_poles : bool, optional
-        If True, only stable poles are plotted. If False, all types of poles are plotted. Default is True.
-
-    Returns
-    -------
-    tuple
-        fig : matplotlib.figure.Figure
-            The matplotlib figure object.
-        ax1 : matplotlib.axes.Axes
-            The axes object with the stabilization chart.
-    """
-    # Stable pole
-    a = np.where(Lab == 7, Fn, np.nan)
-    aa = np.where(Lab == 7, Sm, np.nan)
-
-    # Stable frequency, stable mode shape
-    b = np.where(Lab == 6, Fn, np.nan)
-    bb = np.where(Lab == 6, Sm, np.nan)
-    # Stable frequency, stable damping
-    c = np.where(Lab == 5, Fn, np.nan)
-    cc = np.where(Lab == 5, Sm, np.nan)
-    # Stable damping, stable mode shape
-    d = np.where(Lab == 4, Fn, np.nan)
-    dd = np.where(Lab == 4, Sm, np.nan)
-    # Stable damping
-    e = np.where(Lab == 3, Fn, np.nan)
-    ee = np.where(Lab == 3, Sm, np.nan)
-    # Stable mode shape
-    f = np.where(Lab == 2, Fn, np.nan)
-    ff = np.where(Lab == 2, Sm, np.nan)
-    # Stable frequency
-    g = np.where(Lab == 1, Fn, np.nan)
-    gg = np.where(Lab == 1, Sm, np.nan)
-    # new or unstable
-    h = np.where(Lab == 0, Fn, np.nan)
-    hh = np.where(Lab == 0, Sm, np.nan)
-
-    fig, ax1 = plt.subplots(figsize=(8, 6), tight_layout=True)
-    ax1.set_title("Frequency-damping clustering")
-    ax1.set_ylabel("Damping")
-    ax1.set_xlabel("Frequency [Hz]")
-    if hide_poles:
-        x = a.flatten(order="f")
-        y = aa.flatten(order="f")
-        ax1.plot(x, y, "go", markersize=7, label="Stable pole")
-
-    else:
-        x = a.flatten(order="f")
-        y = aa.flatten(order="f")
-
-        x1 = b.flatten(order="f")
-        y1 = bb.flatten(order="f")
-
-        x2 = c.flatten(order="f")
-        y2 = cc.flatten(order="f")
-
-        x3 = d.flatten(order="f")
-        y3 = dd.flatten(order="f")
-        x4 = e.flatten(order="f")
-        y4 = ee.flatten(order="f")
-        x5 = f.flatten(order="f")
-        y5 = ff.flatten(order="f")
-        x6 = g.flatten(order="f")
-        y6 = gg.flatten(order="f")
-        x7 = h.flatten(order="f")
-        y7 = hh.flatten(order="f")
-
-        ax1.plot(x, y, "go", markersize=7, label="Stable pole")
-
-        ax1.scatter(
-            x1,
-            y1,
-            marker="o",
-            s=4,
-            c="#FFFF00",
-            label="Stable frequency, stable mode shape",
-        )
-        ax1.scatter(
-            x2, y2, marker="o", s=4, c="#FFFF00", label="Stable frequency, stable damping"
-        )
-        ax1.scatter(
-            x3,
-            y3,
-            marker="o",
-            s=4,
-            c="#FFFF00",
-            label="Stable damping, stable mode shape",
-        )
-        ax1.scatter(x4, y4, marker="o", s=4, c="#FFA500", label="Stable damping")
-        ax1.scatter(x5, y5, marker="o", s=4, c="#FFA500", label="Stable mode shape")
-        ax1.scatter(x6, y6, marker="o", s=4, c="#FFA500", label="Stable frequency")
-        ax1.scatter(x7, y7, marker="o", s=4, c="r", label="Unstable pole")
-
-        ax1.legend(loc="lower center", ncol=2)
-
-    ax1.grid()
-    if freqlim is not None:
-        ax1.set_xlim(freqlim[0], freqlim[1])
-    plt.tight_layout()
-    return fig, ax1
-
-
 # -----------------------------------------------------------------------------
 
 
@@ -704,7 +1020,9 @@ def svalH_plot(
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
-    """ """
+    """
+    Plot the singular values of the Hankel matrix.
+    """
     if fig is None and ax is None:
         fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
 
@@ -714,7 +1032,7 @@ def svalH_plot(
 
     ax.stem(S1rad, linefmt="k-")
 
-    ax.set_title(f"Singular values plot, for block-rows(time shift) = {br}")
+    ax.set_title(f"Singular values plot, for block-rows = {br}")
     ax.set_ylabel("Singular values")
     ax.set_xlabel("Index number")
     if iter_n is not None:
@@ -1241,6 +1559,7 @@ def plt_data(
             # loop over the columns
             for jj in range(nc):
                 ax = axs[ii, jj]
+                ax.grid()
                 try:
                     # while kk < data.shape[1]
                     ax.plot(time, data[:, kk], c="k")
@@ -1280,7 +1599,7 @@ def plt_data(
                 ax.legend()
             ax.set_ylabel(f"{unit}")
             kk += 1
-        ax.grid()
+        # ax.grid()
     plt.tight_layout()
 
     return fig, ax
@@ -1341,6 +1660,8 @@ def plt_ch_info(
 
     ndat, nch = data.shape
 
+    figs = []
+    axs = []
     for ii in range(nch):
         fig = plt.figure(figsize=(8, 6), layout="constrained")
         spec = fig.add_gridspec(3, 2)
@@ -1448,11 +1769,15 @@ def plt_ch_info(
             fig.suptitle(f"Info plot channel nr.{ch_idx[ii]}")
         else:
             fig.suptitle(f"Info plot channel nr.{ii}")
-
-    return fig, [ax0, ax10, ax20, ax11, ax21]
+        figs.append(fig)
+        axs.append([ax0, ax10, ax20, ax11, ax21])
+    # return fig, [ax0, ax10, ax20, ax11, ax21]
+    return figs, axs
 
 
 # -----------------------------------------------------------------------------
+
+
 # Short time Fourier transform - SPECTROGRAM
 def STFT(
     data: np.ndarray,
@@ -1534,6 +1859,9 @@ def STFT(
     return figs, axs
 
 
+# -----------------------------------------------------------------------------
+
+
 def plot_mac_matrix(
     array1, array2, colormap="plasma", ax=None
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
@@ -1587,3 +1915,50 @@ def plot_mac_matrix(
     ax.set_title("MAC Matrix")
 
     return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
+def plot_mode_complexity(mode_shape):
+    """
+    Plot the complexity of a mode shape.
+    """
+
+    # Get angles (in radians) and magnitudes
+    angles = np.angle(mode_shape)
+    magnitudes = np.abs(mode_shape)
+
+    # Create a polar plot
+    fig, ax = plt.subplots(subplot_kw={"projection": "polar"}, figsize=(6, 6))
+    ax.set_theta_zero_location("E")  # Set 0 degrees to East
+    ax.set_theta_direction(1)  # Counterclockwise
+    ax.set_rmax(1.1)  # Set maximum radius slightly above 1 for clarity
+    ax.grid(True, linestyle="--", alpha=0.5)
+
+    # Plot arrows using annotate with fixed head size
+    for angle, magnitude in zip(angles, magnitudes):
+        ax.annotate(
+            "",
+            xy=(angle, magnitude),
+            xytext=(angle, 0),
+            arrowprops=dict(
+                facecolor="blue",
+                edgecolor="blue",
+                arrowstyle="-|>",
+                linewidth=1.5,
+                mutation_scale=20,  # Controls the size of the arrowhead
+            ),
+        )
+    # Highlight directions (0° and 180°)
+    principal_angles = [0, np.pi]
+    for pa in principal_angles:
+        ax.plot([pa, pa], [0, 1.1], color="red", linestyle="--", linewidth=1)
+
+    ax.set_yticklabels([])
+    # Add title
+    ax.set_title(
+        "Mode Shape Complexity Plot", va="bottom", fontsize=14, fontweight="bold"
+    )
+    plt.tight_layout()
+    plt.show()
