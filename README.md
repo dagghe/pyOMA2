@@ -22,10 +22,16 @@ https://pyoma.readthedocs.io/en/main/
 
 ## Quick start
 
-Install the library
+Install the library with pip:
 
 ```shell
 pip install pyOMA-2
+```
+
+or with conda/mamba:
+
+```shell
+conda install pyOMA-2
 ```
 
 You'll probably need to install **tk** for the GUI on your system, here some instructions:
