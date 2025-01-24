@@ -159,7 +159,7 @@ We can now plot some of the results:
 .. code:: python
 
     # plot frequecy-damping clusters for SSI
-    ssicov.plot_cluster(freqlim=(0,5))
+    ssicov.plot_freqvsdamp(freqlim=(0,5))
 
 
 .. figure:: /img/Ex2-Fig9.png
