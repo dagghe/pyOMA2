@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.1.0] - 2025-01-24
+
 ### Fixed
 
 - uncertainty calculations for SSI algorithm
@@ -26,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - HC on damping and on complex conjugate included into `SSI_poles`function
   - order for run_param renamed to `order_in`
   - Renamed uncertanties component from `xxx_cov`to `xxx_std`
+- updated tests
 
 ### Added
 
