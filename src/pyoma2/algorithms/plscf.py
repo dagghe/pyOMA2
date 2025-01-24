@@ -377,7 +377,6 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
         )
 
         # Apply HARD CRITERIA
-        # hc_conj = hc["conj"]
         hc_xi_max = hc["xi_max"]
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]

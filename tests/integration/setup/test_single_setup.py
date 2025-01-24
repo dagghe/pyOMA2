@@ -439,9 +439,9 @@ def test_run(ss: SingleSetup) -> None:
 
     # plot FREQUECY-DAMPING CLUSTERS for SSI
     try:
-        fig4, ax4 = ssicov.plot_cluster(freqlim=(1, 4))
+        fig4, ax4 = ssicov.plot_freqvsdamp(freqlim=(1, 4))
     except Exception as e:
-        assert False, f"plot_cluster raised an exception {e}"
+        assert False, f"plot_freqvsdamp raised an exception {e}"
 
     # run mpe_from_plot for algorithms
     try:
@@ -461,7 +461,7 @@ def test_run(ss: SingleSetup) -> None:
 
     # run mpe for algorithms
     try:
-        ss.mpe("SSIcov", sel_freq=[1.88, 2.42, 2.68], order=40)
+        ss.mpe("SSIcov", sel_freq=[1.88, 2.42, 2.68], order_in=40)
     except Exception as e:
         assert False, f"mpe raised an exception {e} for SSIcov"
 

@@ -128,12 +128,14 @@ def build_hank(
             Hvec0 = Hank.reshape(-1, 1, order="f")  # vectorialised hankel
 
             for j in range(1, nb + 1):
-                Ri = np.array(
-                    [
-                        1 / (Nb) * np.dot(Y[:, : j * Nb - k], Yref[:, k : j * Nb].T)
-                        for k in range(p + q)
-                    ]
-                )
+                print(j, nb)
+                Ri = np.array([])
+                for k in range(p + q):
+                    print(f"{k=}, {p=}, {q=}")
+                    res = np.array(
+                        [1 / (Nb) * np.dot(Y[:, : j * Nb - k], Yref[:, k : j * Nb].T)]
+                    )
+                    Ri = np.vstack([Ri, res])
                 Hcov_j = np.vstack(
                     [np.hstack([Ri[i + j, :, :] for j in range(p + 1)]) for i in range(q)]
                 )
@@ -196,7 +198,7 @@ def build_hank(
 # Legacy
 def SSI(
     H: np.ndarray, br: int, ordmax: int, step: int = 1
-) -> typing.Tuple[typing.List[np.ndarray], typing.List[np.ndarray]]:
+) -> typing.Tuple[np.ndarray, typing.List[np.ndarray], typing.List[np.ndarray]]:
     """
     Perform System Identification using the Stochastic Subspace Identification (SSI) method.
 
@@ -953,7 +955,8 @@ def SSI_mpe(
     # OPZIONE 3 order = list[int]
     # -----------------------------------------------------------------------------
     elif isinstance(order, list):
-        order = int(order / step)
+        # Convert each element in the order list to model orders
+        order = [int(o / step) for o in order]
         order_out = np.array(order)
         for ii, fj in enumerate(tqdm(freq_ref)):
             sel = np.nanargmin(np.abs(Fn_pol[:, order[ii]] - fj))
