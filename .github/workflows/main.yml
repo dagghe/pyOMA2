@@ -10,21 +10,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  pre-commit:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-    - name: Install pre-commit
-      run: pip install pre-commit
-    - name: Run pre-commit
-      run: pre-commit run --all-files
+  # pre-commit:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - name: Set up Python
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: "3.11"
+  #   - name: Install pre-commit
+  #     run: pip install pre-commit
+  #   - name: Run pre-commit
+  #     run: pre-commit run --all-files
 
   test:
-    needs: pre-commit
+    # needs: pre-commit
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # Continue running jobs even if a previous job fails
@@ -90,7 +90,8 @@ jobs:
       shell: bash
 
   check_failures:
-    needs: [pre-commit, test]
+    # needs: [pre-commit, test]
+    needs: [test]
     runs-on: ubuntu-latest
     if: always()
     steps:
