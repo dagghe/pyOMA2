@@ -22,7 +22,7 @@ repos:
 # export python requirements
 # LINUX 3.8
 -   repo: https://github.com/pdm-project/pdm
-    rev: 2.22.2
+    rev: 2.20.1
     hooks:
       - id: pdm-export
         name: pdm-export-py38unix
@@ -30,7 +30,7 @@ repos:
         files: ^pdm-py38unix.lock$
 # LINUX 3.9+
 -   repo: https://github.com/pdm-project/pdm
-    rev: 2.22.2
+    rev: 2.20.1
     hooks:
       - id: pdm-export
         name: pdm-export-py39+unix
@@ -38,7 +38,7 @@ repos:
         files: ^pdm-py39\+unix.lock$
 # WINDOWS 3.8
 -   repo: https://github.com/pdm-project/pdm
-    rev: 2.22.2
+    rev: 2.20.1
     hooks:
       - id: pdm-export
         name: pdm-export-py38win
@@ -46,7 +46,7 @@ repos:
         files: ^pdm-py38win.lock$
 # WINDOWS 3.9+
 -   repo: https://github.com/pdm-project/pdm
-    rev: 2.22.2
+    rev: 2.20.1
     hooks:
       - id: pdm-export
         name: pdm-export-py39+win
@@ -54,7 +54,7 @@ repos:
         files: ^pdm-py39\+win.lock$
 # MACOS 3.8
 -   repo: https://github.com/pdm-project/pdm
-    rev: 2.22.2
+    rev: 2.20.1
     hooks:
       - id: pdm-export
         name: pdm-export-py38mac
@@ -62,7 +62,7 @@ repos:
         files: ^pdm-py38macos.lock$
 # MACOS 3.9+
 -   repo: https://github.com/pdm-project/pdm
-    rev: 2.22.2
+    rev: 2.20.1
     hooks:
       - id: pdm-export
         name: pdm-export-py39\+mac
