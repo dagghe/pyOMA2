@@ -230,22 +230,26 @@ def mock_imports():
         "pyoma2.support.sel_from_plot.FigureCanvasTkAgg"
     ), unittest.mock.patch(
         "src.pyoma2.functions.plot.plt.tight_layout"
-    ), unittest.mock.patch("tkinter.Tk"), unittest.mock.patch("tkinter.Menu"):
+    ), unittest.mock.patch(
+        "tkinter.Tk"
+    ), unittest.mock.patch(
+        "tkinter.Menu"
+    ):
         """
         Mocks the imports for the tests.
         All mocked imports area bout GUI and plotting.
         """
 
-        def subplots_side_effect(nrows=1, ncols=1, *args, **kwargs):
+        def subplots_side_effect(nrows=1, ncols=1, squeeze=True, *args, **kwargs):
             """
             Mock for matplotlib.pyplot.subplots.
             Returns a tuple with a MagicMock for the figure and a 2-dimensional
             array of MagicMocks for the axes.
             """
-            if nrows == 1 and ncols == 1:
+            if nrows == 1 and ncols == 1 and squeeze:
                 return (MagicMock(), MagicMock())
             else:
-                if nrows == 1 or ncols == 1:
+                if (nrows == 1 or ncols == 1) and squeeze:
                     size = max(
                         nrows, ncols
                     )  # Determine the size of the 1-dimensional array
