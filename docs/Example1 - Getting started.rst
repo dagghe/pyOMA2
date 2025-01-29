@@ -36,7 +36,7 @@ Now we can instantiate the SingleSetup class, passing the dataset and the sampli
 
     from pyoma2.setup.single import SingleSetup
 
-    simp_5dof = SingleSetup(data, fs=200)
+    simp_5dof = SingleSetup(data, fs=600)
 
 
 Since the maximum frequency is at approximately 6Hz, we can decimate the signal quite a bit.
@@ -44,8 +44,8 @@ To do this we can call the ``decimate_data()`` method
 
 .. code:: python
 
-    # Decimate the data by factor 10
-    simp_5dof.decimate_data(q=10)
+    # Decimate the data
+    simp_5dof.decimate_data(q=30)
 
 
 To analise the data we need to instanciate the desired algorithm to use with a name and the required arguments.
@@ -89,7 +89,7 @@ or we can get the results "manually" with the ``mpe()`` method.
     # simp_ex.mpe_from_plot("SSIdat", freqlim=(0,10))
 
     # or manually
-    simp_5dof.mpe("SSIdat", sel_freq=[0.89, 2.598, 4.095, 5.261, 6.], order="find_min")
+    simp_5dof.mpe("SSIdat", sel_freq=[0.89, 2.598, 4.095, 5.261, 6.], order_in="find_min")
 
 
 Now we can now access all the results and compare them to the exact solution

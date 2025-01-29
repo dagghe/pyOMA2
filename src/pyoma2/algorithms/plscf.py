@@ -87,16 +87,16 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         )
 
         # Apply HARD CRITERIA
-        hc_conj = hc.get("conj")
+        # hc_conj = hc.get("conj")
         hc_xi_max = hc["xi_max"]
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
 
         # HC - presence of complex conjugate
-        if hc_conj:
-            Lambds, mask1 = gen.HC_conj(Lambds)
-            lista = [Fns, Xis, Phis]
-            Fns, Xis, Phis = gen.applymask(lista, mask1, Phis.shape[2])
+        # if hc_conj:
+        Lambds, mask1 = gen.HC_conj(Lambds)
+        lista = [Fns, Xis, Phis]
+        Fns, Xis, Phis = gen.applymask(lista, mask1, Phis.shape[2])
 
         # HC - damping
         Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
@@ -104,10 +104,14 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         Fns, Phis = gen.applymask(lista, mask2, Phis.shape[2])
 
         # HC - MPC and MPD
-        mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
-        lista = [Fns, Xis, Phis]
-        Fns, Xis, Phis = gen.applymask(lista, mask3, Phis.shape[2])
-        Fns, Xis, Phis = gen.applymask(lista, mask4, Phis.shape[2])
+        if hc_mpc_lim is not None:
+            mask3 = gen.HC_MPC(Phis, hc_mpc_lim)
+            lista = [Fns, Xis, Phis, Lambds]
+            Fns, Xis, Phis, Lambds = gen.applymask(lista, mask3, Phis.shape[2])
+        if hc_mpd_lim is not None:
+            mask4 = gen.HC_MPD(Phis, hc_mpd_lim)
+            lista = [Fns, Xis, Phis, Lambds]
+            Fns, Xis, Phis, Lambds = gen.applymask(lista, mask4, Phis.shape[2])
 
         # Apply SOFT CRITERIA
         # Get the labels of the poles
@@ -300,7 +304,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
 
         fig, ax = plot.cluster_plot(
             Fn=self.result.Fn_poles,
-            Sm=self.result.Xi_poles,
+            Xi=self.result.Xi_poles,
             Lab=self.result.Lab,
             ordmin=self.run_params.ordmin,
             freqlim=freqlim,
@@ -373,16 +377,15 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
         )
 
         # Apply HARD CRITERIA
-        hc_conj = hc["conj"]
         hc_xi_max = hc["xi_max"]
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
 
         # HC - presence of complex conjugate
-        if hc_conj:
-            Lambds, mask1 = gen.HC_conj(Lambds)
-            lista = [Fns, Xis, Phis]
-            Fns, Xis, Phis = gen.applymask(lista, mask1, Phis.shape[2])
+        # if hc_conj:
+        Lambds, mask1 = gen.HC_conj(Lambds)
+        lista = [Fns, Xis, Phis]
+        Fns, Xis, Phis = gen.applymask(lista, mask1, Phis.shape[2])
 
         # HC - damping
         Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
@@ -390,10 +393,14 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
         Fns, Phis = gen.applymask(lista, mask2, Phis.shape[2])
 
         # HC - MPC and MPD
-        mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
-        lista = [Fns, Xis, Phis]
-        Fns, Xis, Phis = gen.applymask(lista, mask3, Phis.shape[2])
-        Fns, Xis, Phis = gen.applymask(lista, mask4, Phis.shape[2])
+        if hc_mpc_lim is not None:
+            mask3 = gen.HC_MPC(Phis, hc_mpc_lim)
+            lista = [Fns, Xis, Phis, Lambds]
+            Fns, Xis, Phis, Lambds = gen.applymask(lista, mask3, Phis.shape[2])
+        if hc_mpd_lim is not None:
+            mask4 = gen.HC_MPD(Phis, hc_mpd_lim)
+            lista = [Fns, Xis, Phis, Lambds]
+            Fns, Xis, Phis, Lambds = gen.applymask(lista, mask4, Phis.shape[2])
 
         # Apply SOFT CRITERIA
         # Get the labels of the poles

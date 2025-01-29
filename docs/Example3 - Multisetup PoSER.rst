@@ -78,15 +78,15 @@ remains the same as described in the example for the single setup.
    ss1.mpe(
          "SSIcov1",
          sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
-         order=50)
+         order_in=50)
    ss2.mpe(
          "SSIcov2",
          sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
-         order=40)
+         order_in=40)
    ss3.mpe(
          "SSIcov3",
          sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
-         order=40)
+         order_in=40)
 
 .. figure:: /img/Ex3-Fig1.png
 .. figure:: /img/Ex3-Fig2.png

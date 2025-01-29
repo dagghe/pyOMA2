@@ -62,8 +62,10 @@ class FDDRunParams(BaseRunParams):
     # METODO 1: run
     nxseg: int = 1024
     method_SD: Literal["per", "cor"] = "per"
+    method_SD: Literal["per", "cor"] = "per"
     pov: float = 0.5
     # METODO 2: mpe e mpe_from_plot
+    sel_freq: Optional[npt.NDArray[np.float64]] = None
     sel_freq: Optional[npt.NDArray[np.float64]] = None
     DF: float = 0.1
 
@@ -103,12 +105,15 @@ class EFDDRunParams(BaseRunParams):
     # METODO 1: run
     nxseg: int = 1024
     method_SD: Literal["per", "cor"] = "per"
+    method_SD: Literal["per", "cor"] = "per"
     pov: float = 0.5
     # METODO 2: mpe e mpe_from_plot
+    sel_freq: Optional[npt.NDArray[np.float64]] = None
     sel_freq: Optional[npt.NDArray[np.float64]] = None
     DF1: float = 0.1
     DF2: float = 1.0
     cm: int = 1
+    MAClim: float = 0.95
     MAClim: float = 0.95
     sppk: int = 3
     npmax: int = 20
@@ -123,6 +128,7 @@ class SSIRunParams(BaseRunParams):
     br : int
         Number of block rows in the Hankel matrix.
     method_hank : str or None, optional
+        Method used in the SSI algorithm. Options are ['data', 'cov', 'cov_R'].
         Method used in the SSI algorithm. Options are ['data', 'cov', 'cov_R'].
         Default is None.
     ref_ind : list of int or None, optional
@@ -166,16 +172,24 @@ class SSIRunParams(BaseRunParams):
 
     # METODO 1: run
     br: int = 20
+    br: int = 20
     method: str = None
     ref_ind: Optional[List[int]] = None
+    ref_ind: Optional[List[int]] = None
     ordmin: int = 0
+    ordmax: Optional[int] = None
     ordmax: Optional[int] = None
     step: int = 1
     sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
     hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.5, mpd_lim=0.5, CoV_max=0.05)
+    sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
+    hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.5, mpd_lim=0.5, CoV_max=0.05)
     calc_unc: bool = False  # uncertainty calculations
     nb: int = 50  # number of dataset blocks
+    nb: int = 50  # number of dataset blocks
     # METODO 2: mpe e mpe_from_plot
+    sel_freq: Optional[List[float]] = None
+    order_in: Union[int, List[int], str] = "find_min"
     sel_freq: Optional[List[float]] = None
     order_in: Union[int, List[int], str] = "find_min"
     rtol: float = 5e-2
@@ -233,12 +247,17 @@ class pLSCFRunParams(BaseRunParams):
     ordmin: int = 0
     nxseg: int = 1024
     method_SD: Literal["per", "cor"] = "per"
+    method_SD: Literal["per", "cor"] = "per"
     pov: float = 0.5
     # sgn_basf: int = -1
     # step: int = 1
     sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
     hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
+    sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
+    hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
     # METODO 2: mpe e mpe_from_plot
+    sel_freq: Optional[List[float]] = None
+    order_in: Union[int, List[int], str] = "find_min"
     sel_freq: Optional[List[float]] = None
     order_in: Union[int, List[int], str] = "find_min"
     rtol: float = 5e-2

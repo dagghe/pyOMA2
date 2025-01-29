@@ -202,7 +202,8 @@ def HC_MPD(phi, mpd_lim) -> np.ndarray:
 
 def HC_CoV(Fn, Fn_std, CoV_max) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
-    Apply Hard validation Criteria (HC), retaining only those elements which have a covariance less than a specified maximum.
+    Apply Hard validation Criteria (HC), retaining only those elements which have a
+    Coefficient of Variation (CoV) less than a specified maximum.
 
     Parameters
     ----------

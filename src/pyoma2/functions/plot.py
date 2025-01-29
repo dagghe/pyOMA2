@@ -1020,7 +1020,9 @@ def svalH_plot(
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
-    """ """
+    """
+    Plot the singular values of the Hankel matrix.
+    """
     if fig is None and ax is None:
         fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
 
@@ -1925,7 +1927,9 @@ def plot_mac_matrix(
 
 
 def plot_mode_complexity(mode_shape):
-    """ """
+    """
+    Plot the complexity of a mode shape.
+    """
 
     # Get angles (in radians) and magnitudes
     angles = np.angle(mode_shape)

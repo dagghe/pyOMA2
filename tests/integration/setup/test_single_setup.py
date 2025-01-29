@@ -461,7 +461,7 @@ def test_run(ss: SingleSetup) -> None:
 
     # run mpe for algorithms
     try:
-        ss.mpe("SSIcov", sel_freq=[1.88, 2.42, 2.68], order=40)
+        ss.mpe("SSIcov", sel_freq=[1.88, 2.42, 2.68], order_in=40)
     except Exception as e:
         assert False, f"mpe raised an exception {e} for SSIcov"
 
