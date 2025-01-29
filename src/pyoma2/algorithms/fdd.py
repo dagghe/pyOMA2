@@ -12,6 +12,7 @@ import logging
 import typing
 
 from pyoma2.algorithms.base import BaseAlgorithm
+from pyoma2.algorithms.data.mpe_params import EFDDMPEParams, FDDMPEParams
 from pyoma2.algorithms.data.result import EFDDResult, FDDResult
 from pyoma2.algorithms.data.run_params import EFDDRunParams, FDDRunParams
 from pyoma2.functions import fdd, plot
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 # SINGLE SETUP
 # =============================================================================
 # FREQUENCY DOMAIN DECOMPOSITION
-class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
+class FDD(BaseAlgorithm[FDDRunParams, FDDMPEParams, FDDResult, typing.Iterable[float]]):
     """
     Frequency Domain Decomposition (FDD) algorithm for operational modal analysis.
 
@@ -43,6 +44,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
     """
 
     RunParamCls = FDDRunParams
+    MPEParamCls = FDDMPEParams
     ResultCls = FDDResult
 
     def run(self) -> FDDResult:
@@ -97,8 +99,8 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         """
         super().mpe(sel_freq=sel_freq, DF=DF)
 
-        self.run_params.sel_freq = sel_freq
-        self.run_params.DF = DF
+        self.mpe_params.sel_freq = sel_freq
+        self.mpe_params.DF = DF
         # Sy = self.result.Sy
         S_val = self.result.S_val
         S_vec = self.result.S_vec
@@ -141,7 +143,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
         S_vec = self.result.S_vec
         freq = self.result.freq
 
-        self.run_params.DF = DF
+        self.mpe_params.DF = DF
 
         # chiamare plot interattivo
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
@@ -194,7 +196,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDResult, typing.Iterable[float]]):
 
 # ------------------------------------------------------------------------------
 # ENHANCED FREQUENCY DOMAIN DECOMPOSITION EFDD
-class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
+class EFDD(FDD[EFDDRunParams, EFDDMPEParams, EFDDResult, typing.Iterable[float]]):
     """
     Enhanced Frequency Domain Decomposition (EFDD) Algorithm Class.
 
@@ -219,6 +221,7 @@ class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
     method: typing.Literal["EFDD", "FSDD"] = "EFDD"
 
     RunParamCls = EFDDRunParams
+    MPEParamCls = EFDDMPEParams
     ResultCls = EFDDResult
 
     def mpe(
@@ -261,13 +264,13 @@ class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         """
 
         # Save run parameters
-        self.run_params.sel_freq = sel_freq
-        self.run_params.DF1 = DF1
-        self.run_params.DF2 = DF2
-        self.run_params.cm = cm
-        self.run_params.MAClim = MAClim
-        self.run_params.sppk = sppk
-        self.run_params.npmax = npmax
+        self.mpe_params.sel_freq = sel_freq
+        self.mpe_params.DF1 = DF1
+        self.mpe_params.DF2 = DF2
+        self.mpe_params.cm = cm
+        self.mpe_params.MAClim = MAClim
+        self.mpe_params.sppk = sppk
+        self.mpe_params.npmax = npmax
 
         # Extract modal results
         Fn_FDD, Xi_FDD, Phi_FDD, forPlot = fdd.EFDD_mpe(
@@ -331,12 +334,12 @@ class EFDD(FDD[EFDDRunParams, EFDDResult, typing.Iterable[float]]):
         """
 
         # Save run parameters
-        self.run_params.DF1 = DF1
-        self.run_params.DF2 = DF2
-        self.run_params.cm = cm
-        self.run_params.MAClim = MAClim
-        self.run_params.sppk = sppk
-        self.run_params.npmax = npmax
+        self.mpe_params.DF1 = DF1
+        self.mpe_params.DF2 = DF2
+        self.mpe_params.cm = cm
+        self.mpe_params.MAClim = MAClim
+        self.mpe_params.sppk = sppk
+        self.mpe_params.npmax = npmax
 
         # chiamare plot interattivo
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
@@ -438,7 +441,7 @@ class FSDD(EFDD):
 # MULTI SETUP
 # =============================================================================
 # FREQUENCY DOMAIN DECOMPOSITION
-class FDD_MS(FDD[FDDRunParams, FDDResult, typing.Iterable[dict]]):
+class FDD_MS(FDD[FDDRunParams, FDDMPEParams, FDDResult, typing.Iterable[dict]]):
     """
     Frequency Domain Decomposition (FDD) Algorithm for Multi-Setup Analysis.
 
@@ -462,6 +465,7 @@ class FDD_MS(FDD[FDDRunParams, FDDResult, typing.Iterable[dict]]):
     """
 
     RunParamCls = FDDRunParams
+    MPEParamCls = FDDMPEParams
     ResultCls = FDDResult
 
     def run(self) -> FDDResult:
@@ -498,7 +502,7 @@ class FDD_MS(FDD[FDDRunParams, FDDResult, typing.Iterable[dict]]):
 
 # ------------------------------------------------------------------------------
 # ENHANCED FREQUENCY DOMAIN DECOMPOSITION EFDD
-class EFDD_MS(EFDD[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
+class EFDD_MS(EFDD[EFDDRunParams, EFDDMPEParams, EFDDResult, typing.Iterable[dict]]):
     """
     Enhanced Frequency Domain Decomposition (EFDD) Algorithm for Multi-Setup Analysis.
 
@@ -523,6 +527,7 @@ class EFDD_MS(EFDD[EFDDRunParams, EFDDResult, typing.Iterable[dict]]):
 
     method = "EFDD"
     RunParamCls = EFDDRunParams
+    MPEParamCls = EFDDMPEParams
     ResultCls = EFDDResult
 
     def run(self) -> FDDResult:

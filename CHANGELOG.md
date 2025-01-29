@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Extra1 example jupyter notebook
+
+### Changed
+
+- run_params have been split in run_params and mpe_params
+
 
 ## [1.1.1] - 2025-01-24
 

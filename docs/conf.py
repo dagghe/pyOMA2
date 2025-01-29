@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath("../src/pyoma2"))
 project = "pyoma2"
 copyright = "2024, Dag Pasca"
 author = "Dag Pasca"
-release = "0.5.2"
+release = "1.1.1"
 
 
 ### Code to exclude the docs from pydantic - start ###

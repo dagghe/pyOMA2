@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 import typing
 
+from pyoma2.algorithms.data.mpe_params import SSIMPEParams
 from pyoma2.algorithms.data.result import SSIResult
 from pyoma2.algorithms.data.run_params import SSIRunParams
 from pyoma2.functions import gen, plot, ssi
@@ -25,7 +26,9 @@ logger = logging.getLogger(__name__)
 # SINGLE SETUP
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
+class SSIdat(
+    BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[float]]
+):
     """
     Data-Driven Stochastic Subspace Identification (SSI) algorithm for single setup
     analysis.
@@ -44,6 +47,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
     """
 
     RunParamCls = SSIRunParams
+    MPEParamCls = SSIMPEParams
     ResultCls = SSIResult
     method: typing.Literal["dat"] = "dat"
 
@@ -182,9 +186,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         super().mpe(sel_freq=sel_freq, order_in=order_in, rtol=rtol)
 
         # Save run parameters
-        self.run_params.sel_freq = sel_freq
-        self.run_params.order_in = order_in
-        self.run_params.rtol = rtol
+        self.mpe_params.sel_freq = sel_freq
+        self.mpe_params.order_in = order_in
+        self.mpe_params.rtol = rtol
 
         # Get poles
         Fn_pol = self.result.Fn_poles
@@ -245,7 +249,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         super().mpe_from_plot(freqlim=freqlim, rtol=rtol)
 
         # Save run parameters
-        self.run_params.rtol = rtol
+        self.mpe_params.rtol = rtol
 
         # Get poles
         Fn_pol = self.result.Fn_poles
@@ -428,7 +432,7 @@ class SSIcov(SSIdat):
 # MULTISETUP
 # =============================================================================
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
+class SSIdat_MS(SSIdat[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
     """
     Implements the Data-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup
     experiments.
