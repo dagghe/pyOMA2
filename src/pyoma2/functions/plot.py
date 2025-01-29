@@ -1928,7 +1928,27 @@ def plot_mac_matrix(
 
 def plot_mode_complexity(mode_shape):
     """
-    Plot the complexity of a mode shape.
+    Plot the complexity of a mode shape on a polar plot.
+
+    This function visualizes the mode shape's complexity by representing its
+    magnitudes and angles in a polar coordinate system. The magnitudes of
+    the mode shape are plotted as arrows radiating outward, with their angles
+    representing the phase of the corresponding components. Principal directions
+    (0° and 180°) are highlighted for clarity.
+
+    Parameters
+    ----------
+    mode_shape : array_like
+        A complex-valued array representing the mode shape. Each element's
+        magnitude and angle are used to generate the plot.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the plot.
+
+    ax : matplotlib.axes.Axes
+        The matplotlib axes object.
     """
 
     # Get angles (in radians) and magnitudes
@@ -1968,3 +1988,4 @@ def plot_mode_complexity(mode_shape):
     )
     plt.tight_layout()
     plt.show()
+    return fig, ax

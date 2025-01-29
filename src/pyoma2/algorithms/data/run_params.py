@@ -9,7 +9,6 @@ import typing
 from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
-import numpy.typing as npt
 from pydantic import BaseModel, ConfigDict, model_validator
 from typing_extensions import TypedDict
 
@@ -49,25 +48,11 @@ class FDDRunParams(BaseRunParams):
         Method used for spectral density estimation, default is "per".
     pov : float, optional
         Percentage of overlap between segments (only for "per"), default is 0.5.
-    sel_freq : numpy.ndarray
-        Array of selected frequencies for modal parameter estimation,.
-    DF : float, optional
-        Frequency resolution for estimation, default is 0.1.
-
-    Notes
-    -----
-    `sel_freq` and `DF` are used in the ``mpe`` method.
     """
 
-    # METODO 1: run
     nxseg: int = 1024
     method_SD: Literal["per", "cor"] = "per"
-    method_SD: Literal["per", "cor"] = "per"
     pov: float = 0.5
-    # METODO 2: mpe e mpe_from_plot
-    sel_freq: Optional[npt.NDArray[np.float64]] = None
-    sel_freq: Optional[npt.NDArray[np.float64]] = None
-    DF: float = 0.1
 
 
 class EFDDRunParams(BaseRunParams):
@@ -82,41 +67,11 @@ class EFDDRunParams(BaseRunParams):
         Method used for spectral density estimation, default is "per".
     pov : float, optional
         Percentage of overlap between segments (only for "per"), default is 0.5.
-    sel_freq : numpy.ndarray
-        Array of selected frequencies for modal parameter estimation,.
-    DF1 : float, optional
-        Frequency resolution for estimation, default is 0.1.
-    DF2 : float
-        Frequency resolution for the second stage of EFDD, default is 1.0.
-    cm : int
-        Number of closely spaced modes, default is 1.
-    MAClim : float
-        Minimum acceptable Modal Assurance Criterion value, default is 0.85.
-    sppk : int
-        Number of peaks to skip for the fit, default is 3.
-    npmax : int
-        Maximum number of peaks to use in the fit, default is 20.
-    Notes
-    -----
-    `sel_freq`, `DF1`, `DF2`, `cm`, `MAClim`, `sppk` and `npmax`
-    are used in the ``mpe`` method.
     """
 
-    # METODO 1: run
     nxseg: int = 1024
     method_SD: Literal["per", "cor"] = "per"
-    method_SD: Literal["per", "cor"] = "per"
     pov: float = 0.5
-    # METODO 2: mpe e mpe_from_plot
-    sel_freq: Optional[npt.NDArray[np.float64]] = None
-    sel_freq: Optional[npt.NDArray[np.float64]] = None
-    DF1: float = 0.1
-    DF2: float = 1.0
-    cm: int = 1
-    MAClim: float = 0.95
-    MAClim: float = 0.95
-    sppk: int = 3
-    npmax: int = 20
 
 
 class SSIRunParams(BaseRunParams):
@@ -154,45 +109,18 @@ class SSIRunParams(BaseRunParams):
         Whether to calculate uncertainty. Default is False.
     nb : int, optional
         Number of bootstrap samples to use for uncertainty calculations (default is 100).
-    sel_freq : list of float or None, optional
-        List of selected frequencies for modal parameter extraction. Default is None.
-    order_in : int, list of int, or str
-        Specified model order(s) for which the modal parameters are to be extracted.
-        If 'find_min', the function attempts to find the minimum model order that provides
-        stable poles for each mode of interest.
-    rtol : float, optional
-        Relative tolerance for comparing identified frequencies with the selected ones.
-        Default is 5e-2.
-
-    Notes
-    -----
-    `sel_freq`, `order_in`, and `rtol` are used in the ``mpe`` method to extract
-    modal parameters.
     """
 
-    # METODO 1: run
-    br: int = 20
     br: int = 20
     method: str = None
     ref_ind: Optional[List[int]] = None
-    ref_ind: Optional[List[int]] = None
     ordmin: int = 0
-    ordmax: Optional[int] = None
     ordmax: Optional[int] = None
     step: int = 1
     sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
     hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.5, mpd_lim=0.5, CoV_max=0.05)
-    sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
-    hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.5, mpd_lim=0.5, CoV_max=0.05)
     calc_unc: bool = False  # uncertainty calculations
     nb: int = 50  # number of dataset blocks
-    nb: int = 50  # number of dataset blocks
-    # METODO 2: mpe e mpe_from_plot
-    sel_freq: Optional[List[float]] = None
-    order_in: Union[int, List[int], str] = "find_min"
-    sel_freq: Optional[List[float]] = None
-    order_in: Union[int, List[int], str] = "find_min"
-    rtol: float = 5e-2
 
 
 class pLSCFRunParams(BaseRunParams):
@@ -225,21 +153,6 @@ class pLSCFRunParams(BaseRunParams):
         Modal Phase Collinearity (`mpc_lim`), and Mean Phase Deviation (`mpd_lim`)
         and maximum covariance (`cov_max`). Default values are {'conj': True,
         'xi_max': 0.1, 'mpc_lim': 0.7, 'mpd_lim': 0.3, 'cov_max': 0.2}.
-    sel_freq : list of float or None, optional
-        List of selected frequencies for modal parameter extraction. Default is None.
-    order_in : int or str, optional
-        Specified model order for extraction. Can be an integer or 'find_min'. Default
-        is 'find_min'.
-    deltaf : float, optional
-        Frequency bandwidth around each selected frequency. Default is 0.05.
-    rtol : float, optional
-        Relative tolerance for comparing identified frequencies with the selected ones.
-        Default is 1e-2.
-
-    Notes
-    -----
-    `sel_freq`, `order_in`, `deltaf`, and `rtol` are used in the ``mpe`` method to
-    extract modal parameters.
     """
 
     # METODO 1: run
@@ -247,20 +160,11 @@ class pLSCFRunParams(BaseRunParams):
     ordmin: int = 0
     nxseg: int = 1024
     method_SD: Literal["per", "cor"] = "per"
-    method_SD: Literal["per", "cor"] = "per"
     pov: float = 0.5
     # sgn_basf: int = -1
     # step: int = 1
     sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
     hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
-    sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
-    hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
-    # METODO 2: mpe e mpe_from_plot
-    sel_freq: Optional[List[float]] = None
-    order_in: Union[int, List[int], str] = "find_min"
-    sel_freq: Optional[List[float]] = None
-    order_in: Union[int, List[int], str] = "find_min"
-    rtol: float = 5e-2
 
 
 class AutoSSIRunParams(BaseRunParams):
