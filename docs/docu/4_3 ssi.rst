@@ -9,7 +9,6 @@ SSI, and extracting modal parameters from identified systems.
 
 Functions:
     - :func:`.build_hank`: Constructs a Hankel matrix from time series data.
-    - :func:`.ac2mp`: Converts state-space matrices (A, C) to modal parameters.
     - :func:`.SSI`: Performs system identification using the SSI method.
     - :func:`.SSI_fast`: Efficient implementation of the SSI system identification.
     - :func:`.SSI_poles`: Computes modal parameters from identified state-space models.

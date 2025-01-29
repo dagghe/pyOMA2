@@ -10,9 +10,9 @@ Functions:
     - :func:`.applymask`: Apply a mask to a list of arrays, filtering their values based on the mask.
     - :func:`.HC_conj`: Apply Hard validation Criteria, complex conjugates.
     - :func:`.HC_damp`: Apply Hard validation Criteria, damping.
-    - :func:`.HC_MPD`: Apply Hard validation Criteria, modal phase deviation.
-    - :func:`.HC_MPC`: Apply Hard validation Criteria, modal phase complexity.
-    - :func:`.HC_CoV`: Apply Hard validation Criteria, covariance.
+    - :func:`.HC_MPC`: Apply Hard validation Criteria, modal phase collinearity (MPC).
+    - :func:`.HC_MPD`: Apply Hard validation Criteria, modal phase deviation (MPD).
+    - :func:`.HC_CoV`: Apply Hard validation Criteria, Coefficient of Variation.
     - :func:`.SC_apply`: Apply Soft validation Criteria.
     - :func:`.dfphi_map_func`: Maps mode shapes to sensor locations and constraints.
     - :func:`.check_on_geo1`: Validates geometry1 data.
@@ -31,6 +31,8 @@ Functions:
     - :func:`.filter_data`: Apply a Butterworth filter to the input data.
     - :func:`.save_to_file`: Save the specified setup instance to a file.
     - :func:`.load_from_file`: Load a setup instance from a file.
+    - :func:`.read_excel_file`: Read an Excel file and return its contents as a dictionary.
+
 
 
 .. automodule:: pyoma2.functions.gen

@@ -174,17 +174,17 @@ def multi_setup_poser_fixture(
     ss1.mpe(
         "SSIcov1",
         sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
-        order=50,
+        order_in=50,
     )
     ss2.mpe(
         "SSIcov2",
         sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
-        order=40,
+        order_in=40,
     )
     ss3.mpe(
         "SSIcov3",
         sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
-        order=40,
+        order_in=40,
     )
     # reference indices
     ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
@@ -230,11 +230,7 @@ def mock_imports():
         "pyoma2.support.sel_from_plot.FigureCanvasTkAgg"
     ), unittest.mock.patch(
         "src.pyoma2.functions.plot.plt.tight_layout"
-    ), unittest.mock.patch(
-        "tkinter.Tk"
-    ), unittest.mock.patch(
-        "tkinter.Menu"
-    ):
+    ), unittest.mock.patch("tkinter.Tk"), unittest.mock.patch("tkinter.Menu"):
         """
         Mocks the imports for the tests.
         All mocked imports area bout GUI and plotting.

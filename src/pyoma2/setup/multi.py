@@ -236,8 +236,8 @@ class MultiSetup_PoSER(GeometryMixin):
             fn_mean = np.mean(all_fn, axis=0)
             xi_mean = np.mean(all_xi, axis=0)
 
-            fn_std = np.std(all_fn, axis=0)
-            xi_std = np.std(all_xi, axis=0)
+            fn_std = np.std(all_fn, axis=0)  # / fn_mean
+            xi_std = np.std(all_xi, axis=0)  # / xi_mean
             Phi = merge_mode_shapes(MSarr_list=all_phi, reflist=self.ref_ind)
 
             if self.__result is None:
