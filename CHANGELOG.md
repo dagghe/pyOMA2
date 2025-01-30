@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Extra1 example jupyter notebook
+- clustering.py function file
+- autossi.py for AutoSSI class
+- AutoSSIRunParams class, AutoSSIMPEParams class and AutoSSIResult class
 
 ### Changed
 

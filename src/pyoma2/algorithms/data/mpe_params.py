@@ -110,3 +110,21 @@ class pLSCFMPEParams(BaseMPEParams):
     sel_freq: Optional[List[float]] = None
     order_in: Union[int, List[int], str] = "find_min"
     rtol: float = 5e-2
+
+
+class AutoSSIMPEParams(SSIMPEParams):
+    """
+    Class for storing Stochastic Subspace Identification (SSI) MPE parameters.
+
+    Attributes
+    ----------
+    sel_freq : list of float or None, optional
+        List of selected frequencies for modal parameter extraction. Default is None.
+    order_in : int, list of int, or str
+        Specified model order(s) for which the modal parameters are to be extracted.
+        If 'find_min', the function attempts to find the minimum model order that provides
+        stable poles for each mode of interest.
+    rtol : float, optional
+        Relative tolerance for comparing identified frequencies with the selected ones.
+        Default is 5e-2.
+    """
