@@ -16,6 +16,7 @@ from scipy import signal, stats
 from tqdm import trange
 
 from pyoma2.algorithms.base import BaseAlgorithm
+from pyoma2.algorithms.data.mpe_params import AutoSSIMPEParams
 from pyoma2.algorithms.data.result import AutoSSIResult, ClusteringResult
 from pyoma2.algorithms.data.run_params import AutoSSIRunParams, Clustering
 from pyoma2.functions import clus, gen, plot, ssi
@@ -24,7 +25,11 @@ from pyoma2.support.sel_from_plot import SelFromPlot
 logger = logging.getLogger(__name__)
 
 
-class AutoSSI(BaseAlgorithm[AutoSSIRunParams, AutoSSIResult, typing.Iterable[float]]):
+class AutoSSI(
+    BaseAlgorithm[
+        AutoSSIRunParams, AutoSSIMPEParams, AutoSSIResult, typing.Iterable[float]
+    ]
+):
     """ "
     Automated Stochastic Subspace Identification algorithm implementation.
 
@@ -38,6 +43,7 @@ class AutoSSI(BaseAlgorithm[AutoSSIRunParams, AutoSSIResult, typing.Iterable[flo
         Default method for Hankel matrix computation. Default is 'cov'.
     """
 
+    MPEParamCls = AutoSSIRunParams
     RunParamCls = AutoSSIRunParams
     ResultCls = AutoSSIResult
     method: typing.Literal["cov", "cov_R", "dat"] = "cov"

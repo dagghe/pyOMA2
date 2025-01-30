@@ -119,6 +119,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], 
 
         self.name = name or self.__class__.__name__
         self.mpe_params = self.MPEParamCls()
+        self.result = self.ResultCls()
 
     def _pre_run(self):
         """
