@@ -1,6 +1,25 @@
-# Contribution Guide
+# Contributing to pyOMA2
 
-This project runs on python>=3.8,<3.13
+Welcome! **pyOMA2** is a highly technical Python library focused on **Operational Modal Analysis (OMA)**. As such, contributions can come from both **programmers** (for bug fixes, best practices, and performance improvements) and **field experts** (for validation, methodology suggestions, and real-world applications). We appreciate any contributions that help improve the library!
+
+## How to Get Involved
+
+We welcome contributions from both developers and OMA experts in different ways:
+
+- **Report Issues**: If you encounter a bug, have a feature request, or find something unclear in the documentation, please open a [GitHub Issue](https://github.com/dagghe/pyOMA2/issues).
+- **Code Contributions**: If you are a developer, you can help improve the codebase, fix bugs, enhance performance, or improve best practices by submitting a Pull Request (PR).
+- **Domain Expertise Contributions**: If you are an OMA specialist or engineer, we would love your input on methodology, validation of results, and possible improvements to the implemented techniques.
+- **Documentation Improvements**: If you notice unclear explanations or missing information, feel free to suggest improvements.
+- **Discussions & Questions**: If you're unsure about something, feel free to start a discussion in the Issues section.
+
+## Contribution Guidelines
+
+Before making a contribution, please ensure you follow these best practices:
+
+- Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines.
+- Ensure your changes do not break existing functionality.
+- Write tests for new features where applicable.
+- Be respectful and follow our community guidelines.
 
 ## Setup
 
