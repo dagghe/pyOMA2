@@ -61,6 +61,8 @@ To see how the module works please take a look at the jupyter notebook provided:
 - [Example2 - Real dataset.ipynb](Examples/Example2.ipynb)
 - [Example3 - Multisetup PoSER.ipynb](Examples/Example3.ipynb)
 - [Example4 - MultiSetup PreGER.ipynb](Examples/Example4.ipynb)
+- [Example5 - Clustering for Automatic OMA.ipynb](Examples/Example5.ipynb)
+- [Extra - Tips and Tricks 1.ipynb](Examples/Extra1.ipynb)
 _____
 
 # Schematic organisation of the module showing inheritance between classes.

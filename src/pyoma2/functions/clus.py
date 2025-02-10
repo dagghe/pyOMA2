@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Sun Nov 24 07:07:42 2024
 
@@ -1049,7 +1047,21 @@ def MTT(arr, indices, alpha=0.01):
 
 
 def filter_fl_list(fl_list, stab_lab):
-    """ """
+    """
+    Filter and extract stable elements from a list of feature arrays.
+
+    Parameters
+    ----------
+    fl_list : list of ndarray
+        List of feature arrays, where each array represents a specific feature.
+    stab_lab : ndarray
+        Indices of stable elements in the feature arrays.
+
+    Returns
+    -------
+    list of ndarray
+        List of extracted feature arrays, where only stable elements are retained.
+    """
     return [fl[stab_lab].squeeze() if fl is not None else None for fl in fl_list]
 
 
@@ -1405,6 +1417,21 @@ class UnionFind:
 
 # Matrice distanze con scikit + funzione
 def relative_difference_abs(x, y):
+    """
+    Compute the relative absolute difference between two values.
+
+    Parameters
+    ----------
+    x : ndarray
+        First input value, expected to be a single-element array.
+    y : ndarray
+        Second input value, expected to be a single-element array.
+
+    Returns
+    -------
+    float
+        Relative absolute difference between `x` and `y`. Returns infinity if `x` is zero.
+    """
     xi = x[0]
     xj = y[0]
     if xi == 0:
@@ -1413,6 +1440,21 @@ def relative_difference_abs(x, y):
 
 
 def MAC_difference(x, y):
+    """
+    Compute the Modal Assurance Criterion (MAC) difference between two mode shapes.
+
+    Parameters
+    ----------
+    x : ndarray
+        First mode shape vector.
+    y : ndarray
+        Second mode shape vector.
+
+    Returns
+    -------
+    float
+        The MAC difference between `x` and `y`, defined as `1 - MAC(x, y)`.
+    """
     return 1 - gen.MAC(x, y)
 
 

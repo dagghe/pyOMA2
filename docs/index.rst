@@ -28,6 +28,15 @@ We provide four :doc:`examples` to show the modules capabilities:
 
 Check out the project source_.
 
+
+.. important::
+   We have introduced some new clustering specialised classes that allow the users to perform Automatic OMA.
+   This update enables users to implement and compare a large number of the most popular algorithms
+   introduced over the last 15 years, all within the same analysis framework. Furthermore, users have the
+   flexibility to mix specific strategies from different algorithms to tailor a specific clustering process
+   to their needs.
+
+
 .. note::
 
    Please note that the project is still under active development.

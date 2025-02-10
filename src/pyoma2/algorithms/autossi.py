@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Sun Dec  8 13:58:17 2024
-
-@author: dagghe
+Auto Stochastic Subspace Identification (SSI) Algorithm Module for automated clustering.
+Part of the pyOMA2 package.
+Author:
+Dag Pasca
 """
 
 from __future__ import annotations

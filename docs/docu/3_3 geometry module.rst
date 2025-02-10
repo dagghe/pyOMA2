@@ -5,6 +5,8 @@ This module provides classes for handling geometry-related data, specifically de
 to store and manipulate sensor and background geometry information.
 
 Classes:
+   :class:`.BaseGeometry`
+      Base class for storing and managing sensor and background geometry data.
    :class:`.Geometry1`
       Class for storing and managing sensor and background geometry data for Geometry 1.
    :class:`.Geometry2`

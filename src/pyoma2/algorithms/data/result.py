@@ -5,7 +5,7 @@ related to the pyOMA2 module.
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -134,6 +134,12 @@ class SSIResult(BaseResult):
     Xi_poles_std: Optional[npt.NDArray[np.float64]] = None
     Phi_poles_std: Optional[npt.NDArray[np.float64]] = None
 
+    Xi: Optional[npt.NDArray[np.float64]] = None
+    Fn_std: Optional[npt.NDArray[np.float64]] = None
+    Xi_std: Optional[npt.NDArray[np.float64]] = None
+    Phi_std: Optional[npt.NDArray[np.float64]] = None
+    order_out: Optional[Union[List[int], int]] = None
+
 
 class pLSCFResult(BaseResult):
     """
@@ -171,6 +177,8 @@ class pLSCFResult(BaseResult):
     Xi_poles: Optional[npt.NDArray[np.float64]] = None
     Phi_poles: Optional[npt.NDArray[np.float64]] = None
     Lab: Optional[npt.NDArray[np.float64]] = None
+    Xi: Optional[npt.NDArray[np.float64]] = None
+    order_out: Optional[Union[List[int], int]] = None
 
 
 class MsPoserResult(BaseResult):
