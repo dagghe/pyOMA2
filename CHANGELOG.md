@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - run_params have been split in run_params and mpe_params
 - all dependencies are now mandatory (pyvista and openpyxl)
 
+* security dependencies patch
+
 ## [1.1.1] - 2025-01-24
 
 - fix cluster_plt parameter name to Xi
