@@ -12,8 +12,9 @@ Support classes
    3_2 BaseAlgorithm
    3_3 geometry module
    3_4 result module
-   3_5 run_param module
-   3_6 sel_from_plot module
-   3_7a mpl plotter
-   3_7b pyvista plotter
-   3_8 logging_handler
+   3_5 run_params module
+   3_6 mpe_params module
+   3_7 sel_from_plot module
+   3_8a mpl plotter
+   3_8b pyvista plotter
+   3_9 logging_handler

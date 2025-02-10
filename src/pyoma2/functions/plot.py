@@ -361,7 +361,7 @@ def freq_vs_damp_plot(
         )
 
     # Set plot titles and labels
-    ax.set_title(f"Frequency vs Damping - Clusters {name}")
+    ax.set_title(f"Frequency vs Damping - Clusters, '{name}'")
     ax.set_xlabel("Frequency [Hz]")
     ax.set_ylabel("Damping [%]")
 
@@ -601,7 +601,7 @@ def stab_clus_plot(
         )
 
     # Set plot titles and labels
-    ax.set_title(f"Stabilization Chart with Clusters {name}")
+    ax.set_title(f"Stabilization Chart with Clusters, '{name}'")
     ax.set_xlabel("Frequency [Hz]")
     ax.set_ylabel("Model Order")
 
@@ -1984,8 +1984,8 @@ def plot_mode_complexity(mode_shape):
     ax.set_yticklabels([])
     # Add title
     ax.set_title(
-        "Mode Shape Complexity Plot", va="bottom", fontsize=14, fontweight="bold"
+        "Mode Shape Complexity Plot", va="bottom", fontsize=14, fontweight="bold", pad=25
     )
     plt.tight_layout()
-    plt.show()
+    # plt.show()
     return fig, ax
