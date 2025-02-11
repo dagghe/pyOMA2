@@ -2,7 +2,7 @@ Support classes
 ===============
 
 .. Attention::
-    These classes (and functions) are not instantiated or called directly by the users, but internally by the "main" classes.
+    These classes, except for those in the run_params module, are not instantiated or called directly by the users, but internally by the "main" classes.
 
 
 .. toctree::

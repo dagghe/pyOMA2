@@ -60,6 +60,7 @@ Schematic organisation of the module showing inheritance between classes
 
    Home <self>
    Installation
+   Contributing
 
 
 .. toctree::

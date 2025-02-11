@@ -1,8 +1,7 @@
-The ``autossi`` algorithm module
-================================
+The ``aoma`` algorithm module
+=============================
 
-This module implements the automated version of the Stochastic Subspace Identification (SSI) algorithm.
-With this specialised class users can define clustering algorithms
+This module provide the users with automated algorithms for operational modal analysis and modal parameter estimation.
 
 Classes:
    :class:`.AutoSSI`
@@ -13,9 +12,10 @@ Classes:
 
 
 The ``AutoSSI`` class
--------------------------
+---------------------
 
-.. autoclass:: pyoma2.algorithms.autossi.AutoSSI
+.. autoclass:: pyoma2.algorithms.aoma.AutoSSI
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:
