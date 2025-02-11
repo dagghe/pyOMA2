@@ -104,7 +104,7 @@ level not shown, comprised of the set of functions internally called
 by the class methods. Many of these functions represent an updated
 version of those available in our previous release, `pyOMA`.
 
-![Schematic organisation of the module showing inheritance between classes](../docs/img/info.svg)
+![Schematic organisation of the module showing inheritance between classes](../docs/img/info.pdf)
 
 ## Documentation
 
