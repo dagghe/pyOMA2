@@ -14,6 +14,22 @@ from typing_extensions import TypedDict
 
 
 class HCDictType(TypedDict):
+    """
+    A TypedDict representing Hard validation Criteria (HC).
+
+    Attributes
+    ----------
+    xi_max : float, optional
+        The maximum value for damping.
+    mpc_lim : float, optional
+        The limit value for Modal Phase Collinearity (MPC).
+    mpd_lim : float, optional
+        The limit value for Mean Phase Deviation (MPD).
+    CoV_max : float, optional
+        The maximum coefficient of variation (CoV). Only used when calc_unc == True,
+        i.e. when the uncertainty bounds of the modal parameters are calculated.
+    """
+
     xi_max: Optional[float] = None
     mpc_lim: Optional[float] = None
     mpd_lim: Optional[float] = None
@@ -21,6 +37,19 @@ class HCDictType(TypedDict):
 
 
 class SCDictType(TypedDict):
+    """
+    A TypedDict representing Soft validation Criteria (SC).
+
+    Attributes
+    ----------
+    err_fn : float
+        The maximum thresholds for relative frequency difference.
+    err_xi : float
+        The maximum thresholds for relative damping difference.
+    err_phi : float
+        The maximum thresholds for MAC difference.
+    """
+
     err_fn: float
     err_xi: float
     err_phi: float
@@ -95,20 +124,13 @@ class SSIRunParams(BaseRunParams):
     step : int, optional
         Step size for iterating through model orders. Default is 1.
     sc : dict, optional
-        Soft criteria for the SSI analysis, including thresholds for relative
-        frequency difference (`err_fn`), damping ratio difference (`err_xi`), and
-        Modal Assurance Criterion (`err_phi`). Default values are {'err_fn': 0.01,
-        'err_xi': 0.05, 'err_phi': 0.03}.
+        Soft validation criteria for the analysis.
     hc : dict, optional
-        Hard criteria for the SSI analysis, including settings for presence of
-        complex conjugates (`conj`), maximum damping ratio (`xi_max`),
-        Modal Phase Collinearity (`mpc_lim`), and Mean Phase Deviation (`mpd_lim`)
-        and maximum covariance (`cov_max`). Default values are {'conj': True,
-        'xi_max': 0.1, 'mpc_lim': 0.7, 'mpd_lim': 0.3, 'cov_max': 0.2}.
+        Hard validation criteria for the analysis.
     calc_unc : bool, optional
         Whether to calculate uncertainty. Default is False.
     nb : int, optional
-        Number of bootstrap samples to use for uncertainty calculations (default is 100).
+        Number of bootstrap samples to use for uncertainty calculations (default is 50).
     """
 
     br: int = 20
@@ -143,16 +165,9 @@ class pLSCFRunParams(BaseRunParams):
         Percentage of overlap between segments for PSD estimation (only applicable
         for 'per' method). Default is 0.5.
     sc : dict, optional
-        Soft criteria for the SSI analysis, including thresholds for relative
-        frequency difference (`err_fn`), damping ratio difference (`err_xi`), and
-        Modal Assurance Criterion (`err_phi`). Default values are {'err_fn': 0.01,
-        'err_xi': 0.05, 'err_phi': 0.03}.
+        Soft criteria for the analysis.
     hc : dict, optional
-        Hard criteria for the SSI analysis, including settings for presence of
-        complex conjugates (`conj`), maximum damping ratio (`xi_max`),
-        Modal Phase Collinearity (`mpc_lim`), and Mean Phase Deviation (`mpd_lim`)
-        and maximum covariance (`cov_max`). Default values are {'conj': True,
-        'xi_max': 0.1, 'mpc_lim': 0.7, 'mpd_lim': 0.3, 'cov_max': 0.2}.
+        Hard criteria for the analysis.
     """
 
     # METODO 1: run
