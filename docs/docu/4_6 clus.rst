@@ -45,6 +45,5 @@ Functions:
     - :func:`.dist_all_complex`: Compute pairwise relative distances for a 1D array of complex numbers.
     - :func:`.dist_all_complex`: Compute pairwise relative distances for a 1D array of complex numbers.
 
-
 .. automodule:: pyoma2.functions.clus
    :members:

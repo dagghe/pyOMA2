@@ -27,6 +27,7 @@ The ``pLSCF`` class
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:
 
 The ``pLSCF_MS`` class
 -------------------------
@@ -35,3 +36,4 @@ The ``pLSCF_MS`` class
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:

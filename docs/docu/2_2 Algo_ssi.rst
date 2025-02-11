@@ -3,7 +3,7 @@ The ``ssi`` algorithm module
 
 This module implements the Stochastic Subspace Identification (SSI) [BPDG99]_, [MiDo11]_ algorithm in various forms,
 tailored for both single and multiple experimental setup scenarios [MiDo11]_, [DOME13]_. It includes classes and methods
-for conducting data-driven and covariance-driven SSI analyses, with optional uncertainty bounds estimation.
+for conducting data-driven and covariance-driven SSI analyses, with optional uncertainty bounds estimation [DLM13]_.
 
 Classes:
    :class:`.SSIdat`
@@ -30,6 +30,7 @@ The ``SSIdat`` class
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:
 
 The ``SSIcov`` class
 -------------------------
@@ -38,6 +39,7 @@ The ``SSIcov`` class
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:
 
 The ``SSIdat_MS`` class
 ----------------------------
@@ -46,7 +48,7 @@ The ``SSIdat_MS`` class
    :members:
    :inherited-members:
    :show-inheritance:
-
+   :no-index:
 
 The ``SSIcov_MS`` class
 ----------------------------
@@ -55,3 +57,4 @@ The ``SSIcov_MS`` class
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:

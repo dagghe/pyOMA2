@@ -35,6 +35,7 @@ The ``FDD`` class
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:
 
 The ``EFDD`` class
 -----------------------
@@ -43,6 +44,7 @@ The ``EFDD`` class
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:
 
 The ``FSDD`` class
 -----------------------
@@ -51,6 +53,7 @@ The ``FSDD`` class
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:
 
 The ``FDD_MS`` class
 -------------------------
@@ -59,6 +62,7 @@ The ``FDD_MS`` class
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:
 
 The ``EFDD_MS`` class
 --------------------------
@@ -67,3 +71,4 @@ The ``EFDD_MS`` class
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:
