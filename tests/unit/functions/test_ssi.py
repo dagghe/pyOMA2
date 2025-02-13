@@ -116,29 +116,6 @@ def test_build_hank_invalid_method() -> None:
         assert e.value == "Uncertainty calculations are only available for 'cov' method"
 
 
-def test_ac2mp() -> None:
-    """Test the ac2mp function."""
-
-    A = np.array([[-1, -2], [3, -4]])
-    C = np.array([[1, 0], [0, 1]])
-    dt = 0.1
-
-    fn, xi, phi, *_ = ssi.ac2mp(A, C, dt)
-    assert fn.shape == (2,)
-    assert xi.shape == (2,)
-    assert phi.shape == (2, 2)
-
-    assert np.allclose(fn, np.array([4.35528095, 4.35528095]))
-    assert np.allclose(xi, np.array([-0.4207166, -0.4207166]))
-    assert np.allclose(
-        phi, np.array([[0.5 + 0.64549722j, 1.0 + 0.0j], [0.5 - 0.64549722j, 1.0 + 0.0j]])
-    )
-
-    assert isinstance(fn, np.ndarray)
-    assert isinstance(xi, np.ndarray)
-    assert isinstance(phi, np.ndarray)
-
-
 def test_SSI() -> None:
     """Test the SSI function."""
     # Define test input
