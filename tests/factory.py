@@ -8,6 +8,7 @@ import numpy.typing as npt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from pyoma2.algorithms import BaseAlgorithm
+from pyoma2.algorithms.data.mpe_params import BaseMPEParams
 from pyoma2.algorithms.data.result import BaseResult
 from pyoma2.algorithms.data.run_params import BaseRunParams
 
@@ -20,6 +21,13 @@ FakeAxes = unittest.mock.MagicMock(spec=Axes)
 
 class FakeRunParams(BaseRunParams):
     """FakeRunParams is a subclass of BaseRunParams."""
+
+    param1: int = 1
+    param2: str = "test"
+
+
+class FakeMPEParams(BaseMPEParams):
+    """FakeMPEParams is a subclass of BaseMPEParams."""
 
     param1: int = 1
     param2: str = "test"
@@ -48,6 +56,7 @@ class FakeAlgorithm(BaseAlgorithm[FakeRunParams, FakeResult, typing.Iterable[flo
 
     RunParamCls = FakeRunParams
     ResultCls = FakeResult
+    MPEParamCls = FakeMPEParams
 
     def run(self) -> FakeResult:
         return FakeResult()

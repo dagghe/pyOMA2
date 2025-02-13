@@ -85,6 +85,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], 
     name: typing.Optional[str] = None
     RunParamCls: typing.Type[T_RunParams]
     ResultCls: typing.Type[T_Result]
+    MPEParamCls: typing.Type[T_MPEParams]
 
     # additional attributes set by the Setup Class
     fs: typing.Optional[float]  # sampling frequency
@@ -119,7 +120,6 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], 
 
         self.name = name or self.__class__.__name__
         self.mpe_params = self.MPEParamCls()
-        self.result = self.ResultCls()
 
     def _pre_run(self):
         """
@@ -368,15 +368,15 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], 
                 f"class {cls.__name__}:\n"
                 f"\tRunParamCls = ...\n"
             )
-        # if not getattr(cls, "MPEParamCls", None) or not issubclass(
-        #    cls.MPEParamCls, BaseResult
-        # ):
-        #    raise ValueError(
-        #        f"{cls.__name__}: MPEParamCls must be defined in subclasses of BaseAlgorithm\n\n"
-        #        "# Example\n"
-        #        f"class {cls.__name__}:\n"
-        #        f"\tMPEParamCls = ...\n"
-        #    )
+        if not getattr(cls, "MPEParamCls", None) or not issubclass(
+            cls.MPEParamCls, BaseMPEParams
+        ):
+            raise ValueError(
+                f"{cls.__name__}: MPEParamCls must be defined in subclasses of BaseAlgorithm\n\n"
+                "# Example\n"
+                f"class {cls.__name__}:\n"
+                f"\tMPEParamCls = ...\n"
+            )
         if not getattr(cls, "ResultCls", None) or not issubclass(
             cls.ResultCls, BaseResult
         ):

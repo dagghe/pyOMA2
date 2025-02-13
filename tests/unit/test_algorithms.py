@@ -70,7 +70,7 @@ def test_child_algo_must_define_result_cls():
             def mpe_from_plot(self, *args, **kwargs) -> Any:
                 return super().mpe_from_plot(*args, **kwargs)
 
-    assert "ResultCls must be defined in subclasses of BaseAlgorithm" in str(
+    assert "MPEParamCls must be defined in subclasses of BaseAlgorith" in str(
         excinfo.value
     )
 
@@ -95,7 +95,7 @@ def test_result_cls_is_subclass_of_base_result():
             def mpe_from_plot(self, *args, **kwargs) -> Any:
                 return super().mpe_from_plot(*args, **kwargs)
 
-    assert "ResultCls must be defined in subclasses of BaseAlgorithm" in str(
+    assert "MPEParamCls must be defined in subclasses of BaseAlgorith" in str(
         excinfo.value
     )
 

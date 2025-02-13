@@ -37,7 +37,7 @@ def test_SD_PreGER(input_method: str) -> None:
 )
 def test_SD_est(input_method: str) -> None:
     fs = 1000
-    N = 1000
+    N = 1024
     Yall = np.random.rand(10, N)
     Yref = np.random.rand(5, N)
     nxseg = 1024
