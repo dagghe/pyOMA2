@@ -791,7 +791,7 @@ def SSI_multi_setup(
     A = []
     C = []
     # loop for increasing order of the system
-    for i in trange(1, ordmax + 1, step):
+    for i in trange(0, ordmax + 1, step):
         # System Matrix
         A.append(np.dot(np.linalg.inv(R[:i, :i]), S[:i, :i]))
         # Output Influence Matrix
