@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.2.0b2] - 2025-02-13
+
+- fix tests
+
+## [1.2.0b1] - 2025-02-12
+
 ### Added
 
 - Extra1 example jupyter notebook
