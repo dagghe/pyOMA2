@@ -236,12 +236,12 @@ def SD_svalsvec(SD):
 
 
 def FDD_MPE(
-Sval,
-Svec,
-freq,
-sel_freq,
-DF=0.1,
-):
+    Sval,
+    Svec,
+    freq,
+    sel_freq,
+    DF=0.1,
+    ):
     """
     Extracts modal parameters using the Frequency Domain Decomposition (FDD) method.
 
