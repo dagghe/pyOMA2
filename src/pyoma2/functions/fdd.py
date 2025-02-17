@@ -241,7 +241,7 @@ def FDD_mpe(
     freq,
     sel_freq,
     DF=0.1,
-):
+    ):
     """
     Extracts modal parameters using the Frequency Domain Decomposition (FDD) method.
 
@@ -282,19 +282,24 @@ def FDD_mpe(
     index = []
     maxSy_diff = []
     logger.info("Extracting FDD modal parameters")
+    if Nref == 1:
+        logging.warning("Only 1 reference channel is used - Peak-searching is disabled")
     for sel_fn in tqdm(sel_freq):
-        # Frequency bandwidth where the peak is searched
-        lim = (sel_fn - DF, sel_fn + DF)
-        idxlim = (
-            np.argmin(np.abs(freq - lim[0])),
-            np.argmin(np.abs(freq - lim[1])),
-        )  # Indices of the limits
-        # Ratios between the first and second singular value
-        diffS1S2 = Sval[0, 0, idxlim[0] : idxlim[1]] / Sval[1, 1, idxlim[0] : idxlim[1]]
-        maxDiffS1S2 = np.max(diffS1S2)  # Looking for the maximum difference
-        idx1 = np.argmin(np.abs(diffS1S2 - maxDiffS1S2))  # Index of the max diff
-        idxfin = idxlim[0] + idx1  # Final index
-
+        if Nref > 1:    # peak serching is not available for single ref. ch.
+            # Frequency bandwidth where the peak is searched
+            lim = (sel_fn - DF, sel_fn + DF)
+            idxlim = (
+                np.argmin(np.abs(freq - lim[0])),
+                np.argmin(np.abs(freq - lim[1])),
+            )  # Indices of the limits
+            # Ratios between the first and second singular value
+            diffS1S2 = Sval[0, 0, idxlim[0] : idxlim[1]] / Sval[1, 1, idxlim[0] : idxlim[1]]
+            maxDiffS1S2 = np.max(diffS1S2)  # Looking for the maximum difference
+            idx1 = np.argmin(np.abs(diffS1S2 - maxDiffS1S2))  # Index of the max diff
+            idxfin = idxlim[0] + idx1  # Final index
+            maxSy_diff.append(maxDiffS1S2)
+        else:
+            idxfin = np.argmin(np.abs(freq - sel_fn))
         # Modal properties
         fn_FDD = freq[idxfin]  # Frequency
         phi_FDD = Svec[0, :, idxfin]  # Mode shape
@@ -304,13 +309,13 @@ def FDD_mpe(
         Freq.append(fn_FDD)
         Fi.append(phi_FDDn)
         index.append(idxfin)
-        maxSy_diff.append(maxDiffS1S2)
     logger.debug("Done!")
 
     Fn = np.array(Freq)
     Phi = np.array(Fi).T
     index = np.array(index)
     return Fn, Phi
+
 
 
 # -----------------------------------------------------------------------------
