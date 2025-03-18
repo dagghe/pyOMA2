@@ -1,5 +1,32 @@
 # Contributing to pyOMA2
 
+## **Recent git history update at 205-03-18** ⚠️
+
+Dear contributors,
+
+We've successfully performed maintenance on the pyOMA2 Git repository to remove large binary files from the history, which was causing excessive repository size. This required a rewrite of the repository history.
+
+If you have a local copy of the repository, you'll need to update it using one of these methods:
+
+Option 1 (Recommended) - Fresh clone:
+
+```shell
+git clone https://github.com/dagghe/pyOMA2.git
+```
+
+Option 2 - Update existing repository:
+
+```shell
+# Make sure to commit or stash any local changes first
+git fetch origin
+git reset --hard origin/main
+```
+Please note that attempting to push or pull without performing the above steps will result in Git errors due to the diverged history.
+
+If you have any questions or encounter any issues, please let us know.
+
+____________________________________
+
 Welcome! **pyOMA2** is a highly technical Python library focused on **Operational Modal Analysis (OMA)**. As such, contributions can come from both **programmers** (for bug fixes, best practices, and performance improvements) and **field experts** (for validation, methodology suggestions, and real-world applications). We appreciate any contributions that help improve the library!
 
 ## How to Get Involved
