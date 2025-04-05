@@ -386,7 +386,6 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         """
         # define default settings for plot
         def_settings = dict(cmap="plasma", opacity=0.7, show_scalar_bar=False)
-
         if def_sett == "default":
             def_sett = def_settings
 
@@ -396,7 +395,7 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         points = pv.pyvista_ndarray(geo.pts_coord.to_numpy())
         lines = geo.sens_lines
         surfs = geo.sens_surf
-        # geometry in pyvista format
+
         if lines is not None:
             lines = np.array([np.hstack([2, line]) for line in lines])
         if surfs is not None:
@@ -409,74 +408,78 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         df_phi_map = gen.dfphi_map_func(
             phi, geo.sens_names, geo.sens_map, cstrn=geo.cstrn
         )
-        # add together coordinates and mode shape displacement
-        # newpoints = (points + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() )
+        sens_sign = geo.sens_sign.to_numpy()
 
-        # copy the dataset as we will modify its coordinates
+        # copy points since we will deform them
         points_c = points.copy()
 
         if pl is None:
             pl = pv.Plotter(off_screen=False) if saveGIF else pvqt.BackgroundPlotter()
 
-        # PLOT MODE SHAPE
+        # Add initial meshes
         def_pts = pl.add_points(points_c, scalars=df_phi_map.values, **def_sett)
 
         if plot_lines:
             line_mesh = pv.PolyData(points_c, lines=lines)
             pl.add_mesh(line_mesh, scalars=df_phi_map.values, **def_sett)
+        else:
+            line_mesh = None
+
         if plot_surf:
             face_mesh = pv.PolyData(points_c, faces=surfs)
             pl.add_mesh(face_mesh, scalars=df_phi_map.values, **def_sett)
+        else:
+            face_mesh = None
 
         pl.add_text(
             rf"Mode nr. {mode_nr}, fn = {res.Fn[mode_nr-1]:.3f}Hz",
             position="upper_edge",
             color="black",
-            # font_size=26,
         )
 
         if saveGIF:
+            # GIF saving logic (unchanged)
             pl.enable_anti_aliasing("fxaa")
             n_frames = 30
             pl.open_gif(f"Mode nr. {mode_nr}.gif")
-            for phase in np.linspace(0, 2 * np.pi, n_frames, endpoint=False):
-                def_pts.mapper.dataset.points = (
-                    points
-                    + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
-                )
-                line_mesh.points = (
-                    points
-                    + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
-                )
-                face_mesh.points = (
-                    points
-                    + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
-                )
+            frames = np.linspace(0, 2 * np.pi, n_frames, endpoint=False)
+            for phase in frames:
+                new_coords = points + df_phi_map.to_numpy() * sens_sign * np.cos(phase)
+                def_pts.mapper.dataset.points = new_coords
+                if line_mesh is not None:
+                    line_mesh.points = new_coords
+                if face_mesh is not None:
+                    face_mesh.points = new_coords
                 pl.add_axes(line_width=5, labels_off=False)
                 pl.write_frame()
             pl.show(auto_close=False)
+
         else:
+            # Interactive animation using callback
+            n_frames = 30
+            frames = np.linspace(0, 2 * np.pi, n_frames, endpoint=False)
+            self._current_frame = 0  # track current frame externally
 
             def update_shape():
-                n_frames = 30
-                for phase in np.linspace(0, 2 * np.pi, n_frames, endpoint=False):
-                    def_pts.mapper.dataset.points = (
-                        points
-                        + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
-                    )
-                    line_mesh.points = (
-                        points
-                        + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
-                    )
-                    face_mesh.points = (
-                        points
-                        + df_phi_map.to_numpy() * geo.sens_sign.to_numpy() * np.cos(phase)
-                    )
-                    pl.add_axes(line_width=5, labels_off=False)
-                    pl.update()
+                # Update just one frame per callback call
+                phase = frames[self._current_frame]
+                new_coords = points + df_phi_map.to_numpy() * sens_sign * np.cos(phase)
+                def_pts.mapper.dataset.points = new_coords
+                if line_mesh is not None:
+                    line_mesh.points = new_coords
+                if face_mesh is not None:
+                    face_mesh.points = new_coords
+                pl.update()
 
+                # Move to the next frame
+                self._current_frame = (self._current_frame + 1) % n_frames
+
+            # Add the callback to run every 100 ms (for example)
             pl.add_callback(update_shape, interval=100)
-            # pl.show()
-        # pl.close()
+
+            # Make sure to start the interactive session
+            # If using BackgroundPlotter, it typically shows automatically.
+            # If not, uncomment pl.show() below.
+            pl.show()
 
         return pl

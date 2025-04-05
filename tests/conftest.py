@@ -155,18 +155,18 @@ def multi_setup_poser_fixture(
     ss3.decimate_data(q=2)
 
     # Initialise the algorithms for setup 1
-    ssicov1 = SSIcov(name="SSIcov1", method="cov_mm", br=50, ordmax=80)
+    ssicov1 = SSIcov(name="SSIcov1", method="cov", br=50, ordmax=80)
     # Add algorithms to the class
     ss1.add_algorithms(ssicov1)
     ss1.run_all()
 
     # Initialise the algorithms for setup 2
-    ssicov2 = SSIcov(name="SSIcov2", method="cov_mm", br=50, ordmax=80)
+    ssicov2 = SSIcov(name="SSIcov2", method="cov", br=50, ordmax=80)
     ss2.add_algorithms(ssicov2)
     ss2.run_all()
 
     # Initialise the algorithms for setup 2
-    ssicov3 = SSIcov(name="SSIcov3", method="cov_mm", br=50, ordmax=80)
+    ssicov3 = SSIcov(name="SSIcov3", method="cov", br=50, ordmax=80)
     ss3.add_algorithms(ssicov3)
     ss3.run_all()
 
@@ -174,17 +174,17 @@ def multi_setup_poser_fixture(
     ss1.mpe(
         "SSIcov1",
         sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
-        order=50,
+        order_in=50,
     )
     ss2.mpe(
         "SSIcov2",
         sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
-        order=40,
+        order_in=40,
     )
     ss3.mpe(
         "SSIcov3",
         sel_freq=[2.63, 2.69, 3.43, 8.29, 8.42, 10.62, 14.00, 14.09, 17.57],
-        order=40,
+        order_in=40,
     )
     # reference indices
     ref_ind = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]

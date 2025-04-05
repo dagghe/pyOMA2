@@ -5,11 +5,25 @@ algorithms included in the pyOMA2 module.
 
 from __future__ import annotations
 
-import typing
+from typing import List, Literal, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
 from pydantic import BaseModel, ConfigDict
+from typing_extensions import TypedDict
+
+
+class HCDictType(TypedDict):
+    xi_max: Optional[float] = None
+    mpc_lim: Optional[float] = None
+    mpd_lim: Optional[float] = None
+    CoV_max: Optional[float] = None
+
+
+class SCDictType(TypedDict):
+    err_fn: float
+    err_xi: float
+    err_phi: float
 
 
 class BaseRunParams(BaseModel):
@@ -17,7 +31,9 @@ class BaseRunParams(BaseModel):
     Base class for storing run parameters for modal analysis algorithms.
     """
 
-    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        from_attributes=True, arbitrary_types_allowed=True, extra="forbid"
+    )
 
 
 class FDDRunParams(BaseRunParams):
@@ -44,10 +60,10 @@ class FDDRunParams(BaseRunParams):
 
     # METODO 1: run
     nxseg: int = 1024
-    method_SD: typing.Literal["per", "cor"] = "per"
+    method_SD: Literal["per", "cor"] = "per"
     pov: float = 0.5
     # METODO 2: mpe e mpe_from_plot
-    sel_freq: typing.Optional[npt.NDArray[np.float64]] = None
+    sel_freq: Optional[npt.NDArray[np.float64]] = None
     DF: float = 0.1
 
 
@@ -85,14 +101,14 @@ class EFDDRunParams(BaseRunParams):
 
     # METODO 1: run
     nxseg: int = 1024
-    method_SD: typing.Literal["per", "cor"] = "per"
+    method_SD: Literal["per", "cor"] = "per"
     pov: float = 0.5
     # METODO 2: mpe e mpe_from_plot
-    sel_freq: typing.Optional[npt.NDArray[np.float64]] = None
+    sel_freq: Optional[npt.NDArray[np.float64]] = None
     DF1: float = 0.1
     DF2: float = 1.0
     cm: int = 1
-    MAClim: float = 0.85
+    MAClim: float = 0.95
     sppk: int = 3
     npmax: int = 20
 
@@ -106,7 +122,7 @@ class SSIRunParams(BaseRunParams):
     br : int
         Number of block rows in the Hankel matrix.
     method_hank : str or None, optional
-        Method used in the SSI algorithm. Options are ['data', 'cov_mm', 'cov_R'].
+        Method used in the SSI algorithm. Options are ['data', 'cov', 'cov_R'].
         Default is None.
     ref_ind : list of int or None, optional
         List of reference indices used for subspace identification. Default is None.
@@ -148,21 +164,19 @@ class SSIRunParams(BaseRunParams):
     """
 
     # METODO 1: run
-    br: int
+    br: int = 20
     method: str = None
-    ref_ind: typing.Optional[typing.List[int]] = None
+    ref_ind: Optional[List[int]] = None
     ordmin: int = 0
-    ordmax: typing.Optional[int] = None
+    ordmax: Optional[int] = None
     step: int = 1
-    sc: typing.Dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)  # soft criteria
-    hc: typing.Dict = dict(
-        conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3, cov_max=0.2
-    )  # hard criteria
+    sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
+    hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.5, mpd_lim=0.5, CoV_max=0.05)
     calc_unc: bool = False  # uncertainty calculations
-    nb: int = 100  # number of dataset blocks
+    nb: int = 50  # number of dataset blocks
     # METODO 2: mpe e mpe_from_plot
-    sel_freq: typing.Optional[typing.List[float]] = None
-    order_in: typing.Union[int, list, str] = "find_min"
+    sel_freq: Optional[List[float]] = None
+    order_in: Union[int, List[int], str] = "find_min"
     rtol: float = 5e-2
 
 
@@ -217,13 +231,13 @@ class pLSCFRunParams(BaseRunParams):
     ordmax: int
     ordmin: int = 0
     nxseg: int = 1024
-    method_SD: typing.Literal["per", "cor"] = "per"
+    method_SD: Literal["per", "cor"] = "per"
     pov: float = 0.5
     # sgn_basf: int = -1
     # step: int = 1
-    sc: typing.Dict = dict(err_fn=0.01, err_xi=0.05, err_phi=0.03)
-    hc: typing.Dict = dict(conj=True, xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
+    sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
+    hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
     # METODO 2: mpe e mpe_from_plot
-    sel_freq: typing.Optional[typing.List[float]] = None
-    order_in: typing.Union[int, str] = "find_min"
+    sel_freq: Optional[List[float]] = None
+    order_in: Union[int, List[int], str] = "find_min"
     rtol: float = 5e-2

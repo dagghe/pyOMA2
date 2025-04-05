@@ -135,9 +135,9 @@ def HC_damp(damp, max_damp) -> typing.Tuple[np.ndarray, np.ndarray]:
 # -----------------------------------------------------------------------------
 
 
-def HC_phi_comp(phi, mpc_lim, mpd_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
+def HC_MPC(phi, mpc_lim) -> np.ndarray:
     """
-    Apply Hard validation Criteria (HC), based on modal phase collinearity (MPC) and modal phase deviation (MPD) limits.
+    Apply Hard validation Criteria (HC), based on modal phase collinearity (MPC) limit.
 
     Parameters
     ----------
@@ -145,6 +145,36 @@ def HC_phi_comp(phi, mpc_lim, mpd_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
         Array of mode shapes with shape (number of modes, number of channels, mode shape length).
     mpc_lim : float
         Minimum allowed value for modal phase collinearity.
+
+    Returns
+    -------
+    mask_mpc : np.ndarray
+        Boolean array indicating elements that satisfy the MPC condition.
+    """
+    mask2 = []
+    for o in range(phi.shape[0]):
+        for i in range(phi.shape[1]):
+            try:
+                mask2.append((MPC(phi[o, i, :]) >= mpc_lim).astype(int))
+            except Exception:
+                mask2.append(0)
+    mask2 = np.array(mask2).reshape((phi.shape[0], phi.shape[1]))
+    mask3 = np.expand_dims(mask2, axis=-1)
+    mask3 = np.repeat(mask3, phi.shape[2], axis=-1)
+    return mask3[:, :, 0]
+
+
+# -----------------------------------------------------------------------------
+
+
+def HC_MPD(phi, mpd_lim) -> np.ndarray:
+    """
+    Apply Hard validation Criteria (HC), based on modal phase deviation (MPD) limit.
+
+    Parameters
+    ----------
+    phi : np.ndarray
+        Array of mode shapes with shape (number of modes, number of channels, mode shape length).
     mpd_lim : float
         Maximum allowed value for modal phase deviation.
 
@@ -152,8 +182,7 @@ def HC_phi_comp(phi, mpc_lim, mpd_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
     -------
     mask_mpd : np.ndarray
         Boolean array indicating elements that satisfy the MPD condition.
-    mask_mpc : np.ndarray
-        Boolean array indicating elements that satisfy the MPC condition.
+
     """
     mask = []
     for o in range(phi.shape[0]):
@@ -165,53 +194,40 @@ def HC_phi_comp(phi, mpc_lim, mpd_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
     mask = np.array(mask).reshape((phi.shape[0], phi.shape[1]))
     mask1 = np.expand_dims(mask, axis=-1)
     mask1 = np.repeat(mask1, phi.shape[2], axis=-1)
-    Phi = phi * mask1
-    Phi[Phi == 0] = np.nan
-
-    mask2 = []
-    for o in range(phi.shape[0]):
-        for i in range(phi.shape[1]):
-            try:
-                mask2.append((MPC(phi[o, i, :]) >= mpc_lim).astype(int))
-            except Exception:
-                mask2.append(0)
-    mask2 = np.array(mask2).reshape((phi.shape[0], phi.shape[1]))
-    mask3 = np.expand_dims(mask2, axis=-1)
-    mask3 = np.repeat(mask3, phi.shape[2], axis=-1)
-    Phi = phi * mask3
-    Phi[Phi == 0] = np.nan
-
-    return mask1[:, :, 0], mask3[:, :, 0]
+    return mask1[:, :, 0]
 
 
 # -----------------------------------------------------------------------------
 
 
-def HC_cov(Fn_cov, max_cov) -> typing.Tuple[np.ndarray, np.ndarray]:
+def HC_CoV(Fn, Fn_std, CoV_max) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
-    Apply Hard validation Criteria (HC), retaining only those elements which have a covariance less than a specified maximum.
+    Apply Hard validation Criteria (HC), retaining only those elements which have a
+    Coefficient of Variation (CoV) less than a specified maximum.
 
     Parameters
     ----------
-    Fn_cov : np.ndarray
-        Array of frequency covariances.
-    max_cov : float
-        Maximum allowed covariance.
+    Fn : np.ndarray
+        Array of frequencies.
+    Fn_std : np.ndarray
+        Array of frequency covariances (standard deviation).
+    CoV_max : float
+        Maximum allowed Coefficient of Variation (standard deviation/mean value).
 
     Returns
     -------
     filt_cov : np.ndarray
-        Array of the same shape as `Fn_cov` with elements that do not satisfy the condition set to NaN.
+        Array of the same shape as `Fn_std` with elements that do not satisfy the condition set to NaN.
     mask : np.ndarray
-        Boolean array of the same shape as `Fn_cov`, where True indicates that the element is less than `max_cov`.
+        Boolean array of the same shape as `Fn_std`, where True indicates that the element is less than `max_cov`.
 
     """
-    mask = (Fn_cov < max_cov).astype(int)
-    filt_cov = Fn_cov * mask
-    filt_cov[filt_cov == 0] = np.nan
+    mask = (Fn_std < CoV_max * Fn).astype(int)
+    filt_std = Fn_std * mask
+    filt_std[filt_std == 0] = np.nan
     # should be the same as
     # filt_damp = np.where(damp, np.logical_and(damp < max_damp, damp > 0), damp, np.nan)
-    return filt_cov, mask
+    return filt_std, mask
 
 
 # -----------------------------------------------------------------------------
@@ -253,7 +269,7 @@ def SC_apply(Fn, Xi, Phi, ordmin, ordmax, step, err_fn, err_xi, err_phi) -> np.n
     # SOFT CONDITIONS
     # STABILITY BETWEEN CONSECUTIVE ORDERS
     for oo in range(ordmin, ordmax + 1, step):
-        o = int(oo / step)
+        o = int(oo / step - 1)
 
         f_n = Fn[:, o].reshape(-1, 1)
         xi_n = Xi[:, o].reshape(-1, 1)
@@ -883,7 +899,7 @@ def example_data() -> dict:
     """
 
     rng = np.random.RandomState(12345)  # Set the seed
-    fs = 200  # [Hz] Sampling freqiency
+    fs = 600  # [Hz] Sampling freqiency
     T = 900  # [sec] Period of the time series
 
     dt = 1 / fs  # [sec] time resolution
@@ -988,7 +1004,7 @@ def example_data() -> dict:
     # Adding noise
     # SNR = 10*np.log10(_af/_ar)
     SNR = 10  # Signal-to-Noise ratio
-    ar = af / (10 ** (SNR / 10))  # Noise amplitude
+    ar = af / (10 ** (SNR / 20))  # Noise amplitude
 
     # Initialize the arrays (copy of accelerations)
     acc = a.copy()
@@ -1100,9 +1116,12 @@ def MPC(phi: np.ndarray) -> float:
     float
         MPC value, ranging between 0 and 1, where 1 indicates perfect collinearity.
     """
-    S = np.cov(phi.real, phi.imag)
-    lambd = np.linalg.eigvals(S)
-    MPC = (lambd[0] - lambd[1]) ** 2 / (lambd[0] + lambd[1]) ** 2
+    try:
+        S = np.cov(phi.real, phi.imag)
+        lambd = np.linalg.eigvals(S)
+        MPC = (lambd[0] - lambd[1]) ** 2 / (lambd[0] + lambd[1]) ** 2
+    except Exception:
+        MPC = np.nan
     return MPC
 
 
@@ -1127,13 +1146,15 @@ def MPD(phi: np.ndarray) -> float:
         MPD value, representing the average deviation of the phase from a
         purely real mode.
     """
-
-    U, s, VT = np.linalg.svd(np.c_[phi.real, phi.imag])
-    V = VT.T
-    w = np.abs(phi)
-    num = phi.real * V[1, 1] - phi.imag * V[0, 1]
-    den = np.sqrt(V[0, 1] ** 2 + V[1, 1] ** 2) * np.abs(phi)
-    MPD = np.sum(w * np.arccos(np.abs(num / den))) / np.sum(w)
+    try:
+        U, s, VT = np.linalg.svd(np.c_[phi.real, phi.imag])
+        V = VT.T
+        w = np.abs(phi)
+        num = phi.real * V[1, 1] - phi.imag * V[0, 1]
+        den = np.sqrt(V[0, 1] ** 2 + V[1, 1] ** 2) * np.abs(phi)
+        MPD = np.sum(w * np.arccos(np.abs(num / den))) / np.sum(w)
+    except Exception:
+        MPD = np.nan
     return MPD
 
 
