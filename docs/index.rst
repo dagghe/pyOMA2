@@ -37,7 +37,7 @@ Check out the project source_.
 Schematic organisation of the module showing inheritance between classes
 ========================================================================
 
-.. image:: /img/info.svg
+.. image:: /img/info.png
 
 
 
