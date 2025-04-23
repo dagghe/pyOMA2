@@ -361,7 +361,7 @@ def freq_vs_damp_plot(
         )
 
     # Set plot titles and labels
-    ax.set_title(f"Frequency vs Damping - Clusters {name}")
+    ax.set_title(f"Frequency vs Damping - Clusters, '{name}'")
     ax.set_xlabel("Frequency [Hz]")
     ax.set_ylabel("Damping [%]")
 
@@ -601,7 +601,7 @@ def stab_clus_plot(
         )
 
     # Set plot titles and labels
-    ax.set_title(f"Stabilization Chart with Clusters {name}")
+    ax.set_title(f"Stabilization Chart with Clusters, '{name}'")
     ax.set_xlabel("Frequency [Hz]")
     ax.set_ylabel("Model Order")
 
@@ -1548,7 +1548,13 @@ def plt_data(
 
     nr = round(Nch / nc)  # number of rows in the subplot
     fig, axs = plt.subplots(
-        figsize=(8, 6), nrows=nr, ncols=nc, sharex=True, sharey=True, tight_layout=True
+        figsize=(8, 6),
+        nrows=nr,
+        ncols=nc,
+        sharex=True,
+        sharey=True,
+        tight_layout=True,
+        squeeze=False,
     )
     fig.suptitle("Time Histories of all channels")
 
@@ -1583,7 +1589,7 @@ def plt_data(
                 kk += 1
         # if there is only 1 column
         else:
-            ax = axs[ii]
+            ax = axs[ii, 0]
             ax.plot(time, data[:, kk], c="k")
             if names is not None:
                 ax.set_title(f"{names[kk]}")
@@ -1602,7 +1608,7 @@ def plt_data(
         # ax.grid()
     plt.tight_layout()
 
-    return fig, ax
+    return fig, axs
 
 
 # -----------------------------------------------------------------------------
@@ -1922,7 +1928,27 @@ def plot_mac_matrix(
 
 def plot_mode_complexity(mode_shape):
     """
-    Plot the complexity of a mode shape.
+    Plot the complexity of a mode shape on a polar plot.
+
+    This function visualizes the mode shape's complexity by representing its
+    magnitudes and angles in a polar coordinate system. The magnitudes of
+    the mode shape are plotted as arrows radiating outward, with their angles
+    representing the phase of the corresponding components. Principal directions
+    (0° and 180°) are highlighted for clarity.
+
+    Parameters
+    ----------
+    mode_shape : array_like
+        A complex-valued array representing the mode shape. Each element's
+        magnitude and angle are used to generate the plot.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the plot.
+
+    ax : matplotlib.axes.Axes
+        The matplotlib axes object.
     """
 
     # Get angles (in radians) and magnitudes
@@ -1958,7 +1984,8 @@ def plot_mode_complexity(mode_shape):
     ax.set_yticklabels([])
     # Add title
     ax.set_title(
-        "Mode Shape Complexity Plot", va="bottom", fontsize=14, fontweight="bold"
+        "Mode Shape Complexity Plot", va="bottom", fontsize=14, fontweight="bold", pad=25
     )
     plt.tight_layout()
-    plt.show()
+    # plt.show()
+    return fig, ax

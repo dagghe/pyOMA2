@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.2.0b2] - 2025-02-13
+
+- fix tests
+
+## [1.2.0b1] - 2025-02-12
+
+### Added
+
+- Extra1 example jupyter notebook
+- Example5 jupyter notebook for clustering
+- clustering.py function file
+- aoma.py for AutoSSI class
+- AutoSSIRunParams class, AutoSSIMPEParams class and AutoSSIResult class
+- Step1, Step2, Step3 and Clustering classes
+- documentation files for clustering and examples
+
+### Changed
+
+- run_params have been split in run_params and mpe_params
+- all dependencies are now mandatory (pyvista and openpyxl)
+
 * security dependencies patch
 
 ## [1.1.1] - 2025-01-24

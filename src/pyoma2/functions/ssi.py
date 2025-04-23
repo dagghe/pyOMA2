@@ -372,7 +372,7 @@ def SSI_poles(
     step : int, optional
         Step size for increasing model order. Default is 1.
     HC : bool, optional
-        Whether to apply modal filtering to remove unstable poles. Default is True.
+        Whether to apply Hard Criteria to remove unstable poles. Default is True.
     xi_max : float, optional
         Maximum allowed damping ratio. Default is 0.1.
     calc_unc : bool, optional

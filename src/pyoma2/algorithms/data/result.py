@@ -133,12 +133,12 @@ class SSIResult(BaseResult):
     Fn_poles_std: Optional[npt.NDArray[np.float64]] = None
     Xi_poles_std: Optional[npt.NDArray[np.float64]] = None
     Phi_poles_std: Optional[npt.NDArray[np.float64]] = None
-    # dopo mpe, MPE_forPlot
-    Xi: Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
-    order_out: Optional[Union[int, List[int]]] = None
-    Fn_std: Optional[npt.NDArray[np.float64]] = None  # covariance of natural frequencies
-    Xi_std: Optional[npt.NDArray[np.float64]] = None  # covariance of damping ratios
-    Phi_std: Optional[npt.NDArray[np.float64]] = None  # covariance of mode shapes
+
+    Xi: Optional[npt.NDArray[np.float64]] = None
+    Fn_std: Optional[npt.NDArray[np.float64]] = None
+    Xi_std: Optional[npt.NDArray[np.float64]] = None
+    Phi_std: Optional[npt.NDArray[np.float64]] = None
+    order_out: Optional[Union[List[int], int]] = None
 
 
 class pLSCFResult(BaseResult):
@@ -177,8 +177,7 @@ class pLSCFResult(BaseResult):
     Xi_poles: Optional[npt.NDArray[np.float64]] = None
     Phi_poles: Optional[npt.NDArray[np.float64]] = None
     Lab: Optional[npt.NDArray[np.float64]] = None
-    # dopo mpe, MPE_forPlot
-    Xi: Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
+    Xi: Optional[npt.NDArray[np.float64]] = None
     order_out: Optional[Union[List[int], int]] = None
 
 
@@ -201,8 +200,76 @@ class MsPoserResult(BaseResult):
     """
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
-    Phi: npt.NDArray[np.float64]
-    Fn: npt.NDArray[np.float64]
-    Fn_std: npt.NDArray[np.float64]
-    Xi: npt.NDArray[np.float64]
-    Xi_std: npt.NDArray[np.float64]
+    Phi: npt.NDArray[np.float64] = None
+    Fn: npt.NDArray[np.float64] = None
+    Fn_std: npt.NDArray[np.float64] = None
+    Xi: npt.NDArray[np.float64] = None
+    Xi_std: npt.NDArray[np.float64] = None
+
+
+class AutoSSIResult(SSIResult):
+    """
+    Result class for automated Structural System Identification (SSI) with clustering.
+
+    Attributes
+    ----------
+    clustering_results : dict, optional
+        Dictionary storing clustering results, if available.
+    """
+
+    clustering_results: Optional[dict] = {}
+
+
+class ClusteringResult(BaseResult):
+    """
+    Class to store clustering results and related metadata.
+
+    Attributes
+    ----------
+    Fn : ndarray of shape (n_modes,)
+        Natural frequencies of the modes.
+    Xi : ndarray of shape (n_modes,)
+        Damping ratios of the modes.
+    Phi : ndarray of shape (n_channels, n_modes)
+        Mode shapes.
+    Fn_fl : ndarray of shape (n_samples,)
+        Flattened array of natural frequencies from clustering.
+    Xi_fl : ndarray of shape (n_samples,)
+        Flattened array of damping ratios from clustering.
+    Phi_fl : ndarray of shape (n_samples, n_channels)
+        Flattened array of mode shapes from clustering.
+    Fn_std_fl : ndarray of shape (n_samples,), optional
+        Standard deviation of natural frequencies.
+    Xi_std_fl : ndarray of shape (n_samples,), optional
+        Standard deviation of damping ratios.
+    Phi_std_fl : ndarray of shape (n_samples, n_channels), optional
+        Standard deviation of mode shapes.
+    order_fl : ndarray of shape (n_samples,)
+        Orders corresponding to the flattened data.
+    labels : ndarray of shape (n_samples,)
+        Cluster labels for each sample.
+    dtot : ndarray of shape (n_samples, n_samples)
+        Pairwise distance matrix.
+    medoid_distances : ndarray of shape (n_clusters,)
+        Distance of each sample to its cluster medoid.
+    order_out : ndarray of shape (n_modes,), optional
+        Final order values of the selected modes.
+    """
+
+    Fn: Optional[npt.NDArray[np.float64]] = None
+    Xi: Optional[npt.NDArray[np.float64]] = None
+    Phi: Optional[npt.NDArray[np.float64]] = None
+    Fn_fl: Optional[npt.NDArray[np.float64]] = None
+    Xi_fl: Optional[npt.NDArray[np.float64]] = None
+    Phi_fl: Optional[npt.NDArray[np.float64]] = None
+    Fn_std_fl: Optional[npt.NDArray[np.float64]] = None
+    Xi_std_fl: Optional[npt.NDArray[np.float64]] = None
+    Phi_std_fl: Optional[npt.NDArray[np.float64]] = None
+    order_fl: Optional[npt.NDArray[np.int64]] = None
+    labels: Optional[npt.NDArray[np.int64]] = None
+    dtot: Optional[npt.NDArray[np.float64]] = None
+    medoid_distances: Optional[npt.NDArray[np.float64]] = None
+    order_out: Optional[npt.NDArray[np.int64]] = None
+    Fn_std: Optional[npt.NDArray[np.float64]] = None
+    Xi_std: Optional[npt.NDArray[np.float64]] = None
+    Phi_std: Optional[npt.NDArray[np.float64]] = None

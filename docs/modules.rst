@@ -12,6 +12,7 @@
    docu/2_1 Algo_fdd
    docu/2_2 Algo_ssi
    docu/2_3 Algo_plscf
+   docu/2_4 Algo_autossi
 
 ===============
 Support modules

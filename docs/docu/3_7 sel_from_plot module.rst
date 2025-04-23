@@ -24,6 +24,11 @@ References:
     This module is inspired by and expands upon functionalities found in the pyEMA package [ZBGS20]_,
     offering specialized features tailored for the pyOMA2 package's requirements.
 
+.. Note::
+    To select a peack/pole from a plot hold the SHIFT button and left click with the mouse.
+    To remove from selection the last peack/pole added hold the SHIFT button and right click with the mouse.
+    To remove from selection the closest peack/pole hold the SHIFT button and middle click with the mouse.
+
 .. Warning::
     The module is designed to be used as part of the pyOMA2 package and relies on its
     internal data structures and algorithms.

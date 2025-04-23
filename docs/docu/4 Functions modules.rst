@@ -14,3 +14,4 @@ The following functions are the "foundamental bricks" to perform the analyses.
    4_3 ssi
    4_4 plot
    4_5 plscf
+   4_6 clus

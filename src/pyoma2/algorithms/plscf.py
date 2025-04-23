@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 import typing
 
+from pyoma2.algorithms.data.mpe_params import pLSCFMPEParams
 from pyoma2.algorithms.data.result import pLSCFResult
 from pyoma2.algorithms.data.run_params import pLSCFRunParams
 from pyoma2.functions import fdd, gen, plot, plscf
@@ -24,7 +25,9 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # SINGLE SETUP
 # =============================================================================
-class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
+class pLSCF(
+    BaseAlgorithm[pLSCFRunParams, pLSCFMPEParams, pLSCFResult, typing.Iterable[float]]
+):
     """
     Implementation of the poly-reference Least Square Complex Frequency (pLSCF) algorithm for modal analysis.
 
@@ -47,6 +50,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
     """
 
     RunParamCls = pLSCFRunParams
+    MPEParamCls = pLSCFMPEParams
     ResultCls = pLSCFResult
 
     def run(self) -> pLSCFResult:
@@ -169,9 +173,9 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         super().mpe(sel_freq=sel_freq, order=order, rtol=rtol)
 
         # Save run parameters
-        self.run_params.sel_freq = sel_freq
-        self.run_params.order_in = order
-        self.run_params.rtol = rtol
+        self.mpe_params.sel_freq = sel_freq
+        self.mpe_params.order_in = order
+        self.mpe_params.rtol = rtol
 
         # Get poles
         Fn_pol = self.result.Fn_poles
@@ -216,7 +220,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
         super().mpe_from_plot(freqlim=freqlim, rtol=rtol)
 
         # Save run parameters
-        self.run_params.rtol = rtol
+        self.mpe_params.rtol = rtol
 
         # Get poles
         Fn_pol = self.result.Fn_poles
@@ -316,7 +320,7 @@ class pLSCF(BaseAlgorithm[pLSCFRunParams, pLSCFResult, typing.Iterable[float]]):
 # =============================================================================
 # MULTI SETUP
 # =============================================================================
-class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
+class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFMPEParams, pLSCFResult, typing.Iterable[dict]]):
     """
     A multi-setup extension of the pLSCF class for the poly-reference Least Square Complex Frequency
     (pLSCF) algorithm.
@@ -337,6 +341,7 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFResult, typing.Iterable[dict]]):
     """
 
     RunParamCls = pLSCFRunParams
+    MPEParamCls = pLSCFMPEParams
     ResultCls = pLSCFResult
 
     def run(self) -> pLSCFResult:
