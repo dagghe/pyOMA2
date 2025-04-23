@@ -321,10 +321,18 @@ class Step3(BaseRunParams):
 
     Attributes
     ----------
-    post_proc : list of {'merge_similar', 'damp_IQR', 'fn_IQR', 'fn_med', '1xorder',
-                         'min_size', 'min_size_pctg', 'min_size_kmeans',
-                         'min_size_gmm', 'MTT'}
-        Post-processing steps to apply to clustering results.
+    post_proc : list of post-processing steps to apply to clustering results:
+            - 'merge_similar': Merge similar clusters.
+            - 'damp_IQR': Damp clusters based on Interquartile Range (IQR) of damping.
+            - 'fn_IQR': Filter clusters based on IQR of natural frequencies.
+            - 'fn_med': Filter clusters based on median natural frequencies.
+            - '1xorder': Filter clusters allowing 1 pole per order.
+            - 'min_size': Filter clusters based on minimum size.
+            - 'min_size_pctg': Filter clusters based on minimum size as a percentage of the largest cluster.
+            - 'min_size_kmeans': Filter clusters based on minimum size using k-means.
+            - 'min_size_gmm': Filter clusters based on minimum size using Gaussian Mixture Models.
+            - 'MTT': Filter clusters based on Modified Thompson Tau technique.
+            - 'Adj_boxplot': Filter clusters based on Adjusted boxplot technique.
     merge_dist : {float, 'auto', 'deder'}
         Threshold for merging similar clusters.
     min_pctg : float
@@ -355,6 +363,7 @@ class Step3(BaseRunParams):
             "min_size_kmeans",
             "min_size_gmm",
             "MTT",
+            "Adj_boxplot",
         ]
     ] = ["merge_similar", "damp_IQR", "fn_IQR", "1xorder", "min_size", "MTT"]
     merge_dist: Union[Literal["auto", "deder"], float] = "auto"
@@ -375,6 +384,8 @@ class Clustering(BaseModel):
         Steps defining the clustering process.
     quick : {'Magalhaes', 'Reynders', 'Neu', 'Kvaale', 'Dederichs'}, optional
         Predefined configurations for specific clustering strategies.
+    freq_lim : tuple of float, optional
+        Frequency range limits for filtering clusters.
 
     Methods
     -------
@@ -385,9 +396,10 @@ class Clustering(BaseModel):
     name: str
     steps: Optional[Tuple[Step1, Step2, Step3]] = None
     quick: Optional[str] = None
+    freq_lim: Optional[tuple] = None
 
     @model_validator(mode="after")
-    def assemble_steps(self):
+    def assemble_steps(self, freq_lim):
         # This logic runs after the model is initialized and validated
         if self.steps is None and self.quick is not None:
             if self.quick == "Magalhaes":
@@ -395,7 +407,9 @@ class Clustering(BaseModel):
                 step2 = Step2(
                     distance=["dfn", "dMAC"], algo="hierarc", dc=0.02, linkage="single"
                 )
-                step3 = Step3(post_proc=["damp_IQR"], select="avg")
+                step3 = Step3(
+                    post_proc=["damp_IQR"], select="avg", freq_lim=self.freq_lim
+                )
                 self.steps = (step1, step2, step3)
 
             elif self.quick == "Reynders":
@@ -408,7 +422,11 @@ class Clustering(BaseModel):
                     pre_clus_dist=["dfn", "dxi", "dlambda", "dMAC", "MPC", "MPD"],
                 )
                 step2 = Step2(algo="hierarc", dc="mu+2sig", linkage="average")
-                step3 = Step3(post_proc=["min_size_kmeans"], select="xi_med_close")
+                step3 = Step3(
+                    post_proc=["min_size_kmeans"],
+                    select="xi_med_close",
+                    freq_lim=self.freq_lim,
+                )
                 self.steps = (step1, step2, step3)
 
             elif self.quick == "Neu":
@@ -423,7 +441,10 @@ class Clustering(BaseModel):
                 )
                 step2 = Step2(algo="hierarc", dc="95weib", linkage="average")
                 step3 = Step3(
-                    post_proc=("min_size_pctg", "MTT"), min_pctg=0.5, select="avg"
+                    post_proc=("min_size_pctg", "MTT"),
+                    min_pctg=0.5,
+                    select="avg",
+                    freq_lim=self.freq_lim,
                 )
                 self.steps = (step1, step2, step3)
 
@@ -432,7 +453,7 @@ class Clustering(BaseModel):
                     hc=False, sc=True, sc_dict=dict(err_fn=0.04, err_xi=0.2, err_phi=0.1)
                 )
                 step2 = Step2(algo="hdbscan", min_size=20)
-                step3 = Step3(post_proc=["1xorder"], select="avg")
+                step3 = Step3(post_proc=["1xorder"], select="avg", freq_lim=self.freq_lim)
                 self.steps = (step1, step2, step3)
 
             elif self.quick == "Dederichs":
@@ -449,6 +470,7 @@ class Clustering(BaseModel):
                     post_proc=("merge_similar", "1xorder", "min_size_gmm"),
                     merge_dist="deder",
                     select="avg",
+                    freq_lim=self.freq_lim,
                 )
                 self.steps = (step1, step2, step3)
 

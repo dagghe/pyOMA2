@@ -270,3 +270,6 @@ class ClusteringResult(BaseResult):
     dtot: Optional[npt.NDArray[np.float64]] = None
     medoid_distances: Optional[npt.NDArray[np.float64]] = None
     order_out: Optional[npt.NDArray[np.int64]] = None
+    Fn_std: Optional[npt.NDArray[np.float64]] = None
+    Xi_std: Optional[npt.NDArray[np.float64]] = None
+    Phi_std: Optional[npt.NDArray[np.float64]] = None

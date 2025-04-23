@@ -37,7 +37,7 @@ both input and output data.
 
 ## Statement of need
 
-`pyOMA2` is the latest and improved version of the pyOMA module, a Python
+`pyOMA2` is the latest and improved version of the `pyOMA` module [@pasca2022pyoma], a Python
 library specifically designed for conducting operational modal analysis.
 It fully utilises Python's object-oriented capabilities to offer a
 comprehensive suite of tools for performing OMA.
@@ -52,7 +52,7 @@ define the geometry of tested structures, facilitating the visualisation
 of mode shapes. Since version 1.1.1 the uncertainty bounds of the modal
 properties can also be estimated for the SSI family of algorithms.
 
-The following algorithm are included in the module:
+The following algorithms are included in the module:
 
 - Frequency domain decomposition (FDD);
 - Enhanced frequency domain decomposition (EFDD);

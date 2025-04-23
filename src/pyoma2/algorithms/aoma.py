@@ -42,7 +42,7 @@ class AutoSSI(
         Default method for Hankel matrix computation. Default is 'cov'.
     """
 
-    MPEParamCls = AutoSSIRunParams
+    MPEParamCls = AutoSSIMPEParams
     RunParamCls = AutoSSIRunParams
     ResultCls = AutoSSIResult
     method: typing.Literal["cov", "cov_R", "dat"] = "cov"
@@ -542,6 +542,12 @@ class AutoSSI(
                 flattened_results = (Fn_fl, Xi_fl)
                 clusters, labels = clus.post_MTT(clusters, labels, flattened_results)
 
+            if post_i == "Adj_boxplot":
+                # Removing outliers with the Adjusted boxplot method (Neu 2017)
+                flattened_results = (Fn_fl, Xi_fl)
+                clusters, labels = clus.post_adjusted_boxplot(
+                    clusters, labels, flattened_results
+                )
         # # Sort clusters in ascending order of frequency
         clusters, labels = clus.reorder_clusters(clusters, labels, Fn_fl)
 
@@ -568,13 +574,23 @@ class AutoSSI(
         Fn_out, Xi_out, Phi_out, order_out = clus.output_selection(
             select, clusters, flattened_results, medoid_indices
         )
+        flattened_results1 = (Fn_std_fl, Xi_std_fl, Phi_std_fl.squeeze(), order_fl)
+        Fn_std_out, Xi_std_out, Phi_std_out, order_out = clus.output_selection(
+            select, clusters, flattened_results1, medoid_indices
+        )
 
         # Sort modes in ascending order of frequency
         sorted_indices = np.argsort(Fn_out)
-        Fn_out = Fn_out[sorted_indices]
-        Xi_out = Xi_out[sorted_indices]
-        Phi_out = Phi_out[sorted_indices, :]
-        # Phi_out = Phi_out[sorted_indices]
+        try:
+            Fn_out = Fn_out[sorted_indices]
+            Xi_out = Xi_out[sorted_indices]
+            Phi_out = Phi_out[sorted_indices, :]
+            Fn_std_out = Fn_std_out[sorted_indices]
+            Xi_std_out = Xi_std_out[sorted_indices]
+            Phi_std_out = Phi_std_out[sorted_indices, :]
+        except Exception:
+            logger.warning("Sorting failed, keeping original order")
+
         logger.debug("...saving clustering %s result", name)
 
         risultati = dict(
@@ -592,7 +608,9 @@ class AutoSSI(
             dtot=dtot,
             medoid_distances=medoid_distances,
             order_out=order_out,
-            # clusters=clusters
+            Fn_std=Fn_std_out,
+            Xi_std=Xi_std_out,
+            Phi_std=Phi_std_out.T,
         )
         self.result.clustering_results[f"{name}"] = ClusteringResult(**risultati)
 

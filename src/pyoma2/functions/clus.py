@@ -472,10 +472,10 @@ def post_fn_IQR(clusters, labels, Fn_fl):
         Q1 = np.percentile(frequencies, 25)
         Q3 = np.percentile(frequencies, 75)
         IQR = Q3 - Q1
-        # Define the bounds for acceptable damping values
+        # Define the bounds for acceptable frequency values
         lower_bound = Q1 - 1.5 * IQR
         upper_bound = Q3 + 1.5 * IQR
-        # Determine which damping values are within the bounds
+        # Determine which frequency values are within the bounds
         frequencies_condition = (frequencies >= lower_bound) & (
             frequencies <= upper_bound
         )
@@ -912,6 +912,71 @@ def post_MTT(clusters, labels, flattened_results):
 # -----------------------------------------------------------------------------
 
 
+def post_adjusted_boxplot(clusters, labels, flattened_results):
+    """
+    Remove outliers using the adjusted boxplot method.
+
+    For each cluster, the function computes the adjusted boxplot boundaries for both frequency and damping,
+    then marks as outliers those observations that do not lie within the respective inlier intervals for both
+    measures. Outliers are assigned a label of -1. The clusters dictionary is updated to include only the remaining
+    (non-outlier) indices.
+
+    Parameters
+    ----------
+    clusters : dict
+        Dictionary of clusters where keys are cluster labels and values are arrays of indices.
+    labels : ndarray of shape (n_samples,)
+        Array of cluster labels for each sample.
+    flattened_results : tuple of ndarray
+        Tuple containing:
+          - Fn_fl : ndarray of shape (n_samples,)
+              Frequencies corresponding to each sample.
+          - Xi_fl : ndarray of shape (n_samples,)
+              Damping values corresponding to each sample.
+
+    Returns
+    -------
+    clusters : dict
+        Updated dictionary of clusters with outliers removed.
+    labels : ndarray of shape (n_samples,)
+        Updated cluster labels with outliers assigned -1.
+    """
+    Fn_fl, Xi_fl = flattened_results
+
+    # Process each cluster separately
+    for _, indices in clusters.items():
+        # Select the values corresponding to the current cluster.
+        freqs = Fn_fl[indices].squeeze()
+        xis = Xi_fl[indices].squeeze()
+
+        # Compute the adjusted boxplot bounds for frequencies.
+        lower_fn, upper_fn = adjusted_boxplot_bounds(freqs)
+        # Determine which frequency values are inliers.
+        inliers_fn = indices[(freqs >= lower_fn) & (freqs <= upper_fn)]
+
+        # Compute the adjusted boxplot bounds for damping.
+        lower_xi, upper_xi = adjusted_boxplot_bounds(xis)
+        # Determine which damping values are inliers.
+        inliers_xi = indices[(xis >= lower_xi) & (xis <= upper_xi)]
+
+        # Keep only the indices that are inliers for both criteria.
+        inliers_common = np.intersect1d(inliers_fn, inliers_xi)
+
+        # Mark as outliers those indices in the cluster that are not in the intersection.
+        mask_outliers = np.isin(indices, inliers_common, invert=True)
+        labels[indices[mask_outliers]] = -1
+
+    # Rebuild the clusters dictionary excluding the outliers (labeled -1).
+    unique_labels = set(labels)
+    unique_labels.discard(-1)
+    clusters = {label: np.where(labels == label)[0] for label in unique_labels}
+
+    return clusters, labels
+
+
+# -----------------------------------------------------------------------------
+
+
 def output_selection(select, clusters, flattened_results, medoid_indices):
     """
     Select output results based on the specified selection method.
@@ -1041,6 +1106,62 @@ def MTT(arr, indices, alpha=0.01):
         else:
             break  # No more outliers
     return ind
+
+
+# -----------------------------------------------------------------------------
+
+
+def adjusted_boxplot_bounds(data):
+    """
+    Compute the lower and upper fences of the adjusted boxplot for skewed distributions.
+
+    For MC >= 0:
+      lower_bound = Q1 - 1.5 * exp(-4 * MC) * IQR
+      upper_bound = Q3 + 1.5 * exp(3 * MC) * IQR
+    For MC < 0:
+      lower_bound = Q1 - 1.5 * exp(-3 * MC) * IQR
+      upper_bound = Q3 + 1.5 * exp(4 * MC) * IQR
+
+    Parameters
+    ----------
+    data : array-like
+        1D numeric data.
+
+    Returns
+    -------
+    tuple
+        (lower_bound, upper_bound)
+    """
+    data = np.asarray(data)
+    Q1 = np.percentile(data, 25)
+    Q3 = np.percentile(data, 75)
+    IQR = Q3 - Q1
+
+    # Compute medcouple (MC) using a simple O(n^2) implementation.
+    # For large datasets an optimized implementation is recommended.
+    def medcouple(x):
+        x = np.sort(np.asarray(x))
+        median = np.median(x)
+        left = x[x <= median]
+        right = x[x >= median]
+        L = left[:, np.newaxis]
+        R = right[np.newaxis, :]
+        diff = R - L
+        with np.errstate(divide="ignore", invalid="ignore"):
+            h = (R + L - 2 * median) / diff
+        h[diff == 0] = 0.0
+        return np.median(h)
+
+    MC = medcouple(data)
+
+    if MC >= 0:
+        lower_bound = Q1 - 1.5 * np.exp(-4 * MC) * IQR
+        upper_bound = Q3 + 1.5 * np.exp(3 * MC) * IQR
+    else:
+        lower_bound = Q1 - 1.5 * np.exp(-3 * MC) * IQR
+        upper_bound = Q3 + 1.5 * np.exp(4 * MC) * IQR
+
+    return lower_bound, upper_bound
 
 
 # -----------------------------------------------------------------------------
