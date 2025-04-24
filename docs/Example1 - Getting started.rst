@@ -1,11 +1,9 @@
 ===========================
 Example1 - Getting started
 ===========================
+This example is intended to show the basic usage of the package, and how to run a simple analysis with it, the example is taken from **[C81](#ref-1)** and represents a 5 story shear-type building..
 
-In this first example we'll take a look at a simple 5 degrees of freedom (DOF) system.
-
-To access the data and the exact results of the system we can call the ``example_data()`` function under the submodule ``functions.gen``
-
+To access the data and the exact results of the system we can call the ``example_data()`` function under the submodule ``functions.gen``, which will return a tuple where the first output is an array representing the acceleration time histories of the system (subject to white noise excitation), and the second output is a tuple containing the exact result in terms of modal parameters (natural frequencies, mode shapes and damping ratios) obtained from the modal analysis of the system.
 
 .. code-block:: python
 

@@ -2,7 +2,7 @@
 Example2 - Real data set
 =========================
 
-In this second example we will explore more functionalities with a real dataset from a CLT building, for more info [APTF20]_.
+In this second example we will explore more functionalities of the module with a dataset from a real building. The data was collected during a dynamic identification campaign conducted in 2019 and contains 6 channels of acceleration data sampled at 100 Hz. For more info about the instrumentation used and the building itself refer to [APTF20]_.
 
 First of all we import the necessary modules.
 Then we import the dataset we want to analyse and assign it to a variable.

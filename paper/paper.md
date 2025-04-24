@@ -28,7 +28,7 @@ bibliography: paper.bib
 Operational Modal Analysis (OMA) has garnered considerable attention from
 the engineering community in recent years and has established itself as
 the preferred method for estimating the modal properties of structures in
-Structural Health Monitoring (SHM), particularly in civil engineering.
+Structural Health Monitoring (SHM) applications, particularly in civil engineering.
 The key advantage of OMA over Experimental Modal Analysis (EMA) is its
 ability to derive modal parameters solely from output measurements taken
 during the structure's normal operation. This makes OMA a more practical
@@ -39,46 +39,34 @@ both input and output data.
 
 `pyOMA2` is the latest and improved version of the `pyOMA` module [@pasca2022pyoma], a Python
 library specifically designed for conducting operational modal analysis.
-It fully utilises Python's object-oriented capabilities to offer a
+While its predecessor relied on procedural workflows, `pyOMA2`
+fully utilises Python's object-oriented capabilities to offer a
 comprehensive suite of tools for performing OMA.
 
-The module supports both single and multi-setup data measurements, enabling
-users to handle multiple acquisitions that combine reference and roving
-sensors. It is user-friendly and provides a range of tools for pre-processing
-and visualising data. A key enhancement is the introduction of interactive
-plots, allowing users to select the desired modes directly from
-algorithm-generated graphs. Additionally, a new feature enables users to
-define the geometry of tested structures, facilitating the visualisation
-of mode shapes. Since version 1.1.1 the uncertainty bounds of the modal
-properties can also be estimated for the SSI family of algorithms.
+Notable improvements over the previous version include support for single- and multi-setup measurements, allowing users to handle multiple acquisitions that combine reference and roving sensors; enhanced user-friendliness through a broad range of tools for pre-processing and visualising data; interactive plotting that enables users to select desired modes directly from algorithm-generated graphs; a geometry-definition feature to visualise mode shapes on tested structures; and, since version 1.1.1, the possibility to estimate uncertainty bounds of modal properties for the SSI family of algorithms.
 
 The following algorithms are included in the module:
 
-- Frequency domain decomposition (FDD);
-- Enhanced frequency domain decomposition (EFDD);
-- Frequency spatial domain decomposition (FSDD);
-- Reference based covariance driven stochastic subspace identification (SSIcov);
-- Reference based data driven stochastic subspace identification (SSIdat);
-- Poly-reference Least Square Frequency Domain (pLSCF);
+- Frequency domain decomposition (FDD) [@brincker2001modal];
+- Enhanced frequency domain decomposition (EFDD) [@brincker2001damping];
+- Frequency spatial domain decomposition (FSDD) [@zhang2010frequency];
+- Reference based covariance driven stochastic subspace identification (SSIcov) [@van2012subspace;@peeters1999reference;@reynders2012system];
+- Reference based data driven stochastic subspace identification (SSIdat) [@van2012subspace;@peeters1999reference;@reynders2012system];
+- Poly-reference Least Square Frequency Domain (pLSCF) [@peeters2004polymax];
 
-For the readers seeking a more comprehensive understanding of the algorithms
-and the underlying theory, a wealth of literature is available for consultation.
-Key references include works by Brincker
-[@brincker2001modal;@brincker2015introduction;@brincker2001damping],
-Zhang [@zhang2010frequency], Peeters [@peeters2004polymax;@peeters1999reference],
-Van Overschee and De Moor [@van2012subspace], Reynders [@reynders2012system],
-Rainieri and Fabbrocino [@rainieri2014operational], Amador [@amador2021robust],
-Döhler [@dohler2011subspace,dohler2013efficient,dohler2013uncertainty], and others.
+The multi-setup analyzes can be performed according the so-called Post Separate Estimation
+Re-Scaling (PoSER) approach as well as with the so-called Pre-Global Estimation Re-Scaling (PreGER)
+approach [@brincker2015introduction;@rainieri2014operational;@dohler2013efficient;@amador2021robust]. The calculation of the uncertainty bounds for the SSI family of algorithm follows the efficient implementation by Döhler [@dohler2011subspace;@dohler2013efficient;@dohler2013uncertainty]. The interested reader may refer to the extensive scientific literature on the subject for further information.
 
 A few commercial software implements the algorithms mentioned above.
 The most known presumably are ARTeMIS [@solutions2001artemis], by Structural
 Vibration Solutions, and MACEC, a Matlab toolbox for modal testing and
 OMA [@reynders2014macec]. When it comes to open source modules the only ones
-available to the authors best knowledge are the first version of pyOMA
-[@pasca2022pyoma] and Koma [@koma], which is also an open-source Python library
+available to the authors best knowledge are the first version of `pyOMA`
+[@pasca2022pyoma] and `Koma` [@koma], which is also an open-source Python library
 available on GitHub. It provides tools for OMA, focusing on simplicity and ease of use.
-Koma is designed to be a lightweight alternative to more general libraries like PyOMA,
-making it suitable for smaller projects or educational purposes.
+`Koma` is designed to be a lightweight alternative to more general libraries like `pyOMA`,
+making it suitable for smaller projects.
 
 The module's reliability and applicability for research purposes have been
 demonstrated by the authors through various studies, such as
