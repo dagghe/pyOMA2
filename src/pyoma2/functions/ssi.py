@@ -25,9 +25,10 @@ def build_hank(
     Y: np.ndarray,
     Yref: np.ndarray,
     br: int,
-    method: typing.Literal["cov", "cov_R", "dat"],
+    method: typing.Literal["cov", "cov_R", "dat", "IOcov"],
     calc_unc: bool = False,
     nb: int = 50,
+    U: np.ndarray = None,
 ) -> typing.Tuple[np.ndarray, typing.Optional[np.ndarray]]:
     """
     Construct a Hankel matrix with optional uncertainty calculations.
@@ -113,7 +114,7 @@ def build_hank(
     elif method == "cov_R":
         # Correlations
         Ri = np.array(
-            [1 / (N) * np.dot(Y[:, k:], Yref[:, : Ndat - k].T) for k in range(p + q)]
+            [1 / (N - k) * np.dot(Y[:, k:], Yref[:, : Ndat - k].T) for k in range(p + q)]
         )
         # Assembling the Toepliz matrix
         Hank = np.vstack(
@@ -133,7 +134,7 @@ def build_hank(
                 for k in range(p + q):
                     print(f"{k=}, {p=}, {q=}")
                     res = np.array(
-                        [1 / (Nb) * np.dot(Y[:, : j * Nb - k], Yref[:, k : j * Nb].T)]
+                        [1 / (Nb - k) * np.dot(Y[:, : j * Nb - k], Yref[:, k : j * Nb].T)]
                     )
                     Ri = np.vstack([Ri, res])
                 Hcov_j = np.vstack(
@@ -182,10 +183,75 @@ def build_hank(
                 else:
                     T[:, j] = (Hdat_vec_j - Hvec0) / np.sqrt(nb * (nb - 1))
 
+    elif method == "IOcov":
+        try:
+            inp = U.shape[0]  # number of input channels
+        except AttributeError as e:
+            raise AttributeError(
+                "U must be provided when using method 'IOcov'."
+                "Please provide the input data matrix U."
+            ) from e
+        # preallocate
+        Uf = np.zeros(((p + 1) * inp, N))
+        Up = np.zeros((q * inp, N))
+        Yf = np.zeros(((p + 1) * l, N))
+        Yp = np.zeros((q * r, N))
+
+        # build past‐input blocks Up and past‐output blocks Yp
+        for i in range(q):
+            # take columns i .. i+N-1
+            Up[i * inp : (i + 1) * inp, :] = U[:, i : i + N]
+            Yp[i * r : (i + 1) * r, :] = Yref[:, i : i + N]
+
+        # build future‐input blocks Uf and future‐output blocks Yf
+        for i in range(p + 1):
+            Uf[i * inp : (i + 1) * inp, :] = U[:, q + i : q + i + N]
+            Yf[i * l : (i + 1) * l, :] = Y[:, q + i : q + i + N]
+
+        R2 = Yf.dot(Yp.T) / N
+        R4 = Yf.dot(Uf.T) / N
+        R8 = Uf.dot(Uf.T) / N
+        R5 = Yp.dot(Uf.T) / N
+
+        # Finally compute hk
+        Hank = R2 - R4 @ np.linalg.pinv(R8) @ R5.T
+
+        # Uncertainty calculations
+        logger.info("... calculating cov(H)...")
+        if calc_unc:
+            Nb = N // nb  # number of samples per segment
+            T = np.zeros(((p + 1) * q * l * r, nb))  # Square root of SIGMA_H
+            Hvec0 = Hank.reshape(-1, order="F")  # vectorized Hankel
+
+            for k in trange(nb):
+                Yf_k = Yf[:, (k * Nb) : ((k + 1) * Nb)]
+                Yp_k = Yp[:, (k * Nb) : ((k + 1) * Nb)]
+
+                Uf_k = Uf[:, (k * Nb) : ((k + 1) * Nb)]
+                # Up_k = Up[:, (k * Nb) : ((k + 1) * Nb)]
+
+                R2_k = np.dot(Yf_k, Yp_k.T) / Nb
+                R4_k = np.dot(Yf_k, Uf_k.T) / Nb
+                R5_k = np.dot(Yp_k, Uf_k.T) / Nb
+                R8_k = np.dot(Uf_k, Uf_k.T) / Nb
+
+                # Finally compute hk
+                Hcov_k = R2_k - R4_k @ np.linalg.pinv(R8_k) @ R5_k.T
+
+                Hcov_vec_k = Hcov_k.reshape(-1, order="F")
+
+                if Hcov_vec_k.shape[0] < T.shape[0]:
+                    raise AttributeError(
+                        "Not enough data points per data block."
+                        "Try reducing the number of data blocks, nb and/or the number of block-rows, br"
+                    )
+                else:
+                    T[:, k] = (Hcov_vec_k - Hvec0) / np.sqrt(nb * (nb - 1))
+
     else:
         raise AttributeError(
             f'{method} is not a valid argument. "method" must be '
-            f'one of: "cov", "cov_R", "dat"'
+            f'one of: "cov", "cov_R", "dat", "IOcov"'
         )
 
     logger.debug("... Hankel and SIGMA_H Done!")
@@ -193,6 +259,40 @@ def build_hank(
 
 
 # -----------------------------------------------------------------------------
+
+
+def synt_spctr(A, C, G, R0, omega, dt):
+    # --- derive sizes ---
+    n = A.shape[0]
+    p = C.shape[0]
+    assert A.shape == (n, n)
+    assert C.shape == (p, n)
+    assert G.shape == (n, p)
+    assert R0.shape == (p, p)
+
+    # --- build z vector and pre-allocate ---
+    z_vals = np.exp(1j * omega * dt)  # shape (N,)
+    N = z_vals.size
+    S_YY = np.zeros((p, p, N), dtype=complex)
+
+    # --- identity once only ---
+    I_n = np.eye(n)
+
+    # --- fill 3D array slice by slice ---
+    for k, z in enumerate(z_vals):
+        # forward term
+        M1 = z * I_n - A
+        inv1 = np.linalg.inv(M1)  # (n×n)
+        T1 = C @ inv1 @ G  # (p×p)
+
+        # backward term
+        M2 = (1 / z) * I_n - A.T
+        inv2 = np.linalg.inv(M2)  # (n×n)
+        T2 = G.T @ inv2 @ C.T  # (p×p)
+
+        # assemble
+        S_YY[:, :, k] = T1 + R0 + T2
+    return S_YY
 
 
 # Legacy
@@ -307,6 +407,7 @@ def SSI_fast(
     S1rad = np.sqrt(np.diag(SIG))
     # initializing arrays
     Obs = np.dot(U[:, :ordmax], S1rad[:ordmax, :ordmax])  # Observability matrix
+    Con = np.dot(S1rad[:ordmax, :ordmax], VT[:ordmax, :])  # Controllability matrix
 
     Oup = Obs[: Obs.shape[0] - l, :]
     Odw = Obs[l:, :]
@@ -314,16 +415,17 @@ def SSI_fast(
     # QR decomposition
     Q, R = np.linalg.qr(Oup)
     S = np.dot(Q.T, Odw)
-    # Con = np.dot(S1rad[:ordmax, :ordmax], V1_t[: ordmax, :]) # Controllability matrix
+
     # Initialize A and C matrices
-    A, C = [], []
+    A, C, G = [], [], []
     # loop for increasing order of the system
     logger.info("SSI for increasing model order...")
     for n in trange(0, ordmax + 1, step):
         A.append(np.dot(np.linalg.inv(R[:n, :n]), S[:n, :n]))
         C.append(Obs[:l, :n])
+        G.append(Con[:n, -l:])
     logger.debug("... Done!")
-    return Obs, A, C
+    return Obs, A, C, G
 
 
 # -----------------------------------------------------------------------------
@@ -535,27 +637,12 @@ def SSI_poles(
             phi1 = np.where(expandedmask2, phi1, np.nan)
             phi = phi1.T
 
-        try:
-            # Normalisation to unity
-            idx = np.argmax(abs(phi), axis=0)
-            phi = (
-                np.array(
-                    [
-                        phi[:, ii] / phi[np.argmax(abs(phi[:, ii])), ii]
-                        for ii in range(phi.shape[1])
-                    ]
-                )
-                .reshape(-1, l)
-                .T
-            )
-            vmaxs = [phi[idx[k1], k1] for k1 in range(len(idx))]
-        except Exception as e:
-            logging.debug(f"Ignored exception during normalization: {e}")
-            pass
+        idx = np.argmax(abs(phi), axis=0)
+        vmaxs = [phi[idx[k1], k1] for k1 in range(len(idx))]
 
         Fn[: len(fn), n] = fn  # save the frequencies
         Xi[: len(fn), n] = xi  # save the damping ratios
-        Phi[: len(fn), n, :] = phi.T
+        # Phi[: len(fn), n, :] = phi.T
         Lambdas[: len(fn), n] = lam_c
 
         if calc_unc:
@@ -671,6 +758,26 @@ def SSI_poles(
                     # standard deviation
                     Phi_std[jj, n, :] = abs(np.diag(cov_phi[:l, :l])) ** 0.5
             logger.debug("... uncertainty calculations done!")
+
+        try:
+            # Normalisation to unity
+            # idx = np.argmax(abs(phi), axis=0)
+            phi = (
+                np.array(
+                    [
+                        phi[:, ii] / phi[np.argmax(abs(phi[:, ii])), ii]
+                        for ii in range(phi.shape[1])
+                    ]
+                )
+                .reshape(-1, l)
+                .T
+            )
+            # vmaxs = [phi[idx[k1], k1] for k1 in range(len(idx))]
+        except Exception as e:
+            logging.debug(f"Ignored exception during normalization: {e}")
+            pass
+
+        Phi[: len(fn), n, :] = phi.T
     if calc_unc is True:
         return Fn, Xi, Phi, Lambdas, Fn_std, Xi_std, Phi_std
     else:

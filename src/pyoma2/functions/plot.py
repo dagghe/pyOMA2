@@ -17,6 +17,7 @@ from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator
 from scipy import signal, stats
 from scipy.interpolate import interp1d
+from sklearn.metrics import silhouette_samples, silhouette_score
 
 from .gen import MAC
 
@@ -25,6 +26,92 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # PLOT ALGORITMI
 # =============================================================================
+
+
+def plot_silhouette(distance_matrix, labels, name):
+    """
+    Plot a silhouette plot for clustering results given a precomputed distance matrix.
+
+    Parameters
+    ----------
+    distance_matrix : array-like, shape (n_samples, n_samples)
+        Pairwise distance matrix between samples.
+    labels : array-like, shape (n_samples,)
+        Cluster labels for each sample.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the silhouette plot.
+    """
+    # Number of clusters
+    labels = np.asarray(labels)
+    n_clusters = len(np.unique(labels))
+
+    # Compute the average silhouette score
+    silhouette_avg = silhouette_score(distance_matrix, labels, metric="precomputed")
+    # print(f"Average silhouette score: {silhouette_avg:.3f}")
+
+    # Compute silhouette values for each sample
+    sample_silhouette_values = silhouette_samples(
+        distance_matrix, labels, metric="precomputed"
+    )
+
+    # Set up the plot
+    fig, ax = plt.subplots(figsize=(10, 6))
+    y_lower = 10
+
+    # Choose a colormap with enough distinct colors, excluding greys
+    if n_clusters <= 9:  # Exclude grey from tab10
+        cmap = plt.get_cmap("tab10")
+        colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i != 7]
+    elif n_clusters <= 18:  # Exclude greys from tab20
+        cmap = plt.get_cmap("tab20")
+        colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i not in [14, 15]]
+    else:
+        # Generate a colormap with n_labels distinct colors
+        cmap = plt.cm.get_cmap("hsv", n_clusters)
+        colors = cmap(np.linspace(0, 1, n_clusters))
+
+    # Plot silhouette for each cluster
+    for i in range(1, n_clusters):
+        # aggregate the silhouette scores for samples in cluster i, then sort
+        ith_vals = sample_silhouette_values[labels == i - 1]
+        ith_vals.sort()
+        size_i = ith_vals.shape[0]
+        y_upper = y_lower + size_i
+
+        color = colors[i - 1]
+        ax.fill_betweenx(
+            np.arange(y_lower, y_upper),
+            0,
+            ith_vals,
+            facecolor=color,
+            edgecolor=color,
+            alpha=0.7,
+        )
+        ax.text(-0.05, y_lower + 0.5 * size_i, str(i))
+        y_lower = y_upper + 10  # 10px gap between clusters
+
+    # Draw average silhouette score line with legend label
+    avg_label = f"Avg = {silhouette_avg:.3f}"
+    ax.axvline(
+        x=silhouette_avg, color="red", linestyle="--", linewidth=2, label=avg_label
+    )
+    ax.legend(loc="upper right")
+
+    # Labels and formatting
+    ax.set_title(f"Silhouette Plot - {name}")
+    ax.set_xlabel("Silhouette coefficient values")
+    ax.set_ylabel("Cluster label")
+    ax.set_yticks([])  # Clear y-axis ticks
+    ax.set_xlim([-0.1, 1.0])
+
+    plt.tight_layout()
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
 
 
 def plot_dtot_hist(dtot, bins="auto", sugg_co=True):
@@ -663,8 +750,17 @@ def CMIF_plot(
         If `nSv` is not "all" and is not less than the number of singular values in `S_val`.
     """
     # COMPLEX MODE INDICATOR FUNCTION
+
     if fig is None and ax is None:
         fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
+        title = "Singular values of spectral matrix"
+        ls = "-"
+        alpha = 1.0
+    else:
+        title = ax.get_title()
+        ls = "--"
+        alpha = 0.5
+
     if nSv == "all":
         nSv = S_val.shape[1]
     # Check that the number of singular value to plot is lower thant the total
@@ -684,20 +780,122 @@ def CMIF_plot(
                 10 * np.log10(S_val[k, k, :] / S_val[k, k, :][np.argmax(S_val[k, k, :])]),
                 "k",
                 linewidth=2,
+                alpha=alpha,
             )
         else:
             ax.plot(
                 freq,
                 10 * np.log10(S_val[k, k, :] / S_val[0, 0, :][np.argmax(S_val[0, 0, :])]),
                 "grey",
+                alpha=alpha,
             )
 
+    ax.set_title(title)
+    ax.set_ylabel("dB rel. to unit")
+    ax.set_xlabel("Frequency [Hz]")
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
+    ax.grid(ls=ls, alpha=alpha)
+    # plt.show()
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
+def spectra_comparison(
+    S_val: np.ndarray,
+    S_val1: np.ndarray,
+    freq: np.ndarray,
+    freqlim: typing.Optional[typing.Tuple] = None,
+    nSv: str = "all",
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
+) -> typing.Tuple[plt.Figure, plt.Axes]:
+    """
+    Plots the Complex Mode Indicator Function (CMIF) based on given singular values and frequencies.
+
+    Parameters
+    ----------
+    S_val : ndarray
+        A 3D array representing the singular values, with shape [nChannel, nChannel, nFrequencies].
+    freq : ndarray
+        An array representing the frequency values corresponding to the singular values.
+    freqlim : tuple of float, optional
+        The frequency range (lower, upper) for the plot. If None, includes all frequencies. Default is None.
+    nSv : int or str, optional
+        The number of singular values to plot. If "all", plots all singular values.
+        Otherwise, should be an integer specifying the number of singular values. Default is "all".
+    fig : matplotlib.figure.Figure, optional
+        An existing matplotlib figure object to plot on. If None, a new figure is created. Default is None.
+    ax : matplotlib.axes.Axes, optional
+        An existing axes object to plot on. If None, new axes are created on the provided or new figure.
+        Default is None.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The matplotlib figure object.
+    ax : matplotlib.axes.Axes
+        The axes object with the CMIF plot.
+
+    Raises
+    ------
+    ValueError
+        If `nSv` is not "all" and is not less than the number of singular values in `S_val`.
+    """
+    if fig is None and ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
+    if nSv == "all":
+        nSv = S_val.shape[1]
+    # Check that the number of singular value to plot is lower thant the total
+    # number of singular values
+    else:
+        try:
+            assert int(nSv) < S_val.shape[1]
+        except Exception as e:
+            raise ValueError(
+                f"ERROR: nSV must be less or equal to {S_val.shape[1]}. nSV={int(nSv)}"
+            ) from e
+
+    for k in range(nSv):
+        if k == 0:
+            ax.plot(
+                freq,
+                10 * np.log10(S_val[k, k, :] / S_val[k, k, :][np.argmax(S_val[k, k, :])]),
+                "b",
+                linewidth=2,
+                label="measured spectrum",
+            )
+            ax.plot(
+                freq,
+                10
+                * np.log10(S_val1[k, k, :] / S_val1[k, k, :][np.argmax(S_val1[k, k, :])]),
+                "g",
+                linewidth=2,
+                label="synthesized spectrum",
+            )
+        else:
+            ax.plot(
+                freq,
+                10 * np.log10(S_val[k, k, :] / S_val[0, 0, :][np.argmax(S_val[0, 0, :])]),
+                "b",
+                alpha=0.2,
+            )
+            ax.plot(
+                freq,
+                10
+                * np.log10(S_val1[k, k, :] / S_val1[0, 0, :][np.argmax(S_val1[0, 0, :])]),
+                "g",
+                alpha=0.2,
+            )
     ax.set_title("Singular values of spectral matrix")
     ax.set_ylabel("dB rel. to unit")
     ax.set_xlabel("Frequency [Hz]")
     if freqlim is not None:
         ax.set_xlim(freqlim[0], freqlim[1])
     ax.grid()
+    ax.legend()
     # plt.show()
     return fig, ax
 

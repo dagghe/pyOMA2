@@ -5,10 +5,10 @@ algorithms included in the pyOMA2 module.
 
 from __future__ import annotations
 
-import typing
 from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
 from pydantic import BaseModel, ConfigDict, model_validator
 from typing_extensions import TypedDict
 
@@ -50,9 +50,9 @@ class SCDictType(TypedDict):
         The maximum thresholds for MAC difference.
     """
 
-    err_fn: float
-    err_xi: float
-    err_phi: float
+    err_fn: float = 0.05
+    err_xi: float = 0.1
+    err_phi: float = 0.05
 
 
 class BaseRunParams(BaseModel):
@@ -103,48 +103,6 @@ class EFDDRunParams(BaseRunParams):
     pov: float = 0.5
 
 
-class SSIRunParams(BaseRunParams):
-    """
-    Parameters for the Stochastic Subspace Identification (SSI) method.
-
-    Attributes
-    ----------
-    br : int
-        Number of block rows in the Hankel matrix.
-    method_hank : str or None, optional
-        Method used in the SSI algorithm. Options are ['data', 'cov', 'cov_R'].
-        Method used in the SSI algorithm. Options are ['data', 'cov', 'cov_R'].
-        Default is None.
-    ref_ind : list of int or None, optional
-        List of reference indices used for subspace identification. Default is None.
-    ordmin : int, optional
-        Minimum model order for the analysis. Default is 0.
-    ordmax : int or None, optional
-        Maximum model order for the analysis. Default is None.
-    step : int, optional
-        Step size for iterating through model orders. Default is 1.
-    sc : dict, optional
-        Soft validation criteria for the analysis.
-    hc : dict, optional
-        Hard validation criteria for the analysis.
-    calc_unc : bool, optional
-        Whether to calculate uncertainty. Default is False.
-    nb : int, optional
-        Number of bootstrap samples to use for uncertainty calculations (default is 50).
-    """
-
-    br: int = 20
-    method: str = None
-    ref_ind: Optional[List[int]] = None
-    ordmin: int = 0
-    ordmax: Optional[int] = None
-    step: int = 1
-    sc: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
-    hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.5, mpd_lim=0.5, CoV_max=0.05)
-    calc_unc: bool = False  # uncertainty calculations
-    nb: int = 50  # number of dataset blocks
-
-
 class pLSCFRunParams(BaseRunParams):
     """
     Parameters for the poly-reference Least Square Complex Frequency (pLSCF) method.
@@ -182,41 +140,48 @@ class pLSCFRunParams(BaseRunParams):
     hc: HCDictType = dict(xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3)
 
 
-class AutoSSIRunParams(BaseRunParams):
+class SSIRunParams(BaseRunParams):
     """
-    Run parameters for automated SSI.
+    Parameters for the Stochastic Subspace Identification (SSI) method.
 
     Attributes
     ----------
     br : int
-        Number of block rows.
-    method : {'cov', 'cov_R', 'dat'}
-        Method for assembling the Hankel/subspace matrix.
-    ref_ind : list of int, optional
-        Indices of reference/projection channels.
-    ordmin : int
-        Minimum model order.
-    ordmax : int
-        Maximum model order.
-    step : int
-        Step size for model order increment.
-    calc_unc : bool
-        Whether to calculate uncertainty in results.
-    nb : int
-        Number of data blocks for uncertainty calculations.
+        Number of block rows in the Hankel matrix.
+    method_hank : str or None, optional
+        Method used in the SSI algorithm. Options are ['data', 'cov', 'cov_R', 'IOcov'].
+        Default is None.
+    ref_ind : list of int or None, optional
+        List of reference indices used for subspace identification. Default is None.
+    ordmin : int, optional
+        Minimum model order for the analysis. Default is 0.
+    ordmax : int or None, optional
+        Maximum model order for the analysis. Default is None.
+    step : int, optional
+        Step size for iterating through model orders. Default is 1.
+    sc : dict, optional
+        Soft validation criteria for the analysis.
+    hc : dict, optional
+        Hard validation criteria for the analysis.
+    calc_unc : bool, optional
+        Whether to calculate uncertainty. Default is False.
+    nb : int, optional
+        Number of bootstrap samples to use for uncertainty calculations (default is 50).
     """
 
-    # METODO 1: run
-    br: Optional[int] = None
-    method: Optional[Literal["cov", "cov_R", "dat"]] = None
+    br: int = 20
+    method: Optional[Literal["cov", "cov_R", "dat", "IOcov"]] = "cov"
     ref_ind: Optional[List[int]] = None
     ordmin: int = 0
-    ordmax: typing.Optional[int] = None
+    ordmax: Optional[int] = None
     step: int = 1
+    sc: SCDictType = dict(err_fn=0.05, err_xi=0.1, err_phi=0.05)
+    hc: HCDictType = dict(xi_max=0.2, mpc_lim=0.5, mpd_lim=0.5, CoV_max=0.2)
     calc_unc: bool = False  # uncertainty calculations
     nb: int = 50  # number of dataset blocks
-    # hc_dict: HCDictType = dict(xi_max=0.1, mpc_lim=0.7, mpd_lim=0.3, CoV_max=0.05)
-    # sc_dict: SCDictType = dict(err_fn=0.05, err_xi=0.05, err_phi=0.05)
+    U: npt.NDArray[np.float64] = None  # array of inputs
+    spetrum: bool = False  # whether to calculate the spectrum
+    fdd_run_params: Optional[FDDRunParams] = None  # FDD run parameters
 
 
 # =============================================================================
@@ -258,11 +223,11 @@ class Step1(BaseRunParams):
     """
 
     hc: Union[bool, Literal["after"]] = True  # True, False, "after"
-    hc_dict: HCDictType = dict(xi_max=0.1, mpc_lim=0.5, mpd_lim=0.5, CoV_max=0.05)
-    sc: Union[bool, Literal["after"]] = True  # True, False, "after"
-    sc_dict: SCDictType = dict(err_fn=0.03, err_xi=0.1, err_phi=0.05)
+    hc_dict: HCDictType = dict(xi_max=0.15, mpc_lim=0.8, mpd_lim=0.3, CoV_max=0.15)
+    sc: Union[bool, Literal["after"]] = False  # True, False, "after"
+    sc_dict: SCDictType = dict(err_fn=0.03, err_xi=0.05, err_phi=0.05)
     pre_cluster: bool = False
-    pre_clus_typ: Literal["GMM", "kmeans"] = "GMM"
+    pre_clus_typ: Literal["GMM", "kmeans", "FCMeans"] = "GMM"
     pre_clus_dist: List[
         Literal["dfn", "dxi", "dlambda", "dMAC", "dMPC", "dMPD", "MPC", "MPD"]
     ] = ["dlambda", "dMAC"]
@@ -327,12 +292,12 @@ class Step3(BaseRunParams):
             - 'fn_IQR': Filter clusters based on IQR of natural frequencies.
             - 'fn_med': Filter clusters based on median natural frequencies.
             - '1xorder': Filter clusters allowing 1 pole per order.
-            - 'min_size': Filter clusters based on minimum size.
+            - 'min_size': Filter clusters based on minimum size (from Step2).
             - 'min_size_pctg': Filter clusters based on minimum size as a percentage of the largest cluster.
             - 'min_size_kmeans': Filter clusters based on minimum size using k-means.
             - 'min_size_gmm': Filter clusters based on minimum size using Gaussian Mixture Models.
             - 'MTT': Filter clusters based on Modified Thompson Tau technique.
-            - 'Adj_boxplot': Filter clusters based on Adjusted boxplot technique.
+            - 'ABP': Filter clusters based on Adjusted boxplot technique.
     merge_dist : {float, 'auto', 'deder'}
         Threshold for merging similar clusters.
     min_pctg : float
@@ -363,9 +328,9 @@ class Step3(BaseRunParams):
             "min_size_kmeans",
             "min_size_gmm",
             "MTT",
-            "Adj_boxplot",
+            "ABP",
         ]
-    ] = ["merge_similar", "damp_IQR", "fn_IQR", "1xorder", "min_size", "MTT"]
+    ] = ["merge_similar", "damp_IQR", "fn_IQR", "1xorder", "min_size_pctg", "MTT"]
     merge_dist: Union[Literal["auto", "deder"], float] = "auto"
     min_pctg: float = 0.3
     select: Literal["avg", "fn_mean_close", "xi_med_close", "medoid"] = "medoid"
@@ -474,4 +439,125 @@ class Clustering(BaseModel):
                 )
                 self.steps = (step1, step2, step3)
 
+            elif self.quick == "hdbscan":
+                step1 = Step1(sc=False, pre_cluster=True, pre_clus_typ="GMM")
+                step2 = Step2(algo="hdbscan")
+                step3 = Step3(
+                    post_proc=[
+                        "merge_similar",
+                        "damp_IQR",
+                        "fn_IQR",
+                        "1xorder",
+                        "min_size_pctg",
+                        "MTT",
+                    ],
+                    freq_lim=self.freq_lim,
+                )
+                self.steps = (step1, step2, step3)
+
+            elif self.quick == "affinity":
+                step1 = Step1(sc=False, pre_cluster=True, pre_clus_typ="GMM")
+                step2 = Step2(algo="affinity")
+                step3 = Step3(
+                    post_proc=[
+                        "merge_similar",
+                        "damp_IQR",
+                        "fn_IQR",
+                        "1xorder",
+                        "min_size_pctg",
+                        "MTT",
+                    ],
+                    freq_lim=self.freq_lim,
+                )
+                self.steps = (step1, step2, step3)
+
+            elif self.quick == "spectral":
+                step1 = Step1(sc=False, pre_cluster=True, pre_clus_typ="GMM")
+                step2 = Step2(algo="spectral")
+                step3 = Step3(
+                    post_proc=[
+                        "merge_similar",
+                        "damp_IQR",
+                        "fn_IQR",
+                        "1xorder",
+                        "min_size_pctg",
+                        "MTT",
+                    ],
+                    freq_lim=self.freq_lim,
+                )
+                self.steps = (step1, step2, step3)
+
+            elif self.quick == "optics":
+                step1 = Step1(sc=False, pre_cluster=True, pre_clus_typ="GMM")
+                step2 = Step2(algo="optics")
+                step3 = Step3(
+                    post_proc=[
+                        "merge_similar",
+                        "damp_IQR",
+                        "fn_IQR",
+                        "1xorder",
+                        "min_size_pctg",
+                        "MTT",
+                    ],
+                    freq_lim=self.freq_lim,
+                )
+                self.steps = (step1, step2, step3)
+
+            elif self.quick == "hier_avg":
+                step1 = Step1(sc=False, pre_cluster=True, pre_clus_typ="GMM")
+                step2 = Step2(algo="hierarc", linkage="average")
+                step3 = Step3(
+                    post_proc=[
+                        "merge_similar",
+                        "damp_IQR",
+                        "fn_IQR",
+                        "1xorder",
+                        "min_size_pctg",
+                        "MTT",
+                    ],
+                    freq_lim=self.freq_lim,
+                )
+                self.steps = (step1, step2, step3)
+
+            elif self.quick == "hier_sing":
+                step1 = Step1(sc=False, pre_cluster=True, pre_clus_typ="GMM")
+                step2 = Step2(algo="hierarc", linkage="single", dc="auto")
+                step3 = Step3(
+                    post_proc=[
+                        "merge_similar",
+                        "damp_IQR",
+                        "fn_IQR",
+                        "1xorder",
+                        "min_size_pctg",
+                        "MTT",
+                    ],
+                    freq_lim=self.freq_lim,
+                )
+                self.steps = (step1, step2, step3)
+
+            elif self.quick == "hier_sing_nodc":
+                step1 = Step1(sc=False, pre_cluster=True, pre_clus_typ="GMM")
+                step2 = Step2(
+                    algo="hierarc", linkage="single", dc=None, n_clusters="auto"
+                )
+                step3 = Step3(
+                    post_proc=[
+                        "merge_similar",
+                        "damp_IQR",
+                        "fn_IQR",
+                        "1xorder",
+                        "min_size_pctg",
+                        "MTT",
+                    ],
+                    freq_lim=self.freq_lim,
+                )
+                self.steps = (step1, step2, step3)
+            else:
+                raise AttributeError(
+                    f"Unknown quick option: {self.quick}\n"
+                    "possible values are: \n"
+                    "['Magalhaes', 'Reynders', 'Neu', 'Kvaale', "
+                    "'Dederichs', 'hdbscan', 'affinity', 'spectral', "
+                    "'optics', 'hier_avg', 'hier_sing', 'hier_sing_nodc']"
+                )
         return self

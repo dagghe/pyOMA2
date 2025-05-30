@@ -233,6 +233,33 @@ def HC_CoV(Fn, Fn_std, CoV_max) -> typing.Tuple[np.ndarray, np.ndarray]:
 # -----------------------------------------------------------------------------
 
 
+def HC_freqlim(Fn, freq_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
+    """
+    Applies a frequency mask to limit an array of frequencies within specified bounds.
+
+    Parameters
+    ----------
+    Fn : np.ndarray
+        Array of frequency values to be filtered.
+    freq_lim : tuple of float
+        Lower and upper bounds of the frequency range (min_freq, max_freq).
+
+    Returns
+    -------
+    filt_fn : np.ndarray
+        Array of frequencies where values outside the specified range are replaced with NaN.
+    mask : np.ndarray
+        Boolean array indicating which elements of `Fn` are within the specified frequency range (1 if within, 0 otherwise).
+    """
+    mask = np.logical_and(Fn < freq_lim[1], Fn > freq_lim[0]).astype(int)
+    filt_fn = Fn * mask
+    filt_fn[filt_fn == 0] = np.nan
+    return filt_fn, mask
+
+
+# -----------------------------------------------------------------------------
+
+
 def SC_apply(Fn, Xi, Phi, ordmin, ordmax, step, err_fn, err_xi, err_phi) -> np.ndarray:
     """
     Apply Soft validation Criteria (SC) to determine the stability of modal parameters between consecutive orders.
