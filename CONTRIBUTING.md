@@ -116,12 +116,12 @@ The corresponding `requirements.txt` files are generated during pre-commit hooks
 
 When adding a new package, make sure to update the correct lock file(s). For example:
 
-For Python 3.8 Windows
+For Python 3.8 Windows:
 ```shell
 pdm add <package_name> --lockfile=pdm-py38win.lock
 ```
 
-For Python 3.8 Linux
+For Python 3.8 Linux:
 ```shell
 pdm add <package_name> --lockfile=pdm-py38unix.lock
 ```
@@ -131,7 +131,12 @@ For Python 3.8 (macOS):
 pdm add <package_name> --lockfile=pdm-py38macos.lock
 ```
 
-For Python 3.9+ Linux
+For Python 3.9+ Windows:
+```shell
+pdm add <package_name> --lockfile=pdm-py39+win.lock
+```
+
+For Python 3.9+ Linux:
 ```shell
 pdm add <package_name> --lockfile=pdm-py39+unix.lock
 ```

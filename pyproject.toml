@@ -16,6 +16,15 @@ dependencies = [
     "pydantic>=2.5.1",
     "tqdm>=4.66.1",
     "matplotlib>=3.7.4",
+    "pyvista[all]",
+    "pyvistaqt",
+    "PyQt5==5.15.10",
+    "PyQt5-Qt5==5.15.2; sys_platform != 'darwin'",
+    "PyQt5-Qt5==5.15.14; sys_platform == 'darwin'",
+    "PyQt5-sip==12.15.0",
+    "vtk==9.3.1; python_version != '3.8' or sys_platform != 'darwin'",
+    "openpyxl>=3.1.3",
+    "scikit-learn>=1.3.2",
 ]
 requires-python = ">=3.8,<3.13"
 readme = "README.md"
