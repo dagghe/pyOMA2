@@ -5,7 +5,7 @@
 groups = ["default", "docs", "qa"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:50fe723365aafa513143f128c95affd1d5bef0f81600eb2f5c023463a0194e31"
+content_hash = "sha256:00a604f7f75047b66e88e002d2c9c952a3081b7f42000b23357e4000d4136785"
 
 [[metadata.targets]]
 requires_python = "==3.8.*"
@@ -16,7 +16,7 @@ name = "aiohappyeyeballs"
 version = "2.4.4"
 requires_python = ">=3.8"
 summary = "Happy Eyeballs for asyncio"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "aiohappyeyeballs-2.4.4-py3-none-any.whl", hash = "sha256:a980909d50efcd44795c4afeca523296716d50cd756ddca6af8c65b996e27de8"},
@@ -28,7 +28,7 @@ name = "aiohttp"
 version = "3.10.11"
 requires_python = ">=3.8"
 summary = "Async http client/server framework (asyncio)"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "aiohappyeyeballs>=2.3.0",
@@ -49,7 +49,7 @@ name = "aiosignal"
 version = "1.3.1"
 requires_python = ">=3.7"
 summary = "aiosignal: a list of registered asynchronous callbacks"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "frozenlist>=1.1.0",
@@ -91,7 +91,7 @@ name = "anyio"
 version = "4.5.2"
 requires_python = ">=3.8"
 summary = "High level compatibility layer for multiple asynchronous event loop implementations"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "exceptiongroup>=1.0.2; python_version < \"3.11\"",
@@ -109,7 +109,7 @@ name = "argon2-cffi"
 version = "23.1.0"
 requires_python = ">=3.7"
 summary = "Argon2 for Python"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "argon2-cffi-bindings",
@@ -125,7 +125,7 @@ name = "argon2-cffi-bindings"
 version = "21.2.0"
 requires_python = ">=3.6"
 summary = "Low-level CFFI bindings for Argon2"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "cffi>=1.0.1",
@@ -141,7 +141,7 @@ name = "arrow"
 version = "1.3.0"
 requires_python = ">=3.8"
 summary = "Better dates & times for Python"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "python-dateutil>=2.7.0",
@@ -157,7 +157,7 @@ name = "asttokens"
 version = "3.0.0"
 requires_python = ">=3.8"
 summary = "Annotate AST trees with source code positions"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "asttokens-3.0.0-py3-none-any.whl", hash = "sha256:e3078351a059199dd5138cb1c706e6430c05eff2ff136af5eb4790f9d28932e2"},
@@ -184,7 +184,7 @@ name = "async-timeout"
 version = "5.0.1"
 requires_python = ">=3.8"
 summary = "Timeout context manager for asyncio programs"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "async_timeout-5.0.1-py3-none-any.whl", hash = "sha256:39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c"},
@@ -196,7 +196,7 @@ name = "attrs"
 version = "25.1.0"
 requires_python = ">=3.8"
 summary = "Classes Without Boilerplate"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "attrs-25.1.0-py3-none-any.whl", hash = "sha256:c75a69e28a550a7e93789579c22aa26b0f5b83b75dc4e08fe092980051e1090a"},
@@ -222,7 +222,7 @@ files = [
 name = "backcall"
 version = "0.2.0"
 summary = "Specifications for callback functions passed in to an API"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "backcall-0.2.0-py2.py3-none-any.whl", hash = "sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255"},
@@ -234,7 +234,7 @@ name = "beautifulsoup4"
 version = "4.13.3"
 requires_python = ">=3.7.0"
 summary = "Screen-scraping library"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "soupsieve>1.2",
@@ -250,7 +250,7 @@ name = "bleach"
 version = "6.1.0"
 requires_python = ">=3.8"
 summary = "An easy safelist-based HTML-sanitizing tool."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "six>=1.9.0",
@@ -267,7 +267,7 @@ version = "6.1.0"
 extras = ["css"]
 requires_python = ">=3.8"
 summary = "An easy safelist-based HTML-sanitizing tool."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "bleach==6.1.0",
@@ -295,7 +295,7 @@ name = "certifi"
 version = "2025.1.31"
 requires_python = ">=3.6"
 summary = "Python package for providing Mozilla's CA Bundle."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "certifi-2025.1.31-py3-none-any.whl", hash = "sha256:ca78db4565a652026a4db2bcdf68f2fb589ea80d0be70e03929ed730746b84fe"},
@@ -307,7 +307,7 @@ name = "cffi"
 version = "1.17.1"
 requires_python = ">=3.8"
 summary = "Foreign Function Interface for Python calling C code."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "pycparser",
@@ -346,7 +346,7 @@ name = "charset-normalizer"
 version = "3.4.1"
 requires_python = ">=3.7"
 summary = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "charset_normalizer-3.4.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6e27f48bcd0957c6d4cb9d6fa6b61d192d0b13d5ef563e5f2ae35feafc0d179c"},
@@ -359,7 +359,7 @@ name = "cmocean"
 version = "4.0.3"
 requires_python = ">=3.8"
 summary = "Colormaps for Oceanography"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "matplotlib",
@@ -388,7 +388,7 @@ name = "colorcet"
 version = "3.1.0"
 requires_python = ">=3.7"
 summary = "Collection of perceptually uniform colormaps"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "colorcet-3.1.0-py3-none-any.whl", hash = "sha256:2a7d59cc8d0f7938eeedd08aad3152b5319b4ba3bcb7a612398cc17a384cb296"},
@@ -400,7 +400,7 @@ name = "comm"
 version = "0.2.2"
 requires_python = ">=3.8"
 summary = "Jupyter Python Comm implementation, for usage in ipykernel, xeus-python etc."
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "traitlets>=4",
@@ -488,7 +488,7 @@ name = "decorator"
 version = "5.1.1"
 requires_python = ">=3.5"
 summary = "Decorators for Humans"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"},
@@ -500,7 +500,7 @@ name = "defusedxml"
 version = "0.7.1"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 summary = "XML bomb protection for Python stdlib modules"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
@@ -535,7 +535,7 @@ name = "et-xmlfile"
 version = "2.0.0"
 requires_python = ">=3.8"
 summary = "An implementation of lxml.xmlfile for the standard library"
-groups = ["default"]
+groups = ["default", "openpyxl"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "et_xmlfile-2.0.0-py3-none-any.whl", hash = "sha256:7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"},
@@ -547,7 +547,7 @@ name = "exceptiongroup"
 version = "1.2.2"
 requires_python = ">=3.7"
 summary = "Backport of PEP 654 (exception groups)"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "exceptiongroup-1.2.2-py3-none-any.whl", hash = "sha256:3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b"},
@@ -559,7 +559,7 @@ name = "executing"
 version = "2.2.0"
 requires_python = ">=3.8"
 summary = "Get the currently executing AST node of a frame, and other information"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "executing-2.2.0-py2.py3-none-any.whl", hash = "sha256:11387150cad388d62750327a53d3339fad4888b39a6fe233c3afbb54ecffd3aa"},
@@ -570,7 +570,7 @@ files = [
 name = "fastjsonschema"
 version = "2.21.1"
 summary = "Fastest Python implementation of JSON schema"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "fastjsonschema-2.21.1-py3-none-any.whl", hash = "sha256:c9e5b7e908310918cf494a434eeb31384dd84a98b57a30bcb1f535015b554667"},
@@ -607,7 +607,7 @@ name = "fqdn"
 version = "1.5.1"
 requires_python = ">=2.7, !=3.0, !=3.1, !=3.2, !=3.3, !=3.4, <4"
 summary = "Validates fully-qualified domain names against RFC 1123, so that they are acceptable to modern bowsers"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "cached-property>=1.3.0; python_version < \"3.8\"",
@@ -622,7 +622,7 @@ name = "frozenlist"
 version = "1.5.0"
 requires_python = ">=3.8"
 summary = "A list-like structure which implements collections.abc.MutableSequence"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "frozenlist-1.5.0-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c16d2fa63e0800723139137d667e1056bee1a1cf7965153d2d104b62855e9b99"},
@@ -710,7 +710,7 @@ name = "idna"
 version = "3.10"
 requires_python = ">=3.6"
 summary = "Internationalized Domain Names in Applications (IDNA)"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "idna-3.10-py3-none-any.whl", hash = "sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3"},
@@ -722,7 +722,7 @@ name = "imageio"
 version = "2.35.1"
 requires_python = ">=3.8"
 summary = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "numpy",
@@ -750,7 +750,7 @@ name = "importlib-metadata"
 version = "8.5.0"
 requires_python = ">=3.8"
 summary = "Read metadata from Python packages"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "typing-extensions>=3.6.4; python_version < \"3.8\"",
@@ -852,7 +852,7 @@ name = "ipython"
 version = "8.12.3"
 requires_python = ">=3.8"
 summary = "IPython: Productive Interactive Computing"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "appnope; sys_platform == \"darwin\"",
@@ -879,7 +879,7 @@ name = "ipywidgets"
 version = "8.1.5"
 requires_python = ">=3.7"
 summary = "Jupyter interactive widgets"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "comm>=0.1.3",
@@ -898,7 +898,7 @@ name = "isoduration"
 version = "20.11.0"
 requires_python = ">=3.7"
 summary = "Operations with ISO 8601 durations"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "arrow>=0.15.0",
@@ -913,7 +913,7 @@ name = "jedi"
 version = "0.19.2"
 requires_python = ">=3.6"
 summary = "An autocompletion tool for Python that can be used for text editors."
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "parso<0.9.0,>=0.8.4",
@@ -928,7 +928,7 @@ name = "jinja2"
 version = "3.1.5"
 requires_python = ">=3.7"
 summary = "A very fast and expressive template engine."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "MarkupSafe>=2.0",
@@ -936,6 +936,18 @@ dependencies = [
 files = [
     {file = "jinja2-3.1.5-py3-none-any.whl", hash = "sha256:aba0f4dc9ed8013c424088f68a5c226f7d6097ed89b246d7749c2ec4175c6adb"},
     {file = "jinja2-3.1.5.tar.gz", hash = "sha256:8fefff8dc3034e27bb80d67c671eb8a9bc424c0ef4c0826edbff304cceff43bb"},
+]
+
+[[package]]
+name = "joblib"
+version = "1.4.2"
+requires_python = ">=3.8"
+summary = "Lightweight pipelining with Python functions"
+groups = ["default"]
+marker = "python_version == \"3.8\""
+files = [
+    {file = "joblib-1.4.2-py3-none-any.whl", hash = "sha256:06d478d5674cbc267e7496a410ee875abd68e4340feff4490bcb7afb88060ae6"},
+    {file = "joblib-1.4.2.tar.gz", hash = "sha256:2382c5816b2636fbd20a09e0f4e9dad4736765fdfb7dca582943b9c1366b3f0e"},
 ]
 
 [[package]]
@@ -955,7 +967,7 @@ name = "jsonpointer"
 version = "3.0.0"
 requires_python = ">=3.7"
 summary = "Identify specific nodes in a JSON document (RFC 6901) "
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "jsonpointer-3.0.0-py2.py3-none-any.whl", hash = "sha256:13e088adc14fca8b6aa8177c044e12701e6ad4b28ff10e65f2267a90109c9942"},
@@ -967,7 +979,7 @@ name = "jsonschema"
 version = "4.23.0"
 requires_python = ">=3.8"
 summary = "An implementation of JSON Schema validation for Python"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "attrs>=22.2.0",
@@ -987,7 +999,7 @@ name = "jsonschema-specifications"
 version = "2023.12.1"
 requires_python = ">=3.8"
 summary = "The JSON Schema meta-schemas and vocabularies, exposed as a Registry"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "importlib-resources>=1.4.0; python_version < \"3.9\"",
@@ -1004,7 +1016,7 @@ version = "4.23.0"
 extras = ["format-nongpl"]
 requires_python = ">=3.8"
 summary = "An implementation of JSON Schema validation for Python"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "fqdn",
@@ -1027,7 +1039,7 @@ name = "jupyter-client"
 version = "8.6.3"
 requires_python = ">=3.8"
 summary = "Jupyter protocol implementation and client libraries"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "importlib-metadata>=4.8.3; python_version < \"3.10\"",
@@ -1047,7 +1059,7 @@ name = "jupyter-core"
 version = "5.7.2"
 requires_python = ">=3.8"
 summary = "Jupyter core package. A base package on which Jupyter projects rely."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "platformdirs>=2.5",
@@ -1064,7 +1076,7 @@ name = "jupyter-events"
 version = "0.10.0"
 requires_python = ">=3.8"
 summary = "Jupyter Event System library"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "jsonschema[format-nongpl]>=4.18.0",
@@ -1101,7 +1113,7 @@ name = "jupyter-server"
 version = "2.14.2"
 requires_python = ">=3.8"
 summary = "The backend—i.e. core services, APIs, and REST endpoints—to Jupyter web applications."
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "anyio>=3.1.0",
@@ -1134,7 +1146,7 @@ name = "jupyter-server-proxy"
 version = "4.4.0"
 requires_python = ">=3.8"
 summary = "A Jupyter server extension to run additional processes and proxy to them that comes bundled JupyterLab extension to launch pre-defined processes."
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "aiohttp",
@@ -1154,7 +1166,7 @@ name = "jupyter-server-terminals"
 version = "0.5.3"
 requires_python = ">=3.8"
 summary = "A Jupyter Server Extension Providing Terminals."
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "pywinpty>=2.0.3; os_name == \"nt\"",
@@ -1200,7 +1212,7 @@ name = "jupyterlab-pygments"
 version = "0.3.0"
 requires_python = ">=3.8"
 summary = "Pygments theme using JupyterLab CSS variables"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "jupyterlab_pygments-0.3.0-py3-none-any.whl", hash = "sha256:841a89020971da1d8693f1a99997aefc5dc424bb1b251fd6322462a1b8842780"},
@@ -1234,7 +1246,7 @@ name = "jupyterlab-widgets"
 version = "3.0.13"
 requires_python = ">=3.7"
 summary = "Jupyter interactive widgets for JupyterLab"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "jupyterlab_widgets-3.0.13-py3-none-any.whl", hash = "sha256:e3cda2c233ce144192f1e29914ad522b2f4c40e77214b0cc97377ca3d323db54"},
@@ -1259,7 +1271,7 @@ name = "markdown-it-py"
 version = "3.0.0"
 requires_python = ">=3.8"
 summary = "Python port of markdown-it. Markdown parsing, done right!"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "mdurl~=0.1",
@@ -1274,7 +1286,7 @@ name = "markupsafe"
 version = "2.1.5"
 requires_python = ">=3.7"
 summary = "Safely add untrusted strings to HTML/XML markup."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "MarkupSafe-2.1.5-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fa9db3f79de01457b03d4f01b34cf91bc0048eb2c3846ff26f66687c2f6d16ab"},
@@ -1311,7 +1323,7 @@ name = "matplotlib-inline"
 version = "0.1.7"
 requires_python = ">=3.8"
 summary = "Inline Matplotlib backend for Jupyter"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "traitlets",
@@ -1326,7 +1338,7 @@ name = "mdurl"
 version = "0.1.2"
 requires_python = ">=3.7"
 summary = "Markdown URL utilities"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
@@ -1338,7 +1350,7 @@ name = "meshio"
 version = "5.3.5"
 requires_python = ">=3.8"
 summary = "I/O for many mesh formats"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "importlib-metadata; python_version < \"3.8\"",
@@ -1355,7 +1367,7 @@ name = "mistune"
 version = "3.1.1"
 requires_python = ">=3.8"
 summary = "A sane and fast Markdown parser with useful plugins and renderers"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "typing-extensions; python_version < \"3.11\"",
@@ -1370,7 +1382,7 @@ name = "more-itertools"
 version = "10.5.0"
 requires_python = ">=3.8"
 summary = "More routines for operating on iterables, beyond itertools"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "more-itertools-10.5.0.tar.gz", hash = "sha256:5482bfef7849c25dc3c6dd53a6173ae4795da2a41a80faea6700d9f5846c5da6"},
@@ -1382,7 +1394,7 @@ name = "msgpack"
 version = "1.1.0"
 requires_python = ">=3.8"
 summary = "MessagePack serializer"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "msgpack-1.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f1ba6136e650898082d9d5a5217d5906d1e138024f836ff48691784bbe1adf96"},
@@ -1394,7 +1406,7 @@ name = "multidict"
 version = "6.1.0"
 requires_python = ">=3.8"
 summary = "multidict implementation"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "typing-extensions>=4.1.0; python_version < \"3.11\"",
@@ -1410,7 +1422,7 @@ name = "nbclient"
 version = "0.10.1"
 requires_python = ">=3.8.0"
 summary = "A client library for executing notebooks. Formerly nbconvert's ExecutePreprocessor."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "jupyter-client>=6.1.12",
@@ -1428,7 +1440,7 @@ name = "nbconvert"
 version = "7.16.6"
 requires_python = ">=3.8"
 summary = "Converting Jupyter Notebooks (.ipynb files) to other formats.  Output formats include asciidoc, html, latex, markdown, pdf, py, rst, script.  nbconvert can be used both as a Python library (`import nbconvert`) or as a command line tool (invoked as `jupyter nbconvert ...`)."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "beautifulsoup4",
@@ -1457,7 +1469,7 @@ name = "nbformat"
 version = "5.10.4"
 requires_python = ">=3.8"
 summary = "The Jupyter Notebook format"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "fastjsonschema>=2.15",
@@ -1495,7 +1507,7 @@ name = "nest-asyncio"
 version = "1.6.0"
 requires_python = ">=3.5"
 summary = "Patch asyncio to allow nested event loops"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "nest_asyncio-1.6.0-py3-none-any.whl", hash = "sha256:87af6efd6b5e897c81050477ef65c62e2b2f35d51703cae01aff2905b1852e1c"},
@@ -1566,7 +1578,7 @@ name = "openpyxl"
 version = "3.1.5"
 requires_python = ">=3.8"
 summary = "A Python library to read/write Excel 2010 xlsx/xlsm files"
-groups = ["default"]
+groups = ["default", "openpyxl"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "et-xmlfile",
@@ -1581,7 +1593,7 @@ name = "overrides"
 version = "7.7.0"
 requires_python = ">=3.6"
 summary = "A decorator to automatically detect mismatch when overriding a method."
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "typing; python_version < \"3.5\"",
@@ -1642,7 +1654,7 @@ name = "pandocfilters"
 version = "1.5.1"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "Utilities for writing pandoc filters in python"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "pandocfilters-1.5.1-py2.py3-none-any.whl", hash = "sha256:93be382804a9cdb0a7267585f157e5d1731bbe5545a85b268d6f5fe6232de2bc"},
@@ -1654,7 +1666,7 @@ name = "parso"
 version = "0.8.4"
 requires_python = ">=3.6"
 summary = "A Python Parser"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "parso-0.8.4-py2.py3-none-any.whl", hash = "sha256:a418670a20291dacd2dddc80c377c5c3791378ee1e8d12bffc35420643d43f18"},
@@ -1665,7 +1677,7 @@ files = [
 name = "pexpect"
 version = "4.9.0"
 summary = "Pexpect allows easy control of interactive console applications."
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "sys_platform != \"win32\" and python_version == \"3.8\""
 dependencies = [
     "ptyprocess>=0.5",
@@ -1679,7 +1691,7 @@ files = [
 name = "pickleshare"
 version = "0.7.5"
 summary = "Tiny 'shelve'-like database with concurrency support"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "pathlib2; python_version in \"2.6 2.7 3.2 3.3\"",
@@ -1706,7 +1718,7 @@ name = "pkgutil-resolve-name"
 version = "1.3.10"
 requires_python = ">=3.6"
 summary = "Resolve a name to an object."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "pkgutil_resolve_name-1.3.10-py3-none-any.whl", hash = "sha256:ca27cc078d25c5ad71a9de0a7a330146c4e014c2462d9af19c6b828280649c5e"},
@@ -1718,7 +1730,7 @@ name = "platformdirs"
 version = "4.3.6"
 requires_python = ">=3.8"
 summary = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "platformdirs-4.3.6-py3-none-any.whl", hash = "sha256:73e575e1408ab8103900836b97580d5307456908a03e92031bab39e4554cc3fb"},
@@ -1769,7 +1781,7 @@ name = "pooch"
 version = "1.8.2"
 requires_python = ">=3.7"
 summary = "A friend to fetch your data files"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "packaging>=20.0",
@@ -1805,7 +1817,7 @@ name = "prometheus-client"
 version = "0.21.1"
 requires_python = ">=3.8"
 summary = "Python client for the Prometheus monitoring system."
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "prometheus_client-0.21.1-py3-none-any.whl", hash = "sha256:594b45c410d6f4f8888940fe80b5cc2521b305a1fafe1c58609ef715a001f301"},
@@ -1817,7 +1829,7 @@ name = "prompt-toolkit"
 version = "3.0.50"
 requires_python = ">=3.8.0"
 summary = "Library for building powerful interactive command lines in Python"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "wcwidth",
@@ -1832,7 +1844,7 @@ name = "propcache"
 version = "0.2.0"
 requires_python = ">=3.8"
 summary = "Accelerated property cache"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "propcache-0.2.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:67b69535c870670c9f9b14a75d28baa32221d06f6b6fa6f77a0a13c5a7b0a5b9"},
@@ -1856,7 +1868,7 @@ files = [
 name = "ptyprocess"
 version = "0.7.0"
 summary = "Run a subprocess in a pseudo terminal"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "os_name != \"nt\" and python_version == \"3.8\" or sys_platform != \"win32\" and python_version == \"3.8\""
 files = [
     {file = "ptyprocess-0.7.0-py2.py3-none-any.whl", hash = "sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35"},
@@ -1867,7 +1879,7 @@ files = [
 name = "pure-eval"
 version = "0.2.3"
 summary = "Safely evaluate AST nodes without side effects"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "pure_eval-0.2.3-py3-none-any.whl", hash = "sha256:1db8e35b67b3d218d818ae653e27f06c3aa420901fa7b081ca98cbedc874e0d0"},
@@ -1879,7 +1891,7 @@ name = "pycparser"
 version = "2.22"
 requires_python = ">=3.8"
 summary = "C parser in Python"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc"},
@@ -1923,7 +1935,7 @@ name = "pygments"
 version = "2.19.1"
 requires_python = ">=3.8"
 summary = "Pygments is a syntax highlighting package written in Python."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c"},
@@ -1963,7 +1975,7 @@ name = "pyqt5"
 version = "5.15.10"
 requires_python = ">=3.7"
 summary = "Python bindings for the Qt cross platform application toolkit"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "PyQt5-Qt5>=5.15.2",
@@ -1978,7 +1990,7 @@ files = [
 name = "pyqt5-qt5"
 version = "5.15.2"
 summary = "The subset of a Qt installation needed by PyQt5."
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "PyQt5_Qt5-5.15.2-py3-none-manylinux2014_x86_64.whl", hash = "sha256:1988f364ec8caf87a6ee5d5a3a5210d57539988bf8e84714c7d60972692e2f4a"},
@@ -1989,7 +2001,7 @@ name = "pyqt5-sip"
 version = "12.15.0"
 requires_python = ">=3.8"
 summary = "The sip module support for PyQt5"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "PyQt5_sip-12.15.0-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:0c1c727ede7fdc464a1fe2e46109ba836509b2d7187a46fdeae443148ce51d1c"},
@@ -2049,10 +2061,10 @@ files = [
 
 [[package]]
 name = "python-json-logger"
-version = "3.2.1"
-requires_python = ">=3.8"
-summary = "JSON Log Formatter for the Python Logging Package"
-groups = ["default", "qa"]
+version = "2.0.7"
+requires_python = ">=3.6"
+summary = "A python library adding a json log formatter"
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "typing-extensions; python_version < \"3.10\"",
@@ -2078,7 +2090,7 @@ name = "pyvista"
 version = "0.44.2"
 requires_python = ">=3.8"
 summary = "Easier Pythonic interface to VTK"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "matplotlib>=3.0.1",
@@ -2100,7 +2112,7 @@ version = "0.44.2"
 extras = ["all"]
 requires_python = ">=3.8"
 summary = "Easier Pythonic interface to VTK"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "pyvista==0.44.2",
@@ -2117,7 +2129,7 @@ version = "0.44.2"
 extras = ["colormaps", "io", "jupyter"]
 requires_python = ">=3.8"
 summary = "Easier Pythonic interface to VTK"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "cmocean",
@@ -2144,7 +2156,7 @@ name = "pyvistaqt"
 version = "0.11.2"
 requires_python = ">=3.7"
 summary = "pyvista qt plotter"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "QtPy>=1.9.0",
@@ -2160,7 +2172,7 @@ name = "pyyaml"
 version = "6.0.2"
 requires_python = ">=3.8"
 summary = "YAML parser and emitter for Python"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "PyYAML-6.0.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9056c1ecd25795207ad294bcf39f2db3d845767be0ea6e6a34d856f006006083"},
@@ -2172,7 +2184,7 @@ name = "pyzmq"
 version = "26.2.1"
 requires_python = ">=3.7"
 summary = "Python bindings for 0MQ"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "cffi; implementation_name == \"pypy\"",
@@ -2188,7 +2200,7 @@ name = "qtpy"
 version = "2.4.3"
 requires_python = ">=3.7"
 summary = "Provides an abstraction layer on top of the various Qt bindings (PyQt5/6 and PySide2/6)."
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "packaging",
@@ -2203,7 +2215,7 @@ name = "referencing"
 version = "0.35.1"
 requires_python = ">=3.8"
 summary = "JSON Referencing + Python"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "attrs>=22.2.0",
@@ -2219,7 +2231,7 @@ name = "requests"
 version = "2.32.3"
 requires_python = ">=3.8"
 summary = "Python HTTP for Humans."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "certifi>=2017.4.17",
@@ -2237,7 +2249,7 @@ name = "rfc3339-validator"
 version = "0.1.4"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 summary = "A pure python RFC3339 validator"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "six",
@@ -2252,7 +2264,7 @@ name = "rfc3986-validator"
 version = "0.1.1"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 summary = "Pure python rfc3986 validator"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "rfc3986_validator-0.1.1-py2.py3-none-any.whl", hash = "sha256:2f235c432ef459970b4306369336b9d5dbdda31b510ca1e327636e01f528bfa9"},
@@ -2264,7 +2276,7 @@ name = "rich"
 version = "13.9.4"
 requires_python = ">=3.8.0"
 summary = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "markdown-it-py>=2.2.0",
@@ -2281,11 +2293,29 @@ name = "rpds-py"
 version = "0.20.1"
 requires_python = ">=3.8"
 summary = "Python bindings to Rust's persistent data structures (rpds)"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "rpds_py-0.20.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:02a0629ec053fc013808a85178524e3cb63a61dbc35b22499870194a63578fb9"},
     {file = "rpds_py-0.20.1.tar.gz", hash = "sha256:e1791c4aabd117653530dccd24108fa03cc6baf21f58b950d0a73c3b3b29a350"},
+]
+
+[[package]]
+name = "scikit-learn"
+version = "1.3.2"
+requires_python = ">=3.8"
+summary = "A set of python modules for machine learning and data mining"
+groups = ["default"]
+marker = "python_version == \"3.8\""
+dependencies = [
+    "joblib>=1.1.1",
+    "numpy<2.0,>=1.17.3",
+    "scipy>=1.5.0",
+    "threadpoolctl>=2.0.0",
+]
+files = [
+    {file = "scikit-learn-1.3.2.tar.gz", hash = "sha256:a2f54c76accc15a34bfb9066e6c7a56c1e7235dda5762b990792330b52ccfb05"},
+    {file = "scikit_learn-1.3.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:785a2213086b7b1abf037aeadbbd6d67159feb3e30263434139c98425e3dcfcf"},
 ]
 
 [[package]]
@@ -2308,7 +2338,7 @@ name = "scooby"
 version = "0.10.0"
 requires_python = ">=3.8"
 summary = "A Great Dane turned Python environment detective"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "scooby-0.10.0-py3-none-any.whl", hash = "sha256:0a3d7e304f8ebb16f69ff7f6360c345d7f50b45f2ddbf7c3d18a6a0dc2cb03a6"},
@@ -2320,7 +2350,7 @@ name = "send2trash"
 version = "1.8.3"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
 summary = "Send file to trash natively under Mac OS X, Windows and Linux"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "Send2Trash-1.8.3-py3-none-any.whl", hash = "sha256:0c31227e0bd08961c7665474a3d1ef7193929fedda4233843689baa056be46c9"},
@@ -2344,7 +2374,7 @@ name = "simpervisor"
 version = "1.0.0"
 requires_python = ">=3.8"
 summary = "Simple async process supervisor"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "simpervisor-1.0.0-py3-none-any.whl", hash = "sha256:3e313318264559beea3f475ead202bc1cd58a2f1288363abb5657d306c5b8388"},
@@ -2368,7 +2398,7 @@ name = "sniffio"
 version = "1.3.1"
 requires_python = ">=3.7"
 summary = "Sniff out which async library your code is running under"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
@@ -2391,7 +2421,7 @@ name = "soupsieve"
 version = "2.6"
 requires_python = ">=3.8"
 summary = "A modern CSS selector implementation for Beautiful Soup."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "soupsieve-2.6-py3-none-any.whl", hash = "sha256:e72c4ff06e4fb6e4b5a9f0f55fe6e81514581fca1515028625d0f299c602ccc9"},
@@ -2537,7 +2567,7 @@ files = [
 name = "stack-data"
 version = "0.6.3"
 summary = "Extract data from python stack frames and tracebacks for informative displays"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "asttokens>=2.1.0",
@@ -2554,7 +2584,7 @@ name = "terminado"
 version = "0.18.1"
 requires_python = ">=3.8"
 summary = "Tornado websocket backend for the Xterm.js Javascript terminal emulator library."
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "ptyprocess; os_name != \"nt\"",
@@ -2567,11 +2597,23 @@ files = [
 ]
 
 [[package]]
+name = "threadpoolctl"
+version = "3.5.0"
+requires_python = ">=3.8"
+summary = "threadpoolctl"
+groups = ["default"]
+marker = "python_version == \"3.8\""
+files = [
+    {file = "threadpoolctl-3.5.0-py3-none-any.whl", hash = "sha256:56c1e26c150397e58c4926da8eeee87533b1e32bef131bd4bf6a2f45f3185467"},
+    {file = "threadpoolctl-3.5.0.tar.gz", hash = "sha256:082433502dd922bf738de0d8bcc4fdcbf0979ff44c42bd40f5af8a282f6fa107"},
+]
+
+[[package]]
 name = "tinycss2"
 version = "1.2.1"
 requires_python = ">=3.7"
 summary = "A tiny CSS parser"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "webencodings>=0.4",
@@ -2598,7 +2640,7 @@ name = "tornado"
 version = "6.4.2"
 requires_python = ">=3.8"
 summary = "Tornado is a Python web framework and asynchronous networking library, originally developed at FriendFeed."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "tornado-6.4.2-cp38-abi3-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bca9eb02196e789c9cb5c3c7c0f04fb447dc2adffd95265b2c7223a8a615ccbf"},
@@ -2650,7 +2692,7 @@ name = "traitlets"
 version = "5.14.3"
 requires_python = ">=3.8"
 summary = "Traitlets Python configuration system"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "traitlets-5.14.3-py3-none-any.whl", hash = "sha256:b74e89e397b1ed28cc831db7aea759ba6640cb3de13090ca145426688ff1ac4f"},
@@ -2661,7 +2703,7 @@ files = [
 name = "trame"
 version = "3.7.1"
 summary = "Trame, a framework to build applications in plain Python"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "trame-client<4,>=3.4",
@@ -2677,7 +2719,7 @@ files = [
 name = "trame-client"
 version = "3.5.0"
 summary = "Internal client of trame"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "trame-client-3.5.0.tar.gz", hash = "sha256:e472255608e00bbb3683a805b97825e819326abb01ae007c3121606355691c25"},
@@ -2689,7 +2731,7 @@ name = "trame-server"
 version = "3.3.0"
 requires_python = ">=3.7"
 summary = "Internal server side implementation of trame"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "more-itertools",
@@ -2704,7 +2746,7 @@ files = [
 name = "trame-vtk"
 version = "2.8.13"
 summary = "VTK widgets for trame"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "trame-client",
@@ -2718,7 +2760,7 @@ files = [
 name = "trame-vuetify"
 version = "2.7.2"
 summary = "Vuetify widgets for trame"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "trame-client",
@@ -2733,7 +2775,7 @@ name = "types-python-dateutil"
 version = "2.9.0.20241206"
 requires_python = ">=3.8"
 summary = "Typing stubs for python-dateutil"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "types_python_dateutil-2.9.0.20241206-py3-none-any.whl", hash = "sha256:e248a4bc70a486d3e3ec84d0dc30eec3a5f979d6e7ee4123ae043eedbb987f53"},
@@ -2769,7 +2811,7 @@ name = "uri-template"
 version = "1.3.0"
 requires_python = ">=3.7"
 summary = "RFC 6570 URI Template Processor"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "uri-template-1.3.0.tar.gz", hash = "sha256:0e00f8eb65e18c7de20d595a14336e9f337ead580c70934141624b6d1ffdacc7"},
@@ -2781,7 +2823,7 @@ name = "urllib3"
 version = "2.2.3"
 requires_python = ">=3.8"
 summary = "HTTP library with thread-safe connection pooling, file post, and more."
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "urllib3-2.2.3-py3-none-any.whl", hash = "sha256:ca899ca043dcb1bafa3e262d73aa25c465bfb49e0bd9dd5d59f1d0acba2f8fac"},
@@ -2810,7 +2852,7 @@ files = [
 name = "vtk"
 version = "9.3.1"
 summary = "VTK is an open-source toolkit for 3D computer graphics, image processing, and visualization"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "matplotlib>=2.0.0",
@@ -2823,7 +2865,7 @@ files = [
 name = "wcwidth"
 version = "0.2.13"
 summary = "Measures the displayed width of unicode strings in a terminal"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "backports-functools-lru-cache>=1.2.1; python_version < \"3.2\"",
@@ -2838,7 +2880,7 @@ name = "webcolors"
 version = "24.8.0"
 requires_python = ">=3.8"
 summary = "A library for working with the color formats defined by HTML and CSS."
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "webcolors-24.8.0-py3-none-any.whl", hash = "sha256:fc4c3b59358ada164552084a8ebee637c221e4059267d0f8325b3b560f6c7f0a"},
@@ -2849,7 +2891,7 @@ files = [
 name = "webencodings"
 version = "0.5.1"
 summary = "Character encoding aliases for legacy web content"
-groups = ["default", "docs", "qa"]
+groups = ["default", "docs", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "webencodings-0.5.1-py2.py3-none-any.whl", hash = "sha256:a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78"},
@@ -2861,7 +2903,7 @@ name = "websocket-client"
 version = "1.8.0"
 requires_python = ">=3.8"
 summary = "WebSocket client for Python with low level API options"
-groups = ["default", "qa"]
+groups = ["default", "pyvista", "qa"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "websocket_client-1.8.0-py3-none-any.whl", hash = "sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526"},
@@ -2873,7 +2915,7 @@ name = "widgetsnbextension"
 version = "4.0.13"
 requires_python = ">=3.7"
 summary = "Jupyter interactive widgets for Jupyter Notebook"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 files = [
     {file = "widgetsnbextension-4.0.13-py3-none-any.whl", hash = "sha256:74b2692e8500525cc38c2b877236ba51d34541e6385eeed5aec15a70f88a6c71"},
@@ -2884,7 +2926,7 @@ files = [
 name = "wslink"
 version = "2.2.2"
 summary = "Python/JavaScript library for communicating over WebSocket"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "aiohttp<4",
@@ -2900,7 +2942,7 @@ name = "yarl"
 version = "1.15.2"
 requires_python = ">=3.8"
 summary = "Yet another URL library"
-groups = ["default"]
+groups = ["default", "pyvista"]
 marker = "python_version == \"3.8\""
 dependencies = [
     "idna>=2.0",

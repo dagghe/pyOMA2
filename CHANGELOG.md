@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * security dependencies patch
 
+### Added
+
+- `scikit-learn` deps
+
 ## [1.1.1] - 2025-01-24
 
 - fix cluster_plt parameter name to Xi
