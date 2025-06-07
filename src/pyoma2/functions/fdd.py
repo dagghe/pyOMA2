@@ -11,6 +11,7 @@ import typing
 import numpy as np
 from scipy import signal
 from scipy.optimize import curve_fit
+from scipy.signal import find_peaks
 from tqdm import tqdm, trange
 
 from .gen import MAC
@@ -418,7 +419,7 @@ def EFDD_mpe(
     Sy: np.ndarray,
     freq: np.ndarray,
     dt: float,
-    sel_freq: list,
+    sel_freq: typing.Sequence[float],
     methodSy: str,
     method: str = "FSDD",
     DF1: float = 0.1,
@@ -427,10 +428,10 @@ def EFDD_mpe(
     MAClim: float = 0.85,
     sppk: int = 3,
     npmax: int = 20,
-) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, typing.List]:
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, typing.List[typing.Any]]:
     """
-    Extracts modal parameters using the Enhanced Frequency Domain Decomposition (EFDD) and
-    the Frequency Spatial Domain Decomposition (FSDD) algorithms.
+    Extracts modal parameters using the Enhanced Frequency Domain Decomposition (EFDD)
+    and Frequency Spatial Domain Decomposition (FSDD) algorithms.
 
     Parameters
     ----------
@@ -441,13 +442,14 @@ def EFDD_mpe(
         Array of frequency values corresponding to the spectral matrix.
     dt : float
         Sampling interval of the data.
-    sel_freq : list or ndarray
+    sel_freq : sequence of float
         Selected modal frequencies around which parameters are to be estimated.
     methodSy : str
-        Method used for spectral density estimation ('cor' for correlation or 'per'
-        for periodogram).
+        Method used for spectral density estimation:
+        - 'cor' for correlation
+        - 'per' for periodogram
     method : str, optional
-        Specifies the method for SDOF analysis ('FSDD' or 'EFDD'). Default is 'FSDD'.
+        Specifies the SDOF analysis method ('FSDD' or 'EFDD'). Default is 'FSDD'.
     DF1 : float, optional
         Frequency bandwidth for initial FDD modal parameter extraction. Default is 0.1.
     DF2 : float, optional
@@ -464,127 +466,101 @@ def EFDD_mpe(
 
     Returns
     -------
-    tuple
-        Fn : ndarray
-            Estimated natural frequencies.
-        Xi : ndarray
-            Estimated damping ratios.
-        Phi : ndarray
-            Corresponding mode shapes.
-        PerPlot : list
-            Additional data for plotting and analysis, including frequency response, time,
-            SDOF bell, singular values, indices of singular values, normalized
-            autocorrelation, indices of peaks, damping ratio fit parameters, and delta values.
+    Fn : ndarray
+        Estimated natural frequencies [Hz].
+    Xi : ndarray
+        Estimated damping ratios.
+    Phi : ndarray
+        Mode shapes array of shape [Nch, Nm], where Nm = len(sel_freq).
+    PerPlot : list
+        List of per-mode metadata for plotting and analysis. Each element is a list:
+        [freq, time, SDOF bell, Sval, idSV, normalized autocorr,
+         peak indices, fitted lambda, log-decrement values].
     """
-    Sval, Svec = SD_svalsvec(Sy)
+    logger = logging.getLogger(__name__)
 
+    # 1) Spectral decomposition
+    Sval, Svec = SD_svalsvec(Sy)
     Nch, Nref, nxseg = Sval.shape
-    # number of points for the inverse transform (zeropadding)
-    nIFFT = (int(nxseg)) * 5
+
+    # 2) Prepare zero-padding and time axis
+    pad_factor = 5
+    n_fft = nxseg * pad_factor
+    df = 1.0 / (dt * nxseg)
+    t_record = 1.0 / df
+
+    # 3) Initial FDD extraction
     Freq_FDD, Phi_FDD = FDD_mpe(Sval, Svec, freq, sel_freq, DF=DF1)
 
-    # Initialize Results
-    PerPlot = []
-    Fn_E = []
-    Phi_E = []
-    Xi_E = []
+    # 4) Containers for results
+    PerPlot: typing.List[typing.Any] = []
+    Fn_list, Xi_list, Phi_list = [], [], []
 
-    logger.info("Extracting EFDD modal parameters")
-    for n in trange(len(sel_freq)):  # looping through all frequencies to estimate
-        phi_FDD = Phi_FDD[:, n]  # Select reference mode shape (from FDD)
-        sel_fn = sel_freq[n]
-        SDOFbell, SDOFms = SDOF_bellandMS(
-            Sy, dt, sel_fn, phi_FDD, method=method, cm=cm, MAClim=MAClim, DF=DF2
+    # logger.info("Starting EFDD modal extraction for %d modes", len(sel_freq))
+    for idx, sel_fn in enumerate(sel_freq, start=1):
+        # logger.info("Mode %d/%d: sel_fn=%.4f Hz", idx, len(sel_freq), sel_fn)
+        phi_ref = Phi_FDD[:, idx - 1]
+
+        # Single-DOF bell and mode shape
+        SDOFbell, _ = SDOF_bellandMS(
+            Sy, dt, sel_fn, phi_ref, method=method, cm=cm, MAClim=MAClim, DF=DF2
         )
-
-        # indices of the singular values in SDOFsval
         idSV = np.array(np.where(SDOFbell)).T
-        # Autocorrelation function (Free Decay)
-        SDOFcorr1 = np.fft.ifft(SDOFbell, n=nIFFT, axis=0, norm="ortho").real
-        df = 1 / dt / nxseg
-        tlag = 1 / df  # time lag
-        time = np.linspace(0, tlag, len(SDOFcorr1) // 2)  # t
 
-        # NORMALISED AUTOCORRELATION
-        normSDOFcorr = SDOFcorr1[: len(SDOFcorr1) // 2] / SDOFcorr1[np.argmax(SDOFcorr1)]
+        # 5) Autocorrelation
+        sdof_corr = np.fft.ifft(SDOFbell, n=n_fft, norm="ortho").real
+        half = sdof_corr.size // 2
+        time = np.linspace(0, t_record, half)
+        norm_corr = sdof_corr[:half] / sdof_corr[0]
 
-        # finding where x = 0
-        sgn = np.sign(normSDOFcorr).real  # finding the sign
-        # finding where the sign changes (crossing x)
-        sgn1 = np.diff(sgn, axis=0)
-        zc1 = np.where(sgn1)[0]  # Zero crossing indices
+        # 6) Peak detection
+        peaks_pos, _ = find_peaks(norm_corr)
+        peaks_neg, _ = find_peaks(-norm_corr)
+        all_peaks = np.sort(np.concatenate([peaks_pos, peaks_neg]))
 
-        # finding maximums and minimums (peaks) of the autoccorelation
-        maxSDOFcorr = [
-            np.max(normSDOFcorr[zc1[_i] : zc1[_i + 2]])
-            for _i in range(0, len(zc1) - 2, 2)
-        ]
-        minSDOFcorr = [
-            np.min(normSDOFcorr[zc1[_i] : zc1[_i + 2]])
-            for _i in range(0, len(zc1) - 2, 2)
-        ]
-        if len(maxSDOFcorr) > len(minSDOFcorr):
-            maxSDOFcorr = maxSDOFcorr[:-1]
-        elif len(maxSDOFcorr) < len(minSDOFcorr):
-            minSDOFcorr = minSDOFcorr[:-1]
+        # 7) Bounds check
+        required = sppk + npmax
+        if all_peaks.size < required:
+            raise ValueError(
+                f"Mode {idx}/{len(sel_freq)}: sel_fn={sel_fn:.4f} Hz \n"
+                f"Only {all_peaks.size} peaks found; Reduce npmax:{npmax}."
+            )
 
-        minmax = np.array((minSDOFcorr, maxSDOFcorr))
-        minmax = np.ravel(minmax, order="F")
+        # 8) Select peaks and values
+        peak_idx = all_peaks[sppk:required]
+        peak_vals = norm_corr[peak_idx]
 
-        # finding the indices of the peaks
-        maxSDOFcorr_idx = [np.argmin(abs(normSDOFcorr - maxx)) for maxx in maxSDOFcorr]
-        minSDOFcorr_idx = [np.argmin(abs(normSDOFcorr - minn)) for minn in minSDOFcorr]
-        minmax_idx = np.array((minSDOFcorr_idx, maxSDOFcorr_idx))
-        minmax_idx = np.ravel(minmax_idx, order="F")
+        # 9) Damped frequency estimation
+        Td = 2.0 * np.diff(time[peak_idx])
+        fd = 1.0 / np.mean(Td)
 
-        # Peacks and indices of the peaks to be used in the fitting
-        minmax_fit = np.array([minmax[_a] for _a in range(sppk, sppk + npmax)])
-        minmax_fit_idx = np.array([minmax_idx[_a] for _a in range(sppk, sppk + npmax)])
+        # 10) Log-decrement & curve fit
+        delta = np.log(np.abs(peak_vals[0]) / np.abs(peak_vals))
+        lam, _ = curve_fit(lambda x, m: m * x, np.arange(delta.size), delta)
 
-        # estimating the natural frequency from the distance between the peaks
-        # *2 because we use both max and min
-        Td = np.diff(time[minmax_fit_idx]) * 2
-        Td_EFDD = np.mean(Td)
-
-        fd_EFDD = 1 / Td_EFDD  # damped natural frequency
-
-        # Log decrement
-        delta = np.array(
-            [
-                1 * np.log(np.abs(minmax[0]) / np.abs(minmax[ii]))
-                for ii in range(len(minmax_fit))
-            ]
-        )
-
-        # Fit
-        def _fit(x, m):
-            return m * x
-
-        lam, _ = curve_fit(_fit, np.arange(len(minmax_fit)), delta)
-
-        # damping ratio
-        if methodSy == "cor":  # correct for exponential window
+        # 11) Correct lambda based on spectral method
+        if methodSy == "cor":
             tau = -(nxseg - 1) / np.log(0.01)
-            lam = 2 * lam - 1 / tau  # lam*2 because we use both max and min
-        elif methodSy == "per":
-            lam = 2 * lam  # lam*2 because we use both max and min
+            lam = 2 * lam - 1 / tau
+        else:
+            lam = 2 * lam
 
-        xi_EFDD = lam / np.sqrt(4 * np.pi**2 + lam**2)
+        # 12) Compute damping ratio and natural frequency
+        xi = lam / np.sqrt(4 * np.pi**2 + lam**2)
+        fn = fd / np.sqrt(1 - xi**2)
 
-        fn_EFDD = fd_EFDD / np.sqrt(1 - xi_EFDD**2)
-
-        # Finally appending the results
-        Fn_E.append(fn_EFDD)
-        Xi_E.append(xi_EFDD)
-        Phi_E.append(phi_FDD)
-
+        # 13) Store results
+        Fn_list.append(fn)
+        Xi_list.append(xi)
+        Phi_list.append(phi_ref)
         PerPlot.append(
-            [freq, time, SDOFbell, Sval, idSV, normSDOFcorr, minmax_fit_idx, lam, delta]
+            [freq, time, SDOFbell, Sval, idSV, norm_corr, peak_idx, lam, delta]
         )
-    logger.debug("Done!")
 
-    Fn = np.array(Fn_E)
-    Xi = np.array(Xi_E)
-    Phi = np.array(Phi_E).T
+    # 14) Final assembly
+    Fn = np.array(Fn_list)
+    Xi = np.array(Xi_list)
+    Phi = np.array(Phi_list).T
 
+    logger.info("EFDD extraction complete.")
     return Fn, Xi, Phi, PerPlot

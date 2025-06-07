@@ -17,8 +17,6 @@ Classes:
       Class for storing results data from the poly-reference Least Square Complex Frequency (pLSCF) method.
    :class:`.MsPoserResult`
       Base class for MultiSetup Poser result data.
-   :class:`.AutoSSIResult`
-      Result class for automated Structural System Identification (SSI) with clustering.
    :class:`.ClusteringResult`
       Class to store clustering results and related metadata.
 

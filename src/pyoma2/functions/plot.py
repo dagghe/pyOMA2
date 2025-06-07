@@ -24,11 +24,13 @@ from .gen import MAC
 logger = logging.getLogger(__name__)
 
 # =============================================================================
-# PLOT ALGORITMI
+# PLOT for CLUSTER
 # =============================================================================
 
 
-def plot_silhouette(distance_matrix, labels, name):
+def plot_silhouette(
+    distance_matrix: np.ndarray, labels: np.ndarray, name: str
+) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plot a silhouette plot for clustering results given a precomputed distance matrix.
 
@@ -38,50 +40,51 @@ def plot_silhouette(distance_matrix, labels, name):
         Pairwise distance matrix between samples.
     labels : array-like, shape (n_samples,)
         Cluster labels for each sample.
+    name : str
+        A label or title identifier used in the plot title.
 
     Returns
     -------
     fig : matplotlib.figure.Figure
         The figure object containing the silhouette plot.
+    ax : matplotlib.axes.Axes
+        The axes object containing the silhouette plot.
+
+    Notes
+    -----
+    - Computes the average silhouette score for the provided labels.
+    - Colors each cluster's silhouette values, and draws a vertical line at the average score.
     """
-    # Number of clusters
     labels = np.asarray(labels)
     n_clusters = len(np.unique(labels))
 
-    # Compute the average silhouette score
     silhouette_avg = silhouette_score(distance_matrix, labels, metric="precomputed")
-    # print(f"Average silhouette score: {silhouette_avg:.3f}")
-
-    # Compute silhouette values for each sample
     sample_silhouette_values = silhouette_samples(
         distance_matrix, labels, metric="precomputed"
     )
 
-    # Set up the plot
     fig, ax = plt.subplots(figsize=(10, 6))
     y_lower = 10
 
-    # Choose a colormap with enough distinct colors, excluding greys
-    if n_clusters <= 9:  # Exclude grey from tab10
+    # Choose colormap based on number of clusters, excluding greys where specified
+    if n_clusters <= 9:
         cmap = plt.get_cmap("tab10")
         colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i != 7]
-    elif n_clusters <= 18:  # Exclude greys from tab20
+    elif n_clusters <= 18:
         cmap = plt.get_cmap("tab20")
         colors = [cmap.colors[i] for i in range(len(cmap.colors)) if i not in [14, 15]]
     else:
-        # Generate a colormap with n_labels distinct colors
         cmap = plt.cm.get_cmap("hsv", n_clusters)
         colors = cmap(np.linspace(0, 1, n_clusters))
 
-    # Plot silhouette for each cluster
-    for i in range(1, n_clusters):
-        # aggregate the silhouette scores for samples in cluster i, then sort
-        ith_vals = sample_silhouette_values[labels == i - 1]
+    for i in range(1, n_clusters + 1):
+        cluster_idx = i - 1
+        ith_vals = sample_silhouette_values[labels == cluster_idx]
         ith_vals.sort()
         size_i = ith_vals.shape[0]
         y_upper = y_lower + size_i
 
-        color = colors[i - 1]
+        color = colors[cluster_idx]
         ax.fill_betweenx(
             np.arange(y_lower, y_upper),
             0,
@@ -93,18 +96,16 @@ def plot_silhouette(distance_matrix, labels, name):
         ax.text(-0.05, y_lower + 0.5 * size_i, str(i))
         y_lower = y_upper + 10  # 10px gap between clusters
 
-    # Draw average silhouette score line with legend label
     avg_label = f"Avg = {silhouette_avg:.3f}"
     ax.axvline(
         x=silhouette_avg, color="red", linestyle="--", linewidth=2, label=avg_label
     )
     ax.legend(loc="upper right")
 
-    # Labels and formatting
     ax.set_title(f"Silhouette Plot - {name}")
     ax.set_xlabel("Silhouette coefficient values")
     ax.set_ylabel("Cluster label")
-    ax.set_yticks([])  # Clear y-axis ticks
+    ax.set_yticks([])
     ax.set_xlim([-0.1, 1.0])
 
     plt.tight_layout()
@@ -114,9 +115,11 @@ def plot_silhouette(distance_matrix, labels, name):
 # -----------------------------------------------------------------------------
 
 
-def plot_dtot_hist(dtot, bins="auto", sugg_co=True):
+def plot_dtot_hist(
+    dtot: np.ndarray, bins: typing.Union[int, str] = "auto", sugg_co: bool = True
+) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
-    Plot a histogram of the total distance matrix with optional suggested cut-off distances.
+    Plot a histogram of the total distance data with optional suggested cut-off distances.
 
     This function plots a histogram of the values in the input distance matrix or vector `dtot`.
     It overlays a kernel density estimate (KDE) and optionally indicates suggested cut-off distances
@@ -126,9 +129,9 @@ def plot_dtot_hist(dtot, bins="auto", sugg_co=True):
     ----------
     dtot : ndarray
         The input distance data. If a 2D array is provided, the upper triangular elements
-        (excluding the diagonal) are extracted. If a 1D array is provided, it is used as is.
+        (including the diagonal) are extracted and flattened. If a 1D array is provided, it is used directly.
     bins : int or str, optional
-        The number of bins for the histogram. Defaults to "auto".
+        The number of bins or binning strategy for the histogram. Defaults to "auto".
     sugg_co : bool, optional
         Whether to compute and display suggested cut-off distances for clustering.
         Defaults to True.
@@ -136,124 +139,128 @@ def plot_dtot_hist(dtot, bins="auto", sugg_co=True):
     Returns
     -------
     fig : matplotlib.figure.Figure
-        The figure object containing the plot.
+        The figure object containing the histogram and KDE plot.
     ax : matplotlib.axes.Axes
-        The axes object for the histogram plot.
+        The axes object for the histogram (primary y-axis). The KDE is plotted on a secondary y-axis.
+
+    Notes
+    -----
+    - If `dtot` is 2D, all entries from the upper triangular part (k=0) are used.
+    - Uses SciPy's `gaussian_kde` to overlay a continuous density estimate.
+    - For suggested cut-offs:
+        * Single-linkage: the first local maximum of the KDE.
+        * Average-linkage: the first local minimum of the KDE.
     """
     if dtot.ndim == 2:
-        # Extract upper triangular indices and values
         upper_tri_indices = np.triu_indices_from(dtot, k=0)
         x = dtot[upper_tri_indices]
     elif dtot.ndim == 1:
         x = dtot
+    else:
+        raise ValueError("dtot must be a 1D or 2D array.")
 
-    xs = np.linspace(dtot.min(), dtot.max(), 500)
-
+    xs = np.linspace(x.min(), x.max(), 500)
     kde = stats.gaussian_kde(x)
-    # Evaluate the KDE to get the PDF
     pdf = kde(xs)
 
-    # Create a figure and axis
     fig, ax = plt.subplots(figsize=(10, 6))
-
-    # Plot the histogram on the axis
     ax.hist(x, bins=bins, color="skyblue", edgecolor="black")
     ax1 = ax.twinx()
-    ax1.plot(xs, kde(xs), "k-", label="Kernel density estimate")
+    ax1.plot(xs, pdf, "k-", label="Kernel density estimate")
 
     if sugg_co:
-        minima_in = signal.argrelmin(pdf)[0]
-        minima = pdf[minima_in]
-        min_abs = minima.argmin()
-        min_abs_ind = minima_in[min_abs]
-        maxima_in = signal.argrelmax(pdf)
-        dc2_ind = maxima_in[0][0]
-        dc2 = xs[dc2_ind]
-        dc1 = xs[min_abs_ind]
+        minima_idxs = signal.argrelmin(pdf)[0]
+        maxima_idxs = signal.argrelmax(pdf)[0]
+        if minima_idxs.size > 0:
+            min_vals = pdf[minima_idxs]
+            min_abs_index = minima_idxs[np.argmin(min_vals)]
+            dc1 = xs[min_abs_index]
+            ax1.axvline(
+                dc1,
+                color="red",
+                linestyle="dotted",
+                linewidth=2,
+                label=f"Suggested avg-linkage cut-off: {dc1:.4f}",
+            )
+        if maxima_idxs.size > 0:
+            dc2 = xs[maxima_idxs[0]]
+            ax1.axvline(
+                dc2,
+                color="red",
+                linestyle="dashed",
+                linewidth=2,
+                label=f"Suggested single-linkage cut-off: {dc2:.4f}",
+            )
 
-        ax1.axvline(
-            dc2,
-            color="red",
-            linestyle="dashed",
-            linewidth=2,
-            label=f"Suggested cut-off distance single-linkage: {dc2:.4f}",
-        )
-        ax1.axvline(
-            dc1,
-            color="red",
-            linestyle="dotted",
-            linewidth=2,
-            label=f"Suggested cut-off distance average-linkage: {dc1:.4f}",
-        )
-
-    # Customize plot
-    ax.set_xlabel("dtot")
+    ax.set_xlabel("Distance")
     ax.set_ylabel("Frequency")
-    ax.set_title("Histogram of distances")
-    ax.xaxis.set_major_locator(MultipleLocator(0.1))  # Major ticks every 0.1
-    ax.xaxis.set_minor_locator(
-        MultipleLocator(0.02)
-    )  # Minor ticks every 1/5 of major (0.02)
-
-    # Add grid only for the x-axis
+    ax.set_title("Histogram of distances with KDE")
+    ax.xaxis.set_major_locator(MultipleLocator(0.1))
+    ax.xaxis.set_minor_locator(MultipleLocator(0.02))
     ax.grid(which="major", axis="x", color="gray", linestyle="-", linewidth=0.5)
     ax.grid(
         which="minor", axis="x", color="gray", linestyle=":", linewidth=0.5, alpha=0.7
     )
     ax1.legend(framealpha=1)
     plt.tight_layout()
+
     return fig, ax
 
 
 # -----------------------------------------------------------------------------
 
 
-# Helper function to adjust alpha of colors
-def adjust_alpha(color, alpha):
+def adjust_alpha(color: typing.Union[str, tuple], alpha: float) -> tuple:
     """
     Adjust the alpha (opacity) of a given color.
 
     Parameters
     ----------
     color : str or tuple
-        The input color in any valid Matplotlib format (e.g., string name, hex code, or RGB tuple).
+        The input color in any valid Matplotlib format (e.g., color name, hexadecimal code, or RGB(A) tuple).
     alpha : float
         The desired alpha value, between 0 (completely transparent) and 1 (completely opaque).
 
     Returns
     -------
-    tuple
-        The RGBA representation of the input color with the specified alpha value.
+    rgba: tuple
+        The RGBA representation of the input color with the specified alpha applied.
     """
     rgba = to_rgba(color)
     return rgba[:3] + (alpha,)
 
 
-# Rearrange legend elements for column-wise ordering
-def rearrange_legend_elements(legend_elements, ncols):
+# -----------------------------------------------------------------------------
+
+
+def rearrange_legend_elements(
+    legend_elements: typing.List[Line2D], ncols: int
+) -> typing.List[Line2D]:
     """
     Rearrange legend elements into a column-wise ordering.
+
+    For example, if there are 6 elements and 2 columns, ordering by columns yields:
+    [e1, e3, e5, e2, e4, e6]
 
     Parameters
     ----------
     legend_elements : list of matplotlib.lines.Line2D
-        A list of legend elements to be rearranged.
+        A list of legend handles (e.g., Line2D instances) to be rearranged.
     ncols : int
-        The number of columns to arrange the legend elements into.
+        The desired number of columns in the legend.
 
     Returns
     -------
-    list
-        A reordered list of legend elements arranged column-wise.
+    rearranged_elements : list of matplotlib.lines.Line2D
+        A reordered list of legend handles arranged column-wise.
     """
     n = len(legend_elements)
     nrows = int(np.ceil(n / ncols))
     total_entries = nrows * ncols
-    legend_elements_padded = legend_elements + [None] * (total_entries - n)
-    legend_elements_array = np.array(legend_elements_padded).reshape(nrows, ncols)
-    rearranged_elements = legend_elements_array.flatten(order="F")
-    rearranged_elements = [elem for elem in rearranged_elements if elem is not None]
-    return rearranged_elements
+    padded = legend_elements + [None] * (total_entries - n)
+    array = np.array(padded, dtype=object).reshape(nrows, ncols)
+    flattened = array.flatten(order="F")
+    return [elem for elem in flattened if elem is not None]
 
 
 # -----------------------------------------------------------------------------
@@ -470,13 +477,12 @@ def stab_clus_plot(
     Fn_fl: np.ndarray,
     order_fl: np.ndarray,
     labels: np.ndarray,
-    step: int,
     ordmax: int,
     ordmin: int = 0,
     freqlim: typing.Optional[typing.Tuple[float, float]] = None,
-    Fn_std: np.ndarray = None,
+    Fn_std: typing.Optional[np.ndarray] = None,
     plot_noise: bool = False,
-    name: str = None,
+    name: typing.Optional[str] = None,
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
@@ -488,37 +494,42 @@ def stab_clus_plot(
 
     Parameters
     ----------
-    Fn_fl : np.ndarray
-        Frequency values.
-    order_fl : np.ndarray
-        Model order values.
-    labels : np.ndarray
-        Cluster labels for each point.
-    step : int
-        Step parameter (usage not shown in the plot).
+    Fn_fl : ndarray, shape (n_points,)
+        Array of frequency values for each identified pole, flattened.
+    order_fl : ndarray, shape (n_points,)
+        Array of model order values corresponding to each identified pole.
+    labels : ndarray, shape (n_points,)
+        Cluster labels for each data point. Use -1 for noise points.
     ordmax : int
-        Maximum order for y-axis limit.
+        Maximum model order; used to set y-axis limit.
     ordmin : int, optional
-        Minimum order for y-axis limit, by default 0.
-    freqlim : tuple of float, optional
-        Frequency limits for x-axis, by default None.
-    Fn_std : np.ndarray, optional
-        Standard deviation for frequency, by default None.
-    fig : plt.Figure, optional
-        Existing figure to plot on, by default None.
-    ax : plt.Axes, optional
-        Existing axes to plot on, by default None.
+        Minimum model order; used to set y-axis limit. Default is 0.
+    freqlim : tuple(float, float), optional
+        Frequency axis limits as (min_freq, max_freq). If None, auto-scale is used.
+    Fn_std : ndarray, optional
+        Standard deviation of frequency values, used for horizontal error bars. Should match `Fn_fl` shape.
+        Default is None.
     plot_noise : bool, optional
-        Whether to include the noise cluster in the plot, by default False.
+        Whether to include and plot noise-labeled points (-1) in grey. Defaults to False.
+    name : str, optional
+        An identifier used in the plot title. Defaults to None.
+    fig : matplotlib.figure.Figure, optional
+        Existing figure to plot on. If None, a new figure is created.
+    ax : matplotlib.axes.Axes, optional
+        Existing axes to plot on. If None, new axes are created on the provided or new figure.
 
     Returns
     -------
-    fig : plt.Figure
-        The matplotlib Figure object containing the plot.
-    ax : plt.Axes
-        The matplotlib Axes object containing the plot.
-    """
+    fig : matplotlib.figure.Figure
+        The Matplotlib figure object containing the stabilization chart.
+    ax : matplotlib.axes.Axes
+        The Matplotlib axes object with the plotted data.
 
+    Notes
+    -----
+    - Error bars for frequency (horizontal) are drawn if `Fn_std` is provided.
+    - Vertical dashed lines at median frequency for each cluster (excluding noise).
+    """
     # Initialize figure and axes if not provided
     if fig is None and ax is None:
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -706,48 +717,49 @@ def stab_clus_plot(
     return fig, ax
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+# PLOT for FDD
+# =============================================================================
 
 
 def CMIF_plot(
     S_val: np.ndarray,
     freq: np.ndarray,
-    freqlim: typing.Optional[typing.Tuple] = None,
-    nSv: str = "all",
+    freqlim: typing.Optional[typing.Tuple[float, float]] = None,
+    nSv: typing.Union[int, str] = "all",
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
-    Plots the Complex Mode Indicator Function (CMIF) based on given singular values and frequencies.
+    Plot the Complex Mode Indicator Function (CMIF) based on given singular values and frequencies.
 
     Parameters
     ----------
-    S_val : ndarray
-        A 3D array representing the singular values, with shape [nChannel, nChannel, nFrequencies].
-    freq : ndarray
-        An array representing the frequency values corresponding to the singular values.
-    freqlim : tuple of float, optional
-        The frequency range (lower, upper) for the plot. If None, includes all frequencies. Default is None.
-    nSv : int or str, optional
-        The number of singular values to plot. If "all", plots all singular values.
-        Otherwise, should be an integer specifying the number of singular values. Default is "all".
+    S_val : ndarray, shape (n_channel, n_channel, n_frequencies)
+        A 3D array representing the singular values of the spectral matrix at each frequency.
+    freq : ndarray, shape (n_frequencies,)
+        Frequency vector corresponding to the third axis of S_val.
+    freqlim : tuple(float, float), optional
+        Frequency limits for the x-axis as (min_freq, max_freq). If None, the full frequency range is used.
+    nSv : int or "all", optional
+        The number of singular values to plot per mode. If "all", all singular values are plotted.
+        Otherwise, must be an integer less than or equal to the number of modes. Defaults to "all".
     fig : matplotlib.figure.Figure, optional
-        An existing matplotlib figure object to plot on. If None, a new figure is created. Default is None.
+        Existing figure to plot on. If None, a new figure is created.
     ax : matplotlib.axes.Axes, optional
-        An existing axes object to plot on. If None, new axes are created on the provided or new figure.
-        Default is None.
+        Existing axes to plot on. If None, new axes are created.
 
     Returns
     -------
     fig : matplotlib.figure.Figure
-        The matplotlib figure object.
+        The Matplotlib figure object containing the CMIF plot.
     ax : matplotlib.axes.Axes
-        The axes object with the CMIF plot.
+        The Matplotlib axes object containing the CMIF curves.
 
     Raises
     ------
     ValueError
-        If `nSv` is not "all" and is not less than the number of singular values in `S_val`.
+        If `nSv` is not "all" and is greater than the number of modes in S_val.
     """
     # COMPLEX MODE INDICATOR FUNCTION
 
@@ -803,12 +815,385 @@ def CMIF_plot(
 # -----------------------------------------------------------------------------
 
 
+def EFDD_FIT_plot(
+    Fn: np.ndarray,
+    Xi: np.ndarray,
+    PerPlot: typing.List[typing.Tuple],
+    freqlim: typing.Optional[typing.Tuple[float, float]] = None,
+) -> typing.Tuple[typing.List[plt.Figure], typing.List[typing.List[plt.Axes]]]:
+    """
+    Plot detailed results for the Enhanced Frequency Domain Decomposition (EFDD) and
+    the Frequency Spatial Domain Decomposition (FSDD) algorithms.
+
+    For each mode in `PerPlot`, this function creates a 2x2 subplot figure showing:
+    1. The Spectral Density Function (SDOF bell) compared to the spectrum peak.
+    2. The normalized autocorrelation function over time.
+    3. The selected portion of the autocorrelation used for the damping fit.
+    4. The linear fit to ln(r0/|rk|) vs. index of extrema, from which frequency and damping are derived.
+
+    Parameters
+    ----------
+    Fn : ndarray, shape (n_modes,)
+        Array of natural frequencies identified for each mode.
+    Xi : ndarray, shape (n_modes,)
+        Array of damping ratios identified for each mode.
+    PerPlot : list of tuples, length = n_modes
+        Each tuple corresponds to one mode and contains:
+        (freq, time, SDOFbell, Sval, idSV, normSDOFcorr, minmax_fit_idx, lam, delta)
+        - freq : ndarray of frequency values
+        - time : ndarray of time lags for autocorrelation
+        - SDOFbell : ndarray of SDOF bell function values
+        - Sval : ndarray of spectral values used to compute SDOFbell
+        - idSV : indices of frequency bins at which SDOFbell is evaluated
+        - normSDOFcorr : normalized autocorrelation values
+        - minmax_fit_idx : indices of minima/maxima in autocorrelation used for fit
+        - lam : slope parameter used in damping fit
+        - delta : values of 2 * ln(r0 / |rk|) used for linear regression
+    freqlim : tuple(float, float), optional
+        Frequency axis limits for the first subplot (SDOF bell) as (min_freq, max_freq).
+        If None, the full frequency range is shown.
+
+    Returns
+    -------
+    figs : list of matplotlib.figure.Figure
+        List of figure objects, one per mode.
+    axs : list of list of matplotlib.axes.Axes
+        Nested list of axes for each figure: [[ax1, ax2, ax3, ax4], ...] for each mode.
+
+    Notes
+    -----
+    - Subplot arrangement:
+        (ax1) SDOF Bell vs. normalized spectral peak
+        (ax2) Normalized autocorrelation function
+        (ax3) Portion of autocorrelation selected for fit (highlighted extrema)
+        (ax4) Linear fit for 2 ln(r0/|rk|) vs. extrema index, annotated with Fn and Xi
+    """
+    figs = []
+    axs = []
+    n_modes = len(PerPlot)
+
+    for mode_idx in range(n_modes):
+        (
+            freq_vals,
+            time_vals,
+            SDOFbell,
+            Sval,
+            idSV,
+            normSDOFcorr,
+            minmax_fit_idx,
+            lam,
+            delta,
+        ) = PerPlot[mode_idx]
+        xi_EFDD = Xi[mode_idx]
+        fn_EFDD = Fn[mode_idx]
+
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=(10, 8))
+        # Plot 1: SDOF bell function vs normalized Sval
+        ref_peak = np.argmax(Sval[0, 0])
+        norm_Sval = 10 * np.log10(Sval[0, 0] / Sval[0, 0][ref_peak])
+        ax1.plot(freq_vals, norm_Sval, c="k", label="Normalized Sval (peak)")
+        SDOFbell_norm = 10 * np.log10(
+            SDOFbell[idSV].real / SDOFbell[np.argmax(SDOFbell)].real
+        )
+        ax1.plot(freq_vals[idSV], SDOFbell_norm, c="r", linestyle="-", label="SDOF bell")
+        ax1.set_title("SDOF Bell Function")
+        ax1.set_xlabel("Frequency [Hz]")
+        ax1.set_ylabel("dB rel to peak")
+        ax1.grid(True)
+        if freqlim is not None:
+            ax1.set_xlim(freqlim[0], freqlim[1])
+        ax1.legend()
+
+        # Plot 2: Normalized autocorrelation
+        ax2.plot(time_vals, normSDOFcorr, c="k")
+        ax2.set_title("Normalized Autocorrelation")
+        ax2.set_xlabel("Time lag [s]")
+        ax2.set_ylabel("Correlation")
+        ax2.grid(True)
+
+        # Plot 3: Portion for fit (highlighting minima/maxima)
+        ax3.plot(
+            time_vals[: minmax_fit_idx[-1]], normSDOFcorr[: minmax_fit_idx[-1]], c="k"
+        )
+        ax3.scatter(
+            time_vals[minmax_fit_idx],
+            normSDOFcorr[minmax_fit_idx],
+            c="r",
+            marker="x",
+            label="Extrema",
+        )
+        ax3.set_title("Selected Portion for Fit")
+        ax3.set_xlabel("Time lag [s]")
+        ax3.set_ylabel("Correlation")
+        ax3.grid(True)
+        ax3.legend()
+
+        # Plot 4: Linear fit of 2 ln(r0/|rk|) vs extrema index
+        ax4.scatter(
+            np.arange(len(minmax_fit_idx)), delta, c="k", marker="x", label="Data points"
+        )
+        ax4.plot(
+            np.arange(len(minmax_fit_idx)),
+            (lam / 2) * np.arange(len(minmax_fit_idx)),
+            c="r",
+            label="Fit: slope = λ/2",
+        )
+        annotation_text = (r"$f_n$ = {fn:.3f} Hz" "\n" r"$\xi$ = {xi:.2f}%").format(
+            fn=fn_EFDD, xi=float(xi_EFDD) * 100
+        )
+        ax4.text(
+            0.05,
+            0.95,
+            annotation_text,
+            transform=ax4.transAxes,
+            verticalalignment="top",
+            bbox=dict(boxstyle="round", facecolor="white", alpha=0.8),
+        )
+        ax4.set_title("Damping Fit: 2 ln(r0/|rk|) vs Index")
+        ax4.set_xlabel("Index of extrema (k)")
+        ax4.set_ylabel(r"$2 \ln(r_0 / |r_k|)$")
+        ax4.grid(True)
+        ax4.legend()
+
+        plt.tight_layout()
+        figs.append(fig)
+        axs.append([ax1, ax2, ax3, ax4])
+
+    return figs, axs
+
+
+# =============================================================================
+# PLOT for SSI
+# =============================================================================
+
+
+def stab_plot(
+    Fn: np.ndarray,
+    Lab: np.ndarray,
+    step: int,
+    ordmax: int,
+    ordmin: int = 0,
+    freqlim: typing.Optional[typing.Tuple[float, float]] = None,
+    hide_poles: bool = True,
+    Fn_std: typing.Optional[np.ndarray] = None,
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
+) -> typing.Tuple[plt.Figure, plt.Axes]:
+    """
+    Plot a stabilization chart of poles (frequency vs. model order) for stable vs unstable labeling.
+
+    Parameters
+    ----------
+    Fn : ndarray, shape (n_modes, n_orders)
+        2D array of frequencies for each pole, arranged by mode and order.
+    Lab : ndarray, shape (n_modes, n_orders)
+        2D array of labels indicating whether each pole is stable (1) or unstable (0).
+    step : int
+        Incremental step for model order plotting (vertical axis spacing).
+    ordmax : int
+        Maximum model order to display (upper y-limit).
+    ordmin : int, optional
+        Minimum model order to display (lower y-limit). Default is 0.
+    freqlim : tuple(float, float), optional
+        Frequency axis limits as (min_freq, max_freq). If None, auto-scale is used.
+    hide_poles : bool, optional
+        If True, only stable poles (Lab == 1) are shown. If False, both stable and unstable are shown.
+    Fn_std : ndarray, optional
+        Covariance (standard deviation) of frequencies, same shape as `Fn`. Used for horizontal error bars.
+        Defaults to None.
+    fig : matplotlib.figure.Figure, optional
+        Existing figure to plot on. If None, a new figure is created.
+    ax : matplotlib.axes.Axes, optional
+        Existing axes to plot on. If None, new axes are created on the provided or new figure.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the stabilization chart.
+    ax : matplotlib.axes.Axes
+        The axes object containing the plotted poles.
+
+    Notes
+    -----
+    - Green circles denote stable poles; red circles (if shown) denote unstable poles.
+    - Error bars represent frequency uncertainty if `Fn_std` is provided.
+    """
+    if fig is None and ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
+
+    # Extract stable and unstable frequencies
+    Fns_stab = np.where(Lab == 1, Fn, np.nan)
+    Fns_unstab = np.where(Lab == 0, Fn, np.nan)
+
+    ax.set_title("Stabilisation Chart")
+    ax.set_ylabel("Model Order")
+    ax.set_xlabel("Frequency [Hz]")
+
+    # Indices for plotting
+    if hide_poles:
+        x = Fns_stab.flatten(order="F")
+        y = np.arange(x.size) // Fn.shape[0] * step
+        ax.plot(x, y, "go", markersize=7)
+
+        if Fn_std is not None:
+            xerr = Fn_std.flatten(order="F")
+            ax.errorbar(x, y, xerr=xerr, fmt="None", capsize=5, ecolor="gray")
+    else:
+        x_stab = Fns_stab.flatten(order="F")
+        y_stab = np.arange(x_stab.size) // Fn.shape[0] * step
+        x_unstab = Fns_unstab.flatten(order="F")
+        y_unstab = np.arange(x_unstab.size) // Fn.shape[0] * step
+
+        ax.plot(x_stab, y_stab, "go", markersize=7, label="Stable pole")
+        ax.scatter(x_unstab, y_unstab, c="r", s=30, label="Unstable pole")
+
+        if Fn_std is not None:
+            xerr = np.abs(Fn_std.flatten(order="F"))
+            ax.errorbar(x_stab, y_stab, xerr=xerr, fmt="None", capsize=5, ecolor="gray")
+            ax.errorbar(
+                x_unstab, y_unstab, xerr=xerr, fmt="None", capsize=5, ecolor="gray"
+            )
+
+        ax.legend(loc="lower center", ncol=2)
+        ax.set_ylim(ordmin, ordmax + 1)
+
+    ax.grid(True)
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
+    plt.tight_layout()
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
+def cluster_plot(
+    Fn: np.ndarray,
+    Xi: np.ndarray,
+    Lab: np.ndarray,
+    freqlim: typing.Optional[typing.Tuple[float, float]] = None,
+    hide_poles: bool = True,
+) -> typing.Tuple[plt.Figure, plt.Axes]:
+    """
+    Plot a frequency-damping clustering chart, marking stable vs unstable poles.
+
+    Parameters
+    ----------
+    Fn : ndarray, shape (n_modes, n_orders)
+        2D array of frequencies for each pole, arranged by mode and order.
+    Xi : ndarray, shape (n_modes, n_orders)
+        2D array of damping ratios corresponding to each pole. Same shape as Fn.
+    Lab : ndarray, shape (n_modes, n_orders)
+        2D array of labels indicating whether each pole is stable (1) or unstable (0).
+    freqlim : tuple(float, float), optional
+        Frequency axis limits as (min_freq, max_freq). If None, full range is used.
+    hide_poles : bool, optional
+        If True, only stable poles are plotted. If False, both stable and unstable are plotted.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the cluster chart.
+    ax : matplotlib.axes.Axes
+        The axes object containing the plotted clusters.
+
+    Notes
+    -----
+    - Uses green circles for stable poles, red circles for unstable poles (if shown).
+    - Sets equal aspect by default.
+    """
+    # Extract stable (a, aa) and unstable (b, bb) data
+    a = np.where(Lab == 1, Fn, np.nan)
+    aa = np.where(Lab == 1, Xi, np.nan)
+    b = np.where(Lab == 0, Fn, np.nan)
+    bb = np.where(Lab == 0, Xi, np.nan)
+
+    fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
+    ax.set_title("Frequency-Damping Clustering")
+    ax.set_xlabel("Frequency [Hz]")
+    ax.set_ylabel("Damping")
+
+    if hide_poles:
+        x = a.flatten(order="F")
+        y = aa.flatten(order="F")
+        ax.plot(x, y, "go", markersize=7, label="Stable pole")
+    else:
+        x_stab = a.flatten(order="F")
+        y_stab = aa.flatten(order="F")
+        x_unstab = b.flatten(order="F")
+        y_unstab = bb.flatten(order="F")
+
+        ax.plot(x_stab, y_stab, "go", markersize=7, label="Stable pole")
+        ax.scatter(x_unstab, y_unstab, c="r", s=30, label="Unstable pole")
+        ax.legend(loc="lower center", ncol=2)
+
+    ax.grid(True)
+    if freqlim is not None:
+        ax.set_xlim(freqlim[0], freqlim[1])
+    plt.tight_layout()
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
+def svalH_plot(
+    H: np.ndarray,
+    br: int,
+    iter_n: typing.Optional[int] = None,
+    fig: typing.Optional[plt.Figure] = None,
+    ax: typing.Optional[plt.Axes] = None,
+) -> typing.Tuple[plt.Figure, plt.Axes]:
+    """
+    Plot the singular values of a Hankel matrix as a stem plot.
+
+    Parameters
+    ----------
+    H : ndarray, shape (m, n)
+        Hankel matrix for which singular values will be computed.
+    br : int
+        Number of block-rows used to construct the Hankel matrix; shown in the plot title.
+    iter_n : int, optional
+        Maximum iteration or model order, used to set x-axis limit. If provided, x-axis spans [-1, iter_n].
+    fig : matplotlib.figure.Figure, optional
+        Existing figure to plot on. If None, a new figure is created.
+    ax : matplotlib.axes.Axes, optional
+        Existing axes to plot on. If None, new axes are created on the provided or new figure.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the singular values plot.
+    ax : matplotlib.axes.Axes
+        The axes object containing the stem plot of singular values.
+    """
+    if fig is None and ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
+
+    # Compute singular values
+    U, S, Vt = np.linalg.svd(H)
+    S_sqrt = np.sqrt(S)
+
+    ax.stem(S_sqrt, linefmt="k-", markerfmt="ko", basefmt="k-")
+    ax.set_title(f"Singular values plot for block-rows = {br}")
+    ax.set_ylabel("Singular values")
+    ax.set_xlabel("Model order index")
+    if iter_n is not None:
+        ax.set_xlim(-1, iter_n)
+    ax.grid(True)
+    plt.tight_layout()
+    return fig, ax
+
+
+# -----------------------------------------------------------------------------
+
+
 def spectra_comparison(
     S_val: np.ndarray,
     S_val1: np.ndarray,
     freq: np.ndarray,
-    freqlim: typing.Optional[typing.Tuple] = None,
-    nSv: str = "all",
+    freqlim: typing.Optional[typing.Tuple[float, float]] = None,
+    nSv: typing.Union[int, str] = "all",
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
@@ -817,32 +1202,32 @@ def spectra_comparison(
 
     Parameters
     ----------
-    S_val : ndarray
-        A 3D array representing the singular values, with shape [nChannel, nChannel, nFrequencies].
-    freq : ndarray
-        An array representing the frequency values corresponding to the singular values.
-    freqlim : tuple of float, optional
-        The frequency range (lower, upper) for the plot. If None, includes all frequencies. Default is None.
-    nSv : int or str, optional
-        The number of singular values to plot. If "all", plots all singular values.
-        Otherwise, should be an integer specifying the number of singular values. Default is "all".
+    S_val : ndarray, shape (n_channel, n_channel, n_frequencies)
+        A 3D array of singular values for the measured spectrum.
+    S_val1 : ndarray, shape (n_channel, n_channel, n_frequencies)
+        A 3D array of singular values for the synthesized (reference) spectrum.
+    freq : ndarray, shape (n_frequencies,)
+        Frequency vector corresponding to the third axis of S_val and S_val1.
+    freqlim : tuple(float, float), optional
+        Frequency limits for the x-axis as (min_freq, max_freq). If None, full range is used.
+    nSv : int or "all", optional
+        Number of singular values (modes) to plot. If "all", all are plotted. Defaults to "all".
     fig : matplotlib.figure.Figure, optional
-        An existing matplotlib figure object to plot on. If None, a new figure is created. Default is None.
+        Existing figure to plot on. If None, a new figure is created.
     ax : matplotlib.axes.Axes, optional
-        An existing axes object to plot on. If None, new axes are created on the provided or new figure.
-        Default is None.
+        Existing axes to plot on. If None, new axes are created.
 
     Returns
     -------
     fig : matplotlib.figure.Figure
-        The matplotlib figure object.
+        The Matplotlib figure object containing the comparison plot.
     ax : matplotlib.axes.Axes
-        The axes object with the CMIF plot.
+        The Matplotlib axes object containing the plotted curves.
 
     Raises
     ------
     ValueError
-        If `nSv` is not "all" and is not less than the number of singular values in `S_val`.
+        If `nSv` is not "all" and is greater than the number of modes in S_val or S_val1.
     """
     if fig is None and ax is None:
         fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
@@ -898,350 +1283,6 @@ def spectra_comparison(
     ax.legend()
     # plt.show()
     return fig, ax
-
-
-# -----------------------------------------------------------------------------
-
-
-def EFDD_FIT_plot(
-    Fn: np.ndarray,
-    Xi: np.ndarray,
-    PerPlot: typing.List[typing.Tuple],
-    freqlim: typing.Optional[typing.Tuple] = None,
-) -> typing.Tuple[plt.Figure, typing.List[plt.Axes]]:
-    """
-    Plot detailed results for the Enhanced Frequency Domain Decomposition (EFDD) and
-    the Frequency Spatial Domain Decomposition (FSDD) algorithms.
-
-    Parameters
-    ----------
-    Fn : ndarray
-        An array containing the natural frequencies identified for each mode.
-    Xi : ndarray
-        An array containing the damping ratios identified for each mode.
-    PerPlot : list of tuples
-        A list where each tuple contains data for one mode. Each tuple should have
-        the structure (freq, time, SDOFbell, Sval, idSV, normSDOFcorr, minmax_fit_idx, lam, delta).
-    freqlim : tuple of float, optional
-        The frequency range (lower, upper) for the plots. If None, includes all frequencies. Default is None.
-
-    Returns
-    -------
-    figs : list of matplotlib.figure.Figure
-        A list of matplotlib figure objects.
-    axs : list of lists of matplotlib.axes.Axes
-        A list of lists containing axes objects for each figure.
-
-    Note
-    -----
-    The function plots several aspects of the EFDD method for each mode, including the SDOF Bell function,
-    auto-correlation function, and the selected portion for fit and the actual fit. Each mode's plot
-    includes four subplots, showing the details of the EFDD fit process, including identified frequency
-    and damping ratio.
-    """
-
-    figs = []
-    axs = []
-    for numb_mode in range(len(PerPlot)):
-        freq = PerPlot[numb_mode][0]
-        time = PerPlot[numb_mode][1]
-        SDOFbell = PerPlot[numb_mode][2]
-        Sval = PerPlot[numb_mode][3]
-        idSV = PerPlot[numb_mode][4]
-        fsval = freq[idSV]
-
-        normSDOFcorr = PerPlot[numb_mode][5]
-        minmax_fit_idx = PerPlot[numb_mode][6]
-        lam = PerPlot[numb_mode][7]
-        delta = PerPlot[numb_mode][8]
-
-        xi_EFDD = Xi[numb_mode]
-        fn_EFDD = Fn[numb_mode]
-
-        # If the plot option is activated we return the following plots
-        # build a rectangle in axes coords
-        left, _ = 0.25, 0.5
-        bottom, height = 0.25, 0.5
-        # right = left + width
-        top = bottom + height
-        # axes coordinates are 0,0 is bottom left and 1,1 is upper right
-
-        # PLOT 1 - Plotting the SDOF bell function extracted
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2)
-        ax1.plot(
-            freq, 10 * np.log10(Sval[0, 0] / Sval[0, 0][np.argmax(Sval[0, 0])]), c="k"
-        )
-        ax1.plot(
-            fsval,
-            10 * np.log10(SDOFbell[idSV].real / SDOFbell[np.argmax(SDOFbell)].real),
-            c="r",
-            label="SDOF bell",
-        )
-        ax1.set_title("SDOF Bell function")
-        ax1.set_xlabel("Frequency [Hz]")
-        ax1.set_ylabel(r"dB rel to unit.$")
-        ax1.grid()
-
-        if freqlim is not None:
-            ax1.set_xlim(freqlim[0], freqlim[1])
-
-        ax1.legend()
-
-        # Plot 2
-        ax2.plot(time[:], normSDOFcorr, c="k")
-        ax2.set_title("Auto-correlation Function")
-        ax2.set_xlabel("Time lag[s]")
-        ax2.set_ylabel("Normalized correlation")
-        ax2.grid()
-
-        # PLOT 3 (PORTION for FIT)
-        ax3.plot(time[: minmax_fit_idx[-1]], normSDOFcorr[: minmax_fit_idx[-1]], c="k")
-        ax3.scatter(time[minmax_fit_idx], normSDOFcorr[minmax_fit_idx], c="r", marker="x")
-        ax3.set_title("Portion for fit")
-        ax3.set_xlabel("Time lag[s]")
-        ax3.set_ylabel("Normalized correlation")
-        ax3.grid()
-
-        # PLOT 4 (FIT)
-        ax4.scatter(np.arange(len(minmax_fit_idx)), delta, c="k", marker="x")
-        ax4.plot(
-            np.arange(len(minmax_fit_idx)),
-            lam / 2 * np.arange(len(minmax_fit_idx)),
-            c="r",
-        )
-
-        ax4.text(
-            left,
-            top,
-            r"""$f_n$ = %.3f
-        $\xi$ = %.2f%s"""
-            % (fn_EFDD, float(xi_EFDD) * 100, "%"),
-            transform=ax4.transAxes,
-        )
-
-        ax4.set_title("Fit - Frequency and Damping")
-        ax4.set_xlabel(r"counter $k^{th}$ extreme")
-        ax4.set_ylabel(r"$2ln\left(r_0/|r_k|\right)$")
-        ax4.grid()
-
-        plt.tight_layout()
-
-        figs.append(fig)
-        axs.append([ax1, ax2, ax3, ax4])
-
-    return figs, axs
-
-
-# -----------------------------------------------------------------------------
-
-
-def stab_plot(
-    Fn: np.ndarray,
-    Lab: np.ndarray,
-    step: int,
-    ordmax: int,
-    ordmin: int = 0,
-    freqlim: typing.Optional[typing.Tuple] = None,
-    hide_poles: bool = True,
-    Fn_std: np.array = None,
-    fig: typing.Optional[plt.Figure] = None,
-    ax: typing.Optional[plt.Axes] = None,
-) -> typing.Tuple[plt.Figure, plt.Axes]:
-    """
-    Plots a stabilization chart of the poles of a system.
-
-    Parameters
-    ----------
-    Fn : np.ndarray
-        The frequencies of the poles.
-    Lab : np.ndarray
-        Labels indicating whether each pole is stable (1) or unstable (0).
-    step : int
-        The step size between model orders.
-    ordmax : int
-        The maximum model order.
-    ordmin : int, optional
-        The minimum model order, by default 0.
-    freqlim : tuple, optional
-        The frequency limits for the x-axis as a tuple (min_freq, max_freq), by default None.
-    hide_poles : bool, optional
-        Whether to hide the unstable poles, by default True.
-    fig : plt.Figure, optional
-        A matplotlib Figure object, by default None.
-    ax : plt.Axes, optional
-        A matplotlib Axes object, by default None.
-    Fn_std : np.ndarray, optional
-        The covariance of the frequencies, used for error bars, by default None.
-
-    Returns
-    -------
-    fig : plt.Figure
-        The matplotlib Figure object containing the plot.
-    ax : plt.Axes
-        The matplotlib Axes object containing the plot.
-    """
-    if fig is None and ax is None:
-        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
-
-    # Stable pole
-    Fns_stab = np.where(Lab == 1, Fn, np.nan)
-
-    # new or unstable
-    Fns_unstab = np.where(Lab == 0, Fn, np.nan)
-
-    ax.set_title("Stabilisation Chart")
-    ax.set_ylabel("Model Order")
-    ax.set_xlabel("Frequency [Hz]")
-
-    if hide_poles:
-        x = Fns_stab.flatten(order="F")
-        y = np.array([i // len(Fns_stab) for i in range(len(x))]) * step
-        ax.plot(x, y, "go", markersize=7)
-
-        if Fn_std is not None:
-            xerr = Fn_std.flatten(order="f")
-
-            ax.errorbar(x, y, xerr=xerr, fmt="None", capsize=5, ecolor="gray")
-
-    else:
-        x = Fns_stab.flatten(order="f")
-        y = np.array([i // len(Fns_stab) for i in range(len(x))]) * step
-
-        x1 = Fns_unstab.flatten(order="f")
-        y1 = np.array([i // len(Fns_unstab) for i in range(len(x))]) * step
-
-        ax.plot(x, y, "go", markersize=7, label="Stable pole")
-        ax.scatter(x1, y1, marker="o", s=4, c="r", label="Unstable pole")
-
-        if Fn_std is not None:
-            xerr = abs(Fn_std).flatten(order="f")
-
-            ax.errorbar(
-                x, y, xerr=xerr.flatten(order="f"), fmt="None", capsize=5, ecolor="gray"
-            )
-
-            ax.errorbar(
-                x1, y1, xerr=xerr.flatten(order="f"), fmt="None", capsize=5, ecolor="gray"
-            )
-
-        ax.legend(loc="lower center", ncol=2)
-        ax.set_ylim(ordmin, ordmax + 1)
-
-    ax.grid()
-    if freqlim is not None:
-        ax.set_xlim(freqlim[0], freqlim[1])
-    plt.tight_layout()
-    return fig, ax
-
-
-# -----------------------------------------------------------------------------
-
-
-def cluster_plot(
-    Fn: np.ndarray,
-    Xi: np.ndarray,
-    Lab: np.ndarray,
-    ordmin: int = 0,
-    freqlim: typing.Optional[typing.Tuple] = None,
-    hide_poles: bool = True,
-) -> typing.Tuple[plt.Figure, plt.Axes]:
-    """
-    Plots the frequency-damping clusters of the identified poles.
-
-    Parameters
-    ----------
-    Fn : ndarray
-        An array containing the frequencies of poles for each model order and identification step.
-    Xi : ndarray
-        An array containing the damping ratios associated with the poles in `Fn`.
-    Lab : ndarray
-        Labels indicating whether each pole is stable (1) or unstable (0).
-    ordmin : int, optional
-        The minimum model order to be displayed on the plot. Default is 0.
-    freqlim : tuple of float, optional
-        The frequency limits for the x-axis as a tuple (min_freq, max_freq), by default None.
-    hide_poles : bool, optional
-        Whether to hide the unstable poles, by default True.
-
-    Returns
-    -------
-    tuple
-        fig : matplotlib.figure.Figure
-            The matplotlib figure object.
-        ax : matplotlib.axes.Axes
-            The axes object with the stabilization chart.
-    """
-    # Stable pole
-    a = np.where(Lab == 1, Fn, np.nan)
-    aa = np.where(Lab == 1, Xi, np.nan)
-
-    # new or unstable
-    b = np.where(Lab == 0, Fn, np.nan)
-    bb = np.where(Lab == 0, Xi, np.nan)
-
-    fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
-    ax.set_title("Frequency-damping clustering")
-    ax.set_ylabel("Damping")
-    ax.set_xlabel("Frequency [Hz]")
-    if hide_poles:
-        x = a.flatten(order="f")
-        y = aa.flatten(order="f")
-        ax.plot(x, y, "go", markersize=7, label="Stable pole")
-
-    else:
-        x = a.flatten(order="f")
-        y = aa.flatten(order="f")
-
-        x1 = b.flatten(order="f")
-        y1 = bb.flatten(order="f")
-
-        ax.plot(x, y, "go", markersize=7, label="Stable pole")
-
-        ax.scatter(x1, y1, marker="o", s=4, c="r", label="Unstable pole")
-
-        ax.legend(loc="lower center", ncol=2)
-
-    ax.grid()
-    if freqlim is not None:
-        ax.set_xlim(freqlim[0], freqlim[1])
-    plt.tight_layout()
-    return fig, ax
-
-
-# -----------------------------------------------------------------------------
-
-
-def svalH_plot(
-    H: np.ndarray,
-    br: int,
-    iter_n: int = None,
-    fig: typing.Optional[plt.Figure] = None,
-    ax: typing.Optional[plt.Axes] = None,
-) -> typing.Tuple[plt.Figure, plt.Axes]:
-    """
-    Plot the singular values of the Hankel matrix.
-    """
-    if fig is None and ax is None:
-        fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
-
-    # SINGULAR VALUE DECOMPOSITION
-    U1, S1, V1_t = np.linalg.svd(H)
-    S1rad = np.sqrt(S1)
-
-    ax.stem(S1rad, linefmt="k-")
-
-    ax.set_title(f"Singular values plot, for block-rows = {br}")
-    ax.set_ylabel("Singular values")
-    ax.set_xlabel("Index number")
-    if iter_n is not None:
-        ax.set_xlim(-1, iter_n)
-
-    ax.grid()
-
-    return fig, ax
-
-
-# -----------------------------------------------------------------------------
 
 
 # =============================================================================
@@ -1698,37 +1739,34 @@ def plt_data(
     show_rms: bool = False,
 ) -> typing.Tuple[plt.Figure, np.ndarray]:
     """
-    Plots time series data for multiple channels, with an option to include the Root Mean Square (RMS)
-    of each signal.
+    Plot time-series data for multiple channels, optionally showing RMS value lines.
 
     Parameters
     ----------
-    data : ndarray
-        A 2D array with dimensions [number of data points, number of channels], representing signal data
-        for multiple channels.
+    data : ndarray, shape (n_samples, n_channels)
+        Time-domain signal data for multiple channels.
     fs : float
-        Sampling frequency.
+        Sampling frequency in Hz.
     nc : int, optional
-        Number of columns for subplots, indicating how many subplots per row to display. Default is 1.
+        Number of columns in the subplot grid. Determines how many subplots per row. Default is 1.
     names : list of str, optional
-        Names of the channels, used for titling each subplot if provided. Default is None.
+        Channel names for titling each subplot. If None, no titles are set. Default is None.
     unit : str, optional
-        The unit to display on the y-axis label. Default is "unit".
+        Unit label for the y-axis. Default is "unit".
     show_rms : bool, optional
-        If True, includes the RMS of each signal on the corresponding subplot. Default is False.
+        If True, plot the root mean square (RMS) value of each channel as a horizontal red line. Default is False.
 
     Returns
     -------
     fig : matplotlib.figure.Figure
-        The matplotlib figure object.
-    axs : array of matplotlib.axes.Axes
-        An array of axes objects for the generated subplots.
+        The figure object containing the subplots for each channel.
+    axs : ndarray of matplotlib.axes.Axes
+        2D array of axes objects for each subplot with shape (n_rows, nc).
 
-    Note
+    Notes
     -----
-    Plots each channel in its own subplot for comparison. Supports multiple columns and adjusts the number of
-    rows based on channels and columns.
-    If `show_rms` is True, the RMS value of each signal is plotted as a constant line.
+    - Arranges subplots in a grid with `nc` columns and as many rows as needed.
+    - Shares x- and y-axes across subplots for consistent scaling.
     """
     # show RMS of signal
     if show_rms is True:
@@ -1816,250 +1854,231 @@ def plt_ch_info(
     data: np.ndarray,
     fs: float,
     nxseg: int = 1024,
-    freqlim: typing.Optional[typing.Tuple] = None,
+    freqlim: typing.Optional[typing.Tuple[float, float]] = None,
     logscale: bool = False,
     ch_idx: typing.Union[int, typing.List[int], str] = "all",
     unit: str = "unit",
-) -> typing.Tuple[plt.Figure, np.ndarray]:
+) -> typing.Tuple[typing.List[plt.Figure], typing.List[typing.List[plt.Axes]]]:
     """
-    Plot channel information including time history, normalised auto-correlation,
-    power spectral density (PSD), probability density function, and a normal
-    probability plot for each channel in the data.
+    Plot channel diagnostic information: time history, autocorrelation, PSD, PDF, and normal probability plot.
+
+    For each specified channel, creates a 3x2 grid of subplots showing:
+    - Time history
+    - Normalized autocorrelation
+    - Power spectral density (PSD)
+    - Probability density function (PDF) estimate
+    - Normal probability plot
 
     Parameters
     ----------
-    data : ndarray
-        The input signal data.
+    data : ndarray, shape (n_samples, n_channels)
+        Input signal data.
     fs : float
-        The sampling frequency of the input data in Hz.
+        Sampling frequency in Hz.
     nxseg : int, optional
-        The number of points per segment.
-    freqlim : tuple of float, optional
-        The frequency limits (min, max) for the PSD plot. If None, the full frequency range is used.
-        Default is None.
+        Number of points per segment for PSD and autocorrelation. Default is 1024.
+    freqlim : tuple(float, float), optional
+        Frequency axis limits for PSD as (min_freq, max_freq). If None, full range is used.
     logscale : bool, optional
-        If True, the PSD plot will be in log scale (decibel). Otherwise, it will be in linear scale.
-        Default is False.
+        If True, PSD is plotted in dB. Otherwise, amplitude spectral density is plotted. Default is False.
     ch_idx : int, list of int, or "all", optional
-        The index (indices) of the channel(s) to plot. If "all", information for all channels is plotted.
-        Default is "all".
+        Index or list of indices of channels to plot. If "all", all channels are plotted. Default is "all".
     unit : str, optional
-        The unit of the input data for labelling the PSD plot. Default is "unit".
+        Unit label for PSD y-axis (linear scale) or dB reference. Default is "unit".
 
     Returns
     -------
-    fig : matplotlib.figure.Figure
-        The figure object containing all the plots.
-    axes : list of matplotlib.axes.Axes
-        The list of axes objects corresponding to each subplot.
+    figs : list of matplotlib.figure.Figure
+        List of figure objects, one per channel plotted.
+    axs : list of list of matplotlib.axes.Axes
+        Nested list of axes for each figure: [[ax0, ax1, ax2, ax3, ax4], ...]
 
-    Note
+    Notes
     -----
-    This function is designed to provide a comprehensive overview of the signal characteristics for one or
-    multiple channels of a dataset. It plots the time history, normalised auto-correlation, PSD, probability
-    density function, and a normal probability plot for each specified channel.
+    - Autocorrelation is normalized by its maximum (lag 0).
+    - PSD computed via SciPy's `signal.welch` with 50% overlap.
+    - PDF estimated via numerical differentiation of the sorted CDF.
+    - Normal probability plot compares normalized data to a standard normal distribution.
     """
-    if ch_idx != "all":
-        data = data[:, ch_idx]
+    data = (
+        data
+        if ch_idx == "all"
+        else data[:, [ch_idx]]
+        if isinstance(ch_idx, int)
+        else data[:, ch_idx]
+    )
 
     ndat, nch = data.shape
-
     figs = []
     axs = []
-    for ii in range(nch):
-        fig = plt.figure(figsize=(8, 6), layout="constrained")
+
+    for i in range(nch):
+        fig = plt.figure(figsize=(10, 8), layout="constrained")
         spec = fig.add_gridspec(3, 2)
 
-        # select channel
-        x = data[:, ii]
-
-        # Normalize data
+        x = data[:, i]
         x = x - np.mean(x)
         x = x / np.std(x)
         sorted_x = np.sort(x)
         n = len(x)
-        y = np.arange(1, n + 1) / n
+        y_cdf = np.arange(1, n + 1) / n
 
-        # Adjusted axis limits
-        xlim = max(abs(sorted_x.min()), abs(sorted_x.max()))
-        ylim = max(
-            abs(np.sort(np.random.randn(n)).min()), abs(np.sort(np.random.randn(n)).max())
-        )
-        maxlim = np.max((xlim, ylim))
-
-        # Plot 1: Time History
+        # Time History
         ax0 = fig.add_subplot(spec[0, :])
-        ax0.plot(np.linspace(0, len(x) / fs, len(x)), x, c="k")
-        ax0.set_xlabel("Time [s]")
+        ax0.plot(np.linspace(0, (n - 1) / fs, n), x, c="k")
         ax0.set_title("Time History")
-        ax0.set_ylabel("Unit")
-        ax0.grid()
+        ax0.set_xlabel("Time [s]")
+        ax0.set_ylabel(unit)
+        ax0.grid(True)
 
-        # Plot 2: Normalised auto-correlation
-        ax10 = fig.add_subplot(spec[1, 0])
-        # R_i = np.array([ 1/(ndat - kk) * np.dot(x[:ndat-kk], x[kk:].T)  for kk in range(nxseg)])
-        R_i = signal.correlate(x, x, mode="full")[len(x) - 1 : len(x) + nxseg - 1]
-        R_i /= np.max(R_i)
-        ax10.plot(np.linspace(0, len(R_i) / fs, len(R_i)), R_i, c="k")
-        ax10.set_xlabel("Time [s]")
-        ax10.set_ylabel("Norm. auto-corr.")
-        ax10.set_title("Normalised auto-correlation")
-        ax10.grid()
+        # Normalized Autocorrelation
+        ax1 = fig.add_subplot(spec[1, 0])
+        R = signal.correlate(x, x, mode="full")
+        R = R[n - 1 : n - 1 + nxseg] / np.max(np.abs(R[n - 1 : n - 1 + nxseg]))
+        ax1.plot(np.linspace(0, (nxseg - 1) / fs, nxseg), R, c="k")
+        ax1.set_title("Normalized Autocorrelation")
+        ax1.set_xlabel("Time [s]")
+        ax1.set_ylabel("Corr.")
+        ax1.grid(True)
 
-        # Plot 3: PSD
+        # PSD
+        ax2 = fig.add_subplot(spec[2, 0])
         freq, psd = signal.welch(
-            x,
-            fs,
-            nperseg=nxseg,
-            noverlap=nxseg * 0.5,
-            window="hann",
+            x, fs, nperseg=nxseg, noverlap=int(nxseg * 0.5), window="hann"
         )
-        ax20 = fig.add_subplot(spec[2, 0])
-        if logscale is True:
-            ax20.plot(freq, 10 * np.log10(psd), c="k")
-            ax20.set_ylabel(f"dB rel. to {unit}")
-        elif logscale is False:
-            ax20.plot(freq, np.sqrt(psd), c="k")
-            ax20.set_ylabel(rf"${unit}^2 / Hz$")
-        if freqlim is not None:
-            ax20.set_xlim(freqlim[0], freqlim[1])
-        ax20.set_xlabel("Frequency [Hz]")
-        ax20.set_title("PSD")
-        ax20.grid()
-
-        # Plot 4: Density function
-        ax11 = fig.add_subplot(spec[1, 1])
-        xm = min(abs(min(sorted_x)), abs(max(sorted_x)))
-        dx = nxseg * xm / n
-        xi = np.arange(-xm, xm + dx, dx)
-        Fi = interp1d(sorted_x, y, kind="linear", fill_value="extrapolate")(xi)
-        F2 = Fi[1:]
-        F1 = Fi[:-1]
-        f = (F2 - F1) / dx
-        xf = (xi[1:] + xi[:-1]) / 2
-        ax11.plot(
-            xf,
-            f,
-            "k",
-        )
-        ax11.set_title("Probability Density Function")
-        ax11.set_xlabel(
-            "Normalised data",
-        )
-        ax11.set_ylabel("Probability")
-        ax11.set_xlim(-xlim, xlim)
-        ax11.grid()
-
-        # Plot 5: Normal probability plot
-        ax21 = fig.add_subplot(spec[2, 1])
-        np.random.seed(0)
-        xn = np.random.randn(n)
-        sxn = np.sort(xn)
-        ax21.plot(sorted_x, sxn, "k+", markersize=5)
-        ax21.set_title(
-            "Normal probability plot",
-        )
-        ax21.set_xlabel(
-            "Normalised data",
-        )
-        ax21.set_ylabel(
-            "Gaussian axis",
-        )
-        ax21.grid()
-        ax21.set_xlim(-maxlim, maxlim)
-        ax21.set_ylim(-maxlim, maxlim)
-
-        if ch_idx != "all":
-            fig.suptitle(f"Info plot channel nr.{ch_idx[ii]}")
+        if logscale:
+            ax2.plot(freq, 10 * np.log10(psd), c="k")
+            ax2.set_ylabel(f"dB rel. to {unit}")
         else:
-            fig.suptitle(f"Info plot channel nr.{ii}")
+            ax2.plot(freq, np.sqrt(psd), c="k")
+            ax2.set_ylabel(rf"{unit}$^2$/Hz")
+        if freqlim is not None:
+            ax2.set_xlim(freqlim[0], freqlim[1])
+        ax2.set_title("Power Spectral Density")
+        ax2.set_xlabel("Frequency [Hz]")
+        ax2.grid(True)
+
+        # PDF
+        ax3 = fig.add_subplot(spec[1, 1])
+        xm = max(abs(sorted_x.min()), abs(sorted_x.max()))
+        dx = 2 * xm / nxseg
+        xi = np.linspace(-xm, xm, nxseg + 1)
+        Fi = interp1d(sorted_x, y_cdf, kind="linear", fill_value="extrapolate")(xi)
+        f_est = np.diff(Fi) / dx
+        xf = (xi[:-1] + xi[1:]) / 2
+        ax3.plot(xf, f_est, c="k")
+        ax3.set_title("Probability Density Function")
+        ax3.set_xlabel("Normalized data")
+        ax3.set_ylabel("Probability")
+        ax3.set_xlim(-xm, xm)
+        ax3.grid(True)
+
+        # Normal Probability Plot
+        ax4 = fig.add_subplot(spec[2, 1])
+        np.random.seed(0)
+        normal_samples = np.random.randn(n)
+        sorted_normal = np.sort(normal_samples)
+        ax4.plot(sorted_x, sorted_normal, "k+", markersize=5)
+        ax4.set_title("Normal Probability Plot")
+        ax4.set_xlabel("Normalized data")
+        ax4.set_ylabel("Gaussian quantiles")
+        maxlim = max(
+            abs(sorted_x.min()),
+            abs(sorted_x.max()),
+            abs(sorted_normal.min()),
+            abs(sorted_normal.max()),
+        )
+        ax4.set_xlim(-maxlim, maxlim)
+        ax4.set_ylim(-maxlim, maxlim)
+        ax4.grid(True)
+
+        fig.suptitle(f"Channel Info Plot: Channel {i}")
         figs.append(fig)
-        axs.append([ax0, ax10, ax20, ax11, ax21])
-    # return fig, [ax0, ax10, ax20, ax11, ax21]
+        axs.append([ax0, ax1, ax2, ax3, ax4])
+
     return figs, axs
 
 
 # -----------------------------------------------------------------------------
 
 
-# Short time Fourier transform - SPECTROGRAM
 def STFT(
     data: np.ndarray,
     fs: float,
     nxseg: int = 512,
     pov: float = 0.9,
     win: str = "hann",
-    freqlim: typing.Optional[typing.Tuple] = None,
+    freqlim: typing.Optional[typing.Tuple[float, float]] = None,
     ch_idx: typing.Union[int, typing.List[int], str] = "all",
-) -> typing.Tuple[plt.Figure, np.ndarray]:
+) -> typing.Tuple[typing.List[plt.Figure], typing.List[plt.Axes]]:
     """
-    Perform the Short Time Fourier Transform (STFT) to generate spectrograms for given signal data.
-
-    This function computes the STFT for each channel in the signal data, visualising the frequency content
-    of the signal over time. It allows for the selection of specific channels and customisation of the
-    STFT computation parameters.
+    Compute and plot the Short-Time Fourier Transform (STFT) spectrogram for each channel.
 
     Parameters
     ----------
-    data : ndarray
-        The input signal data.
+    data : ndarray, shape (n_samples, n_channels)
+        Time-domain input signal data.
     fs : float
-        The sampling frequency of the input data in Hz.
+        Sampling frequency in Hz.
     nxseg : int, optional
-        The number of points per segment for the STFT. Default is 512.
+        Window (segment) length for STFT in samples. Default is 512.
     pov : float, optional
-        The proportion of overlap between segments, expressed as a value between 0 and 1. Default is 0.9.
+        Proportion of overlap between segments (0 < pov < 1). Default is 0.9.
     win : str, optional
-        The type of window function to apply. Default is "hann".
-    freqlim : tuple of float, optional
-        The frequency limits (minimum, maximum) for the frequency axis of the spectrogram. If None,
-        the full frequency range is used. Default is None.
+        Window function name for STFT (e.g., "hann"). Default is "hann".
+    freqlim : tuple(float, float), optional
+        Frequency limits for plotting as (min_freq, max_freq). If None, full range is used.
     ch_idx : int, list of int, or "all", optional
-        The index (indices) of the channel(s) to compute the STFT for. If "all", the STFT for all
-        channels is computed. Default is "all".
+        Index or indices of channels to process. If "all", all channels are used. Default is "all".
 
     Returns
     -------
     figs : list of matplotlib.figure.Figure
-        The list of figure objects created, each corresponding to a channel in the input data.
+        List of figures created, one per channel.
     axs : list of matplotlib.axes.Axes
-        The list of Axes objects corresponding to each figure, used for plotting the spectrograms.
+        List of axes objects corresponding to each figure's spectrogram plot.
 
     Notes
     -----
-    The function visualises the magnitude of the STFT, showing how the frequency content of the signal
-    changes over time. This is useful for analysing non-stationary signals. The function returns the
-    figures and axes for further customisation or display.
+    - Uses SciPy's `signal.stft` function to compute the complex STFT.
+    - Plot uses `pcolormesh` of the magnitude of the STFT.
+    - If `freqlim` is provided, the frequency axis is cropped accordingly.
     """
-    if ch_idx != "all":
-        data = data[:, ch_idx]
+    data = (
+        data
+        if ch_idx == "all"
+        else data[:, [ch_idx]]
+        if isinstance(ch_idx, int)
+        else data[:, ch_idx]
+    )
 
     ndat, nch = data.shape
     figs = []
     axs = []
-    for ii in range(nch):
-        # select channel
-        ch = data[:, ii]
-        fig = plt.figure(figsize=(8, 6))
-        ax = fig.add_subplot()
-        ax.set_title(f"STFT Magnitude for channel nr.{ii+1}")
-        ax.set_xlabel("Time [sec]")
-        ax.set_ylabel("Frequency [Hz]")
-        # nxseg = w_T*fs
-        noverlap = nxseg * pov
-        freq, time, Sxx = signal.stft(
-            ch, fs, window=win, nperseg=nxseg, noverlap=noverlap
-        )
-        if freqlim is not None:
-            idx1 = np.argmin(abs(freq - freqlim[0]))
-            idx2 = np.argmin(abs(freq - freqlim[1]))
 
-            freq = freq[idx1:idx2]
-            Sxx = Sxx[idx1:idx2]
-        ax.pcolormesh(time, freq, np.abs(Sxx))
+    for i in range(nch):
+        ch = data[:, i]
+        fig = plt.figure(figsize=(8, 6))
+        ax = fig.add_subplot(1, 1, 1)
+        ax.set_title(f"STFT Magnitude: Channel {i}")
+        ax.set_xlabel("Time [s]")
+        ax.set_ylabel("Frequency [Hz]")
+
+        noverlap = int(nxseg * pov)
+        freq, t, Sxx = signal.stft(ch, fs, window=win, nperseg=nxseg, noverlap=noverlap)
+
+        if freqlim is not None:
+            idx_min = np.argmin(np.abs(freq - freqlim[0]))
+            idx_max = np.argmin(np.abs(freq - freqlim[1])) + 1
+            freq = freq[idx_min:idx_max]
+            Sxx = Sxx[idx_min:idx_max, :]
+
+        pcm = ax.pcolormesh(t, freq, np.abs(Sxx), shading="gouraud")
+        fig.colorbar(pcm, ax=ax, label="Magnitude")
         plt.tight_layout()
         figs.append(fig)
         axs.append(ax)
+
     return figs, axs
 
 
@@ -2067,32 +2086,47 @@ def STFT(
 
 
 def plot_mac_matrix(
-    array1, array2, colormap="plasma", ax=None
+    array1: np.ndarray,
+    array2: np.ndarray,
+    colormap: str = "plasma",
+    ax: typing.Optional[plt.Axes] = None,
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
-    Compute and plot the MAC matrix between the columns of two 2D arrays.
+    Compute and plot the Modal Assurance Criterion (MAC) matrix between two sets of mode shapes.
 
     Parameters
     ----------
-    array1 : np.ndarray
-        The first 2D array with shape (n_modes, n_dofs).
-    array2 : np.ndarray
-        The second 2D array with shape (n_modes, n_dofs).
+    array1 : ndarray, shape (n_dofs, n_modes1)
+        First set of mode shape vectors as columns.
+    array2 : ndarray, shape (n_dofs, n_modes2)
+        Second set of mode shape vectors as columns.
     colormap : str, optional
-        The colormap to use for the plot. Default is 'plasma'.
+        Colormap name for the heatmap. Default is "plasma".
     ax : matplotlib.axes.Axes, optional
-        The axes object to plot on. If None, a new figure and axes will be created. Default is None.
+        Existing axes to plot on. If None, creates a new figure and axes.
 
     Returns
     -------
     fig : matplotlib.figure.Figure
-        The matplotlib figure object.
+        The figure object containing the MAC matrix heatmap.
     ax : matplotlib.axes.Axes
-        The matplotlib axes object.
+        The axes object containing the heatmap.
+
+    Raises
+    ------
+    ValueError
+        If either `array1` or `array2` has fewer than 2 modes (columns).
+
+    Notes
+    -----
+    - The MAC value between mode i of `array1` and mode j of `array2` is defined as:
+      |(phi1_i^H phi2_j)|^2 / [(phi1_i^H phi1_i)(phi2_j^H phi2_j)].
+    - Calls the `MAC` function from `.gen` to compute the matrix.
     """
-    # Check if there are more than 1 column vector in the input arrays
+    if array1.ndim != 2 or array2.ndim != 2:
+        raise ValueError("Both inputs must be 2D arrays with modes as columns.")
     if array1.shape[1] < 2 or array2.shape[1] < 2:
-        raise ValueError("Each input array must have more than one column vector.")
+        raise ValueError("Each input array must have at least two mode columns.")
 
     mac_matr = MAC(array1, array2)
 
@@ -2104,63 +2138,62 @@ def plot_mac_matrix(
     cax = ax.imshow(mac_matr, cmap=colormap, aspect="auto")
     fig.colorbar(cax, ax=ax, label="MAC value")
 
-    n_cols1 = array1.shape[1]
-    n_cols2 = array2.shape[1]
-    x_labels = [f"mode nr. {i+1}" for i in range(n_cols1)]
-    y_labels = [f"mode nr. {i+1}" for i in range(n_cols2)]
+    n1 = array1.shape[1]
+    n2 = array2.shape[1]
+    x_labels = [f"Mode {i+1}" for i in range(n1)]
+    y_labels = [f"Mode {j+1}" for j in range(n2)]
 
-    ax.set_xticks(np.arange(n_cols1))
+    ax.set_xticks(np.arange(n1))
     ax.set_xticklabels(x_labels, rotation=45)
-    ax.set_yticks(np.arange(n_cols2))
+    ax.set_yticks(np.arange(n2))
     ax.set_yticklabels(y_labels)
 
-    ax.set_xlabel("Array 1")
-    ax.set_ylabel("Array 2")
+    ax.set_xlabel("Array 1 Modes")
+    ax.set_ylabel("Array 2 Modes")
     ax.set_title("MAC Matrix")
-
     return fig, ax
 
 
 # -----------------------------------------------------------------------------
 
 
-def plot_mode_complexity(mode_shape):
+def plot_mode_complexity(
+    mode_shape: typing.Union[np.ndarray, typing.List[complex]],
+) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
-    Plot the complexity of a mode shape on a polar plot.
+    Plot the complexity of a mode shape on a polar coordinate plot.
 
-    This function visualizes the mode shape's complexity by representing its
-    magnitudes and angles in a polar coordinate system. The magnitudes of
-    the mode shape are plotted as arrows radiating outward, with their angles
-    representing the phase of the corresponding components. Principal directions
-    (0° and 180°) are highlighted for clarity.
+    Each element of `mode_shape` is a complex number; its magnitude and phase are represented
+    as arrows radiating from the origin. Principal directions at 0° and 180° are highlighted.
 
     Parameters
     ----------
-    mode_shape : array_like
-        A complex-valued array representing the mode shape. Each element's
-        magnitude and angle are used to generate the plot.
+    mode_shape : array_like, shape (n_dofs,)
+        Complex-valued mode shape vector. Each element's magnitude and angle (phase) are plotted.
 
     Returns
     -------
     fig : matplotlib.figure.Figure
-        The figure object containing the plot.
-
+        The figure object containing the polar plot.
     ax : matplotlib.axes.Axes
-        The matplotlib axes object.
-    """
+        The polar axes object containing the mode shape complexity visualization.
 
-    # Get angles (in radians) and magnitudes
+    Notes
+    -----
+    - 0 degrees is set to East (positive x-axis) and direction is CCW.
+    - Radial axis is scaled to accommodate maximum magnitude plus a small margin (1.1).
+    - Arrows represent each complex component with an arrow from origin to (magnitude, angle).
+    """
+    mode_shape = np.asarray(mode_shape, dtype=complex)
     angles = np.angle(mode_shape)
     magnitudes = np.abs(mode_shape)
 
-    # Create a polar plot
     fig, ax = plt.subplots(subplot_kw={"projection": "polar"}, figsize=(6, 6))
-    ax.set_theta_zero_location("E")  # Set 0 degrees to East
+    ax.set_theta_zero_location("E")
     ax.set_theta_direction(1)  # Counterclockwise
-    ax.set_rmax(1.1)  # Set maximum radius slightly above 1 for clarity
+    ax.set_rmax(magnitudes.max() * 1.1 if magnitudes.max() > 0 else 1.1)
     ax.grid(True, linestyle="--", alpha=0.5)
 
-    # Plot arrows using annotate with fixed head size
     for angle, magnitude in zip(angles, magnitudes):
         ax.annotate(
             "",
@@ -2171,19 +2204,17 @@ def plot_mode_complexity(mode_shape):
                 edgecolor="blue",
                 arrowstyle="-|>",
                 linewidth=1.5,
-                mutation_scale=20,  # Controls the size of the arrowhead
+                mutation_scale=20,
             ),
         )
-    # Highlight directions (0° and 180°)
-    principal_angles = [0, np.pi]
-    for pa in principal_angles:
-        ax.plot([pa, pa], [0, 1.1], color="red", linestyle="--", linewidth=1)
+
+    # Highlight principal directions (0° and 180°)
+    for pa in [0, np.pi]:
+        ax.plot([pa, pa], [0, ax.get_rmax()], color="red", linestyle="--", linewidth=1)
 
     ax.set_yticklabels([])
-    # Add title
     ax.set_title(
         "Mode Shape Complexity Plot", va="bottom", fontsize=14, fontweight="bold", pad=25
     )
     plt.tight_layout()
-    # plt.show()
     return fig, ax

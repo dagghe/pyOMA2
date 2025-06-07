@@ -31,41 +31,47 @@ def build_hank(
     U: np.ndarray = None,
 ) -> typing.Tuple[np.ndarray, typing.Optional[np.ndarray]]:
     """
-    Construct a Hankel matrix with optional uncertainty calculations.
+    Construct a Hankel matrix using specified method with optional uncertainty estimation.
 
-    This function constructs a Hankel matrix using various methods, such as covariance-based
-    or data-driven approaches, and optionally computes uncertainty matrices.
+    Depending on the selected method, this function assembles a Hankel matrix using covariance-based,
+    data-driven, or input-output approaches, with an option to estimate uncertainty.
 
     Parameters
     ----------
     Y : np.ndarray
-        The primary data matrix with shape (number of channels, number of data points).
+        Output data matrix with shape (number of output channels, number of data points).
     Yref : np.ndarray
-        The reference data matrix with shape (number of reference channels, number of data points).
+        Reference output data matrix with shape (number of reference channels, number of data points).
     br : int
-        The number of block rows in the Hankel matrix.
-    method : {'cov', 'cov_R', 'dat'}
-        The method for constructing the Hankel matrix:
-        - 'cov': Covariance-based.
-        - 'cov_R': Covariance-based with auto-correlations.
-        - 'dat': Data-driven.
+        Number of block rows in the Hankel matrix.
+    method : {'cov', 'cov_R', 'dat', 'IOcov'}
+        Method used for Hankel matrix construction:
+        - 'cov': Covariance-based using future and past output data.
+        - 'cov_R': Covariance-based using correlation matrices.
+        - 'dat': Data-driven using QR decomposition.
+        - 'IOcov': Input-output covariance-based method (requires `U`).
     calc_unc : bool, optional
-        Whether to calculate uncertainty matrices. Default is False.
+        If True, compute an uncertainty matrix using data segmentation. Default is False.
     nb : int, optional
-        The number of data blocks to use for uncertainty calculations. Default is 50.
+        Number of segments for uncertainty estimation. Default is 50.
+    U : np.ndarray, optional
+        Input data matrix with shape (number of input channels, number of data points).
+        Required if `method` is 'IOcov'.
 
     Returns
     -------
     Hank : np.ndarray
-        The constructed Hankel matrix.
+        Assembled Hankel matrix according to the selected method.
     T : np.ndarray or None
-        The uncertainty matrix, returned only if `calc_unc` is True. None otherwise.
+        Matrix containing uncertainty estimates, returned only if `calc_unc` is True; otherwise, None.
 
     Raises
     ------
     AttributeError
-        If `method` is not one of {'cov', 'cov_R', 'dat'}, or if data is insufficient for
-        uncertainty calculation.
+        If an unsupported method is specified or if input requirements are not met
+        (e.g., `U` is not provided for 'IOcov').
+    AttributeError
+        If the number of data points per block is insufficient for uncertainty estimation.
 
     Notes
     -----
@@ -261,8 +267,40 @@ def build_hank(
 # -----------------------------------------------------------------------------
 
 
-def synt_spctr(A, C, G, R0, omega, dt):
-    # --- derive sizes ---
+def synt_spctr(
+    A: np.ndarray,
+    C: np.ndarray,
+    G: np.ndarray,
+    R0: np.ndarray,
+    omega: np.ndarray,
+    dt: float,
+) -> np.ndarray:
+    """
+    Compute the synthetic output power spectral density matrix.
+
+    This function evaluates the power spectral density (PSD) of system outputs using
+    a state-space model over a range of angular frequencies.
+
+    Parameters
+    ----------
+    A : np.ndarray
+        State matrix of shape (n, n).
+    C : np.ndarray
+        Output matrix of shape (p, n).
+    G : np.ndarray
+        Input influence matrix of shape (n, p).
+    R0 : np.ndarray
+        Output noise covariance matrix of shape (p, p).
+    omega : np.ndarray
+        Array of angular frequencies at which the PSD is computed.
+    dt : float
+        Sampling time interval.
+
+    Returns
+    -------
+    S_YY : np.ndarray
+        Power spectral density matrix of shape (p, p, N), where N is the number of frequency points.
+    """
     n = A.shape[0]
     p = C.shape[0]
     assert A.shape == (n, n)
@@ -270,22 +308,20 @@ def synt_spctr(A, C, G, R0, omega, dt):
     assert G.shape == (n, p)
     assert R0.shape == (p, p)
 
-    # --- build z vector and pre-allocate ---
+    # build z array and preallocate Sy
     z_vals = np.exp(1j * omega * dt)  # shape (N,)
     N = z_vals.size
     S_YY = np.zeros((p, p, N), dtype=complex)
 
-    # --- identity once only ---
+    # preallocate identity matrix
     I_n = np.eye(n)
 
-    # --- fill 3D array slice by slice ---
+    # Fill 3D array slice by slice
     for k, z in enumerate(z_vals):
-        # forward term
         M1 = z * I_n - A
         inv1 = np.linalg.inv(M1)  # (n×n)
         T1 = C @ inv1 @ G  # (p×p)
 
-        # backward term
         M2 = (1 / z) * I_n - A.T
         inv2 = np.linalg.inv(M2)  # (n×n)
         T2 = G.T @ inv2 @ C.T  # (p×p)
@@ -366,6 +402,7 @@ def SSI_fast(
     typing.List[np.ndarray],
     typing.List[np.ndarray],
     typing.List[np.ndarray],
+    typing.List[np.ndarray],
 ]:
     """
     Perform a fast implementation of Stochastic Subspace Identification (SSI).
@@ -392,6 +429,9 @@ def SSI_fast(
         List of estimated system matrices for each model order.
     C : list of np.ndarray
         List of estimated output influence matrices for each model order.
+    G : list of np.ndarray
+        List of estimated next state-output covariance matrices
+
 
     Notes
     -----

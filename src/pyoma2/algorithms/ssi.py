@@ -1,9 +1,10 @@
 """
 Stochastic Subspace Identification (SSI) Algorithm Module.
 Part of the pyOMA2 package.
+
 Authors:
-Dag Pasca
-Diego Margoni
+    Dag Pasca
+    Diego Margoni
 """
 
 from __future__ import annotations
@@ -31,20 +32,24 @@ logger = logging.getLogger(__name__)
 # (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[float]]):
     """
-    Data-Driven Stochastic Subspace Identification (SSI) algorithm for single setup
-    analysis.
+    Perform Stochastic Subspace Identification (SSI) on single-setup measurement data.
 
-    This class processes measurement data from a single setup experiment to identify
-    and extract modal parameters using the SSIdat-ref method.
+    This class implements the SSI-ref algorithm to identify system modal
+    parameters (natural frequencies, damping ratios, mode shapes, etc.) from a single
+    setup experiment. It estimates the state-space matrices, constructs Hankel matrices,
+    computes poles, applies hard and soft criteria, and optionally estimates the power
+    spectral density.
 
     Attributes
     ----------
     RunParamCls : Type[SSIRunParams]
-        The class of parameters specific to this algorithm's run.
+        Class for algorithm run parameters.
+    MPEParamCls : Type[SSIMPEParams]
+        Class for modal parameter extraction parameters.
     ResultCls : Type[SSIResult]
-        The class of results produced by this algorithm.
-    method : str
-        The method used in this SSI algorithm, set to 'cov' by default.
+        Class for storing algorithm results.
+    method : Literal["dat", "cov", "cov_R", "IOcov"]
+        Default SSI method. Set to 'cov' by default.
     """
 
     RunParamCls = SSIRunParams
@@ -54,19 +59,29 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
 
     def run(self) -> SSIResult:
         """
-        Executes the SSIdat algorithm and returns the results.
+        Execute the SSI-ref algorithm on the provided measurement data.
 
-        Processes the input data using the Data-Driven Stochastic Subspace Identification method.
-        Computes state space matrices, modal parameters, and other relevant results.
+        This method builds the required Hankel matrix (optionally using input U if provided),
+        computes the state-space matrices (observability, A, C), estimates poles (natural
+        frequencies, damping ratios, mode shapes), applies validation criteria (hard and soft),
+        and returns the results encapsulated in an SSIResult object.
 
         Returns
         -------
         SSIResult
-            An object containing the computed matrices and modal parameters.
+            Contains the observability matrix (Obs), state matrix (A), output matrix (C),
+            Hankel matrix (H), eigenvalues (Lambds), identified poles (Fn_poles, Xi_poles, Phi_poles),
+            pole labels (Lab), and associated uncertainties (Fn_poles_std, Xi_poles_std, Phi_poles_std).
+
+        Raises
+        ------
+        ValueError
+            If mandatory run parameters are missing or invalid.
         """
+        # Transpose measurement data: rows are sensors, columns are time samples
         Y = self.data.T
 
-        # Check for Input matrix U
+        # Transpose Input matrix U if provided
         U = self.run_params.U.T if self.run_params.U is not None else None
 
         br = self.run_params.br
@@ -79,20 +94,19 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         calc_unc = self.run_params.calc_unc
         nb = self.run_params.nb
 
-        # Check if the user specifies reference indices
+        # Determine reference data indices for spectrum estimation or SSI
         if self.run_params.ref_ind is not None:
             ref_ind = self.run_params.ref_ind
             Yref = Y[ref_ind, :]
         else:
             Yref = Y
 
-        # Check whether to estimate the spectrum
+        # Estimate spectrum (PSD) if requested
         if self.run_params.spetrum is True:
-            # Check if the user specifies the run_params
             if self.run_params.fdd_run_params is not None:
                 fdd_run_params = self.run_params.fdd_run_params
             else:
-                fdd_run_params = FDDRunParams()  # use default parameters
+                fdd_run_params = FDDRunParams()  # Use default FDD parameters
             self.freq, self.Sy = fdd.SD_est(
                 Y,
                 Yref,
@@ -102,16 +116,17 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
                 fdd_run_params.pov,
             )
 
-        # Build Hankel matrix
+        # Build Hankel matrix H and time vector T
         H, T = ssi.build_hank(
             Y=Y, Yref=Yref, br=br, method=method_hank, calc_unc=calc_unc, nb=nb, U=U
         )
 
-        # Get state matrix and output matrix
+        # Compute observability matrix (Obs), state transition (A), and output (C), and innovation covariance G
         Obs, A, C, self.G = ssi.SSI_fast(H, br, ordmax, step=step)
 
+        # Maximum damping ratio for hard criterion
         hc_xi_max = hc["xi_max"]
-        # Get frequency poles (and damping and mode shapes)
+        # Compute poles (frequencies, damping ratios, mode shapes, eigenvalues, and their uncertainties)
         Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = ssi.SSI_poles(
             Obs,
             A,
@@ -126,34 +141,33 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             HC=True,
         )
 
+        # Hard Criterion: magnitude of modal phase collinearity collinearity (mpc), modal phase deviation (mpd), coefficient of variation (CoV) of the frequencies
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
         hc_CoV_max = hc["CoV_max"]
 
-        # HC - MPC and MPD
         if hc_mpc_lim is not None:
             mask3 = gen.HC_MPC(Phis, hc_mpc_lim)
-            lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+            to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
             Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                lista, mask3, Phis.shape[2]
+                to_mask, mask3, Phis.shape[2]
             )
+
         if hc_mpd_lim is not None:
             mask4 = gen.HC_MPD(Phis, hc_mpd_lim)
-            lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+            to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
             Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                lista, mask4, Phis.shape[2]
+                to_mask, mask4, Phis.shape[2]
             )
 
-        # HC - maximum covariance
-        if Fn_std is not None and hc_CoV_max is not None:
+        if calc_unc and hc_CoV_max is not None:
             Fn_std, mask5 = gen.HC_CoV(Fns, Fn_std, hc_CoV_max)
-            lista = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
+            to_mask = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
             Fns, Xis, Phis, Lambds, Xi_std, Phi_std = gen.applymask(
-                lista, mask5, Phis.shape[2]
+                to_mask, mask5, Phis.shape[2]
             )
 
-        # Apply SOFT CRITERIA
-        # Get the labels of the poles
+        # Apply Soft Criteria to label poles
         Lab = gen.SC_apply(
             Fns,
             Xis,
@@ -183,69 +197,113 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
 
     def est_spectrum(self, run_params: typing.Optional[FDDRunParams] = None) -> None:
         """
-        Estimate the power spectral density (PSD) of the input data.
+        Estimate the power spectral density (PSD) of the measurement data using FDD.
+
+        If run_params is not provided, default FDD parameters (FDDRunParams()) are used.
 
         Parameters
         ----------
-        run_params : FDDRunParams
-            Parameters for the frequency domain decomposition (FDD) method.
+        run_params : FDDRunParams, optional
+            Configuration parameters for Frequency Domain Decomposition (FDD).
 
         Returns
         -------
         None
+
+        Notes
+        -----
+        The computed frequency vector (self.freq) and spectral matrix (self.Sy) are stored
+        as attributes of the algorithm instance.
         """
         if run_params is None:
             run_params = FDDRunParams()
+
+        Y = self.data.T
+        Yref = Y[self.run_params.ref_ind, :] if self.run_params.ref_ind is not None else Y
         self.freq, self.Sy = fdd.SD_est(
-            self.data.T,
-            self.data.T[self.run_params.ref_ind, :]
-            if self.run_params.ref_ind is not None
-            else self.data.T,
+            Y,
+            Yref,
             self.dt,
             run_params.nxseg,
             run_params.method_SD,
             run_params.pov,
         )
 
-    def plot_sSy_VS_mSy(self, order, freqlim=None, nSv="all") -> None:
+    def plot_sSy_VS_mSy(
+        self,
+        order: int,
+        freqlim: typing.Optional[tuple[float, float]] = None,
+        nSv: typing.Union[int, str] = "all",
+    ) -> tuple:
         """
-        Plot the comparison between synthetic and measured spectra.
+        Plot comparison between synthetic and measured singular value spectra.
+
+        This method computes synthetic spectral singular values from the identified state-space
+        matrices (A, C, G) at a specified model order and compares them with the measured spectral
+        singular values obtained via FDD.
+
+        Parameters
+        ----------
+        order : int
+            The model order at which to compute the synthetic spectrum. Internally, the order
+            is divided by the run_params.step.
+        freqlim : tuple(float, float), optional
+            Frequency limits for plotting. If None, determined automatically.
+        nSv : int or 'all', optional
+            Number of singular values to plot. Default is 'all'.
 
         Returns
         -------
-        fig, ax : tuple
+        tuple
+            (fig, ax) where fig is the matplotlib Figure and ax is the Axes of the plot.
+
+        Raises
+        ------
+        ValueError
+            If spectrum (self.Sy) or result (self.result) is not available.
         """
         if self.Sy is None:
-            raise ValueError("Estimate the spectrum first")
+            raise ValueError("Spectrum not estimated. Call est_spectrum() first.")
         if self.result is None:
-            raise ValueError("Run algorithm first")
-        order = int(order / self.run_params.step)
+            raise ValueError("Run SSI algorithm first. Call run() before plotting.")
+
+        order_index = int(order / self.run_params.step)
         AA = self.result.A
         CC = self.result.C
         GG = self.G
-        R0 = 1 / (self.data.shape[0]) * np.dot(self.data[:, :].T, self.data[:, :])
 
-        # Compute the synthetic spectrum
+        # Compute sample covariance matrix R0
+        R0 = (1 / self.data.shape[0]) * np.dot(self.data.T, self.data)
+
+        # Compute synthetic spectral matrix at the specified order
         sSy = ssi.synt_spctr(
-            AA[order], CC[order], GG[order], R0, omega=self.freq * 2 * np.pi, dt=self.dt
+            AA[order_index],
+            CC[order_index],
+            GG[order_index],
+            R0,
+            omega=self.freq * 2 * np.pi,
+            dt=self.dt,
         )
 
-        # Singular values
+        # Compute singular values of measured and synthetic spectra
         Sval, _ = fdd.SD_svalsvec(self.Sy)
         sSval, _ = fdd.SD_svalsvec(sSy)
 
-        # Plot the comparison of synthetic and measured spectra
+        # Create comparison plot
         fig, ax = plot.spectra_comparison(Sval, sSval, self.freq, freqlim, nSv)
         return fig, ax
 
     def add_clustering(self, *clusterings: Clustering) -> None:
         """
-        Add clustering configurations to the AutoSSI algorithm.
+        Add clustering configuration(s) to the algorithm.
+
+        Stores one or more Clustering objects (algorithm names and steps) so that clustering
+        can be run after SSI identification.
 
         Parameters
         ----------
         *clusterings : Clustering
-            One or more `Clustering` objects containing clustering configurations to add.
+            One or more Clustering instances containing clustering parameters.
 
         Returns
         -------
@@ -258,44 +316,58 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
 
     def run_all_clustering(self) -> None:
         """
-        Run all configured clustering methods sequentially.
+        Execute all added clustering configurations sequentially.
 
-        Iterates through all clustering configurations added using `add_clustering`
-        and executes the clustering process.
+        Iterates through each stored clustering configuration and calls run_clustering()
+        for each algorithm name in self.clusterings. Results are stored in self.result.
 
         Returns
         -------
         None
         """
         for i in trange(len(self.clusterings.keys())):
-            self.run_clustering(name=list(self.clusterings.keys())[i])
-        logger.info("all done")
+            name = list(self.clusterings.keys())[i]
+            self.run_clustering(name=name)
+        logger.info("All clustering configurations executed.")
 
     def run_clustering(self, name: str) -> None:
         """
-        Run a specific clustering method by name.
+        Perform clustering on identified poles using a specified configuration.
+
+        Applies hard and soft criteria (HC and SC), pre-clustering filters, distance-based
+        clustering (e.g., HDBSCAN, k-means, etc.), and post-processing to group identified poles
+        into clusters. The final clustering result is stored in self.result.clustering_results.
 
         Parameters
         ----------
         name : str
-            Name of the clustering configuration to execute.
+            The name of the clustering configuration to run (must match a key added via add_clustering()).
 
         Raises
         ------
         ValueError
-            If the clustering method cannot be run before the main algorithm (`run()`) has been executed.
-
-        Returns
-        -------
-        None
+            If try to run clustering before running the main SSI algorithm (self.result is None).
+        AttributeError
+            If the provided name is not in self.clusterings.
         """
-        # TODO run_clustering can only run after run(), raise error otherwise
-        # Get needed data
+        if self.result is None:
+            raise ValueError("SSI algorithm must be run before clustering (call run()).")
+
+        try:
+            steps = self.clusterings[name]
+        except KeyError as e:
+            raise AttributeError(
+                f"'{name}' is not a valid clustering configuration. "
+                f"Valid names: {list(self.clusterings.keys())}"
+            ) from e
+
+        logger.info("Running clustering '%s'...", name)
+
+        # Extract data from SSI result
         Fns = self.result.Fn_poles
         Xis = self.result.Xi_poles
         Lambds = self.result.Lambds
         Phis = self.result.Phi_poles
-
         Fn_std = self.result.Fn_poles_std
         Xi_std = self.result.Xi_poles_std
         Phi_std = self.result.Phi_poles_std
@@ -305,68 +377,57 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         ordmax = self.run_params.ordmax
         step = self.run_params.step
 
-        logger.info("Running clustering %s...", name)
+        # Unpack clustering steps
+        step1, step2, step3 = steps
+        freq_lim = step3.freqlim
 
-        # Get Steps
-        steps = self.clusterings[name]
-        step1 = steps[0]
-        step2 = steps[1]
-        step3 = steps[2]
-
-        freq_lim = step3.freq_lim
-
-        # =============================================================================
-        # STEP 1
-        hc = step1.hc
-        sc = step1.sc
+        # STEP 1: Hard Criterion (HC) and Soft Criterion (SC) pre-filtering
         hc_dict = step1.hc_dict
         sc_dict = step1.sc_dict
-
         pre_cluster = step1.pre_cluster
         pre_clus_typ = step1.pre_clus_typ
         pre_clus_dist = step1.pre_clus_dist
         transform = step1.transform
 
-        # If the user specifies the freq_lim arg we remove the poles to speed up the analysis
+        # Apply frequency limit filter if specified
         if freq_lim is not None:
             Fns, mask_flim = gen.HC_freqlim(Fns, freq_lim)
-            lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+            to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
             Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                lista, mask_flim, Phis.shape[2]
+                to_mask, mask_flim, Phis.shape[2]
             )
 
-        if hc:
-            # HC - damping
+        if step1.hc:
+            # HC: Damping ratio filter
             if hc_dict["xi_max"] is not None:
                 Xis, mask2 = gen.HC_damp(Xis, hc_dict["xi_max"])
-                lista = [Fns, Lambds, Phis, Fn_std, Xi_std, Phi_std]
+                to_mask = [Fns, Lambds, Phis, Fn_std, Xi_std, Phi_std]
                 Fns, Lambds, Phis, Fn_std, Xi_std, Phi_std = gen.applymask(
-                    lista, mask2, Phis.shape[2]
+                    to_mask, mask2, Phis.shape[2]
                 )
+            # HC: Modal phase collinearity (MPC) and modal phase deviation (MPD)
             if hc_dict["mpc_lim"] is not None:
-                # HC - MPC and MPD
                 mask3 = gen.HC_MPC(Phis, hc_dict["mpc_lim"])
-                lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+                to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
                 Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                    lista, mask3, Phis.shape[2]
+                    to_mask, mask3, Phis.shape[2]
                 )
             if hc_dict["mpd_lim"] is not None:
-                # HC - MPC and MPD
                 mask4 = gen.HC_MPD(Phis, hc_dict["mpd_lim"])
-                lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+                to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
                 Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                    lista, mask4, Phis.shape[2]
+                    to_mask, mask4, Phis.shape[2]
                 )
-            if calc_unc is not False and hc_dict["CoV_max"] is not None:
-                # HC - maximum covariance
+            # HC: Uncertainty-based CoV filter
+            if calc_unc and hc_dict["CoV_max"] is not None:
                 Fn_std, mask5 = gen.HC_CoV(Fns, Fn_std, hc_dict["CoV_max"])
-                lista = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
+                to_mask = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
                 Fns, Xis, Phis, Lambds, Xi_std, Phi_std = gen.applymask(
-                    lista, mask5, Phis.shape[2]
+                    to_mask, mask5, Phis.shape[2]
                 )
 
-        if sc:
-            # Apply SOFT CRITERIA
+        if step1.sc:
+            # SC: Label poles based on soft-criteria thresholds
             Lab = gen.SC_apply(
                 Fns,
                 Xis,
@@ -378,20 +439,22 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
                 sc_dict["err_xi"],
                 sc_dict["err_phi"],
             )
-            lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+            to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
             Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                lista, Lab, Phis.shape[2]
+                to_mask, Lab, Phis.shape[2]
             )
-        # order array (same shape as Fns)
-        order = np.full(Lambds.shape, np.nan)
-        for _kk in range(0, Lambds.shape[1]):
-            order[: _kk * step, _kk] = _kk * step
 
+        # Compute order grid for each pole
+        order = np.full(Lambds.shape, np.nan)
+        for kk in range(0, Lambds.shape[1]):
+            order[: kk * step, kk] = kk * step
+
+        # Compute MPC and MPD arrays for all poles
         MPC = np.apply_along_axis(gen.MPC, axis=2, arr=Phis)
         MPD = np.apply_along_axis(gen.MPD, axis=2, arr=Phis)
 
+        # Vectorize features across non-masked poles
         non_nan_index = np.argwhere(~np.isnan(Fns.flatten(order="f")))
-        # Vettorializzazione features
         features = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std, MPC, MPD, order]
         (
             Fn_fl,
@@ -406,6 +469,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             order_fl,
         ) = clus.vectorize_features(features, non_nan_index)
 
+        # Pre-clustering: optionally filter stable poles before main clustering
         if pre_cluster:
             data_dict = {
                 "Fns": Fns,
@@ -415,7 +479,6 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
                 "MPC": MPC,
                 "MPD": MPD,
             }
-
             feat_arr = clus.build_feature_array(
                 pre_clus_dist, data_dict, ordmax, step, transform
             )
@@ -425,27 +488,30 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
                     labels_all, dlim = clus.GMM(feat_arr, dist=True)
                 else:
                     labels_all = clus.GMM(feat_arr)
-
             elif pre_clus_typ == "kmeans":
                 labels_all = clus.kmeans(feat_arr)
-
             elif pre_clus_typ == "FCMeans":
                 labels_all = clus.FCMeans(feat_arr)
+            else:
+                raise ValueError(f"Unsupported pre-clustering type: {pre_clus_typ}")
 
+            # Keep only stable cluster (label == 0)
             stab_lab = np.argwhere(labels_all == 0)
-
-            lista = [
-                Fn_fl,
-                Xi_fl,
-                Phi_fl,
-                Lambd_fl,
-                Fn_std_fl,
-                Xi_std_fl,
-                Phi_std_fl,
-                MPC_fl,
-                MPD_fl,
-                order_fl,
-            ]
+            filtered = clus.filter_fl_list(
+                [
+                    Fn_fl,
+                    Xi_fl,
+                    Phi_fl,
+                    Lambd_fl,
+                    Fn_std_fl,
+                    Xi_std_fl,
+                    Phi_std_fl,
+                    MPC_fl,
+                    MPD_fl,
+                    order_fl,
+                ],
+                stab_lab,
+            )
             (
                 Fn_fl,
                 Xi_fl,
@@ -457,47 +523,44 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
                 MPC_fl,
                 MPD_fl,
                 order_fl,
-            ) = clus.filter_fl_list(lista, stab_lab)
+            ) = filtered
 
-        if hc == "after" or sc == "after":
-            # apply hc and sc criteria after initial clustering if == "after"
+        # If Hard or Soft criteria to be applied after initial clustering
+        if step1.hc == "after" or step1.sc == "after":
+            # Reconstruct 2D arrays from vectorized features
             list_array1d = [Fn_fl, Xi_fl, Lambd_fl, MPC_fl, MPD_fl, order_fl]
             Fns, Xis, Lambds, MPC, MPD, order = clus.oned_to_2d(
                 list_array1d, order_fl, Fns.shape, step
             )
             Phis = clus.oned_to_2d([Phi_fl], order_fl, Phis.shape, step)[0]
 
-            if hc == "after":
+            if step1.hc == "after":
                 if hc_dict["xi_max"] is not None:
                     Xis, mask2 = gen.HC_damp(Xis, hc_dict["xi_max"])
-                    lista = [Fns, Lambds, Phis, Fn_std, Xi_std, Phi_std]
+                    to_mask = [Fns, Lambds, Phis, Fn_std, Xi_std, Phi_std]
                     Fns, Lambds, Phis, Fn_std, Xi_std, Phi_std = gen.applymask(
-                        lista, mask2, Phis.shape[2]
+                        to_mask, mask2, Phis.shape[2]
                     )
                 if hc_dict["mpc_lim"] is not None:
-                    # HC - MPC and MPD
                     mask3 = gen.HC_MPC(Phis, hc_dict["mpc_lim"])
-                    lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+                    to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
                     Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                        lista, mask3, Phis.shape[2]
+                        to_mask, mask3, Phis.shape[2]
                     )
                 if hc_dict["mpd_lim"] is not None:
-                    # HC - MPC and MPD
                     mask4 = gen.HC_MPD(Phis, hc_dict["mpd_lim"])
-                    lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+                    to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
                     Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                        lista, mask4, Phis.shape[2]
+                        to_mask, mask4, Phis.shape[2]
                     )
-                if calc_unc is not False and hc_dict["CoV_max"] is not None:
-                    # HC - maximum covariance
+                if calc_unc and hc_dict["CoV_max"] is not None:
                     Fn_std, mask5 = gen.HC_CoV(Fns, Fn_std, hc_dict["CoV_max"])
-                    lista = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
+                    to_mask = [Fns, Xis, Phis, Lambds, Xi_std, Phi_std]
                     Fns, Xis, Phis, Lambds, Xi_std, Phi_std = gen.applymask(
-                        lista, mask5, Phis.shape[2]
+                        to_mask, mask5, Phis.shape[2]
                     )
-            if sc == "after":
-                # Apply SOFT CRITERIA
-                # Get the labels of the poles
+
+            if step1.sc == "after":
                 Lab = gen.SC_apply(
                     Fns,
                     Xis,
@@ -505,17 +568,17 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
                     ordmin,
                     ordmax,
                     step,
-                    sc_dict.err_fn,
-                    sc_dict.err_xi,
-                    sc_dict.err_phi,
+                    sc_dict["err_fn"],
+                    sc_dict["err_xi"],
+                    sc_dict["err_phi"],
                 )
-                lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+                to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
                 Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                    lista, Lab, Phis.shape[2]
+                    to_mask, Lab, Phis.shape[2]
                 )
-            # Riappiattisci tutto
+
+            # Re-vectorize features after filtering
             non_nan_index = np.argwhere(~np.isnan(Fns.flatten(order="f")))
-            # Vettorializzazione features
             features = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std, MPC, MPD, order]
             (
                 Fn_fl,
@@ -529,8 +592,8 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
                 MPD_fl,
                 order_fl,
             ) = clus.vectorize_features(features, non_nan_index)
-        # =============================================================================
-        # STEP 2
+
+        # STEP 2: Distance-based clustering
         dist_feat = step2.distance
         weights = step2.weights
         sqrtsqr = step2.sqrtsqr
@@ -541,7 +604,6 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         dc = step2.dc
         n_clusters = step2.n_clusters
 
-        # calculate distance_matrix
         data_dict = {
             "Fn_fl": Fn_fl,
             "Xi_fl": Xi_fl,
@@ -556,24 +618,21 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
 
         if method == "hdbscan":
             labels_clus = clus.hdbscan(dtot, min_size)
-
         elif method == "optics":
             labels_clus = clus.optics(dtot, min_size)
-
         elif method == "hierarc":
             linkage = step2.linkage
             labels_clus = clus.hierarc(
                 dtot, dc, linkage, n_clusters, ordmax, step, Fns, Phis
             )
-
         elif method == "spectral":
             labels_clus = clus.spectral(dsim, n_clusters, ordmax)
-
         elif method == "affinity":
             labels_clus = clus.affinity(dsim)
+        else:
+            raise ValueError(f"Unsupported clustering method: {method}")
 
-        # =============================================================================
-        # STEP 3
+        # STEP 3: Post-processing (filter clusters, merge, remove outliers, etc.)
         post_proc = step3.post_proc
         merge_dist = step3.merge_dist
         if merge_dist == "auto":
@@ -587,97 +646,73 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             merge_dist = xs[dc2_ind]
         elif merge_dist == "deder":
             merge_dist = dlim
+
         select = step3.select
 
         labels = labels_clus.copy()
         unique_labels = set(labels)
         unique_labels.discard(-1)
-
-        # Create a dictionary mapping each label to its corresponding indices
         clusters = {label: np.where(labels == label)[0] for label in unique_labels}
 
         for post_i in post_proc:
-            if post_i == "fn_med" and calc_unc is True:
-                # Frequency-based filtering
-                flattened_results = (Fn_fl, Fn_std_fl)
-                clusters, labels = clus.post_fn_med(clusters, labels, flattened_results)
-
+            if post_i == "fn_med" and calc_unc:
+                clusters, labels = clus.post_fn_med(clusters, labels, (Fn_fl, Fn_std_fl))
             if post_i == "fn_IQR":
-                # Frequency-based filtering
                 clusters, labels = clus.post_fn_IQR(clusters, labels, Fn_fl)
-
             if post_i == "damp_IQR":
-                # Damping-based filtering
                 clusters, labels = clus.post_xi_IQR(clusters, labels, Xi_fl)
-
             if post_i == "min_size":
-                # Minimum size based filtering (min_size from step2)
                 clusters, labels = clus.post_min_size(clusters, labels, min_size)
-
             if post_i == "min_size_pctg":
                 min_pctg = step3.min_pctg
-                # Minimum size based filtering (minimum size min_pctg % of biggest cluster)
                 clusters, labels = clus.post_min_size_pctg(clusters, labels, min_pctg)
-
             if post_i == "min_size_kmeans":
-                # Minimum size based filtering (minimum size from kmeans)
                 clusters, labels = clus.post_min_size_kmeans(labels)
-
             if post_i == "min_size_gmm":
-                # Minimum size based filtering (minimum size from gaussian mixture)
                 clusters, labels = clus.post_min_size_gmm(labels)
-
             if post_i == "merge_similar":
-                # Merge similar clusters
                 clusters, labels = clus.post_merge_similar(
                     clusters, labels, dtot, merge_dist
                 )
-
             if post_i == "1xorder":
-                # keep only one pole per order¨
                 clusters, labels = clus.post_1xorder(clusters, labels, dtot, order_fl)
-
             if post_i == "MTT":
-                # Removing outliers with the modified Thompson Tau Techinique (Neu 2017)
-                flattened_results = (Fn_fl, Xi_fl)
-                clusters, labels = clus.post_MTT(clusters, labels, flattened_results)
-
+                clusters, labels = clus.post_MTT(clusters, labels, (Fn_fl, Xi_fl))
             if post_i == "ABP":
-                # Removing outliers with the Adjusted boxplot method
-                flattened_results = (Fn_fl, Xi_fl)
                 clusters, labels = clus.post_adjusted_boxplot(
-                    clusters, labels, flattened_results
+                    clusters, labels, (Fn_fl, Xi_fl)
                 )
-        # # Sort clusters in ascending order of frequency
+
+        # Reorder clusters by ascending frequency
         clusters, labels = clus.reorder_clusters(clusters, labels, Fn_fl)
 
-        # limit the cluster to be inside freq_lim
+        # Enforce frequency limit on final clusters if needed
         if freq_lim is not None:
             clusters, labels = clus.post_freq_lim(clusters, labels, freq_lim, Fn_fl)
 
-        # Recompute medoids for the final clusters
+        # Compute medoids for each cluster
         medoids = {}
         for label, indices in clusters.items():
             if len(indices) == 0:
-                continue  # Skip empty clusters
+                continue
             submatrix = dtot[np.ix_(indices, indices)]
             total_distances = submatrix.sum(axis=1)
             medoid_index = indices[np.argmin(total_distances)]
             medoids[label] = medoid_index
 
-        # Compute inter-medoid distances for the final clusters
         medoid_indices = list(medoids.values())
         medoid_distances = dtot[np.ix_(medoid_indices, medoid_indices)]
 
-        # SELECTION OF RESULTS
+        # Select final outputs: frequencies, damping, mode shapes, and uncertainties
         flattened_results = (Fn_fl, Xi_fl, Phi_fl.squeeze(), order_fl)
         Fn_out, Xi_out, Phi_out, order_out = clus.output_selection(
             select, clusters, flattened_results, medoid_indices
         )
-        if calc_unc is True:
-            flattened_results1 = (Fn_std_fl, Xi_std_fl, Phi_std_fl.squeeze(), order_fl)
+
+        if calc_unc:
+            flattened_unc = (Fn_std_fl, Xi_std_fl, Phi_std_fl.squeeze(), order_fl)
             Fn_std_out, Xi_std_out, Phi_std_out, order_out = clus.output_selection(
-                select, clusters, flattened_results1, medoid_indices
+                select, clusters, flattened_unc, medoid_indices
             )
             Phi_std_out = Phi_std_out.T
         else:
@@ -685,7 +720,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             Xi_std_out = None
             Phi_std_out = None
 
-        logger.debug("...saving clustering %s result", name)
+        logger.debug("Saving clustering '%s' result.", name)
 
         risultati = dict(
             Fn=Fn_out,
@@ -706,199 +741,217 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             Xi_std=Xi_std_out,
             Phi_std=Phi_std_out,
         )
-        self.result.clustering_results[f"{name}"] = ClusteringResult(**risultati)
+        self.result.clustering_results[name] = ClusteringResult(**risultati)
 
-    def plot_silhouette(self, name):
+    def plot_silhouette(self, name: str) -> tuple:
         """
-        Plot the Stabilisation Diagram with clustering results.
+        Plot silhouette scores for clustering results (Stabilization Diagram).
+
+        For a given clustering name, this method computes and plots silhouette scores
+        from the distance matrix (dtot) and cluster labels, which indicate how well
+        each data point fits within its assigned cluster.
 
         Parameters
         ----------
         name : str
-            Name of the clustering result to plot.
-        plot_noise : bool, optional
-            Whether to include noise points in the plot. Default is True.
+            Name of the clustering result to plot. Use 'all' to plot for every stored clustering.
 
         Returns
         -------
-        fig, ax : tuple
-            Matplotlib figure and axes containing the Stabilisation Diagram.
+        tuple or list of tuples
+            If name is a single clustering, returns (fig, ax) for that clustering.
+            If name == 'all', returns two lists: ([fig1, fig2, ...], [ax1, ax2, ...]).
+
+        Raises
+        ------
+        ValueError
+            If there are no clustering results stored.
+        AttributeError
+            If the specified clustering name does not exist.
         """
         if name == "all":
-            if len(self.result.clustering_results) == 0:
+            if not self.result.clustering_results:
                 raise ValueError("No clustering results available.")
             names = list(self.result.clustering_results.keys())
-
-            figs = []
-            axs = []
-            for name in names:
-                try:
-                    clus_res = self.result.clustering_results[name]
-                except KeyError as e:
+            figs, axs = [], []
+            for nm in names:
+                clus_res = self.result.clustering_results.get(nm)
+                if clus_res is None:
                     raise AttributeError(
-                        f"'{name}' is not a valid clustering algorithm name.\n"
-                        f"Valid names are: {list(self.result.clustering_results.keys())}"
-                    ) from e
+                        f"'{nm}' is not a valid clustering algorithm name. "
+                        f"Valid names: {list(self.result.clustering_results.keys())}"
+                    )
                 labels = clus_res.labels
                 dtot = clus_res.dtot
-                # Use np.where to ensure that small negative elements are set to their abs value
+                # Correct minor negative values due to numerical issues
                 dtot_c = np.where((dtot < 0) & (np.abs(dtot) < 1e-10), np.abs(dtot), dtot)
-
-                fig, ax = plot.plot_silhouette(dtot_c, labels, name)
+                fig, ax = plot.plot_silhouette(dtot_c, labels, nm)
                 figs.append(fig)
                 axs.append(ax)
             return figs, axs
-
         else:
-            try:
-                clus_res = self.result.clustering_results[name]
-            except KeyError as e:
+            clus_res = self.result.clustering_results.get(name)
+            if clus_res is None:
                 raise AttributeError(
-                    f"'{name}' is not a valid clustering algorithm name.\n"
-                    f"Valid names are: {list(self.result.clustering_results.keys())}"
-                ) from e
-            clus_res = self.result.clustering_results[name]
+                    f"'{name}' is not a valid clustering algorithm name. "
+                    f"Valid names: {list(self.result.clustering_results.keys())}"
+                )
             labels = clus_res.labels
             dtot = clus_res.dtot
-            # Use np.where to ensure that small negative elements are set to their abs value
             dtot_c = np.where((dtot < 0) & (np.abs(dtot) < 1e-10), np.abs(dtot), dtot)
-
             fig, ax = plot.plot_silhouette(dtot_c, labels, name)
             return fig, ax
 
-    def plot_stab_cluster(self, name, plot_noise=True):
+    def plot_stab_cluster(
+        self,
+        name: str,
+        plot_noise: bool = True,
+        freqlim: typing.Optional[tuple[float, float]] = None,
+    ) -> tuple:
         """
-        Plot the Stabilisation Diagram with clustering results.
+        Plot stabilization diagram overlaid with clustering results.
+
+        Visualizes mode stability (frequency vs. model order) and colors each point
+        according to its cluster label. Optionally include noise points.
 
         Parameters
         ----------
         name : str
-            Name of the clustering result to plot.
+            Name of the clustering result to plot. Use 'all' to create figures for all clusterings.
         plot_noise : bool, optional
-            Whether to include noise points in the plot. Default is True.
+            If True, noise points (label == -1) are included in the plot. Default is True.
+        freqlim : tuple(float, float), optional
+            Frequency axis limits as (min_freq, max_freq). If None, auto-scale is used.
 
         Returns
         -------
-        fig, ax : tuple
-            Matplotlib figure and axes containing the Stabilisation Diagram.
+        tuple or list of tuples
+            If name is single clustering, returns (fig, ax).
+            If name == 'all', returns lists: ([fig1, fig2, ...], [ax1, ax2, ...]).
+
+        Raises
+        ------
+        ValueError
+            If there are no clustering results stored.
+        AttributeError
+            If the specified clustering name does not exist.
         """
         if name == "all":
-            if len(self.result.clustering_results) == 0:
+            if not self.result.clustering_results:
                 raise ValueError("No clustering results available.")
             names = list(self.result.clustering_results.keys())
-
-            figs = []
-            axs = []
-            for name in names:
-                try:
-                    clus_res = self.result.clustering_results[name]
-                except KeyError as e:
+            figs, axs = [], []
+            for nm in names:
+                clus_res = self.result.clustering_results.get(nm)
+                if clus_res is None:
                     raise AttributeError(
-                        f"'{name}' is not a valid clustering algorithm name.\n"
-                        f"Valid names are: {list(self.result.clustering_results.keys())}"
-                    ) from e
+                        f"'{nm}' is not a valid clustering algorithm name. "
+                        f"Valid names: {list(self.result.clustering_results.keys())}"
+                    )
                 Fn_fl = clus_res.Fn_fl
                 Fn_std_fl = clus_res.Fn_std_fl
                 order_fl = clus_res.order_fl
                 labels = clus_res.labels
 
                 ordmax = self.run_params.ordmax
-                step = self.run_params.step
+                # step = self.run_params.step
 
                 fig, ax = plot.stab_clus_plot(
                     Fn_fl,
                     order_fl,
                     labels,
                     ordmax=ordmax,
-                    step=step,
                     plot_noise=plot_noise,
+                    freqlim=freqlim,
                     Fn_std=Fn_std_fl,
-                    name=name,
+                    name=nm,
                 )
                 figs.append(fig)
                 axs.append(ax)
             return figs, axs
-
         else:
-            try:
-                clus_res = self.result.clustering_results[name]
-            except KeyError as e:
+            clus_res = self.result.clustering_results.get(name)
+            if clus_res is None:
                 raise AttributeError(
-                    f"'{name}' is not a valid clustering algorithm name.\n"
-                    f"Valid names are: {list(self.result.clustering_results.keys())}"
-                ) from e
-
+                    f"'{name}' is not a valid clustering algorithm name. "
+                    f"Valid names: {list(self.result.clustering_results.keys())}"
+                )
             Fn_fl = clus_res.Fn_fl
             Fn_std_fl = clus_res.Fn_std_fl
             order_fl = clus_res.order_fl
             labels = clus_res.labels
 
             ordmax = self.run_params.ordmax
-            step = self.run_params.step
+            # step = self.run_params.step
 
             fig, ax = plot.stab_clus_plot(
                 Fn_fl,
                 order_fl,
                 labels,
                 ordmax=ordmax,
-                step=step,
                 plot_noise=plot_noise,
+                freqlim=freqlim,
                 Fn_std=Fn_std_fl,
                 name=name,
             )
             return fig, ax
 
-    def plot_freqvsdamp_cluster(self, name, plot_noise=True):
+    def plot_freqvsdamp_cluster(self, name: str, plot_noise: bool = True) -> tuple:
         """
-        Plot the frequency-damping cluster plot for a clustering result.
+        Plot frequency-damping scatter with cluster coloring.
+
+        Shows each pole's natural frequency vs. damping ratio, colored by cluster label.
+        Optionally include noise points (label == -1).
 
         Parameters
         ----------
         name : str
-            Name of the clustering result to plot.
+            Name of the clustering result to plot. Use 'all' to create figures for all clusterings.
         plot_noise : bool, optional
-            Whether to include noise points in the plot. Default is True.
+            If True, noise points are included. Default is True.
 
         Returns
         -------
-        fig, ax : tuple
-            Matplotlib figure and axes containing the frequency-damping cluster plot.
+        tuple or list of tuples
+            If name is single clustering, returns (fig, ax).
+            If name == 'all', returns lists: ([fig1, fig2, ...], [ax1, ax2, ...]).
+
+        Raises
+        ------
+        ValueError
+            If there are no clustering results stored.
+        AttributeError
+            If the specified clustering name does not exist.
         """
         if name == "all":
-            if len(self.result.clustering_results) == 0:
+            if not self.result.clustering_results:
                 raise ValueError("No clustering results available.")
             names = list(self.result.clustering_results.keys())
-
-            figs = []
-            axs = []
-            for name in names:
-                try:
-                    clus_res = self.result.clustering_results[name]
-                except KeyError as e:
+            figs, axs = [], []
+            for nm in names:
+                clus_res = self.result.clustering_results.get(nm)
+                if clus_res is None:
                     raise AttributeError(
-                        f"'{name}' is not a valid clustering algorithm name.\n"
-                        f"Valid names are: {list(self.result.clustering_results.keys())}"
-                    ) from e
+                        f"'{nm}' is not a valid clustering algorithm name. "
+                        f"Valid names: {list(self.result.clustering_results.keys())}"
+                    )
                 Fn_fl = clus_res.Fn_fl
                 Xi_fl = clus_res.Xi_fl
                 labels = clus_res.labels
 
                 fig, ax = plot.freq_vs_damp_plot(
-                    Fn_fl, Xi_fl, labels, plot_noise=plot_noise, name=name
+                    Fn_fl, Xi_fl, labels, plot_noise=plot_noise, name=nm
                 )
                 figs.append(fig)
                 axs.append(ax)
             return figs, axs
-
         else:
-            try:
-                clus_res = self.result.clustering_results[name]
-            except KeyError as e:
+            clus_res = self.result.clustering_results.get(name)
+            if clus_res is None:
                 raise AttributeError(
-                    f"'{name}' is not a valid clustering algorithm name.\n"
-                    f"Valid names are: {list(self.result.clustering_results.keys())}"
-                ) from e
-            clus_res = self.result.clustering_results[name]
+                    f"'{name}' is not a valid clustering algorithm name. "
+                    f"Valid names: {list(self.result.clustering_results.keys())}"
+                )
             Fn_fl = clus_res.Fn_fl
             Xi_fl = clus_res.Xi_fl
             labels = clus_res.labels
@@ -908,50 +961,58 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             )
             return fig, ax
 
-    def plot_dtot_distrib(self, name, bins="auto"):
+    def plot_dtot_distrib(
+        self, name: str, bins: typing.Union[int, str] = "auto"
+    ) -> tuple:
         """
-        Plot the distribution of the distance matrix for clustering.
+        Plot histogram of pairwise distances from clustering distance matrix (dtot).
+
+        Provides visualization of distance distribution used in clustering.
 
         Parameters
         ----------
         name : str
-            Name of the clustering result to plot.
-        bins : str, optional
-            Bin size for the histogram. Default is 'auto'.
+            Name of the clustering result to plot. Use 'all' to plot for every stored clustering.
+        bins : int or str, optional
+            Number of bins or binning strategy for histogram. Default is 'auto'.
+
         Returns
         -------
-        fig, ax : tuple
-            Matplotlib figure and axes containing the distance matrix histogram.
+        tuple or list of tuples
+            If name is single clustering, returns (fig, ax).
+            If name == 'all', returns lists: ([fig1, fig2, ...], [ax1, ax2, ...]).
+
+        Raises
+        ------
+        ValueError
+            If there are no clustering results stored.
+        AttributeError
+            If the specified clustering name does not exist.
         """
         if name == "all":
-            if len(self.result.clustering_results) == 0:
+            if not self.result.clustering_results:
                 raise ValueError("No clustering results available.")
             names = list(self.result.clustering_results.keys())
-
-            figs = []
-            axs = []
-            for name in names:
-                try:
-                    clus_res = self.result.clustering_results[name]
-                except KeyError as e:
+            figs, axs = [], []
+            for nm in names:
+                clus_res = self.result.clustering_results.get(nm)
+                if clus_res is None:
                     raise AttributeError(
-                        f"'{name}' is not a valid clustering algorithm name.\n"
-                        f"Valid names are: {list(self.result.clustering_results.keys())}"
-                    ) from e
+                        f"'{nm}' is not a valid clustering algorithm name. "
+                        f"Valid names: {list(self.result.clustering_results.keys())}"
+                    )
                 dtot = clus_res.dtot
                 fig, ax = plot.plot_dtot_hist(dtot, bins=bins)
                 figs.append(fig)
                 axs.append(ax)
             return figs, axs
         else:
-            try:
-                clus_res = self.result.clustering_results[name]
-            except KeyError as e:
+            clus_res = self.result.clustering_results.get(name)
+            if clus_res is None:
                 raise AttributeError(
-                    f"'{name}' is not a valid clustering algorithm name.\n"
-                    f"Valid names are: {list(self.result.clustering_results.keys())}"
-                ) from e
-            clus_res = self.result.clustering_results[name]
+                    f"'{name}' is not a valid clustering algorithm name. "
+                    f"Valid names: {list(self.result.clustering_results.keys())}"
+                )
             dtot = clus_res.dtot
             fig, ax = plot.plot_dtot_hist(dtot, bins=bins)
             return fig, ax
@@ -961,44 +1022,55 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         sel_freq: typing.List[float],
         order_in: typing.Union[int, str] = "find_min",
         rtol: float = 5e-2,
-    ) -> typing.Any:
+    ) -> None:
         """
-        Extracts the modal parameters at the selected frequencies.
+        Extract modal parameters at specified frequencies (stationary MPE).
+
+        Uses previously identified poles (Fn_poles, Xi_poles, Phi_poles) to extract modal
+        parameters corresponding to the user-selected frequencies (sel_freq). Optionally,
+        the minimum stable order is found automatically if order_in == 'find_min'.
 
         Parameters
         ----------
         sel_freq : list of float
-            Selected frequencies for modal parameter extraction.
-        order : int or str, optional
-            Model order for extraction, or 'find_min' to auto-determine the minimum stable order.
-            Default is 'find_min'.
+            Frequencies (in Hz) at which to extract modal parameters.
+        order_in : int or 'find_min', optional
+            Fixed model order to use for extraction, or 'find_min' to automatically select
+            the lowest order where each mode is stable. Default is 'find_min'.
         rtol : float, optional
-            Relative tolerance for comparing frequencies. Default is 5e-2.
+            Relative tolerance for matching selected frequencies to identified poles.
+            Default is 5e-2.
 
         Returns
         -------
-        typing.Any
-            The extracted modal parameters. The format and content depend on the algorithm's implementation.
+        None
+
+        Notes
+        -----
+        Saves extracted modal frequencies (self.result.Fn), damping ratios (self.result.Xi),
+        mode shapes (self.result.Phi), and their uncertainties (self.result.Fn_std,
+        self.result.Xi_std, self.result.Phi_std). The output order (self.result.order_out)
+        is also stored.
         """
         super().mpe(sel_freq=sel_freq, order_in=order_in, rtol=rtol)
 
-        # Save run parameters
+        # Store MPE parameters
         self.mpe_params.sel_freq = sel_freq
         self.mpe_params.order_in = order_in
         self.mpe_params.rtol = rtol
 
-        # Get poles
+        # Retrieve identified poles and uncertainties
         Fn_pol = self.result.Fn_poles
         Xi_pol = self.result.Xi_poles
         Phi_pol = self.result.Phi_poles
         Lab = self.result.Lab
         step = self.run_params.step
 
-        # Get cov
         Fn_pol_std = self.result.Fn_poles_std
         Xi_pol_std = self.result.Xi_poles_std
         Phi_pol_std = self.result.Phi_poles_std
-        # Extract modal results
+
+        # Perform modal parameter extraction
         Fn, Xi, Phi, order_out, Fn_std, Xi_std, Phi_std = ssi.SSI_mpe(
             sel_freq,
             Fn_pol,
@@ -1013,7 +1085,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             Phi_std=Phi_pol_std,
         )
 
-        # Save results
+        # Store extraction results in self.result
         self.result.order_out = order_out
         self.result.Fn = Fn
         self.result.Xi = Xi
@@ -1026,45 +1098,52 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         rtol: float = 1e-2,
-    ) -> typing.Any:
+    ) -> None:
         """
-        Interactive method for extracting modal parameters by selecting frequencies from a plot.
+        Interactive modal parameter extraction based on frequency selection from a plot.
+
+        Displays an interactive Stabilization Diagram or frequency plot (via SelFromPlot)
+        where the user can click on modes of interest. Selected frequencies and corresponding
+        orders are then used to extract modal parameters similarly to mpe().
 
         Parameters
         ----------
-        freqlim : tuple of float, optional
-            Frequency limits for the plot. If None, limits are determined automatically. Default is None.
+        freqlim : tuple(float, float), optional
+            Frequency limits for the interactive plot. If None, limits are determined automatically.
+            Default is None.
         rtol : float, optional
-            Relative tolerance for comparing frequencies. Default is 1e-2.
+            Relative tolerance for matching selected frequencies to identified poles.
+            Default is 1e-2.
 
         Returns
         -------
-        typing.Any
-            The extracted modal parameters after interactive selection. Format depends on algorithm's
-            implementation.
+        None
+
+        Notes
+        -----
+        After user selection, self.result.Fn, Xi, Phi, Fn_std, Xi_std, Phi_std, and order_out
+        are populated with extracted modal parameters.
         """
         super().mpe_from_plot(freqlim=freqlim, rtol=rtol)
 
-        # Save run parameters
+        # Save relative tolerance
         self.mpe_params.rtol = rtol
 
-        # Get poles
         Fn_pol = self.result.Fn_poles
         Xi_pol = self.result.Xi_poles
         Phi_pol = self.result.Phi_poles
         step = self.run_params.step
 
-        # Get cov
         Fn_pol_std = self.result.Fn_poles_std
         Xi_pol_std = self.result.Xi_poles_std
         Phi_pol_std = self.result.Phi_poles_std
 
-        # call interactive plot
+        # Launch interactive frequency selection
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
         sel_freq = SFP.result[0]
         order = SFP.result[1]
 
-        # and then extract results
+        # Extract modal parameters from user-selected frequencies
         Fn, Xi, Phi, order_out, Fn_std, Xi_std, Phi_std = ssi.SSI_mpe(
             sel_freq,
             Fn_pol,
@@ -1079,7 +1158,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             Phi_std=Phi_pol_std,
         )
 
-        # Save results
+        # Store results
         self.result.order_out = order_out
         self.result.Fn = Fn
         self.result.Xi = Xi
@@ -1094,27 +1173,37 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         hide_poles: typing.Optional[bool] = True,
         spectrum: bool = False,
         nSv: typing.Union[int, "all"] = "all",
-    ) -> typing.Any:
+    ) -> tuple:
         """
-        Plot the Stability Diagram for the SSI algorithms.
+        Plot the Stabilization Diagram for the SSI algorithm.
 
-        The Stability Diagram helps visualize the stability of identified poles across different
-        model orders, making it easier to separate physical poles from spurious ones.
+        The diagram shows identified pole frequencies across model orders, highlighting
+        stable poles. Optionally overlay the measured spectral singular values (CMIF plot).
 
         Parameters
         ----------
-        freqlim : tuple of float, optional
-            Frequency limits for the plot. If None, limits are determined automatically. Default is None.
+        freqlim : tuple(float, float), optional
+            Frequency limits for the plot. If None, determined automatically. Default is None.
         hide_poles : bool, optional
-            Option to hide poles in the plot for clarity. Default is True.
+            If True, hide individual poles for clarity. Default is True.
+        spectrum : bool, optional
+            If True, overlay the measured spectral singular values (CMIF) on a secondary axis.
+            Default is False.
+        nSv : int or 'all', optional
+            Number of singular values for CMIF plot. Default is 'all'.
 
         Returns
         -------
-        typing.Any
-            A tuple containing the matplotlib figure and axes of the Stability Diagram plot.
+        tuple
+            (fig, ax) where fig is the matplotlib Figure and ax is the primary Axes.
+
+        Raises
+        ------
+        ValueError
+            If the SSI algorithm has not been run (self.result is None).
         """
-        if not self.result:
-            raise ValueError("Run algorithm first")
+        if self.result is None:
+            raise ValueError("Run SSI algorithm first (call run()).")
 
         fig, ax = plot.stab_plot(
             Fn=self.result.Fn_poles,
@@ -1133,9 +1222,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             if not hasattr(self, "Sy"):
                 self.est_spectrum()
             Sval, _ = fdd.SD_svalsvec(self.Sy)
-            # Instantiate a second axes that shares the same x-axis
             ax2 = ax.twinx()
-            # Plot the spectrum on the second axes
             fig, ax = plot.CMIF_plot(Sval, self.freq, ax=ax2, freqlim=freqlim, nSv=nSv)
 
         return fig, ax
@@ -1144,68 +1231,70 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
-    ) -> typing.Any:
+    ) -> tuple:
         """
-        Plot the frequency-damping cluster diagram for the identified modal parameters.
+        Plot frequency vs. damping scatter (cluster plot) for all identified poles.
 
-        The cluster diagram visualizes the relationship between frequencies and damping
-        ratios for the identified poles, helping to identify clusters of physical modes.
+        Visualizes the distribution of identified mode frequencies and damping ratios,
+        helping to identify clusters of physical modes in the dataset.
 
         Parameters
         ----------
-        freqlim : tuple of float, optional
-            Frequency limits for the plot. If None, limits are determined automatically. Default is None.
+        freqlim : tuple(float, float), optional
+            Frequency limits for the plot. If None, determined automatically. Default is None.
         hide_poles : bool, optional
-            Option to hide poles in the plot for clarity. Default is True.
+            If True, hide individual pole markers in the scatter. Default is True.
 
         Returns
         -------
-        typing.Any
-            A tuple containing the matplotlib figure and axes of the cluster diagram plot.
+        tuple
+            (fig, ax) where fig is the matplotlib Figure and ax is the Axes.
+
+        Raises
+        ------
+        ValueError
+            If the SSI algorithm has not been run (self.result is None).
         """
-        if not self.result:
-            raise ValueError("Run algorithm first")
+        if self.result is None:
+            raise ValueError("Run SSI algorithm first (call run()).")
 
         fig, ax = plot.cluster_plot(
             Fn=self.result.Fn_poles,
             Xi=self.result.Xi_poles,
             Lab=self.result.Lab,
-            ordmin=self.run_params.ordmin,
             freqlim=freqlim,
             hide_poles=hide_poles,
         )
         return fig, ax
 
-    def plot_svalH(
-        self,
-        iter_n: typing.Optional[int] = None,
-    ) -> typing.Any:
+    def plot_svalH(self, iter_n: typing.Optional[int] = None) -> tuple:
         """
-        Plot the singular values of the Hankel matrix for the SSI algorithm.
+        Plot singular values of the Hankel matrix model order.
 
-        This plot is useful for checking the influence of the number of block-rows, br,
-        on the Singular Values of the Hankel matrix.
+        This plot helps inspect the singular value decay as a function of block-row index,
+        giving insight into model order selection and system observability.
 
         Parameters
         ----------
         iter_n : int, optional
-            The iteration number for which to plot the singular values. If None, the last
-            iteration is used. Default is None.
+            Specific iteration (model order) at which to plot singular values. If None,
+            uses the maximum order (self.run_params.ordmax). Default is None.
 
         Returns
         -------
-        typing.Any
-            A tuple containing the matplotlib figure and axes of the singular value plot.
+        tuple
+            (fig, ax) where fig is the matplotlib Figure and ax is the Axes.
 
         Raises
         ------
         ValueError
-            If the algorithm has not been run before plotting.
+            If the SSI algorithm has not been run (self.result is None).
         """
-        if not self.result:
-            raise ValueError("Run algorithm first")
+        if self.result is None:
+            raise ValueError("Run SSI algorithm first (call run()).")
         if iter_n is None:
             iter_n = self.run_params.ordmax
+
         fig, ax = plot.svalH_plot(H=self.result.H, br=self.run_params.br, iter_n=iter_n)
         return fig, ax
 
@@ -1213,43 +1302,47 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
 # =============================================================================
 # MULTISETUP
 # =============================================================================
-# (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
+# (REF) STOCHASTIC SUBSPACE IDENTIFICATION
 class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
     """
-    Implements the Data-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup
-    experiments.
+    Perform Stochastic Subspace Identification (SSI) on multi-setup measurement data.
 
-    This class extends the SSIdat class to handle data from multiple experimental setups, with
-    moving and reference sensors.
+    Extends the single-setup SSI implementation to handle data from multiple measurement
+    setups (e.g., moving and reference sensors). Builds combined observability, state,
+    and output matrices across setups and identifies global poles.
 
-    Inherits all attributes and methods from SSIdat, with focus on multi-setup data handling.
+    Inherits methods and attributes from SSI, overriding run() to accommodate multi-setup data.
 
     Attributes
     ----------
     Inherits all attributes from SSI.
-
-    Methods
-    -------
-    Inherits other methods from SSI, applicable to multi-setup scenarios.
+    method : Literal["dat", "cov_R", "cov"]
+        Default SSI method for multi-setup. Set to 'cov' by default.
     """
 
     method: typing.Literal["dat", "cov_R", "cov"] = "cov"
 
     def run(self) -> SSIResult:
         """
-        Executes the SSI algorithm for multiple setups and returns the results.
+        Execute the SSI algorithm across multiple experimental setups.
 
-        Processes the input data from multiple setups using the Data-Driven Stochastic Subspace
-        Identification method. It builds Hankel matrices for each setup and computes the state and
-        output matrices, along with frequency poles.
+        Builds a Hankel matrix from concatenated multi-setup data, computes the global
+        observability matrix (Obs), state transition matrix (A), and output matrix (C),
+        then extracts poles (frequencies, damping, mode shapes) and applies validation criteria.
 
         Returns
         -------
         SSIResult
-            An object containing the system matrices, poles, damping ratios, and mode shapes across
-            multiple setups.
-        """
+            Contains combined observability matrix (Obs), state matrix (A), output matrix (C),
+            eigenvalues (Lambds), identified global poles (Fn_poles, Xi_poles, Phi_poles),
+            pole labels (Lab), and pole uncertainties (Fn_poles_std, Xi_poles_std, Phi_poles_std)
+            (uncertainties are set to None since calc_unc is False for multi-setup).
 
+        Raises
+        ------
+        ValueError
+            If input data does not match expected multi-setup format or run parameters are invalid.
+        """
         Y = self.data
         br = self.run_params.br
         method_hank = self.run_params.method or self.method
@@ -1259,13 +1352,15 @@ class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
         sc = self.run_params.sc
         hc = self.run_params.hc
 
-        # Build Hankel matrix and Get observability matrix, state matrix and output matrix
+        # Build combined Hankel/observability matrices and retrieve A, C
         Obs, A, C = ssi.SSI_multi_setup(
             Y, self.fs, br, ordmax, step=1, method_hank=method_hank
         )
 
+        # Maximum damping ratio for hard criterion
         hc_xi_max = hc["xi_max"]
-        # Get frequency poles (and damping and mode shapes)
+
+        # Compute poles across multi-setup data
         Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = ssi.SSI_poles(
             Obs,
             A,
@@ -1278,27 +1373,25 @@ class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
             xi_max=hc_xi_max,
         )
 
-        # VALIDATION CRITERIA FOR POLES
+        # Hard criteria thresholds
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
-        # hc_CoV_max = hc["CoV_max"]
 
-        # HC - MPC and MPD
         if hc_mpc_lim is not None:
             mask3 = gen.HC_MPC(Phis, hc_mpc_lim)
-            lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+            to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
             Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                lista, mask3, Phis.shape[2]
-            )
-        if hc_mpd_lim is not None:
-            mask4 = gen.HC_MPD(Phis, hc_mpd_lim)
-            lista = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
-            Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
-                lista, mask4, Phis.shape[2]
+                to_mask, mask3, Phis.shape[2]
             )
 
-        # Apply SOFT CRITERIA
-        # Get the labels of the poles
+        if hc_mpd_lim is not None:
+            mask4 = gen.HC_MPD(Phis, hc_mpd_lim)
+            to_mask = [Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std]
+            Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = gen.applymask(
+                to_mask, mask4, Phis.shape[2]
+            )
+
+        # Apply soft criteria to label poles
         Lab = gen.SC_apply(
             Fns,
             Xis,
@@ -1311,7 +1404,6 @@ class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
             sc["err_phi"],
         )
 
-        # Return results
         return SSIResult(
             Obs=Obs,
             A=A,

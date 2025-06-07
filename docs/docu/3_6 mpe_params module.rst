@@ -14,8 +14,6 @@ Classes:
       Class for storing Stochastic Subspace Identification (SSI) MPE parameters.
    :class:`.pLSCFMPEParams`
       Class for storing poly-reference Least Square Complex Frequency (pLSCF) MPE parameters.
-   :class:`.AutoSSIMPEParams`
-      Class for storing Stochastic Subspace Identification (SSI) MPE parameters.
 
 .. Warning::
     The module is designed to be used as part of the pyOMA2 package and relies on its

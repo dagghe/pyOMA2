@@ -120,6 +120,9 @@ References
 .. [PAGL04] Peeters, B., Van der Auweraer, H., Guillaume, P., & Leuridan, J. (2004).
    The PolyMAX frequency-domain method: a new standard for modal parameter estimation?.
    Shock and Vibration, 11(3-4), 395-409.
+.. [MDM16] Mellinger, P., Döhler, M., & Mevel, L. (2016).
+   Variance estimation of modal parameters from output-only and input/output subspace-based system identification.
+   Journal of Sound and Vibration, 379, 1–27.
 
 .. _source: https://github.com/dagghe/pyOMA2
 
