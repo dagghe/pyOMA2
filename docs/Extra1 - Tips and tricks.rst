@@ -20,7 +20,7 @@ To start the analysis we need to have the data loaded as an array with shape (Nd
     from pyoma2.setup.single import SingleSetup
     from pyoma2.algorithms.data.run_params import EFDDRunParams, SSIRunParams
     from pyoma2.algorithms.fdd import FSDD
-    from pyoma2.algorithms.ssi import SSIcov
+    from pyoma2.algorithms.ssi import SSI
     from pyoma2.functions.plot import plot_mac_matrix, plot_mode_complexity
     from pyoma2.functions.gen import save_to_file, load_from_file
 
@@ -28,7 +28,7 @@ To start the analysis we need to have the data loaded as an array with shape (Nd
     data, ground_truth = example_data()
 
     # Create an instance of the setup class
-    simp_5dof = SingleSetup(data, fs=600)
+    simp_5dof = SingleSetup(data, fs=100)
 
 Once we have created the instance of the setup class we have access to a series of methods (and attributes) that let us inspect the data:
 - The ``data`` attribute stores the input data.
@@ -49,7 +49,7 @@ Moreover we have access to some methods useful to pre-process the data at hand:
 .. code-block:: python
 
     # Decimate the data
-    simp_5dof.decimate_data(q=30)
+    simp_5dof.decimate_data(q=2)
 
 Once we´re done with the pre-processing we can start with the analysis.
 
@@ -66,7 +66,7 @@ The parameters required to run each algorithm can be passed one by one to the al
 .. code-block:: python
 
     # Do the same for SSI, changing some of the default arguments
-    ssi_runpar = SSIRunParams(br=50, ordmax=50, calc_unc=True)
+    ssi_runpar = SSIRunParams(method="cov", br=20, ordmax=50, calc_unc=True, step=2)
     dict(ssi_runpar)
 
 .. code-block:: python
@@ -78,7 +78,7 @@ The parameters required to run each algorithm can be passed one by one to the al
 
     ssicov = SSIcov(name="SSIcov", run_params=ssi_runpar)
     # Equivalent to
-    ssicov1 = SSIcov(name="SSIcov1", br=50, ordmax=50, calc_unc=True)
+    ssicov1 = SSIcov(name="SSIcov1", method="cov", br=20, ordmax=50, calc_unc=True, step=2)
 
 The ``run_params`` attribute of the algorithm instance let us inspect the parameters passed and overwrite/update them if needed.
 
@@ -88,7 +88,7 @@ The ``run_params`` attribute of the algorithm instance let us inspect the parame
     print("SSI run parameters: ", ssicov.run_params)
 
     # Overwrite/update run parameters for an algorithm
-    fsdd.run_params = FSDD.RunParamCls(nxseg=2048, method_SD="cor", pov=0.5)
+    fsdd.run_params = FSDD.RunParamCls(nxseg=2048, method_SD="per", pov=0.5)
     print("")
     print("FSDD run parameters: ", fsdd.run_params)
 
