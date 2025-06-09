@@ -12,17 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified SSI algorithms class. With this change the user specifies which SSI algorithm to perform (i.e. "cov", "cov_R", "dat", "IOcov") in the RunParam class. In this way Clustering algorithms can be applied to every SSI algorithm.
 - plot_stab() method of SSI class now accepts two new arguments to add a second optional axis with the plot of the singular values of the PSD matrix.
 - SSI_fast() function (pyoma2.functions.ssi) now return also the G matrix (next state-output covariance matrix)
-- polished code and docstrings in ssi.py (algorithms), ssi.py (functions), plot.py, run_params.py
+- refactor code and docstrings in ssi.py (algorithms), ssi.py (functions), plot.py, run_params.py
 - example_data() function (pyoma2.functions.gen) has been improved and now returns also the input forces U
+- refactor code in pyvista_plotter.py and mixin.py
 
 ### Added
 
-- "IOcov" method for build_hank() function. Allows to perform Input Output SSIcov.
+- "IOcov" method for build_hank() function. Allows to perform Input Output SSIcov
 - U argument for inputs to SSIRunParams
 - HC_freqlim() and synt_spectr() functions to ssi.py functions file
 - plot_silhouette() and spectra_comparison() functions in plot.py functions file
 - FuzzyCMeansClustering class and FCMeans() function in clus.py functions file
 - est_spectrum() and plot_sSy_VS_mSy() methods for SSI class
+- dynamic coloring of mode shape in animate_mode() method based on points position
 
 ### Fixed
 
