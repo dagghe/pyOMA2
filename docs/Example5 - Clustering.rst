@@ -16,8 +16,8 @@ The exact natural frequencies of the system are:
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    from pyoma2.algorithms.autossi import AutoSSI
-    from pyoma2.algorithms.data.run_params import AutoSSIRunParams, Clustering, Step1, Step2, Step3
+    from pyoma2.algorithms.ssi import SSI
+    from pyoma2.algorithms.data.run_params import SSIRunParams, Clustering, Step1, Step2, Step3
     from pyoma2.setup.single import SingleSetup
     from pyoma2.support.geometry import GeometryMixin
     from pyoma2.support.utils.sample_data import get_sample_data
@@ -34,7 +34,7 @@ Once we have defined the setup class we can proceed to instanciate the ``AutoSSI
 .. code-block:: python
 
     # define AutoSSI run parameters
-    run_param = AutoSSIRunParams(ordmax=100, step=2, br=50, method="cov", calc_unc=False)
+    run_param = AutoSSIRunParams(ordmax=100, step=2, br=30, method="cov", calc_unc=False)
 
     # Create autoSSI instance
     autossi = AutoSSI(name="autossi", run_params=run_param)

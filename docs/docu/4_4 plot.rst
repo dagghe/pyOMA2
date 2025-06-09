@@ -29,6 +29,8 @@ Functions:
     - :func:`.STFT`: Perform the Short Time Fourier Transform (STFT) to generate spectrograms.
     - :func:`.plot_mac_matrix`: Compute and plot the MAC matrix between the columns of two 2D arrays.
     - :func:`.plot_mode_complexity`: Plot the complexity of a mode shape.
+    - :func:`.plot_silhouette`: Generate a silhouette plot for cluster validation.
+    - :func:`.spectra_comparison`: Compare measured and synthesized spectral singular values using CMIF.
 
 .. automodule:: pyoma2.functions.plot
    :members:

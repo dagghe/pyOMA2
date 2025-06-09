@@ -78,69 +78,6 @@ class EFDDResult(FDDResult):
     forPlot: Optional[List] = None
 
 
-class SSIResult(BaseResult):
-    """
-    Class for storing results data from Stochastic Subspace Identification (SSI) methods.
-
-    Attributes
-    ----------
-    Obs : numpy.NDArray, optional
-        Observability matrix obtained from the SSI analysis.
-    A : list of numpy.NDArray, optional
-        List of system matrices A from the SSI analysis.
-    C : list of numpy.NDArray, optional
-        List of system matrices C from the SSI analysis.
-    H : numpy.NDArray, optional
-        Hankel matrix used in SSI analysis.
-    Lambds : numpy.NDArray, optional
-        Array of eigenvalues from the SSI analysis.
-    Fn_poles : numpy.NDArray, optional
-        Array of all natural frequencies.
-    Xi_poles : numpy.NDArray, optional
-        Array of all damping ratios.
-    Phi_poles : numpy.NDArray, optional
-        Array of all mode shape vectors.
-    Lab : numpy.NDArray, optional
-        Array of labels for all the poles.
-    Fn_poles_std : numpy.NDArray, optional
-        Covariance of all natural frequencies.
-    Xi_poles_std : numpy.NDArray, optional
-        Covariance of all damping ratios.
-    Phi_poles_std : numpy.NDArray, optional
-        Covariance of all mode shape vectors.
-    Xi : numpy.NDArray, optional
-        Array of damping ratios.
-    order_out : Union[list[int], int], optional
-        Output order after modal parameter estimation. Can be a list of integers or a single integer.
-    Fn_std : numpy.NDArray, optional
-        Covariance of natural frequencies obtained from the analysis.
-    Xi_std : numpy.NDArray, optional
-        Covariance of damping ratios obtained from the analysis.
-    Phi_std : numpy.NDArray, optional
-        Covariance of mode shape vectors obtained from the analysis.
-    """
-
-    Obs: Optional[npt.NDArray[np.float64]] = None
-    A: Optional[List[npt.NDArray[np.float64]]] = None
-    C: Optional[List[npt.NDArray[np.float64]]] = None
-    H: Optional[npt.NDArray[np.float64]] = None
-
-    Lambds: Optional[npt.NDArray[np.float64]] = None
-    Fn_poles: Optional[npt.NDArray[np.float64]] = None
-    Xi_poles: Optional[npt.NDArray[np.float64]] = None
-    Phi_poles: Optional[npt.NDArray[np.float64]] = None
-    Lab: Optional[npt.NDArray[np.float64]] = None
-    Fn_poles_std: Optional[npt.NDArray[np.float64]] = None
-    Xi_poles_std: Optional[npt.NDArray[np.float64]] = None
-    Phi_poles_std: Optional[npt.NDArray[np.float64]] = None
-
-    Xi: Optional[npt.NDArray[np.float64]] = None
-    Fn_std: Optional[npt.NDArray[np.float64]] = None
-    Xi_std: Optional[npt.NDArray[np.float64]] = None
-    Phi_std: Optional[npt.NDArray[np.float64]] = None
-    order_out: Optional[Union[List[int], int]] = None
-
-
 class pLSCFResult(BaseResult):
     """
     Class for storing results data from the poly-reference Least Square Complex Frequency (pLSCF) method.
@@ -207,19 +144,6 @@ class MsPoserResult(BaseResult):
     Xi_std: npt.NDArray[np.float64] = None
 
 
-class AutoSSIResult(SSIResult):
-    """
-    Result class for automated Structural System Identification (SSI) with clustering.
-
-    Attributes
-    ----------
-    clustering_results : dict, optional
-        Dictionary storing clustering results, if available.
-    """
-
-    clustering_results: Optional[dict] = {}
-
-
 class ClusteringResult(BaseResult):
     """
     Class to store clustering results and related metadata.
@@ -273,3 +197,68 @@ class ClusteringResult(BaseResult):
     Fn_std: Optional[npt.NDArray[np.float64]] = None
     Xi_std: Optional[npt.NDArray[np.float64]] = None
     Phi_std: Optional[npt.NDArray[np.float64]] = None
+
+
+class SSIResult(BaseResult):
+    """
+    Class for storing results data from Stochastic Subspace Identification (SSI) methods.
+
+    Attributes
+    ----------
+    Obs : numpy.NDArray, optional
+        Observability matrix obtained from the SSI analysis.
+    A : list of numpy.NDArray, optional
+        List of system matrices A from the SSI analysis.
+    C : list of numpy.NDArray, optional
+        List of system matrices C from the SSI analysis.
+    H : numpy.NDArray, optional
+        Hankel matrix used in SSI analysis.
+    Lambds : numpy.NDArray, optional
+        Array of eigenvalues from the SSI analysis.
+    Fn_poles : numpy.NDArray, optional
+        Array of all natural frequencies.
+    Xi_poles : numpy.NDArray, optional
+        Array of all damping ratios.
+    Phi_poles : numpy.NDArray, optional
+        Array of all mode shape vectors.
+    Lab : numpy.NDArray, optional
+        Array of labels for all the poles.
+    Fn_poles_std : numpy.NDArray, optional
+        Covariance of all natural frequencies.
+    Xi_poles_std : numpy.NDArray, optional
+        Covariance of all damping ratios.
+    Phi_poles_std : numpy.NDArray, optional
+        Covariance of all mode shape vectors.
+    Xi : numpy.NDArray, optional
+        Array of damping ratios.
+    order_out : Union[list[int], int], optional
+        Output order after modal parameter estimation. Can be a list of integers or a single integer.
+    Fn_std : numpy.NDArray, optional
+        Covariance of natural frequencies obtained from the analysis.
+    Xi_std : numpy.NDArray, optional
+        Covariance of damping ratios obtained from the analysis.
+    Phi_std : numpy.NDArray, optional
+        Covariance of mode shape vectors obtained from the analysis.
+    """
+
+    Obs: Optional[npt.NDArray[np.float64]] = None
+    A: Optional[List[npt.NDArray[np.float64]]] = None
+    C: Optional[List[npt.NDArray[np.float64]]] = None
+    H: Optional[npt.NDArray[np.float64]] = None
+
+    Lambds: Optional[npt.NDArray[np.float64]] = None
+    Fn_poles: Optional[npt.NDArray[np.float64]] = None
+    Xi_poles: Optional[npt.NDArray[np.float64]] = None
+    Phi_poles: Optional[npt.NDArray[np.float64]] = None
+    Lab: Optional[npt.NDArray[np.float64]] = None
+    Fn_poles_std: Optional[npt.NDArray[np.float64]] = None
+    Xi_poles_std: Optional[npt.NDArray[np.float64]] = None
+    Phi_poles_std: Optional[npt.NDArray[np.float64]] = None
+
+    Xi: Optional[npt.NDArray[np.float64]] = None
+    Fn_std: Optional[npt.NDArray[np.float64]] = None
+    Xi_std: Optional[npt.NDArray[np.float64]] = None
+    Phi_std: Optional[npt.NDArray[np.float64]] = None
+    order_out: Optional[Union[List[int], int]] = None
+
+    clustering_results: Optional[dict] = {}

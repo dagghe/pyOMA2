@@ -1,6 +1,6 @@
 import math
 
-from pyoma2.algorithms import SSIdat_MS, pLSCF_MS
+from pyoma2.algorithms import SSI_MS, pLSCF_MS
 
 from src.pyoma2.setup import MultiSetup_PreGER
 
@@ -128,7 +128,7 @@ def test_run(ms_preger: MultiSetup_PreGER) -> None:
     ms_preger.def_geo2_by_file(path="./tests/test_data/3SL/Geo2.xlsx")
 
     # Initialise the algorithms
-    ssidat = SSIdat_MS(name="SSIdat", br=5, ordmax=5)
+    ssidat = SSI_MS(name="SSIdat", br=5, ordmax=5)
     plscf = pLSCF_MS(name="pLSCF", ordmax=5, nxseg=64)
 
     ms_preger.decimate_data(q=50)

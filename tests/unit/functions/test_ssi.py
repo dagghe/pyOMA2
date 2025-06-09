@@ -161,12 +161,13 @@ def test_SSI_fast() -> None:
     step = 1
 
     # Call the function with test input
-    Obs, A, C = ssi.SSI_fast(H, br, ordmax, step)
+    Obs, A, C, G = ssi.SSI_fast(H, br, ordmax, step)
 
     # Check output shapes
     assert len(A) == ordmax + 1
     assert len(C) == ordmax + 1
     assert isinstance(Obs, np.ndarray)
+    assert len(G) == ordmax + 1
 
 
 # def test_SSI_poles() -> None:

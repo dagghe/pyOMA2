@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing
 import warnings
+from typing import Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -372,18 +373,21 @@ class GeometryMixin:
         return fig, ax
 
     # PLOT GEO2 - PyVista plotter
+    # PLOT GEO2 - PyVista plotter
     def plot_geo2(
         self,
-        scaleF: int = 1,
+        *,
+        scaleF: float = 1.0,
         col_sens: str = "red",
-        plot_lines: bool = True,
-        plot_surf: bool = True,
-        points_sett: dict = "default",
-        lines_sett: dict = "default",
-        surf_sett: dict = "default",
-        bg_plotter: bool = True,
+        show_points: bool = True,
+        show_lines: bool = True,
+        show_surf: bool = True,
+        points_sett: Optional[dict] = None,
+        lines_sett: Optional[dict] = None,
+        surf_sett: Optional[dict] = None,
+        background: bool = True,
         notebook: bool = False,
-    ) -> "pv.Plotter":
+    ) -> pv.Plotter:
         """
         Plots the second geometry setup (geo2) using PyVista for 3D visualization.
 
@@ -393,22 +397,24 @@ class GeometryMixin:
 
         Parameters
         ----------
-        scaleF : int, optional
-            Scaling factor for the plot. Default is 1.
+        scaleF : float, optional
+            Scaling factor for sensor arrow length. Default is 1.0.
         col_sens : str, optional
             Color of the sensors. Default is 'red'.
-        plot_lines : bool, optional
+        show_points : bool, optional
+            Whether to plot sensor points. Default is True.
+        show_lines : bool, optional
             Whether to plot lines connecting sensors. Default is True.
-        plot_surf : bool, optional
+        show_surf : bool, optional
             Whether to plot surfaces connecting sensors. Default is True.
-        points_sett : dict, optional
-            Settings for the points' appearance. Default is 'default'.
-        lines_sett : dict, optional
-            Settings for the lines' appearance. Default is 'default'.
-        surf_sett : dict, optional
-            Settings for the surfaces' appearance. Default is 'default'.
-        bg_plotter : bool, optional
-            Whether to include a background plotter. Default is True.
+        points_sett : dict or None, optional
+            Settings for the points' appearance; falls back to defaults if None.
+        lines_sett : dict or None, optional
+            Settings for the lines' appearance; falls back to defaults if None.
+        surf_sett : dict or None, optional
+            Settings for the surfaces' appearance; falls back to defaults if None.
+        background : bool, optional
+            Whether to use a background Qt plotter if creating new. Default is True.
         notebook : bool, optional
             Whether to render the plot in a Jupyter notebook environment. Default is False.
 
@@ -430,13 +436,14 @@ class GeometryMixin:
         pl = Plotter.plot_geo(
             scaleF=scaleF,
             col_sens=col_sens,
-            plot_lines=plot_lines,
-            plot_surf=plot_surf,
+            show_points=show_points,
             points_sett=points_sett,
+            show_lines=show_lines,
             lines_sett=lines_sett,
+            show_surf=show_surf,
             surf_sett=surf_sett,
             pl=None,
-            bg_plotter=bg_plotter,
+            background=background,
             notebook=notebook,
         )
         return pl
@@ -581,62 +588,56 @@ class GeometryMixin:
     def plot_mode_geo2(
         self,
         algo_res: BaseResult,
+        *,
         mode_nr: int = 1,
         scaleF: float = 1.0,
-        plot_lines: bool = True,
-        plot_surf: bool = True,
-        plot_undef: bool = True,
-        def_sett: dict = "default",
-        undef_sett: dict = "default",
-        bg_plotter: bool = True,
+        show_lines: bool = True,
+        show_surf: bool = True,
+        def_sett: Optional[dict] = None,
+        undef_sett: Optional[dict] = None,
+        background: bool = True,
         notebook: bool = False,
-        *args,
-        **kwargs,
-    ) -> "pv.Plotter":
+    ) -> pv.Plotter:
         """
-        Plots the mode shapes for the second geometry setup (geo2) using PyVista for interactive 3D visualization.
+        Plots the mode shapes for the second geometry setup (geo2) using PyVista.
 
-        This method uses PyVista for creating an interactive 3D plot of the mode shapes corresponding
-        to the specified mode number. The plot can include options for visualizing lines, surfaces, and
-        undeformed geometries, with customization for appearance settings.
+        This method creates an interactive 3D plot of a single mode shape (with undeformed
+        geometry underneath) for the second geometry setup. You can toggle connection lines
+        and surface faces, and supply custom plot settings.
 
         Parameters
         ----------
         algo_res : BaseResult
             The result object containing modal parameters and mode shape data.
         mode_nr : int, optional
-            The mode number to be plotted. Default is 1.
+            Mode number to visualize (1-based). Default is 1.
         scaleF : float, optional
-            Scaling factor for the mode shape visualization. Default is 1.0.
-        plot_lines : bool, optional
-            Whether to plot lines connecting sensors. Default is True.
-        plot_surf : bool, optional
-            Whether to plot surfaces connecting sensors. Default is True.
-        plot_undef : bool, optional
-            Whether to plot the undeformed geometry. Default is True.
-        def_sett : dict, optional
-            Settings for the deformed mode shapes. Default is 'default'.
-        undef_sett : dict, optional
-            Settings for the undeformed mode shapes. Default is 'default'.
-        bg_plotter : bool, optional
-            Whether to include a background plotter. Default is True.
+            Scale factor for deformation amplitude. Default is 1.0.
+        show_lines : bool, optional
+            Whether to render connection lines on the mode shape. Default is True.
+        show_surf : bool, optional
+            Whether to render surface faces on the mode shape. Default is True.
+        def_sett : dict or None, optional
+            Plot settings for the deformed shape; falls back to defaults if None.
+        undef_sett : dict or None, optional
+            Plot settings for the undeformed shape; falls back to defaults if None.
+        background : bool, optional
+            Whether to use a background Qt plotter if creating new. Default is True.
         notebook : bool, optional
-            Whether to render the plot in a Jupyter notebook. Default is False.
+            Whether to render the plot in a Jupyter notebook environment. Default is False.
 
         Returns
         -------
-        pyvista.Plotter
-            A PyVista plotter object with the interactive 3D visualization.
+        pv.Plotter
+            A PyVista Plotter object with the mode‐shape visualization.
 
         Raises
         ------
         ValueError
-            If `geo2` is not defined or if the algorithm results are missing (e.g., `Fn` is None).
+            If `geo2` is not defined or if `algo_res.Fn` is None.
         """
-
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
-
         if algo_res.Fn is None:
             raise ValueError("Run algorithm first")
 
@@ -645,13 +646,12 @@ class GeometryMixin:
         pl = Plotter.plot_mode(
             mode_nr=mode_nr,
             scaleF=scaleF,
-            plot_lines=plot_lines,
-            plot_surf=plot_surf,
-            plot_undef=plot_undef,
+            show_lines=show_lines,
+            show_surf=show_surf,
             def_sett=def_sett,
             undef_sett=undef_sett,
             pl=None,
-            bg_plotter=bg_plotter,
+            background=background,
             notebook=notebook,
         )
         return pl
@@ -711,69 +711,64 @@ class GeometryMixin:
     def anim_mode_geo2(
         self,
         algo_res: BaseResult,
+        *,
         mode_nr: int = 1,
         scaleF: float = 1.0,
-        pl=None,
-        plot_points: bool = True,
-        plot_lines: bool = True,
-        plot_surf: bool = True,
-        def_sett: dict = "default",
-        saveGIF: bool = False,
-        *args,
-        **kwargs,
-    ) -> "pv.Plotter":
+        show_lines: bool = True,
+        show_surf: bool = True,
+        def_sett: Optional[dict] = None,
+        save_gif: bool = False,
+        pl: Optional[pv.Plotter] = None,
+    ) -> Union[pv.Plotter, str]:
         """
-        Creates an animation of the mode shapes for the second geometry setup (geo2) using PyVista.
+        Creates an animation of the mode shape for the second geometry setup (geo2).
 
-        This method animates the mode shapes corresponding to the specified mode number, using
-        PyVista for interactive 3D visualization. It supports saving the animation as a GIF.
+        This wraps PvGeoPlotter.animate_mode, letting you animate a single mode
+        (with optional GIF export) on geo2.
 
         Parameters
         ----------
         algo_res : BaseResult
             The result object containing modal parameters and mode shape data.
         mode_nr : int, optional
-            The mode number to animate. Default is 1.
+            Mode number to animate (1-based). Default is 1.
         scaleF : float, optional
-            Scaling factor for the mode shape animation. Default is 1.0.
-        pl : pyvista.Plotter, optional
-            An existing PyVista plotter object for the animation. If None, a new plotter is created.
-        plot_points : bool, optional
-            Whether to plot sensor points. Default is True.
-        plot_lines : bool, optional
-            Whether to plot lines connecting sensors. Default is True.
-        plot_surf : bool, optional
-            Whether to plot surfaces connecting sensors. Default is True.
-        def_sett : dict, optional
-            Settings for the deformed mode shapes. Default is 'default'.
-        saveGIF : bool, optional
-            Whether to save the animation as a GIF. Default is False.
+            Scale factor for oscillation amplitude. Default is 1.0.
+        show_lines : bool, optional
+            Whether to render connection lines during the animation. Default is True.
+        show_surf : bool, optional
+            Whether to render surface faces during the animation. Default is True.
+        def_sett : dict or None, optional
+            Plot settings for animation frames; falls back to defaults if None.
+        save_gif : bool, optional
+            If True, save the animation as a GIF and return its filepath. Default is False.
+        pl : pv.Plotter or None, optional
+            Existing Plotter to use; if None, one is created. Default is None.
 
         Returns
         -------
-        pyvista.Plotter
-            A PyVista plotter object with the animated 3D visualization.
+        pv.Plotter or str
+            The Plotter instance for live animation, or filepath string if GIF was saved.
 
         Raises
         ------
         ValueError
-            If `geo2` is not defined or if the algorithm results are missing (e.g., `Fn` is None).
+            If `geo2` is not defined or if `algo_res.Fn` is None.
         """
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
-
         if algo_res.Fn is None:
             raise ValueError("Run algorithm first")
 
         Plotter = PvGeoPlotter(self.geo2, algo_res)
 
-        pl = Plotter.animate_mode(
+        result = Plotter.animate_mode(
             mode_nr=mode_nr,
             scaleF=scaleF,
-            plot_lines=plot_lines,
-            plot_surf=plot_surf,
+            show_lines=show_lines,
+            show_surf=show_surf,
             def_sett=def_sett,
-            saveGIF=saveGIF,
-            pl=None,
+            save_gif=save_gif,
+            pl=pl,
         )
-        return pl
+        return result

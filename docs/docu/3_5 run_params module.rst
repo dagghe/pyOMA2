@@ -14,8 +14,6 @@ Classes:
       Parameters for the Stochastic Subspace Identification (SSI) method.
    :class:`.pLSCFRunParams`
       Parameters for the poly-reference Least Square Complex Frequency (pLSCF) method.
-   :class:`.AutoSSIRunParams`
-      Run parameters for automated SSI.
    :class:`.Step1`
       Parameters for the first step of clustering analysis.
    :class:`.Step2`

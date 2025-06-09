@@ -89,6 +89,9 @@ class SelFromPlot:
             Type of plot to be displayed. Supported values are "FDD", "SSI", and "pLSCF". Default is "FDD".
         """
         self.algo = algo
+        if hasattr(algo.run_params, "step"):
+            self.step = algo.run_params.step
+
         self.plot = plot
         self.fs = self.algo.fs
         self.freqlim = freqlim if freqlim is not None else (0.0, self.fs / 2)
@@ -247,7 +250,7 @@ class SelFromPlot:
             stab_plot(
                 Fn,
                 Lab,
-                1,
+                self.step,
                 ordmax,
                 ordmin=ordmin,
                 freqlim=freqlim,
@@ -274,15 +277,22 @@ class SelFromPlot:
         plot : str
             Type of plot ("SSI" or "pLSCF") for which the pole is being selected.
         """
-        if plot in ("SSI", "pLSCF"):
-            Fn_poles = self.algo.result.Fn_poles
+        Fn_poles = self.algo.result.Fn_poles
+        rp = self.algo.run_params
 
-        y_ind = int(np.argmin(np.abs(np.arange(Fn_poles.shape[1]) - self.y_data_pole)))
-        x = Fn_poles[:, y_ind]
-        sel = np.nanargmin(np.abs(x - self.x_data_pole))
+        # Reconstruct the actual orders you plotted:
+        orders = np.arange(rp.ordmin, rp.ordmax + 1, rp.step)
 
-        self.pole_ind.append(y_ind)
-        self.sel_freq.append(Fn_poles[sel, y_ind])
+        # find the closest order to where the user clicked:
+        col_idx = int(np.argmin(np.abs(orders - self.y_data_pole)))
+
+        # now find the closest frequency in that row of Fn_poles:
+        freqs = Fn_poles[:, col_idx]
+        mode_idx = int(np.nanargmin(np.abs(freqs - self.x_data_pole)))
+
+        # store the *actual* order, and the selected frequency:
+        self.pole_ind.append(orders[col_idx])
+        self.sel_freq.append(freqs[mode_idx])
 
         self.sort_selected_poles()
 

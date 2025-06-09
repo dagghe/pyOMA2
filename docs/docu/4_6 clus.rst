@@ -42,8 +42,10 @@ Functions:
     - :func:`.dist_n_n1_phi`: Compute distances between successive columns of a 3D mode shape array using MAC differences.
     - :func:`.dist_n_n1_f_complex`: Compute distances between successive columns of a 2D complex array using relative differences.
     - :func:`.dist_all_complex`: Compute pairwise relative distances for a 1D array of complex numbers.
-    - :func:`.dist_all_complex`: Compute pairwise relative distances for a 1D array of complex numbers.
-    - :func:`.dist_all_complex`: Compute pairwise relative distances for a 1D array of complex numbers.
+    - :class:`.FuzzyCMeansClustering`: Fuzzy C-Means clustering class implementation.
+    - :func:`.FCMeans`: Perform Fuzzy C-Means clustering on the given feature array.
+    - :func:`.post_adjusted_boxplot`: Filter clusters using the adjusted boxplot method.
+    - :func:`.adjusted_boxplot_bounds`: Compute adjusted boxplot bounds (used in outlier detection).
 
 .. automodule:: pyoma2.functions.clus
    :members:

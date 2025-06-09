@@ -26,6 +26,165 @@ from pyoma2.functions import gen
 # =============================================================================
 
 
+class FuzzyCMeansClustering:
+    """
+    Fuzzy C-Means clustering algorithm class.
+
+    Parameters
+    ----------
+    n_clusters : int, default=2
+        The number of clusters to form.
+    m : float, default=2.0
+        Fuzziness parameter. Must be > 1.
+    max_iter : int, default=100
+        Maximum number of iterations of the algorithm.
+    tol : float, default=1e-5
+        Tolerance for convergence. If improvement is less than tol, stop.
+    random_state : int, default=None
+        Seed for membership matrix initialization.
+    """
+
+    def __init__(self, n_clusters=2, m=2.0, max_iter=100, tol=1e-5, random_state=None):
+        self.n_clusters = n_clusters
+        self.m = m
+        self.max_iter = max_iter
+        self.tol = tol
+        self.random_state = random_state
+        self.cluster_centers_ = None
+        self.membership_ = None
+        self.labels_ = None
+
+    def _initialize_membership(self, n_samples):
+        rng = np.random.RandomState(self.random_state)
+        U = rng.rand(n_samples, self.n_clusters)
+        U = U / np.sum(U, axis=1, keepdims=True)
+        return U
+
+    def _update_centers(self, X, U):
+        # U raised to power m
+        Um = U**self.m
+        # compute cluster centers
+        centers = (Um.T @ X) / np.sum(Um.T, axis=1, keepdims=True)
+        return centers
+
+    def _update_membership(self, X, centers):
+        n_samples = X.shape[0]
+        U_new = np.zeros((n_samples, self.n_clusters))
+        # exponent for distance ratio
+        exp = 2.0 / (self.m - 1)
+        for i in range(n_samples):
+            distances = np.linalg.norm(X[i] - centers, axis=1)
+            # avoid division by zero
+            distances = np.fmax(distances, np.finfo(np.float64).eps)
+            inv = distances ** (-exp)
+            U_new[i] = inv / np.sum(inv)
+        return U_new
+
+    def fit(self, X, y=None):  # y ignored
+        """
+        Compute fuzzy c-means clustering.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training instances to cluster.
+
+        Returns
+        -------
+        self
+        """
+        X = np.asarray(X, dtype=float)
+        n_samples = X.shape[0]
+
+        # initialize membership matrix
+        U = self._initialize_membership(n_samples)
+
+        self.n_iter_ = 0
+        for iteration in range(1, self.max_iter + 1):
+            centers = self._update_centers(X, U)
+            U_new = self._update_membership(X, centers)
+
+            # check convergence
+            if np.linalg.norm(U_new - U) < self.tol:
+                self.n_iter_ = iteration
+                U = U_new
+                break
+
+            U = U_new
+
+        else:
+            # loop finished without break
+            self.n_iter_ = self.max_iter
+
+        self.membership_ = U
+        self.cluster_centers_ = centers
+        # assign crisp labels
+        self.labels_ = np.argmax(U, axis=1)
+        return self
+
+    def predict(self, X):
+        """
+        Predict the closest cluster each sample in X belongs to.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+
+        Returns
+        -------
+        labels : ndarray of shape (n_samples,)
+            Index of the cluster each sample belongs to.
+        """
+        X = np.asarray(X, dtype=float)
+        distances = np.linalg.norm(
+            X[:, None, :] - self.cluster_centers_[None, :, :], axis=2
+        )
+        return np.argmin(distances, axis=1)
+
+    def fit_predict(self, X, y=None):  # y ignored
+        """
+        Compute cluster centers and predict cluster index for each sample.
+
+        Returns
+        -------
+        labels : ndarray of shape (n_samples,)
+        """
+        self.fit(X)
+        return self.labels_
+
+
+# -----------------------------------------------------------------------------
+
+
+def FCMeans(feat_arr):
+    """
+    Perform Fuzzy C-Means clustering on the given feature array.
+
+    Parameters
+    ----------
+    feat_arr : ndarray of shape (n_samples, n_features)
+        Input feature array for clustering.
+
+    Returns
+    -------
+    labels_all : ndarray of shape (n_samples,)
+        Cluster labels for each sample. Labels are adjusted such that the first cluster
+        corresponds to the smaller centroid (stable modes).
+    """
+    fcm = FuzzyCMeansClustering(n_clusters=2, max_iter=500)
+    fcm.fit(feat_arr)
+    labels_all = fcm.labels_
+    # check the centroids to establish stable and spurious modes
+    centroids = fcm.cluster_centers_
+    # if the first centroid is larger than the second invert the labels
+    if centroids[0, 0] > centroids[1, 0]:
+        labels_all = 1 - labels_all
+    return labels_all
+
+
+# -----------------------------------------------------------------------------
+
+
 def kmeans(feat_arr):
     """
     Perform k-means clustering on the given feature array.
