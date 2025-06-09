@@ -11,7 +11,7 @@ if typing.TYPE_CHECKING:
 
 import numpy as np
 import pytest
-from pyoma2.algorithms import SSIcov
+from pyoma2.algorithms import SSI
 from pyoma2.support.utils.sample_data import (
     SAMPLE_DATA_DEFAULT_LOCAL_DIR,
     get_sample_data,
@@ -155,18 +155,18 @@ def multi_setup_poser_fixture(
     ss3.decimate_data(q=2)
 
     # Initialise the algorithms for setup 1
-    ssicov1 = SSIcov(name="SSIcov1", method="cov", br=50, ordmax=80)
+    ssicov1 = SSI(name="SSIcov1", method="cov", br=50, ordmax=80)
     # Add algorithms to the class
     ss1.add_algorithms(ssicov1)
     ss1.run_all()
 
     # Initialise the algorithms for setup 2
-    ssicov2 = SSIcov(name="SSIcov2", method="cov", br=50, ordmax=80)
+    ssicov2 = SSI(name="SSIcov2", method="cov", br=50, ordmax=80)
     ss2.add_algorithms(ssicov2)
     ss2.run_all()
 
     # Initialise the algorithms for setup 2
-    ssicov3 = SSIcov(name="SSIcov3", method="cov", br=50, ordmax=80)
+    ssicov3 = SSI(name="SSIcov3", method="cov", br=50, ordmax=80)
     ss3.add_algorithms(ssicov3)
     ss3.run_all()
 
