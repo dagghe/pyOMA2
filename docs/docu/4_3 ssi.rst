@@ -14,6 +14,7 @@ Functions:
     - :func:`.SSI_poles`: Computes modal parameters from identified state-space models.
     - :func:`.SSI_multi_setup`: SSI for multiple setup measurements.
     - :func:`.SSI_mpe`: Extracts modal parameters for selected frequencies.
+    - :func:`.synt_spctr`: Computes synthetic output power spectral density using a state-space model.
 
 .. automodule:: pyoma2.functions.ssi
    :members:

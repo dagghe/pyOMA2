@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from scipy.signal import decimate, detrend
 
-from src.pyoma2.algorithms import FDD, FSDD, SSIcov
+from src.pyoma2.algorithms import FDD, FSDD, SSI
 from src.pyoma2.setup import BaseSetup, SingleSetup
 from tests.factory import FakeAlgorithm, FakeAlgorithm2
 
@@ -399,7 +399,7 @@ def test_run(ss: SingleSetup) -> None:
     # Initialise the algorithms
     fdd = FDD(name="FDD")
     fsdd = FSDD(name="FSDD", nxseg=2048, method_SD="per", pov=0.5)
-    ssicov = SSIcov(name="SSIcov", br=50, ordmax=80)
+    ssicov = SSI(name="SSI", br=50, ordmax=80)
 
     # Overwrite/update run parameters for an algorithm
     fdd.run_params = FDD.RunParamCls(nxseg=512, method_SD="cor")
@@ -411,10 +411,10 @@ def test_run(ss: SingleSetup) -> None:
     # results are none
     assert ss["FDD"].result is None
     assert ss["FSDD"].result is None
-    assert ss["SSIcov"].result is None
+    assert ss["SSI"].result is None
 
     # Run all or run by name
-    ss.run_by_name("SSIcov")
+    ss.run_by_name("SSI")
     ss.run_by_name("FSDD")
 
     # Run all algorithms
@@ -423,7 +423,7 @@ def test_run(ss: SingleSetup) -> None:
     # Check the result
     assert ss["FDD"].result is not None
     assert ss["FSDD"].result is not None
-    assert ss["SSIcov"].result is not None
+    assert ss["SSI"].result is not None
 
     # plot SINGULAR VALUES
     try:
@@ -445,9 +445,9 @@ def test_run(ss: SingleSetup) -> None:
 
     # run mpe_from_plot for algorithms
     try:
-        ss.mpe_from_plot("SSIcov", freqlim=(1, 4))
+        ss.mpe_from_plot("SSI", freqlim=(1, 4))
     except Exception as e:
-        assert False, f"mpe_from_plot raised an exception {e} for SSIcov"
+        assert False, f"mpe_from_plot raised an exception {e} for SSI"
 
     try:
         ss.mpe_from_plot("FSDD", freqlim=(1, 4))
@@ -461,9 +461,9 @@ def test_run(ss: SingleSetup) -> None:
 
     # run mpe for algorithms
     try:
-        ss.mpe("SSIcov", sel_freq=[1.88, 2.42, 2.68], order_in=40)
+        ss.mpe("SSI", sel_freq=[1.88, 2.42, 2.68], order_in=40)
     except Exception as e:
-        assert False, f"mpe raised an exception {e} for SSIcov"
+        assert False, f"mpe raised an exception {e} for SSI"
 
     try:
         ss.mpe("FSDD", sel_freq=[1.88, 2.42, 2.68], MAClim=0.95)
@@ -483,14 +483,14 @@ def test_run(ss: SingleSetup) -> None:
     except Exception as e:
         assert False, f"plot_fit raised an exception {e} for FDD"
 
-    # PLOTE_MODE_G1
+    # PLOT_MODE_geo1
     try:
         _ = ss.plot_mode_geo1(algo_res=fdd.result, mode_nr=2, view="3D", scaleF=2)
     except Exception as e:
         assert False, f"plot_mode_geo1 raised an exception {e} for FDD"
 
-    # PLOTE_MODE_geo2
+    # PLOT_MODE_geo2
     try:
-        _ = ss.plot_mode_geo2(algo_res=fsdd.result, mode_nr=2, view="3D", scaleF=2)
+        _ = ss.plot_mode_geo2(algo_res=fsdd.result, mode_nr=2, scaleF=2)
     except Exception as e:
         assert False, f"plot_mode_geo2 raised an exception {e} for FSDD"

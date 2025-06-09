@@ -1,15 +1,22 @@
+===========================
 Example1 - Getting started
-==========================
+===========================
+This example is intended to show the basic usage of the package, and how to run a simple analysis with it, the example is taken from **[C81](#ref-1)** and represents a 5 story shear-type building..
 
-In this first example we'll take a look at a simple 5 degrees of freedom (DOF) system.
-To access the data and the exact results of the system we can call the ``example_data()`` function in the submodule ``functions.gen``
+To access the data and the exact results of the system we can call the ``example_data()`` function under the submodule ``functions.gen``, which will return a tuple where the first output is an array representing the acceleration time histories of the system (subject to white noise excitation), and the second output is a tuple containing the exact result in terms of modal parameters (natural frequencies, mode shapes and damping ratios) obtained from the modal analysis of the system.
 
-.. code:: python
+.. code-block:: python
+
+    import os
+    import sys
+    import numpy as np
+    # Add the directory we execute the script from to path:
+    sys.path.insert(0, os.path.realpath('__file__'))
 
     # import the function to generate the example dataset
     from pyoma2.functions.gen import example_data
 
-    # assign the returned values
+    # generate example data and results
     data, ground_truth = example_data()
 
     # Print the exact results
@@ -29,28 +36,24 @@ To access the data and the exact results of the system we can call the ``example
         [ 1.     0.919  0.764 -0.546 -0.285]]
 
 
+Now we can instantiate the ``SingleSetup`` class, passing the dataset and the sampling frequency as arguments
 
-Now we can instantiate the SingleSetup class, passing the dataset and the sampling frequency as arguments
-
-.. code:: python
+.. code-block:: python
 
     from pyoma2.setup.single import SingleSetup
 
     simp_5dof = SingleSetup(data, fs=600)
 
+Since the maximum frequency is at approximately 6Hz, we can decimate the signal quite a bit. To do this we can call the ``decimate_data()`` method
 
-Since the maximum frequency is at approximately 6Hz, we can decimate the signal quite a bit.
-To do this we can call the ``decimate_data()`` method
-
-.. code:: python
+.. code-block:: python
 
     # Decimate the data
     simp_5dof.decimate_data(q=30)
 
-
 To analise the data we need to instanciate the desired algorithm to use with a name and the required arguments.
 
-.. code:: python
+.. code-block:: python
 
     from pyoma2.algorithms.fdd import FDD
     from pyoma2.algorithms.ssi import SSIdat
@@ -65,11 +68,9 @@ To analise the data we need to instanciate the desired algorithm to use with a n
     # run
     simp_5dof.run_all()
 
-
 We can now check the results
 
-.. code:: python
-
+.. code-block:: python
 
     # plot singular values of the spectral density matrix
     _, _ = fdd.plot_CMIF(freqlim=(0,8))
@@ -80,10 +81,9 @@ We can now check the results
 .. image:: /img/Ex1-Fig1.png
 .. image:: /img/Ex1-Fig2.png
 
-We can get the modal parameters with the help of an interactive plot calling the ``mpe_from_plot()`` method,
-or we can get the results "manually" with the ``mpe()`` method.
+We can get the modal parameters with the help of an interactive plot calling the ``mpe_from_plot()`` method, or we can get the results "manually" with the ``mpe()`` method.
 
-.. code:: python
+.. code-block:: python
 
     # get the modal parameters with the interactive plot
     # simp_ex.mpe_from_plot("SSIdat", freqlim=(0,10))
@@ -91,10 +91,9 @@ or we can get the results "manually" with the ``mpe()`` method.
     # or manually
     simp_5dof.mpe("SSIdat", sel_freq=[0.89, 2.598, 4.095, 5.261, 6.], order_in="find_min")
 
+Now we can access all the results and compare them to the exact values.
 
-Now we can now access all the results and compare them to the exact solution
-
-.. code:: python
+.. code-block:: python
 
     # dict of results
     ssidat_res = dict(ssidat.result)
@@ -107,7 +106,6 @@ Now we can now access all the results and compare them to the exact solution
     print(f"the dampings are: {ssidat_res['Xi']} \n")
     print("the (column-wise) mode shape matrix:")
     print(f"{ssidat_res['Phi'].real} \n")
-
     _, _ = plot_mac_matrix(ssidat_res['Phi'].real, ground_truth[1])
 
     >>> the natural frequencies are: [0.891 2.596 4.097 5.263 5.998]

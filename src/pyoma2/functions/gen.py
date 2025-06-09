@@ -233,6 +233,33 @@ def HC_CoV(Fn, Fn_std, CoV_max) -> typing.Tuple[np.ndarray, np.ndarray]:
 # -----------------------------------------------------------------------------
 
 
+def HC_freqlim(Fn, freq_lim) -> typing.Tuple[np.ndarray, np.ndarray]:
+    """
+    Applies a frequency mask to limit an array of frequencies within specified bounds.
+
+    Parameters
+    ----------
+    Fn : np.ndarray
+        Array of frequency values to be filtered.
+    freq_lim : tuple of float
+        Lower and upper bounds of the frequency range (min_freq, max_freq).
+
+    Returns
+    -------
+    filt_fn : np.ndarray
+        Array of frequencies where values outside the specified range are replaced with NaN.
+    mask : np.ndarray
+        Boolean array indicating which elements of `Fn` are within the specified frequency range (1 if within, 0 otherwise).
+    """
+    mask = np.logical_and(Fn < freq_lim[1], Fn > freq_lim[0]).astype(int)
+    filt_fn = Fn * mask
+    filt_fn[filt_fn == 0] = np.nan
+    return filt_fn, mask
+
+
+# -----------------------------------------------------------------------------
+
+
 def SC_apply(Fn, Xi, Phi, ordmin, ordmax, step, err_fn, err_xi, err_phi) -> np.ndarray:
     """
     Apply Soft validation Criteria (SC) to determine the stability of modal parameters between consecutive orders.
@@ -878,152 +905,142 @@ def flatten_sns_names(sens_names, ref_ind=None) -> typing.List[str]:
 # -----------------------------------------------------------------------------
 
 
-def example_data() -> dict:
+def example_data() -> tuple:
     """
-    This function generates a time history of acceleration for a 5 DOF
-    system.
-
-    The function returns a (360001,5) array and a tuple containing: the
-    natural frequencies of the system (fn = (5,) array); the unity
-    displacement normalised mode shapes matrix (FI_1 = (5,5) array); and the
-    damping ratios (xi = float)
+    Simulate a 5‐DOF shear‐type building under white‐noise excitation,
+    with options for base‐ vs. DOF‐level inputs and choice of measurement type.
 
     Returns
     -------
-    acc : 2D array
-        Time histories of the 5 DOF of the system.
-    (fn, FI_1, xi) : tuple
-        Tuple containing the natural frequencies (fn), the mode shape
-        matrix (FI_1), and the damping ratio (xi) of the system.
-
+    Y_noisy : ndarray, shape (N, dof)
+        Simulated output time histories (for each DOF) of the requested measurement.
+    U : ndarray, shape (N, nu)
+        The actual input(s) (white noise + process noise) used.
+    (fn, xi, phi) : tuple
+        fn : array of natural frequencies [Hz], length = dof
+        xi : damping ratio (scalar)
+        phi: mass‐normalized mode‐shape matrix (dof × dof)
     """
+    # -------------------------
+    # Variable definition
+    dof = 5  # degrees of freedom
+    m_val = 25.91  # [kg]
+    k_val = 10000.0  # [N/m]
+    base_excitation: bool = False  # wheter to apply the input as base excitation or not
+    meas: str = "a"  # "d" = displacement, "v" = velocity, "a" = acceleration
+    N: int = 30001  # Number of samples
+    dt: float = 1 / 100  # Time increment [sec]
+    noise: float = 0.1  # Noise level (used for both process‐ and measurement noise)
+    xi: float = 0.02  # Damping ratio (all modes)
 
-    rng = np.random.RandomState(12345)  # Set the seed
-    fs = 600  # [Hz] Sampling freqiency
-    T = 900  # [sec] Period of the time series
+    # -------------------------
+    # Assembling mass matrix M and stiffness matrix K
+    M = np.eye(dof) * m_val
+    K = np.zeros((dof, dof))
+    for i in range(dof):
+        if i < dof - 1:
+            K[i, i] += k_val
+            K[i, i + 1] += -k_val
+            K[i + 1, i] += -k_val
+            K[i + 1, i + 1] += k_val
+        else:
+            K[i, i] += k_val
 
-    dt = 1 / fs  # [sec] time resolution
-    Ndat = int(T / dt)  # number of data points
+    # Eigen‐analysis: K φ = M φ Λ
+    lam, phi = linalg.eigh(K, M)
+    idx = np.argsort(lam)
+    lam = lam[idx]
+    phi = phi[:, idx]
 
-    t = np.linspace(0, T + dt, Ndat)
+    # Natural frequencies [Hz] and mass‐normalized mode shapes
+    w = np.sqrt(lam)  # [rad/s]
+    fn = w / (2 * np.pi)  # [Hz]
+    M_mod = phi.T @ M @ phi
+    norm_factors = 1.0 / np.sqrt(np.diag(M_mod))
+    phi = phi * norm_factors[np.newaxis, :]  # φ.T M φ = I
 
-    # =========================================================================
-    # SYSTEM DEFINITION
+    # Modal damping (diagonal of 2*ξ*ω_i)
+    zeta = 2 * w * xi
+    C_modal = np.diag(zeta)
+    C = M @ phi @ C_modal @ phi.T @ M  # physical damping matrix
 
-    m = 25.91  # mass
-    k = 10000.0  # stiffness
+    # Continuous‐time A matrix (2dof × 2dof)
+    zero = np.zeros((dof, dof))
+    Idn = np.eye(dof)
+    A_cont = np.block([[zero, Idn], [-linalg.solve(M, K), -linalg.solve(M, C)]])
 
-    # Mass matrix
-    M = np.eye(5) * m
-    _ndof = M.shape[0]  # number of DOF (5)
+    # Build C_full and D_full based on measurement type
+    if meas == "d":
+        C_full = np.hstack([Idn, zero])  # output = displacement
+        D_full = np.zeros((dof, dof))
+    elif meas == "v":
+        C_full = np.hstack([zero, Idn])  # output = velocity
+        D_full = np.zeros((dof, dof))
+    elif meas == "a":
+        # output = acceleration = -M^{-1}K x - M^{-1}C x_dot + M^{-1} F
+        C_full = np.hstack([-linalg.solve(M, K), -linalg.solve(M, C)])
+        D_full = linalg.solve(M, np.eye(dof))
+    else:
+        raise ValueError("meas must be one of 'd', 'v', or 'a'")
 
-    # Stiffness matrix
-    K = (
-        np.array(
-            [
-                [2, -1, 0, 0, 0],
-                [-1, 2, -1, 0, 0],
-                [0, -1, 2, -1, 0],
-                [0, 0, -1, 2, -1],
-                [0, 0, 0, -1, 1],
-            ]
-        )
-        * k
-    )
+    # -------------------------
+    # Build B, C, D depending on base vs. DOF excitation
+    if base_excitation:
+        # Base excitation enters through first DOF only (r_vec = [1, 0, ..., 0]^T)
+        r_vec = np.zeros((dof, 1))
+        r_vec[0, 0] = 1.0
 
-    lam, FI = linalg.eigh(K, b=M)  # Solving eigen value problem
+        if meas == "d":
+            B = np.vstack([np.zeros((dof, 1)), -linalg.solve(M, K @ r_vec)])
+            D = np.zeros((dof, 1))
+        elif meas == "v":
+            B = np.vstack([np.zeros((dof, 1)), -linalg.solve(M, C @ r_vec)])
+            D = np.zeros((dof, 1))
+        else:  # "a"
+            B = np.vstack([np.zeros((dof, 1)), -r_vec])
+            D = -r_vec
 
-    fn = np.sqrt(lam) / (2 * np.pi)  # Natural frequencies
+        C = C_full.copy()
 
-    # Unity displacement normalised mode shapes
-    FI_1 = np.array([FI[:, k] / max(abs(FI[:, k])) for k in range(_ndof)]).T
-    # Ordering from smallest to largest
-    FI_1 = FI_1[:, np.argsort(fn)]
-    fn = np.sort(fn)
+    else:
+        # DOF‐level excitation: one independent force per DOF
+        B_full = np.vstack([np.zeros((dof, dof)), linalg.solve(M, np.eye(dof))])
+        B = B_full.copy()
+        C = C_full.copy()
+        D = D_full.copy()
 
-    # K_M = FI_M.T @ K @ FI_M # Modal stiffness
-    M_M = FI_1.T @ M @ FI_1  # Modal mass
+    # Continuous‐time StateSpace → discrete
+    sysc = signal.StateSpace(A_cont, B, C, D)
+    sysd = sysc.to_discrete(dt)
 
-    xi = 0.02  # damping ratio for all modes (2%)
-    # Modal damping
-    C_M = np.diag(
-        np.array([2 * M_M[i, i] * xi * fn[i] * (2 * np.pi) for i in range(_ndof)])
-    )
+    # Time vector
+    t = np.arange(N) * dt
 
-    C = linalg.inv(FI_1.T) @ C_M @ linalg.inv(FI_1)  # Damping matrix
+    # -------------------------
+    # Construct input U
+    rng = np.random.RandomState(12345)
+    if base_excitation:
+        # Single‐channel white noise + process noise
+        U_clean = rng.randn(N, 1)
+        U_noise = noise * rng.randn(N, 1)
+        U = U_clean + U_noise
+    else:
+        # One white‐noise input per DOF + process noise
+        U_clean = rng.randn(N, dof)
+        U_noise = noise * rng.randn(N, dof)
+        U = U_clean + U_noise
 
-    # =========================================================================
-    # STATE-SPACE FORMULATION
+    # -------------------------
+    # Simulate discrete‐time response
+    tout, Y, X = signal.dlsim(sysd, U, t)
 
-    a1 = np.zeros((_ndof, _ndof))  # Zeros (ndof x ndof)
-    a2 = np.eye(_ndof)  # Identity (ndof x ndof)
-    A1 = np.hstack((a1, a2))  # horizontal stacking (ndof x 2*ndof)
-    a3 = -linalg.inv(M) @ K  # M^-1 @ K (ndof x ndof)
-    a4 = -linalg.inv(M) @ C  # M^-1 @ C (ndof x ndof)
-    A2 = np.hstack((a3, a4))  # horizontal stacking(ndof x 2*ndof)
-    # vertical stacking of A1 e A2
-    Ac = np.vstack((A1, A2))  # State Matrix A (2*ndof x 2*ndof))
+    # -------------------------
+    # Add measurement noise to outputs (same 0.1 factor)
+    meas_noise_std = noise * np.std(Y, axis=0)
+    Y_noisy = Y + (rng.randn(*Y.shape) * meas_noise_std)
 
-    b2 = -linalg.inv(M)
-    # Input Influence Matrix B (2*ndof x n°input=ndof)
-    Bc = np.vstack((a1, b2))
-
-    # N.B. number of rows = n°output*ndof
-    # n°output may be 1, 2 o 3 (displacements, velocities, accelerations)
-    # the Cc matrix has to be defined accordingly
-    c1 = np.hstack((a2, a1))  # displacements row
-    c2 = np.hstack((a1, a2))  # velocities row
-    c3 = np.hstack((a3, a4))  # accelerations row
-    # Output Influence Matrix C (n°output*ndof x 2*ndof)
-    Cc = np.vstack((c1, c2, c3))
-
-    # Direct Transmission Matrix D (n°output*ndof x n°input=ndof)
-    Dc = np.vstack((a1, a1, b2))
-
-    # =========================================================================
-    # Using SciPy's LTI to solve the system
-
-    # Defining the system
-    sys = signal.lti(Ac, Bc, Cc, Dc)
-
-    # Defining the amplitute of the force
-    af = 1
-
-    # Assembling the forcing vectors (N x ndof) (random white noise!)
-    # N.B. N=number of data points; ndof=number of DOF
-    u = np.array([rng.randn(Ndat) * af for r in range(_ndof)]).T
-
-    # Solving the system
-    tout, yout, xout = signal.lsim(sys, U=u, T=t)
-
-    # d = yout[:,:5] # displacement
-    # v = yout[:,5:10] # velocity
-    a = yout[:, 10:]  # acceleration
-
-    # =========================================================================
-    # Adding noise
-    # SNR = 10*np.log10(_af/_ar)
-    SNR = 10  # Signal-to-Noise ratio
-    ar = af / (10 ** (SNR / 20))  # Noise amplitude
-
-    # Initialize the arrays (copy of accelerations)
-    acc = a.copy()
-    for _ind in range(_ndof):
-        # Measurments POLLUTED BY NOISE
-        acc[:, _ind] = a[:, _ind] + ar * rng.randn(Ndat)
-
-    # # Subplot of the accelerations
-    # fig, axs = plt.subplots(5,1,sharex=True)
-    # for _nr in range(_ndof):
-    #     axs[_nr].plot(t, a[:,_nr], alpha=1, linewidth=1, label=f'story{_nr+1}')
-    #     axs[_nr].legend(loc=1, shadow=True, framealpha=1)
-    #     axs[_nr].grid(alpha=0.3)
-    #     axs[_nr].set_ylabel('$mm/s^2$')
-    # axs[_nr].set_xlabel('t [sec]')
-    # fig.suptitle('Accelerations plot', fontsize=12)
-    # plt.show()
-
-    return acc, (fn, FI_1, xi)
+    # Return noisy outputs, inputs, and modal info
+    return Y_noisy, U, (fn, xi, phi)
 
 
 # -----------------------------------------------------------------------------

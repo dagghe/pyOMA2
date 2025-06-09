@@ -1,19 +1,19 @@
 The ``ssi`` algorithm module
 ============================
 
-This module implements the Stochastic Subspace Identification (SSI) [BPDG99]_, [MiDo11]_ algorithm in various forms,
-tailored for both single and multiple experimental setup scenarios [MiDo11]_, [DOME13]_. It includes classes and methods
-for conducting data-driven and covariance-driven SSI analyses, with optional uncertainty bounds estimation.
+This module provides a comprehensive implementation of the Stochastic Subspace Identification (SSI) algorithm family
+for modal analysis and system identification [BPDG99]_, [MiDo11]_, [MDM16]_. It supports both single‐setup and
+multi‐setup experimental configurations, as well as input-output scenarios using OMAX (Operational Modal Analysis with
+eXogenous inputs).
+Both data‐driven and covariance‐driven algorithms are included, with optional uncertainty quantification for the
+modal parameters [DLM13]_.
 
 Classes:
-   :class:`.SSIdat`
-      Implements the Data-Driven SSI algorithm for single setup.
-   :class:`.SSIcov`
-      Implements the Covariance-Driven SSI algorithm for single setup.
-   :class:`.SSIdat_MS`
-      Extends ``SSIdat`` for multi-setup experiments.
-   :class:`.SSIcov_MS`
-      Extends ``SSIdat_MS`` for covariance-based analysis in multi-setup experiments.
+   :class:`.SSI`
+      Implements the SSI algorithm for single setup experiments.
+   :class:`.SSI_MS`
+      Extends ``SSI`` for multi-setup experiments.
+
 
 .. Important::
    Each class contains methods for executing the SSI algorithm, extracting modal parameters,
@@ -23,35 +23,20 @@ Classes:
    Users should be familiar with the concepts of modal analysis and system identification to effectively use this module.
 
 
-The ``SSIdat`` class
+The ``SSI`` class
 -------------------------
 
-.. autoclass:: pyoma2.algorithms.ssi.SSIdat
+.. autoclass:: pyoma2.algorithms.ssi.SSI
    :members:
    :inherited-members:
    :show-inheritance:
+   :no-index:
 
-The ``SSIcov`` class
--------------------------
-
-.. autoclass:: pyoma2.algorithms.ssi.SSIcov
-   :members:
-   :inherited-members:
-   :show-inheritance:
-
-The ``SSIdat_MS`` class
+The ``SSI_MS`` class
 ----------------------------
 
-.. autoclass:: pyoma2.algorithms.ssi.SSIdat_MS
+.. autoclass:: pyoma2.algorithms.ssi.SSI_MS
    :members:
    :inherited-members:
    :show-inheritance:
-
-
-The ``SSIcov_MS`` class
-----------------------------
-
-.. autoclass:: pyoma2.algorithms.ssi.SSIcov_MS
-   :members:
-   :inherited-members:
-   :show-inheritance:
+   :no-index:

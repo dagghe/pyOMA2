@@ -13,6 +13,7 @@ import typing
 
 from pydantic import BaseModel
 
+from pyoma2.algorithms.data.mpe_params import BaseMPEParams
 from pyoma2.algorithms.data.result import BaseResult
 from pyoma2.algorithms.data.run_params import BaseRunParams
 
@@ -21,11 +22,12 @@ if typing.TYPE_CHECKING:
 
 
 T_RunParams = typing.TypeVar("T_RunParams", bound=BaseRunParams)
+T_MPEParams = typing.TypeVar("T_MPEParams", bound=BaseMPEParams)
 T_Result = typing.TypeVar("T_Result", bound=BaseResult)
 T_Data = typing.TypeVar("T_Data", bound=typing.Iterable)
 
 
-class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
+class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], abc.ABC):
     """
     Abstract base class for OMA algorithms.
 
@@ -39,6 +41,9 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
     run_params : Optional[T_RunParams]
         Holds the parameters necessary to run the algorithm. The type of run parameters
         depends on T_RunParams.
+    mpe_params : Optional[T_MPEParams]
+        Holds the parameters necessary to extract the modal parameters. The type of mpe parameters
+        depends on T_MPEParams.
     name : Optional[str]
         The name of the algorithm, used for identification and logging.
     RunParamCls : Type[T_RunParams]
@@ -76,9 +81,11 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
 
     result: typing.Optional[T_Result] = None
     run_params: typing.Optional[T_RunParams] = None
+    mpe_params: typing.Optional[T_MPEParams] = None
     name: typing.Optional[str] = None
     RunParamCls: typing.Type[T_RunParams]
     ResultCls: typing.Type[T_Result]
+    MPEParamCls: typing.Type[T_MPEParams]
 
     # additional attributes set by the Setup Class
     fs: typing.Optional[float]  # sampling frequency
@@ -112,6 +119,7 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
             self.run_params = self.RunParamCls(**kwargs)
 
         self.name = name or self.__class__.__name__
+        self.mpe_params = self.MPEParamCls()
 
     def _pre_run(self):
         """
@@ -326,20 +334,22 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
         if not issubclass(cls, BaseAlgorithm):
             # avoid evaluating the types for the BaseAlgorithm class itself
             cls.RunParamCls = item[0]
-            cls.ResultCls = item[1]
+            cls.MPEParamCls = item[1]
+            cls.ResultCls = item[2]
         return cls
 
     def __init_subclass__(cls, **kwargs):
         """
         Initialize subclass of `BaseAlgorithm`.
 
-        This method ensures that subclasses of `BaseAlgorithm` define `RunParamCls` and `ResultCls`.
+        This method ensures that subclasses of `BaseAlgorithm` define `RunParamCls`,`MPEParamCls` and
+        `ResultCls`.
 
         Raises
         ------
         ValueError
-            If `RunParamCls` or `ResultCls` are not defined or not subclasses of `BaseModel` and `BaseResult`,
-            respectively.
+            If `RunParamCls`, `MPEParamCls` or `ResultCls` are not defined or not subclasses of `BaseModel`
+            and `BaseResult`, respectively.
 
         Note
         -----
@@ -357,6 +367,15 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_Result, T_Data], abc.ABC):
                 "# Example\n"
                 f"class {cls.__name__}:\n"
                 f"\tRunParamCls = ...\n"
+            )
+        if not getattr(cls, "MPEParamCls", None) or not issubclass(
+            cls.MPEParamCls, BaseMPEParams
+        ):
+            raise ValueError(
+                f"{cls.__name__}: MPEParamCls must be defined in subclasses of BaseAlgorithm\n\n"
+                "# Example\n"
+                f"class {cls.__name__}:\n"
+                f"\tMPEParamCls = ...\n"
             )
         if not getattr(cls, "ResultCls", None) or not issubclass(
             cls.ResultCls, BaseResult

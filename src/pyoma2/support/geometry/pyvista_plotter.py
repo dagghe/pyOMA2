@@ -5,481 +5,439 @@ Created on Sat Jun  8 21:25:39 2024
 @author: dagpa
 """
 
-import typing
-import warnings
+import logging
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
+import pyvista as pv
+import pyvistaqt as pvqt
+from numpy.typing import NDArray
 
-from pyoma2.support.geometry.data import Geometry2
-
-# import numpy.typing as npt
-try:
-    import pyvista as pv
-    import pyvistaqt as pvqt
-except ImportError:
-    warnings.warn(
-        "Optional package 'pyvista' is not installed. Some features may not be available.",
-        ImportWarning,
-        stacklevel=2,
-    )
-    warnings.warn(
-        "Install 'pyvista' with 'pip install pyvista' or 'pip install pyoma_2[pyvista]'",
-        ImportWarning,
-        stacklevel=2,
-    )
-    pv = None
-    pvqt = None
 from pyoma2.algorithms.data.result import BaseResult
 from pyoma2.functions import gen
+from pyoma2.support.geometry.data import Geometry2
 
 from .plotter import BasePlotter
 
-if typing.TYPE_CHECKING:
-    from pyoma2.support.geometry import Geometry2
+# Default visualization settings
+_UNDEF_SETT: dict = {"color": "gray", "opacity": 0.7}
+_DEF_MODE_SETT: dict = {"cmap": "plasma", "opacity": 0.7, "show_scalar_bar": False}
+_UNDEF_MODE_SETT: dict = {"color": "gray", "opacity": 0.3}
 
 
 class PvGeoPlotter(BasePlotter[Geometry2]):
     """
-    A class to visualize and animate mode shapes in 3D using `pyvista`.
+    Visualize and animate 3D mode shapes using PyVista.
 
-    This class provides methods for plotting geometry, mode shapes, and animating
-    mode shapes, utilizing the `pyvista` and `pyvistaqt` libraries for visualization.
-
-    Parameters
+    Attributes
     ----------
     geo : Geometry2
-        The geometric data of the model, which includes sensor coordinates and other
-        structural information.
-    Res : Union[BaseResult, MsPoserResult], optional
-        The result data containing mode shapes and frequency data (default is None).
-
-    Raises
-    ------
-    ImportError
-        If `pyvista` or `pyvistaqt` are not installed, an error is raised when attempting
-        to instantiate the class.
+        Geometric model containing sensor positions and topology.
+    res : Optional[BaseResult]
+        Modal analysis results (mode shapes, frequencies).
     """
 
-    def __init__(self, geo: Geometry2, res: typing.Optional[BaseResult] = None):
+    def __init__(self, geo: Geometry2, res: Optional[BaseResult] = None):
         """
-        Initialize the class with geometric and result data.
-        Ensure that the `pyvista` and `pyvistaqt` libraries are installed.
-        """
-        super().__init__(geo, res)
-        if pv is None or pvqt is None:
-            raise ImportError(
-                "Optional package 'pyvista' is not installed. Some features may not be available."
-                "Install 'pyvista' with 'pip install pyvista' or 'pip install pyoma_2[pyvista]'"
-            )
-
-    def plot_geo(
-        self,
-        scaleF=1,
-        col_sens="red",
-        plot_points=True,
-        points_sett="default",
-        plot_lines=True,
-        lines_sett="default",
-        plot_surf=True,
-        surf_sett="default",
-        pl=None,
-        bg_plotter: bool = True,
-        notebook: bool = False,
-    ):
-        """
-        Plot the 3D geometry of the model, including points, lines, and surfaces.
+        Initialize the plotter.
 
         Parameters
         ----------
-        scaleF : float, optional
-            Scale factor for the sensor vectors (default is 1).
-        col_sens : str, optional
-            Color for the sensor points and arrows (default is 'red').
-        plot_points : bool, optional
-            Whether to plot sensor points (default is True).
-        points_sett : dict or str, optional
-            Settings for plotting points (default is 'default', which applies preset settings).
-        plot_lines : bool, optional
-            Whether to plot lines representing connections between sensors (default is True).
-        lines_sett : dict or str, optional
-            Settings for plotting lines (default is 'default', which applies preset settings).
-        plot_surf : bool, optional
-            Whether to plot surfaces (default is True).
-        surf_sett : dict or str, optional
-            Settings for plotting surfaces (default is 'default', which applies preset settings).
-        pl : pyvista.Plotter, optional
-            Existing plotter instance to use (default is None, which creates a new plotter).
-        bg_plotter : bool, optional
-            Whether to use a background plotter for visualization (default is True).
-        notebook : bool, optional
-            If True, a plotter for use in Jupyter notebooks is created (default is False).
+        geo : Geometry2
+            Geometric model with sensor coordinates and connectivity.
+        res : Optional[BaseResult], default=None
+            Modal analysis results containing mode shapes and frequencies.
+
+        Raises
+        ------
+        ImportError
+            If PyVista or PyVistaQt is not installed.
+        """
+        super().__init__(geo, res)
+        if pv is None or pvqt is None:
+            logging.error("PyVista or PyVistaQt not available.")
+            raise ImportError("Install 'pyvista' and 'pyvistaqt' to use PvGeoPlotter.")
+
+    @staticmethod
+    def _make_plotter(notebook: bool, background: bool) -> pv.Plotter:
+        """
+        Create a PyVista Plotter based on execution context.
+
+        Parameters
+        ----------
+        notebook : bool
+            Whether to create a notebook-compatible plotter.
+        background : bool
+            Whether to use a background Qt plotter.
 
         Returns
         -------
-        pyvista.Plotter
-            The plotter object used for visualization.
-
-        Notes
-        -----
-        If `pyvistaqt` is used, a background plotter will be created. If running in
-        a notebook environment, a `pyvista` plotter with notebook support is used.
+        pv.Plotter
+            Configured Plotter instance.
         """
-        # import geometry
-        geo = self.geo
+        if notebook:
+            return pv.Plotter(notebook=True)
+        return pvqt.BackgroundPlotter() if background else pv.Plotter()
 
-        # define the plotter object type
-        if pl is None:
-            if notebook:
-                pl = pv.Plotter(notebook=True)
-            elif bg_plotter:
-                pl = pvqt.BackgroundPlotter()
-            else:
-                pl = pv.Plotter()
+    @staticmethod
+    def _encode_mesh(
+        points: NDArray[np.float64],
+        lines_list: Optional[np.ndarray],
+        faces_list: Optional[np.ndarray],
+    ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+        """
+        Convert raw connectivity lists into PyVista-friendly arrays.
 
-        # define default settings for plot
-        undef_sett = dict(
-            color="gray",
-            opacity=0.7,
+        Parameters
+        ----------
+        points : ndarray
+            Point coordinates (n_points x 3).
+        lines_list : Optional[list of int pairs]
+            Sensor line connectivity.
+        faces_list : Optional[list of int triplets]
+            Surface face connectivity.
+
+        Returns
+        -------
+        Tuple[Optional[ndarray], Optional[ndarray]]
+            Encoded lines and faces arrays.
+        """
+        lines = None
+        faces = None
+        if lines_list is not None:
+            lines = np.array([np.hstack(([2], line)) for line in lines_list], dtype=int)
+        if faces_list is not None:
+            faces = np.array([np.hstack(([3], face)) for face in faces_list], dtype=int)
+        return lines, faces
+
+    def _get_sensor_arrows(
+        self,
+    ) -> Tuple[NDArray[np.float64], NDArray[np.float64], List[str]]:
+        """
+        Compute arrow origins, directions, and labels for each sensor channel.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        positions : ndarray
+            Arrow start points (n_arrows x 3).
+        directions : ndarray
+            Arrow direction vectors (n_arrows x 3).
+        labels : list of str
+            Channel names corresponding to each arrow.
+        """
+        sens_map = self.geo.sens_map.to_numpy()
+        sens_sign = self.geo.sens_sign.to_numpy()
+        pts = self.geo.pts_coord.to_numpy()
+
+        positions, directions, labels = [], [], []
+        n_pts, n_axes = sens_map.shape
+        for i in range(n_pts):
+            for axis in range(n_axes):
+                name = sens_map[i, axis]
+                if isinstance(name, str) and name.lower() != "nan":
+                    positions.append(pts[i])
+                    vec = np.zeros(3, dtype=float)
+                    vec[axis] = sens_sign[i, axis]
+                    directions.append(vec)
+                    labels.append(name)
+        return np.array(positions), np.array(directions), labels
+
+    def plot_geo(
+        self,
+        *,
+        scaleF: float = 1.0,
+        col_sens: str = "red",
+        show_points: bool = True,
+        points_sett: Optional[dict] = None,
+        show_lines: bool = True,
+        lines_sett: Optional[dict] = None,
+        show_surf: bool = True,
+        surf_sett: Optional[dict] = None,
+        pl: Optional[pv.Plotter] = None,
+        background: bool = True,
+        notebook: bool = False,
+    ) -> pv.Plotter:
+        """
+        Plot the raw geometry: points, lines, surfaces, and sensor arrows.
+
+        Parameters
+        ----------
+        scaleF : float, default=1.0
+            Scale factor for arrow length.
+        col_sens : str, default="red"
+            Color for sensor arrows.
+        show_points : bool, default=True
+            Whether to render sensor points.
+        points_sett : dict or None, default=None
+            Plot settings for points; falls back to default.
+        show_lines : bool, default=True
+            Whether to render sensor connection lines.
+        lines_sett : dict or None, default=None
+            Plot settings for lines; falls back to default.
+        show_surf : bool, default=True
+            Whether to render surface faces.
+        surf_sett : dict or None, default=None
+            Plot settings for surfaces; falls back to default.
+        pl : pv.Plotter or None, default=None
+            Existing plotter instance to use.
+        background : bool, default=True
+            Whether to use a background Qt plotter if creating new.
+        notebook : bool, default=False
+            Whether to create a notebook-compatible plotter.
+
+        Returns
+        -------
+        pv.Plotter
+            The configured plotter with raw geometry.
+        """
+        pl = pl or self._make_plotter(notebook, background)
+
+        pts = self.geo.pts_coord.to_numpy()
+        lines_arr, faces_arr = self._encode_mesh(
+            pts, self.geo.sens_lines, self.geo.sens_surf
         )
 
-        if points_sett == "default":
-            points_sett = undef_sett
+        # Apply defaults
+        points_sett = points_sett or _UNDEF_SETT.copy()
+        lines_sett = lines_sett or _UNDEF_SETT.copy()
+        surf_sett = surf_sett or _UNDEF_SETT.copy()
 
-        if lines_sett == "default":
-            lines_sett = undef_sett
+        if show_points:
+            pl.add_points(pts, **points_sett)
+        if show_lines and lines_arr is not None:
+            pl.add_mesh(pv.PolyData(pts, lines=lines_arr), **lines_sett)
+        if show_surf and faces_arr is not None:
+            pl.add_mesh(pv.PolyData(pts, faces=faces_arr), **surf_sett)
 
-        if surf_sett == "default":
-            surf_sett = undef_sett
-
-        # GEOMETRY
-        points = geo.pts_coord.to_numpy()
-        lines = geo.sens_lines
-        surfs = geo.sens_surf
-        # geometry in pyvista format
-        if lines is not None:
-            lines = np.array([np.hstack([2, line]) for line in lines])
-        if surfs is not None:
-            surfs = np.array([np.hstack([3, surf]) for surf in surfs])
-
-        # PLOTTING
-        if plot_points:
-            pl.add_points(points, **points_sett)
-        if plot_lines:
-            line_mesh = pv.PolyData(points, lines=lines)
-            pl.add_mesh(line_mesh, **lines_sett)
-        if plot_surf:
-            face_mesh = pv.PolyData(points, faces=surfs)
-            pl.add_mesh(face_mesh, **surf_sett)
-
-        # # Add axes
-        # pl.add_axes(line_width=5, labels_off=False)
-        # pl.show()
-
-        # add sensor points + arrows for direction
-        sens_names = geo.sens_names
-        ch_names = geo.sens_map.to_numpy()
-        ch_names = np.array(
-            [name if name in sens_names else "nan" for name in ch_names.flatten()]
-        ).reshape(ch_names.shape)
-
-        ch_names_fl = ch_names.flatten()[ch_names.flatten() != "nan"]
-        ch_names_fl = [str(ele) for ele in ch_names_fl]
-        # Plot points where ch_names_1 is not np.nan
-        valid_indices = ch_names != "nan"  # FIXME
-        valid_points = points[np.any(valid_indices, axis=1)]
-
-        pl.add_points(
-            valid_points,
-            render_points_as_spheres=True,
-            color=col_sens,
-            point_size=10,
-        )
-
-        points_new = []
-        directions = []
-        for i, (row1, row2) in enumerate(zip(ch_names, points)):
-            for j, elem in enumerate(row1):
-                if elem != "nan":
-                    vector = [0, 0, 0]
-                    # vector[j] = 1
-                    vector[j] = geo.sens_sign.values[i, j]
-                    directions.append(vector)
-                    points_new.append(row2)
-
-        points_new = np.array(points_new)
-        directions = np.array(directions)
-        # Add arrow to plotter
-        pl.add_arrows(points_new, directions, mag=scaleF, color=col_sens)
+        # Sensor arrows
+        pos, dirs, labels = self._get_sensor_arrows()
+        pl.add_arrows(pos, dirs, mag=scaleF, color=col_sens)
         pl.add_point_labels(
-            points_new + directions * scaleF,
-            ch_names_fl,
-            font_size=20,
+            pos + dirs * scaleF,
+            labels,
+            font_size=12,
             always_visible=True,
             shape_color="white",
         )
 
-        # Add axes
-        pl.add_axes(line_width=5, labels_off=False)
+        pl.add_axes(line_width=2)
         pl.show()
-
         return pl
 
     def plot_mode(
         self,
         mode_nr: int = 1,
         scaleF: float = 1.0,
-        plot_lines: bool = True,
-        plot_surf: bool = True,
-        plot_undef: bool = True,
-        def_sett: dict = "default",
-        undef_sett: dict = "default",
-        pl=None,
-        bg_plotter: bool = True,
+        show_lines: bool = True,
+        show_surf: bool = True,
+        def_sett: Optional[dict] = None,
+        undef_sett: Optional[dict] = None,
+        pl: Optional[pv.Plotter] = None,
+        background: bool = True,
         notebook: bool = False,
-    ):
+    ) -> pv.Plotter:
         """
-        Plot the mode shape of the structure for a given mode number.
+        Plot a single mode shape with optional undeformed geometry.
 
         Parameters
         ----------
-        mode_nr : int, optional
-            The mode number to plot (default is 1).
-        scaleF : float, optional
-            Scale factor for the deformation (default is 1.0).
-        plot_lines : bool, optional
-            Whether to plot lines connecting sensor points (default is True).
-        plot_surf : bool, optional
-            Whether to plot surface meshes (default is True).
-        plot_undef : bool, optional
-            Whether to plot the undeformed shape of the structure (default is True).
-        def_sett : dict or str, optional
-            Settings for the deformed plot (default is 'default', which applies preset settings).
-        undef_sett : dict or str, optional
-            Settings for the undeformed plot (default is 'default', which applies preset settings).
-        pl : pyvista.Plotter, optional
-            Existing plotter instance to use (default is None, which creates a new plotter).
-        bg_plotter : bool, optional
-            Whether to use a background plotter for visualization (default is True).
-        notebook : bool, optional
-            If True, a plotter for use in Jupyter notebooks is created (default is False).
-
-        Returns
-        -------
-        pyvista.Plotter
-            The plotter object used for visualization.
+        mode_nr : int, default=1
+            Mode number to visualize (1-based).
+        scaleF : float, default=1.0
+            Scale factor for deformation amplitude.
+        show_lines : bool, default=True
+            Whether to render connection lines on mode shape.
+        show_surf : bool, default=True
+            Whether to render surface faces on mode shape.
+        def_sett : dict or None, default=None
+            Plot settings for deformed shape; falls back to default.
+        undef_sett : dict or None, default=None
+            Plot settings for undeformed shape; falls back to default.
+        pl : pv.Plotter or None, default=None
+            Existing plotter instance to use.
+        background : bool, default=True
+            Whether to use a background Qt plotter if creating new.
+        notebook : bool, default=False
+            Whether to create a notebook-compatible plotter.
 
         Raises
         ------
         ValueError
-            If the result (`Res`) data is not provided when plotting a mode shape.
+            If modal results (`res`) are not provided or mode_nr is out of range.
+
+        Returns
+        -------
+        pv.Plotter
+            The configured plotter with mode shape.
         """
-        # import geometry and results
-        geo = self.geo
-        res = self.res
+        if self.res is None:
+            raise ValueError("Modal result data is required to plot mode shapes.")
+        n_modes = self.res.Phi.shape[1]
+        if not 1 <= mode_nr <= n_modes:
+            raise ValueError(f"mode_nr must be between 1 and {n_modes}")
 
-        # define the plotter object type
-        if pl is None:
-            if notebook:
-                pl = pv.Plotter(notebook=True)
-            elif bg_plotter:
-                pl = pvqt.BackgroundPlotter()
-            else:
-                pl = pv.Plotter()
-
-        # define default settings for plot
-        def_settings = dict(cmap="plasma", opacity=0.7, show_scalar_bar=False)
-        undef_settings = dict(color="gray", opacity=0.3)
-
-        if def_sett == "default":
-            def_sett = def_settings
-
-        if undef_sett == "default":
-            undef_sett = undef_settings
-
-        # GEOMETRY
-        points = geo.pts_coord.to_numpy()
-        lines = geo.sens_lines
-        surfs = geo.sens_surf
-        # geometry in pyvista format
-        if lines is not None:
-            lines = np.array([np.hstack([2, line]) for line in lines])
-        if surfs is not None:
-            surfs = np.array([np.hstack([3, surf]) for surf in surfs])
-
-        # Mode shape
-        if res is not None:
-            phi = res.Phi[:, int(mode_nr - 1)].real * scaleF
-        else:
-            raise ValueError("You must pass the Res class to plot a mode shape!")
-
-        # APPLY POINTS TO SENSOR MAPPING
-        df_phi_map = gen.dfphi_map_func(
-            phi, geo.sens_names, geo.sens_map, cstrn=geo.cstrn
+        pl = pl or self._make_plotter(notebook, background)
+        pts = self.geo.pts_coord.to_numpy()
+        lines_arr, faces_arr = self._encode_mesh(
+            pts, self.geo.sens_lines, self.geo.sens_surf
         )
-        # calculate deformed shape (NEW POINTS)
-        newpoints = points + df_phi_map.to_numpy() * geo.sens_sign.to_numpy()
 
-        # If true plot undeformed shape
-        if plot_undef:
-            pl.add_points(points, **undef_sett)
-            if plot_lines:
-                line_mesh = pv.PolyData(points, lines=lines)
-                pl.add_mesh(line_mesh, **undef_sett)
-            if plot_surf:
-                face_mesh = pv.PolyData(points, faces=surfs)
-                pl.add_mesh(face_mesh, **undef_sett)
+        def_sett = def_sett or _DEF_MODE_SETT.copy()
+        undef_sett = undef_sett or _UNDEF_MODE_SETT.copy()
 
-        # PLOT MODE SHAPE
-        pl.add_points(newpoints, scalars=df_phi_map.values, **def_sett)
-        if plot_lines:
-            line_mesh = pv.PolyData(newpoints, lines=lines)
-            pl.add_mesh(line_mesh, scalars=df_phi_map.values, **def_sett)
-        if plot_surf:
-            face_mesh = pv.PolyData(newpoints, faces=surfs)
-            pl.add_mesh(face_mesh, scalars=df_phi_map.values, **def_sett)
-
-        pl.add_text(
-            rf"Mode nr. {mode_nr}, fn = {res.Fn[mode_nr-1]:.3f}Hz",
-            position="upper_edge",
-            color="black",
-            # font_size=26,
+        # Compute deformation
+        phi = self.res.Phi[:, mode_nr - 1].real * scaleF
+        df_map = gen.dfphi_map_func(
+            phi, self.geo.sens_names, self.geo.sens_map, cstrn=self.geo.cstrn
         )
-        pl.add_axes(line_width=5, labels_off=False)
+        new_pts = pts + df_map.to_numpy() * self.geo.sens_sign.to_numpy()
+
+        # Undeformed
+        pl.add_points(pts, **undef_sett)
+        if show_lines and lines_arr is not None:
+            pl.add_mesh(pv.PolyData(pts, lines=lines_arr), **undef_sett)
+        if show_surf and faces_arr is not None:
+            pl.add_mesh(pv.PolyData(pts, faces=faces_arr), **undef_sett)
+
+        # Deformed with scalars
+        pl.add_points(new_pts, scalars=df_map.values, **def_sett)
+        if show_lines and lines_arr is not None:
+            pl.add_mesh(
+                pv.PolyData(new_pts, lines=lines_arr), scalars=df_map.values, **def_sett
+            )
+        if show_surf and faces_arr is not None:
+            pl.add_mesh(
+                pv.PolyData(new_pts, faces=faces_arr), scalars=df_map.values, **def_sett
+            )
+
+        freq = self.res.Fn[mode_nr - 1]
+        pl.add_text(f"Mode {mode_nr}: {freq:.3f} Hz", position="upper_edge")
+        pl.add_axes(line_width=2)
         pl.show()
-
         return pl
 
     def animate_mode(
         self,
         mode_nr: int = 1,
         scaleF: float = 1.0,
-        plot_lines: bool = True,
-        plot_surf: bool = True,
-        def_sett: dict = "default",
-        saveGIF: bool = False,
-        pl=None,
-    ) -> "pv.Plotter":
+        show_lines: bool = True,
+        show_surf: bool = True,
+        def_sett: Optional[dict] = None,
+        save_gif: bool = False,
+        pl: Optional[pv.Plotter] = None,
+    ) -> Union[pv.Plotter, str]:
         """
-        Animate the mode shape for the given mode number.
+        Animate a mode shape oscillation. Optionally save as GIF.
 
         Parameters
         ----------
-        mode_nr : int, optional
-            The mode number to animate (default is 1).
-        scaleF : float, optional
-            Scale factor for the deformation (default is 1.0).
-        plot_lines : bool, optional
-            Whether to plot lines connecting sensor points (default is True).
-        plot_surf : bool, optional
-            Whether to plot surface meshes (default is True).
-        def_sett : dict or str, optional
-            Settings for the deformed plot (default is 'default', which applies preset settings).
-        saveGIF : bool, optional
-            If True, the animation is saved as a GIF (default is False).
-        pl : pyvista.Plotter, optional
-            Existing plotter instance to use (default is None, which creates a new plotter).
+        mode_nr : int, default=1
+            Mode number to animate (1-based).
+        scaleF : float, default=1.0
+            Scale factor for oscillation amplitude.
+        show_lines : bool, default=True
+            Whether to render connection lines during animation.
+        show_surf : bool, default=True
+            Whether to render surface faces during animation.
+        def_sett : dict or None, default=None
+            Plot settings for animation frames; falls back to default.
+        save_gif : bool, default=False
+            If True, saves animation as a GIF and returns its filepath.
+        pl : pv.Plotter or None, default=None
+            Existing plotter instance to use. If None, a new one is created.
+
+        Raises
+        ------
+        ValueError
+            If modal results (`res`) are not provided.
 
         Returns
         -------
-        pyvista.Plotter
-            The plotter object used for the animation.
+        pv.Plotter or str
+            Plotter instance for live animation, or filepath string if GIF saved.
         """
-        # define default settings for plot
-        def_settings = dict(cmap="plasma", opacity=0.7, show_scalar_bar=False)
-        if def_sett == "default":
-            def_sett = def_settings
+        if self.res is None:
+            raise ValueError("Modal result data is required to animate mode shapes.")
 
-        # import geometry and results
-        geo = self.geo
-        res = self.res
-        points = pv.pyvista_ndarray(geo.pts_coord.to_numpy())
-        lines = geo.sens_lines
-        surfs = geo.sens_surf
-
-        if lines is not None:
-            lines = np.array([np.hstack([2, line]) for line in lines])
-        if surfs is not None:
-            surfs = np.array([np.hstack([3, surf]) for surf in surfs])
-
-        # Mode shape
-        phi = res.Phi[:, int(mode_nr - 1)].real * scaleF
-
-        # mode shape mapped to points
-        df_phi_map = gen.dfphi_map_func(
-            phi, geo.sens_names, geo.sens_map, cstrn=geo.cstrn
-        )
-        sens_sign = geo.sens_sign.to_numpy()
-
-        # copy points since we will deform them
-        points_c = points.copy()
-
+        # Configure plotter
+        new_plotter = False
         if pl is None:
-            pl = pv.Plotter(off_screen=False) if saveGIF else pvqt.BackgroundPlotter()
+            pl = pv.Plotter(off_screen=True) if save_gif else pvqt.BackgroundPlotter()
+            new_plotter = True
 
-        # Add initial meshes
-        def_pts = pl.add_points(points_c, scalars=df_phi_map.values, **def_sett)
+        def_sett = def_sett or _DEF_MODE_SETT.copy()
 
-        if plot_lines:
-            line_mesh = pv.PolyData(points_c, lines=lines)
-            pl.add_mesh(line_mesh, scalars=df_phi_map.values, **def_sett)
-        else:
-            line_mesh = None
-
-        if plot_surf:
-            face_mesh = pv.PolyData(points_c, faces=surfs)
-            pl.add_mesh(face_mesh, scalars=df_phi_map.values, **def_sett)
-        else:
-            face_mesh = None
-
-        pl.add_text(
-            rf"Mode nr. {mode_nr}, fn = {res.Fn[mode_nr-1]:.3f}Hz",
-            position="upper_edge",
-            color="black",
+        # Prepare geometry and scalars
+        pts = self.geo.pts_coord.to_numpy()
+        lines_arr, faces_arr = self._encode_mesh(
+            pts, self.geo.sens_lines, self.geo.sens_surf
         )
+        phi = self.res.Phi[:, mode_nr - 1].real * scaleF
+        df_map = gen.dfphi_map_func(
+            phi, self.geo.sens_names, self.geo.sens_map, cstrn=self.geo.cstrn
+        )
+        sens_sign = self.geo.sens_sign.to_numpy()
 
-        if saveGIF:
-            # GIF saving logic (unchanged)
-            pl.enable_anti_aliasing("fxaa")
-            n_frames = 30
-            pl.open_gif(f"Mode nr. {mode_nr}.gif")
-            frames = np.linspace(0, 2 * np.pi, n_frames, endpoint=False)
-            for phase in frames:
-                new_coords = points + df_phi_map.to_numpy() * sens_sign * np.cos(phase)
-                def_pts.mapper.dataset.points = new_coords
-                if line_mesh is not None:
-                    line_mesh.points = new_coords
-                if face_mesh is not None:
-                    face_mesh.points = new_coords
-                pl.add_axes(line_width=5, labels_off=False)
+        # Initial displaced mesh
+        pts_mesh = pv.PolyData(pts)
+        base_disp = df_map.to_numpy() * sens_sign
+        amps = np.linalg.norm(base_disp, axis=1)
+        pts_mesh.point_data["amplitude"] = amps
+        pl.add_mesh(pts_mesh, scalars="amplitude", **def_sett)
+
+        # Optional line and surface meshes
+        line_mesh = None
+        if show_lines and lines_arr is not None:
+            line_mesh = pv.PolyData(pts, lines=lines_arr)
+            line_mesh.point_data["amplitude"] = amps
+            pl.add_mesh(line_mesh, scalars="amplitude", **def_sett)
+        face_mesh = None
+        if show_surf and faces_arr is not None:
+            face_mesh = pv.PolyData(pts, faces=faces_arr)
+            face_mesh.point_data["amplitude"] = amps
+            pl.add_mesh(face_mesh, scalars="amplitude", **def_sett)
+
+        # Annotation
+        freq = self.res.Fn[mode_nr - 1]
+        pl.add_text(f"Mode {mode_nr}: {freq:.3f} Hz", position="upper_edge")
+        pl.add_axes(line_width=2)
+
+        # Animation loop
+        n_frames = 30
+        frames = np.linspace(0, 2 * np.pi, n_frames, endpoint=False)
+        idx = {"frame": 0}
+
+        def _update():
+            phase = frames[idx["frame"]]
+            disp = base_disp * np.cos(phase)
+            new_pts = pts + disp
+            inst_amp = np.linalg.norm(disp, axis=1)
+
+            pts_mesh.points = new_pts
+            pts_mesh.point_data["amplitude"] = inst_amp
+            if line_mesh is not None:
+                line_mesh.points = new_pts
+                line_mesh.point_data["amplitude"] = inst_amp
+            if face_mesh is not None:
+                face_mesh.points = new_pts
+                face_mesh.point_data["amplitude"] = inst_amp
+
+            pl.render()
+            idx["frame"] = (idx["frame"] + 1) % n_frames
+
+        if save_gif:
+            gif_path = f"Mode_{mode_nr}.gif"
+            pl.open_gif(gif_path)
+            for _ in range(n_frames):
+                _update()
                 pl.write_frame()
-            pl.show(auto_close=False)
-
+            return gif_path
         else:
-            # Interactive animation using callback
-            n_frames = 30
-            frames = np.linspace(0, 2 * np.pi, n_frames, endpoint=False)
-            self._current_frame = 0  # track current frame externally
-
-            def update_shape():
-                # Update just one frame per callback call
-                phase = frames[self._current_frame]
-                new_coords = points + df_phi_map.to_numpy() * sens_sign * np.cos(phase)
-                def_pts.mapper.dataset.points = new_coords
-                if line_mesh is not None:
-                    line_mesh.points = new_coords
-                if face_mesh is not None:
-                    face_mesh.points = new_coords
-                pl.update()
-
-                # Move to the next frame
-                self._current_frame = (self._current_frame + 1) % n_frames
-
-            # Add the callback to run every 100 ms (for example)
-            pl.add_callback(update_shape, interval=100)
-
-            # Make sure to start the interactive session
-            # If using BackgroundPlotter, it typically shows automatically.
-            # If not, uncomment pl.show() below.
-            pl.show()
-
-        return pl
+            pl.add_callback(_update, interval=100)
+            if new_plotter:
+                pl.show()
+            return pl
