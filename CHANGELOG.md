@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0b3] - 2025-06-11
+
 ### Changed
 
 - Unified SSI algorithms class. With this change the user specifies which SSI algorithm to perform (i.e. "cov", "cov_R", "dat", "IOcov") in the RunParam class. In this way Clustering algorithms can be applied to every SSI algorithm.
