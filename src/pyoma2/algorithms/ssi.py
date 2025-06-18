@@ -1173,6 +1173,9 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         hide_poles: typing.Optional[bool] = True,
         spectrum: bool = False,
         nSv: typing.Union[int, "all"] = "all",
+        color_scheme: typing.Literal[
+            "default", "classic", "high_contrast", "viridis"
+        ] = "default",
     ) -> tuple:
         """
         Plot the Stabilization Diagram for the SSI algorithm.
@@ -1191,6 +1194,9 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             Default is False.
         nSv : int or 'all', optional
             Number of singular values for CMIF plot. Default is 'all'.
+        color_scheme : typing.Literal["default", "classic", "high_contrast", "viridis"], optional
+            Color scheme for stable/unstable poles. Options: 'default', 'classic',
+            'high_contrast', 'viridis'.
 
         Returns
         -------
@@ -1216,6 +1222,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             fig=None,
             ax=None,
             Fn_std=self.result.Fn_poles_std,
+            color_scheme=color_scheme,
         )
 
         if spectrum:
@@ -1231,6 +1238,9 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
+        color_scheme: typing.Literal[
+            "default", "classic", "high_contrast", "viridis"
+        ] = "default",
     ) -> tuple:
         """
         Plot frequency vs. damping scatter (cluster plot) for all identified poles.
@@ -1244,6 +1254,9 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             Frequency limits for the plot. If None, determined automatically. Default is None.
         hide_poles : bool, optional
             If True, hide individual pole markers in the scatter. Default is True.
+        color_scheme : typing.Literal["default", "classic", "high_contrast", "viridis"], optional
+            Color scheme for stable/unstable poles. Options: 'default', 'classic',
+            'high_contrast', 'viridis'.
 
         Returns
         -------
@@ -1264,6 +1277,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
             Lab=self.result.Lab,
             freqlim=freqlim,
             hide_poles=hide_poles,
+            color_scheme=color_scheme,
         )
         return fig, ax
 

@@ -247,6 +247,9 @@ class pLSCF(
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
+        color_scheme: typing.Literal[
+            "default", "classic", "high_contrast", "viridis"
+        ] = "default",
     ) -> typing.Any:
         """
         Plot the Stability Diagram for the pLSCF analysis.
@@ -261,6 +264,9 @@ class pLSCF(
             automatically. Default is None.
         hide_poles : bool, optional
             Option to hide the unstable poles in the diagram for clarity. Default is True.
+        color_scheme : typing.Literal["default", "classic", "high_contrast", "viridis"], optional
+            Color scheme for stable/unstable poles. Options: 'default', 'classic',
+            'high_contrast', 'viridis'.
 
         Returns
         -------
@@ -277,6 +283,7 @@ class pLSCF(
             hide_poles=hide_poles,
             fig=None,
             ax=None,
+            color_scheme=color_scheme,
         )
         return fig, ax
 
@@ -284,6 +291,9 @@ class pLSCF(
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
+        color_scheme: typing.Literal[
+            "default", "classic", "high_contrast", "viridis"
+        ] = "default",
     ) -> typing.Any:
         """
         Plot the frequency-damping cluster diagram for the identified modal parameters.
@@ -297,6 +307,9 @@ class pLSCF(
             Frequency limits for the plot. If None, limits are determined automatically. Default is None.
         hide_poles : bool, optional
             Option to hide poles in the plot for clarity. Default is True.
+        color_scheme : typing.Literal["default", "classic", "high_contrast", "viridis"], optional
+            Color scheme for stable/unstable poles. Options: 'default', 'classic',
+            'high_contrast', 'viridis'.
 
         Returns
         -------
@@ -310,9 +323,9 @@ class pLSCF(
             Fn=self.result.Fn_poles,
             Xi=self.result.Xi_poles,
             Lab=self.result.Lab,
-            ordmin=self.run_params.ordmin,
             freqlim=freqlim,
             hide_poles=hide_poles,
+            color_scheme=color_scheme,
         )
         return fig, ax
 

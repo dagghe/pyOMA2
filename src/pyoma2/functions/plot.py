@@ -24,6 +24,54 @@ from .gen import MAC
 logger = logging.getLogger(__name__)
 
 # =============================================================================
+# COLOR CONFIGURATION
+# =============================================================================
+
+DEFAULT_COLORS = {
+    "stable": "tab:green",
+    "unstable": "tab:red",
+}
+
+# Alternative color sets for different preferences
+ALTERNATIVE_COLORS = {
+    # Good for color blind
+    "classic": {"stable": "blue", "unstable": "orange"},
+    # High contrast for B&W printing
+    "high_contrast": {"stable": "black", "unstable": "gray"},
+    # Viridis colormap extremes
+    "viridis": {"stable": "#440154", "unstable": "#FDE725"},
+}
+
+
+def get_pole_colors(
+    color_scheme: typing.Literal[
+        "default", "classic", "high_contrast", "viridis"
+    ] = "default",
+) -> dict:
+    """
+    Get color scheme for stable and unstable poles.
+
+    Parameters
+    ----------
+    color_scheme : str, optional
+        Color scheme to use. Options: 'default', 'classic', 'high_contrast', 'viridis'.
+        Default is 'default' which uses colorblind-friendly colors.
+
+    Returns
+    -------
+    dict
+        Dictionary with 'stable' and 'unstable' color keys.
+    """
+    if color_scheme == "default":
+        return DEFAULT_COLORS.copy()
+    elif color_scheme in ALTERNATIVE_COLORS:
+        return ALTERNATIVE_COLORS[color_scheme].copy()
+    else:
+        logger.warning(f"Unknown color scheme '{color_scheme}', using default")
+        return DEFAULT_COLORS.copy()
+
+
+# =============================================================================
 # PLOT for CLUSTER
 # =============================================================================
 
@@ -978,6 +1026,9 @@ def stab_plot(
     Fn_std: typing.Optional[np.ndarray] = None,
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
+    color_scheme: typing.Literal[
+        "default", "classic", "high_contrast", "viridis"
+    ] = "default",
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plot a stabilization chart of poles (frequency vs. model order) for stable vs unstable labeling.
@@ -1005,6 +1056,9 @@ def stab_plot(
         Existing figure to plot on. If None, a new figure is created.
     ax : matplotlib.axes.Axes, optional
         Existing axes to plot on. If None, new axes are created on the provided or new figure.
+    color_scheme : str, optional
+        Color scheme to use for stable/unstable poles. Options: 'default', 'classic',
+        'high_contrast', 'viridis'. Default is 'default' (colorblind-friendly).
 
     Returns
     -------
@@ -1015,11 +1069,14 @@ def stab_plot(
 
     Notes
     -----
-    - Green circles denote stable poles; red circles (if shown) denote unstable poles.
+    - By default uses colorblind-friendly blue/orange colors for stable/unstable poles.
     - Error bars represent frequency uncertainty if `Fn_std` is provided.
     """
     if fig is None and ax is None:
         fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
+
+    # Get colors based on scheme
+    colors = get_pole_colors(color_scheme)
 
     # Extract stable and unstable frequencies
     Fns_stab = np.where(Lab == 1, Fn, np.nan)
@@ -1033,7 +1090,7 @@ def stab_plot(
     if hide_poles:
         x = Fns_stab.flatten(order="F")
         y = np.arange(x.size) // Fn.shape[0] * step
-        ax.plot(x, y, "go", markersize=7)
+        ax.plot(x, y, "o", color=colors["stable"], markersize=7)
 
         if Fn_std is not None:
             xerr = Fn_std.flatten(order="F")
@@ -1044,8 +1101,10 @@ def stab_plot(
         x_unstab = Fns_unstab.flatten(order="F")
         y_unstab = np.arange(x_unstab.size) // Fn.shape[0] * step
 
-        ax.plot(x_stab, y_stab, "go", markersize=7, label="Stable pole")
-        ax.scatter(x_unstab, y_unstab, c="r", s=30, label="Unstable pole")
+        ax.plot(
+            x_stab, y_stab, "o", color=colors["stable"], markersize=7, label="Stable pole"
+        )
+        ax.scatter(x_unstab, y_unstab, c=colors["unstable"], s=30, label="Unstable pole")
 
         if Fn_std is not None:
             xerr = np.abs(Fn_std.flatten(order="F"))
@@ -1073,6 +1132,9 @@ def cluster_plot(
     Lab: np.ndarray,
     freqlim: typing.Optional[typing.Tuple[float, float]] = None,
     hide_poles: bool = True,
+    color_scheme: typing.Literal[
+        "default", "classic", "high_contrast", "viridis"
+    ] = "default",
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
     """
     Plot a frequency-damping clustering chart, marking stable vs unstable poles.
@@ -1089,6 +1151,9 @@ def cluster_plot(
         Frequency axis limits as (min_freq, max_freq). If None, full range is used.
     hide_poles : bool, optional
         If True, only stable poles are plotted. If False, both stable and unstable are plotted.
+    color_scheme : Literal["default", "classic", "high_contrast", "viridis"], optional
+        Color scheme to use for stable/unstable poles. Options: 'default', 'classic',
+        'high_contrast', 'viridis'. Default is 'default' (colorblind-friendly).
 
     Returns
     -------
@@ -1099,9 +1164,12 @@ def cluster_plot(
 
     Notes
     -----
-    - Uses green circles for stable poles, red circles for unstable poles (if shown).
+    - By default uses colorblind-friendly blue/orange colors for stable/unstable poles.
     - Sets equal aspect by default.
     """
+    # Get colors based on scheme
+    colors = get_pole_colors(color_scheme=color_scheme)
+
     # Extract stable (a, aa) and unstable (b, bb) data
     a = np.where(Lab == 1, Fn, np.nan)
     aa = np.where(Lab == 1, Xi, np.nan)
@@ -1116,15 +1184,17 @@ def cluster_plot(
     if hide_poles:
         x = a.flatten(order="F")
         y = aa.flatten(order="F")
-        ax.plot(x, y, "go", markersize=7, label="Stable pole")
+        ax.plot(x, y, "o", color=colors["stable"], markersize=7, label="Stable pole")
     else:
         x_stab = a.flatten(order="F")
         y_stab = aa.flatten(order="F")
         x_unstab = b.flatten(order="F")
         y_unstab = bb.flatten(order="F")
 
-        ax.plot(x_stab, y_stab, "go", markersize=7, label="Stable pole")
-        ax.scatter(x_unstab, y_unstab, c="r", s=30, label="Unstable pole")
+        ax.plot(
+            x_stab, y_stab, "o", color=colors["stable"], markersize=7, label="Stable pole"
+        )
+        ax.scatter(x_unstab, y_unstab, c=colors["unstable"], s=30, label="Unstable pole")
         ax.legend(loc="lower center", ncol=2)
 
     ax.grid(True)
@@ -1544,6 +1614,8 @@ def plt_quiver(
         Default is None.
     color_text : str, optional
         Color of the text labels. Default is "red".
+    method : str, optional
+        Method for arrow plotting: '1' for quiver, '2' for line plots. Default is '1'.
 
     Returns
     -------

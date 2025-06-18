@@ -121,6 +121,39 @@ SSI algorithms have also access to the ``plot_freqvsdamp()`` method which shows 
 
     ssicov.plot_freqvsdamp()
 
+Color Schemes for Stabilization Plots
+--------------------------------------
+
+The stabilization plots (``plot_stab()`` and ``plot_freqvsdamp()``) now support different color schemes to improve accessibility and readability. By default, the plots use the original green/red colors, but you can select from several alternatives:
+
+**Available Color Schemes:**
+
+- ``'default'``: Green/red colors (original scheme)
+- ``'classic'``: Blue/orange colors (colorblind-friendly)
+- ``'high_contrast'``: Black/gray colors (excellent for B&W printing)
+- ``'viridis'``: Colors from the viridis colormap (scientific publication friendly)
+
+**Usage Examples:**
+
+.. code-block:: python
+
+    # Default colors (green/red)
+    ssicov.plot_stab()
+
+    # Colorblind-friendly blue/orange colors
+    ssicov.plot_stab(color_scheme='classic')
+
+    # High contrast for B&W printing
+    ssicov.plot_stab(color_scheme='high_contrast')
+
+    # Scientific publication colors
+    ssicov.plot_freqvsdamp(color_scheme='viridis')
+
+The ``color_scheme`` parameter is available for both SSI and pLSCF algorithms in their ``plot_stab()`` and ``plot_freqvsdamp()`` methods.
+
+Modal Parameter Extraction
+---------------------------
+
 The modal results can then be selected "manually" with the ``mpe()`` method or through an interactive version of the ``plot_CMIF()`` and  ``plot_stab()``, using the ``mpe_from_plot()`` method. As mentioned previously the arguments passed to these two methods will be stored in a specialised class accessible through the ``mpe_params`` attribute (after the method has been called)
 
 In order to select a mode press the ``SHIFT`` button and left click on the desired peak/pole, to remove the last selected pole press ``SHIFT`` and right click, finally pressing ``SHIFT`` and the middle button will remove the closest selected peack/pole.
