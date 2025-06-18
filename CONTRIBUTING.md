@@ -274,6 +274,22 @@ make test-coverage
 make tox
 ```
 
+## Docs
+
+To build the documentation, you can install the required `docs` dependencies using PDM:
+
+```shell
+pdm install --with docs
+```
+Then, you can build the documentation using Sphinx:
+
+```shell
+cd docs
+make html
+```
+
+An HTML version of the documentation will be generated in the `_build/html` directory. You can open the `index.html` file in a web browser to view the documentation.
+
 ### Running tests on
 
 ## Conventions
