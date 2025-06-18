@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Color scheme support for stabilization plots (`plot_stab()` and `plot_freqvsdamp()`) to improve accessibility and readability
+- `get_pole_colors()` function in `plot.py` to manage color schemes for stable/unstable poles
+- Four color schemes available:
+  - `'default'`: Green/red colors (original scheme, maintained for backward compatibility)
+  - `'classic'`: Blue/orange colors (colorblind-friendly alternative)
+  - `'high_contrast'`: Black/gray colors (excellent for B&W printing)
+  - `'viridis'`: Colors from viridis colormap (scientific publication friendly)
+- Documentation section "Color Schemes for Stabilization Plots" in "Extra1 - Tips and tricks.rst"
+- Documentation build instructions in CONTRIBUTING.md
+
+### Changed
+
+- Enhanced `plot_stab()` and `cluster_plot()` functions in `plot.py` to accept `color_scheme` parameter
+- Updated `plot_stab()` and `plot_freqvsdamp()` methods in SSI and pLSCF algorithm classes to support color scheme selection
+- Improved docstrings in plotting functions to describe colorblind-friendly features
+- Default plotting behavior maintains original green/red colors for backward compatibility
+
+### Fixed
+
+- Accessibility issues in stabilization plots for users with color vision deficiencies
 
 ## [1.1.1] - 2025-01-24
 

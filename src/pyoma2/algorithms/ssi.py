@@ -291,6 +291,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
+        color_scheme: typing.Literal[
+            "default", "classic", "high_contrast", "viridis"
+        ] = "default",
     ) -> typing.Any:
         """
         Plot the Stability Diagram for the SSI algorithms.
@@ -304,6 +307,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Frequency limits for the plot. If None, limits are determined automatically. Default is None.
         hide_poles : bool, optional
             Option to hide poles in the plot for clarity. Default is True.
+        color_scheme : typing.Literal["default", "classic", "high_contrast", "viridis"], optional
+            Color scheme for stable/unstable poles. Options: 'default', 'classic',
+            'high_contrast', 'viridis'.
 
         Returns
         -------
@@ -324,6 +330,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             fig=None,
             ax=None,
             Fn_std=self.result.Fn_poles_std,
+            color_scheme=color_scheme,
         )
         return fig, ax
 
@@ -331,6 +338,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         self,
         freqlim: typing.Optional[tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
+        color_scheme: typing.Literal[
+            "default", "classic", "high_contrast", "viridis"
+        ] = "default",
     ) -> typing.Any:
         """
         Plot the frequency-damping cluster diagram for the identified modal parameters.
@@ -344,6 +354,10 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Frequency limits for the plot. If None, limits are determined automatically. Default is None.
         hide_poles : bool, optional
             Option to hide poles in the plot for clarity. Default is True.
+            If True, hide individual pole markers in the scatter. Default is True.
+        color_scheme : typing.Literal["default", "classic", "high_contrast", "viridis"], optional
+            Color scheme for stable/unstable poles. Options: 'default', 'classic',
+            'high_contrast', 'viridis'.
 
         Returns
         -------
@@ -360,6 +374,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             ordmin=self.run_params.ordmin,
             freqlim=freqlim,
             hide_poles=hide_poles,
+            color_scheme=color_scheme,
         )
         return fig, ax
 
