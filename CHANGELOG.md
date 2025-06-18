@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.2.0b4] - 2025-06-18
+
 ### Added
 
 - Color scheme support for stabilization plots (`plot_stab()` and `plot_freqvsdamp()`) to improve accessibility and readability
