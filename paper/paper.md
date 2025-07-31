@@ -56,10 +56,10 @@ The following algorithms are included in the module:
 
 The multi-setup analyzes can be performed according the so-called Post Separate Estimation
 Re-Scaling (PoSER) approach as well as with the so-called Pre-Global Estimation Re-Scaling (PreGER)
-approach [@brincker2015introduction;@rainieri2014operational;@dohler2013efficient;@amador2021robust]. The calculation of the uncertainty bounds for the SSI family of algorithm follows the efficient implementation by Döhler [@dohler2011subspace;@dohler2013efficient;@dohler2013uncertainty]. The interested reader may refer to the extensive scientific literature on the subject for further information.
+approach [@brincker2015introduction;@rainieri2014operational;@dohler2013efficient;@amador2021robust]. The calculation of the uncertainty bounds for the SSI family of algorithms follows the efficient implementation by Döhler [@dohler2011subspace;@dohler2013efficient;@dohler2013uncertainty]. The interested reader may refer to the extensive scientific literature on the subject for further information.
 
-A few commercial software implements the algorithms mentioned above.
-The most known presumably are ARTeMIS [@solutions2001artemis], by Structural
+A few commercial software programs implements the algorithms mentioned above.
+The most well-known presumably are ARTeMIS [@solutions2001artemis], by Structural
 Vibration Solutions, and MACEC, a Matlab toolbox for modal testing and
 OMA [@reynders2014macec]. When it comes to open source modules the only ones
 available to the authors best knowledge are the first version of `pyOMA`
