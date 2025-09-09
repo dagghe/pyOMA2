@@ -1432,3 +1432,37 @@ class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
             Xi_poles_std=Xi_std,
             Phi_poles_std=Phi_std,
         )
+
+    def est_spectrum(self, run_params: typing.Optional[FDDRunParams] = None) -> None:
+        """
+        Estimate the power spectral density (PSD) of the measurement data using FDD.
+
+        If run_params is not provided, default FDD parameters (FDDRunParams()) are used.
+
+        Parameters
+        ----------
+        run_params : FDDRunParams, optional
+            Configuration parameters for Frequency Domain Decomposition (FDD).
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        The computed frequency vector (self.freq) and spectral matrix (self.Sy) are stored
+        as attributes of the algorithm instance.
+        """
+        if run_params is None:
+            run_params = FDDRunParams()
+
+        Y = self.data
+
+        nxseg = run_params.nxseg
+        method = run_params.method_SD
+        pov = run_params.pov
+        # self.run_params.df = 1 / dt / nxseg
+
+        self.freq, self.Sy = fdd.SD_PreGER(
+            Y, self.fs, nxseg=nxseg, method=method, pov=pov
+        )
