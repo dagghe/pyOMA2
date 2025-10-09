@@ -1,0 +1,59 @@
+services:
+  # Standard pyOMA2 service with Python shell
+  pyoma2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pyoma2:latest
+    container_name: pyoma2-app
+    stdin_open: true
+    tty: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      # Mount X11 socket for GUI support (Linux/macOS with XQuartz)
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Mount local data directory
+      - ./data:/app/data:rw
+      # Mount examples (optional - allows editing examples from host)
+      - ./Examples:/app/Examples:rw
+    # network_mode: host  # Uncomment for Linux if you have X11 issues
+
+  # Jupyter notebook service
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pyoma2:latest
+    container_name: pyoma2-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./data:/app/data:rw
+      - ./Examples:/app/Examples:rw
+    command: >
+      bash -c "pip install --user jupyter jupyterlab &&
+               ~/.local/bin/jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='' --NotebookApp.password=''"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+
+  # Development service with mounted source code
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pyoma2:latest
+    container_name: pyoma2-dev
+    stdin_open: true
+    tty: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./data:/app/data:rw
+      - ./src:/app/src:rw
+      - ./tests:/app/tests:rw
+      - ./Examples:/app/Examples:rw
+    command: /bin/bash

@@ -1,0 +1,71 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# PDM
+.pdm.toml
+.pdm-python
+__pypackages__/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testing
+.tox/
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# Documentation builds
+docs/_build/
+docs/doctrees/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Lock files (not needed in container)
+pdm-*.lock
+*.lock
+
+# Development files
+.pre-commit-config.yaml
+tox.ini
+.editorconfig
+
+# Test data (optional - uncomment if you don't need test data in container)
+# tests/
+# test_*.py
+
+# Makefile (optional)
+Makefile

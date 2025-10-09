@@ -55,7 +55,72 @@ Mac:
 
 https://www.pythonguis.com/installation/install-tkinter-mac/
 
-_____
+## Docker (Recommended for isolated environment)
+
+Run pyOMA2 in a container with **all dependencies pre-installed** - no local Python setup needed, just Docker.
+
+### Build the image
+
+```shell
+docker compose build
+```
+
+### Run Jupyter Notebook
+
+```shell
+docker compose up jupyter
+```
+
+Then open `http://localhost:8888` in your browser (no token required for local development).
+
+**Docker Limitations:**
+
+- Interactive Qt windows (`pyvistaqt`) not available - use `notebook=True` for 3D plots and `save_gif=True` for animations
+- Authentication disabled for convenience - only use on trusted networks
+
+### Run Python shell
+
+```shell
+docker compose up pyoma2
+```
+
+### Run a command in the container
+
+```shell
+docker compose run --rm pyoma2 python3 your_script.py
+```
+
+### Enter interactive shell
+
+```shell
+docker compose run --rm pyoma2 /bin/bash
+```
+
+### GUI Applications (Optional)
+
+For 3D visualizations and interactive plots, enable X11 forwarding:
+
+**Linux:**
+```shell
+xhost +local:docker
+docker compose up pyoma2
+```
+
+**macOS:**
+```shell
+# Install XQuartz first: brew install --cask xquartz
+xhost +localhost
+docker compose up pyoma2
+```
+
+**Windows/WSL2:**
+```shell
+# Install VcXsrv or Xming, then:
+export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
+docker compose up pyoma2
+```
+
+_______________________
 
 # Examples
 
