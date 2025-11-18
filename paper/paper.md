@@ -25,11 +25,11 @@ bibliography: paper.bib
 
 ## Summary
 
-Operational Modal Analysis (OMA) has garnered considerable attention from
+Operational modal analysis (OMA) has garnered considerable attention from
 the engineering community in recent years and has established itself as
 the preferred method for estimating the modal properties of structures in
-Structural Health Monitoring (SHM) applications, particularly in civil engineering.
-The key advantage of OMA over Experimental Modal Analysis (EMA) is its
+structural health monitoring (SHM) applications, particularly in civil engineering.
+The key advantage of OMA over experimental modal analysis (EMA) is its
 ability to derive modal parameters solely from output measurements taken
 during the structure's normal operation. This makes OMA a more practical
 and efficient approach, as opposed to the traditional EMA, which requires
@@ -50,16 +50,16 @@ The following algorithms are included in the module:
 - Frequency domain decomposition (FDD) [@brincker2001modal];
 - Enhanced frequency domain decomposition (EFDD) [@brincker2001damping];
 - Frequency spatial domain decomposition (FSDD) [@zhang2010frequency];
-- Reference based covariance driven stochastic subspace identification (SSIcov) [@van2012subspace;@peeters1999reference;@reynders2012system];
-- Reference based data driven stochastic subspace identification (SSIdat) [@van2012subspace;@peeters1999reference;@reynders2012system];
-- Poly-reference Least Square Frequency Domain (pLSCF) [@peeters2004polymax];
+- Reference-based covariance driven stochastic subspace identification (SSIcov) [@van2012subspace;@peeters1999reference;@reynders2012system];
+- Reference-based data driven stochastic subspace identification (SSIdat) [@van2012subspace;@peeters1999reference;@reynders2012system];
+- Poly-reference least square frequency domain (pLSCF) [@peeters2004polymax];
 
-The multi-setup analyzes can be performed according the so-called Post Separate Estimation
-Re-Scaling (PoSER) approach as well as with the so-called Pre-Global Estimation Re-Scaling (PreGER)
-approach [@brincker2015introduction;@rainieri2014operational;@dohler2013efficient;@amador2021robust]. The calculation of the uncertainty bounds for the SSI family of algorithm follows the efficient implementation by Döhler [@dohler2011subspace;@dohler2013efficient;@dohler2013uncertainty]. The interested reader may refer to the extensive scientific literature on the subject for further information.
+The multi-setup analyzes can be performed according the so-called post separate estimation
+re-scaling (PoSER) approach as well as with the so-called pre-global estimation re-scaling (PreGER)
+approach [@brincker2015introduction;@rainieri2014operational;@dohler2013efficient;@amador2021robust]. The calculation of the uncertainty bounds for the SSI family of algorithms follows the efficient implementation by Döhler and colleagues [@dohler2011subspace;@dohler2013efficient;@dohler2013uncertainty]. The interested reader may refer to the extensive scientific literature on the subject for further information.
 
-A few commercial software implements the algorithms mentioned above.
-The most known presumably are ARTeMIS [@solutions2001artemis], by Structural
+A few commercial software programs implements the algorithms mentioned above.
+The most well-known presumably are ARTeMIS [@solutions2001artemis], by Structural
 Vibration Solutions, and MACEC, a Matlab toolbox for modal testing and
 OMA [@reynders2014macec]. When it comes to open source modules the only ones
 available to the authors best knowledge are the first version of `pyOMA`
@@ -69,11 +69,11 @@ available on GitHub. It provides tools for OMA, focusing on simplicity and ease 
 making it suitable for smaller projects.
 
 The module's reliability and applicability for research purposes have been
-demonstrated by the authors through various studies, such as
+demonstrated by the authors through various studies
 [@alaggio2021two;@aloisio2020dynamic;@simoncelli2023intensity].
 Additionally, the module has gained traction within the research community,
 as evidenced by its use in studies by
-[@saharan2023convolutional;@croce2023towards;@talebi2023interoperability;@abuodeh2023examining], and others.
+@saharan2023convolutional, @croce2023towards, @talebi2023interoperability, @abuodeh2023examining, and others.
 
 ## Module's structure
 
