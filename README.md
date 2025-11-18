@@ -141,3 +141,32 @@ _____
 ![](docs/img/info.png "")
 
 ____
+
+_______________________
+
+## How to Cite
+
+If you use pyOMA2 in your research, please cite our JOSS paper:
+
+**BibTeX:**
+```bibtex
+@article{Pasca2025,
+  doi = {10.21105/joss.07656},
+  url = {https://doi.org/10.21105/joss.07656},
+  year = {2025},
+  publisher = {The Open Journal},
+  volume = {10},
+  number = {115},
+  pages = {7656},
+  author = {Pasca, Dag P. and Margoni, Diego Federico},
+  title = {pyOMA2: A Python module for conducting operational modal analysis},
+  journal = {Journal of Open Source Software}
+}
+```
+
+**APA:**
+```
+Pasca, D. P., & Margoni, D. F. (2025). pyOMA2: A Python module for conducting operational modal analysis. Journal of Open Source Software, 10(115), 7656. https://doi.org/10.21105/joss.07656
+```
+
+_______________________
