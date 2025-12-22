@@ -9,6 +9,7 @@ Dag Pasca
 import logging
 import pickle
 import typing
+import math
 
 import numpy as np
 import pandas as pd
@@ -295,9 +296,7 @@ def SC_apply(Fn, Xi, Phi, ordmin, ordmax, step, err_fn, err_xi, err_phi) -> np.n
 
     # SOFT CONDITIONS
     # STABILITY BETWEEN CONSECUTIVE ORDERS
-    for oo in range(ordmin, ordmax + 1, step):
-        o = int(oo / step - 1)
-
+    for o in range(math.ceil(ordmin / step), math.floor(ordmax / step) + 1):
         f_n = Fn[:, o].reshape(-1, 1)
         xi_n = Xi[:, o].reshape(-1, 1)
         phi_n = Phi[:, o, :]
