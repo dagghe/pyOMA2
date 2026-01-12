@@ -26,6 +26,7 @@ from matplotlib.figure import Figure
 if typing.TYPE_CHECKING:
     from pyoma2.algorithms import BaseAlgorithm
 
+from pyoma2.functions import fdd
 from pyoma2.functions.plot import CMIF_plot, stab_plot
 
 logger = logging.getLogger(__name__)
@@ -62,12 +63,20 @@ class SelFromPlot:
         Matplotlib Figure object for plotting.
     ax2 : matplotlib.axes.Axes
         Axes object for the figure.
+    ax_spectrum : matplotlib.axes.Axes, optional
+        Secondary axes for spectrum overlay (CMIF plot).
     MARKER : matplotlib.lines.Line2D
         Line2D object for displaying selected points on the plot.
     show_legend : int
         Flag to control the visibility of the legend in the plot.
     hide_poles : int
         Flag to control the visibility of unstable poles in the plot.
+    spectrum : bool
+        Flag indicating if spectrum overlay feature is enabled.
+    show_spectrum : bool
+        Flag to control the current visibility of spectrum overlay.
+    nSv : int or 'all'
+        Number of singular values to display in spectrum overlay.
     """
 
     def __init__(
@@ -75,6 +84,8 @@ class SelFromPlot:
         algo: BaseAlgorithm,
         freqlim: Tuple[float, float] = None,
         plot: Literal["FDD", "SSI", "pLSCF"] = "FDD",
+        spectrum: bool = False,
+        nSv: typing.Union[int, str] = "all",
     ):
         """
         Initializes the SelFromPlot class with specified algorithm, frequency limit, and plot type.
@@ -87,6 +98,11 @@ class SelFromPlot:
             Upper frequency limit for the plot, defaults to half the Nyquist frequency if not provided.
         plot : str, optional
             Type of plot to be displayed. Supported values are "FDD", "SSI", and "pLSCF". Default is "FDD".
+        spectrum : bool, optional
+            If True and plot is "SSI" or "pLSCF", overlay the measured spectral singular values (CMIF)
+            on a secondary axis. Default is False.
+        nSv : int or 'all', optional
+            Number of singular values for CMIF plot when spectrum is True. Default is 'all'.
         """
         self.algo = algo
         if hasattr(algo.run_params, "step"):
@@ -97,6 +113,10 @@ class SelFromPlot:
         self.freqlim = freqlim if freqlim is not None else (0.0, self.fs / 2)
         self.shift_is_held = False
         self.sel_freq = []
+        self.spectrum = spectrum
+        self.nSv = nSv
+        self.show_spectrum = spectrum  # Track current spectrum visibility state
+        self.ax_spectrum = None  # Secondary axis for spectrum overlay
 
         if self.plot in ("SSI", "pLSCF"):
             self.show_legend = 0
@@ -149,6 +169,19 @@ class SelFromPlot:
                 command=lambda: (self.toggle_hide_poles(1), self.toggle_legend(0)),
             )
             menubar.add_cascade(label="Show/Hide Unstable Poles", menu=hidepolesmenu)
+
+            # Add spectrum toggle menu if spectrum feature is enabled
+            if self.spectrum:
+                spectrummenu = tk.Menu(menubar, tearoff=0)
+                spectrummenu.add_command(
+                    label="Show spectrum",
+                    command=lambda: self.toggle_spectrum(True),
+                )
+                spectrummenu.add_command(
+                    label="Hide spectrum",
+                    command=lambda: self.toggle_spectrum(False),
+                )
+                menubar.add_cascade(label="Spectrum Overlay", menu=spectrummenu)
 
         helpmenu = tk.Menu(menubar, tearoff=0)
         helpmenu.add_command(label="Help", command=self.show_help)
@@ -247,6 +280,12 @@ class SelFromPlot:
 
         if not update_ticks:
             self.ax2.clear()
+
+            # Remove old spectrum axis if it exists
+            if self.ax_spectrum is not None:
+                self.ax_spectrum.remove()
+                self.ax_spectrum = None
+
             stab_plot(
                 Fn,
                 Lab,
@@ -258,6 +297,23 @@ class SelFromPlot:
                 fig=self.fig,
                 ax=self.ax2,
             )
+
+            # Add spectrum overlay if enabled and visible
+            if self.spectrum and self.show_spectrum:
+                # Estimate spectrum if not already computed
+                if not hasattr(self.algo, "Sy"):
+                    self.algo.est_spectrum()
+
+                Sval, _ = fdd.SD_svalsvec(self.algo.Sy)
+                self.ax_spectrum = self.ax2.twinx()
+                _, _ = CMIF_plot(
+                    Sval,
+                    self.algo.freq,
+                    ax=self.ax_spectrum,
+                    freqlim=freqlim,
+                    nSv=self.nSv
+                )
+
             (self.MARKER,) = self.ax2.plot(
                 self.sel_freq, self.pole_ind, "kx", markersize=10
             )
@@ -407,6 +463,18 @@ class SelFromPlot:
             Flag indicating whether to hide (1) or show (0) unstable poles.
         """
         self.hide_poles = bool(x)
+        self.plot_stab(self.plot)
+
+    def toggle_spectrum(self, show: bool) -> None:
+        """
+        Toggles the visibility of spectrum overlay in the plot.
+
+        Parameters
+        ----------
+        show : bool
+            Flag indicating whether to show (True) or hide (False) spectrum overlay.
+        """
+        self.show_spectrum = show
         self.plot_stab(self.plot)
 
     def sort_selected_poles(self) -> None:

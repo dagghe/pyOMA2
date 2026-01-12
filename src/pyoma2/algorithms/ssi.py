@@ -1176,6 +1176,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         color_scheme: typing.Literal[
             "default", "classic", "high_contrast", "viridis"
         ] = "default",
+        interactive: bool = False,
     ) -> tuple:
         """
         Plot the Stabilization Diagram for the SSI algorithm.
@@ -1197,20 +1198,48 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         color_scheme : typing.Literal["default", "classic", "high_contrast", "viridis"], optional
             Color scheme for stable/unstable poles. Options: 'default', 'classic',
             'high_contrast', 'viridis'.
+        interactive : bool, optional
+            If True, open an interactive Tkinter GUI for pole selection with mouse clicks.
+            When interactive mode is enabled, the user can pick modes directly from the plot.
+            Default is False.
 
         Returns
         -------
         tuple
             (fig, ax) where fig is the matplotlib Figure and ax is the primary Axes.
+            If interactive=True, returns (None, None) after GUI closes, and selected modes
+            are stored in self.result.
 
         Raises
         ------
         ValueError
             If the SSI algorithm has not been run (self.result is None).
+
+        Notes
+        -----
+        Interactive mode controls:
+        - SHIFT + LEFT mouse button: Select a pole
+        - SHIFT + RIGHT mouse button: Deselect last pole
+        - SHIFT + MIDDLE mouse button: Deselect closest pole
         """
         if self.result is None:
             raise ValueError("Run SSI algorithm first (call run()).")
 
+        # If interactive mode is requested, use SelFromPlot
+        if interactive:
+            from pyoma2.support.sel_from_plot import SelFromPlot
+
+            SFP = SelFromPlot(
+                algo=self,
+                freqlim=freqlim,
+                plot="SSI",
+                spectrum=spectrum,
+                nSv=nSv,
+            )
+            # Interactive mode handles everything, return None
+            return None, None
+
+        # Non-interactive static plot
         fig, ax = plot.stab_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,

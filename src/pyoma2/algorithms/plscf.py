@@ -250,6 +250,9 @@ class pLSCF(
         color_scheme: typing.Literal[
             "default", "classic", "high_contrast", "viridis"
         ] = "default",
+        spectrum: bool = False,
+        nSv: typing.Union[int, str] = "all",
+        interactive: bool = False,
     ) -> typing.Any:
         """
         Plot the Stability Diagram for the pLSCF analysis.
@@ -267,12 +270,45 @@ class pLSCF(
         color_scheme : typing.Literal["default", "classic", "high_contrast", "viridis"], optional
             Color scheme for stable/unstable poles. Options: 'default', 'classic',
             'high_contrast', 'viridis'.
+        spectrum : bool, optional
+            If True, overlay the measured spectral singular values (CMIF) on a secondary axis.
+            Default is False.
+        nSv : int or 'all', optional
+            Number of singular values for CMIF plot when spectrum is True. Default is 'all'.
+        interactive : bool, optional
+            If True, open an interactive Tkinter GUI for pole selection with mouse clicks.
+            When interactive mode is enabled, the user can pick modes directly from the plot.
+            Default is False.
 
         Returns
         -------
         Any
             A tuple containing the matplotlib figure and axes objects for the stability diagram.
+            If interactive=True, returns (None, None) after GUI closes, and selected modes
+            are stored in self.result.
+
+        Notes
+        -----
+        Interactive mode controls:
+        - SHIFT + LEFT mouse button: Select a pole
+        - SHIFT + RIGHT mouse button: Deselect last pole
+        - SHIFT + MIDDLE mouse button: Deselect closest pole
         """
+        # If interactive mode is requested, use SelFromPlot
+        if interactive:
+            from pyoma2.support.sel_from_plot import SelFromPlot
+
+            SFP = SelFromPlot(
+                algo=self,
+                freqlim=freqlim,
+                plot="pLSCF",
+                spectrum=spectrum,
+                nSv=nSv,
+            )
+            # Interactive mode handles everything, return None
+            return None, None
+
+        # Non-interactive static plot
         fig, ax = plot.stab_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,
@@ -285,6 +321,17 @@ class pLSCF(
             ax=None,
             color_scheme=color_scheme,
         )
+
+        # Add spectrum overlay if enabled
+        if spectrum:
+            from pyoma2.functions import fdd
+
+            if not hasattr(self, "Sy"):
+                self.est_spectrum()
+            Sval, _ = fdd.SD_svalsvec(self.Sy)
+            ax2 = ax.twinx()
+            fig, ax = plot.CMIF_plot(Sval, self.freq, ax=ax2, freqlim=freqlim, nSv=nSv)
+
         return fig, ax
 
     def plot_freqvsdamp(
