@@ -141,10 +141,10 @@ class SingleSetup(BaseSetup, GeometryMixin):
         """
         data = self.data
         fs = self.fs
-        nc = nc  # number of columns for subplot
-        names = names  # list of names (str) of the channnels
-        unit = unit  # str label for the y-axis (unit of measurement)
-        show_rms = show_rms  # wheter to show or not the rms acc in the plot
+        # nc: number of columns for subplot
+        # names: list of names (str) of the channels
+        # unit: str label for the y-axis (unit of measurement)
+        # show_rms: whether to show or not the rms acc in the plot
         fig, ax = plot.plt_data(data, fs, nc, names, unit, show_rms)
         return fig, ax
 

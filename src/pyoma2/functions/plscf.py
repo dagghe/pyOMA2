@@ -14,6 +14,8 @@ import numpy as np
 # import matplotlib.pyplot as plt
 from tqdm import tqdm, trange
 
+# WARNING: Global error suppression - consider using context managers (np.errstate)
+# for specific operations instead of suppressing warnings globally
 np.seterr(divide="ignore", invalid="ignore")
 logger = logging.getLogger(__name__)
 
@@ -343,7 +345,7 @@ def pLSCF_mpe(
 
             ii = 0
             check = np.array([False, False])
-            while check.any() == False:  # noqa: E712
+            while not check.any():
                 # try:
                 fn_at_ord_ii = aa[:, ii]
                 fn_at_ord_ii = np.unique(fn_at_ord_ii)

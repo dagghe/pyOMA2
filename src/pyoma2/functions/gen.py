@@ -157,7 +157,8 @@ def HC_MPC(phi, mpc_lim) -> np.ndarray:
         for i in range(phi.shape[1]):
             try:
                 mask2.append((MPC(phi[o, i, :]) >= mpc_lim).astype(int))
-            except Exception:
+            except (ValueError, np.linalg.LinAlgError) as e:
+                logger.debug("MPC calculation failed for phi[%d, %d]: %s", o, i, e)
                 mask2.append(0)
     mask2 = np.array(mask2).reshape((phi.shape[0], phi.shape[1]))
     mask3 = np.expand_dims(mask2, axis=-1)
@@ -190,7 +191,8 @@ def HC_MPD(phi, mpd_lim) -> np.ndarray:
         for i in range(phi.shape[1]):
             try:
                 mask.append((MPD(phi[o, i, :]) <= mpd_lim).astype(int))
-            except Exception:
+            except (ValueError, np.linalg.LinAlgError) as e:
+                logger.debug("MPD calculation failed for phi[%d, %d]: %s", o, i, e)
                 mask.append(0)
     mask = np.array(mask).reshape((phi.shape[0], phi.shape[1]))
     mask1 = np.expand_dims(mask, axis=-1)
@@ -1136,7 +1138,8 @@ def MPC(phi: np.ndarray) -> float:
         S = np.cov(phi.real, phi.imag)
         lambd = np.linalg.eigvals(S)
         MPC = (lambd[0] - lambd[1]) ** 2 / (lambd[0] + lambd[1]) ** 2
-    except Exception:
+    except (ValueError, ZeroDivisionError, np.linalg.LinAlgError) as e:
+        logger.debug("MPC calculation failed: %s", e)
         MPC = np.nan
     return MPC
 
@@ -1169,7 +1172,8 @@ def MPD(phi: np.ndarray) -> float:
         num = phi.real * V[1, 1] - phi.imag * V[0, 1]
         den = np.sqrt(V[0, 1] ** 2 + V[1, 1] ** 2) * np.abs(phi)
         MPD = np.sum(w * np.arccos(np.abs(num / den))) / np.sum(w)
-    except Exception:
+    except (ValueError, ZeroDivisionError, np.linalg.LinAlgError) as e:
+        logger.debug("MPD calculation failed: %s", e)
         MPD = np.nan
     return MPD
 

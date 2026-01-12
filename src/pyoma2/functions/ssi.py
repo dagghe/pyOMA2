@@ -13,6 +13,8 @@ import numpy as np
 from scipy import linalg
 from tqdm import tqdm, trange
 
+# WARNING: Global error suppression - consider using context managers (np.errstate)
+# for specific operations instead of suppressing warnings globally
 np.seterr(divide="ignore", invalid="ignore")
 logger = logging.getLogger(__name__)
 
@@ -79,7 +81,7 @@ def build_hank(
     """
 
     Ndat = Y.shape[1]  # number of data points
-    l = Y.shape[0]  # number of channels # noqa E741 (ambiguous variable name 'l')
+    num_channels = Y.shape[0]  # number of channels
     r = Yref.shape[0]  # number of reference channels
     p = br - 1  # number of block rows
     q = br  # block columns
@@ -99,7 +101,7 @@ def build_hank(
         if calc_unc:
             logger.info("... calculating cov(H)...")
             Nb = N // nb  # number of samples per segment
-            T = np.zeros(((p + 1) * q * l * r, nb))  # Square root of SIGMA_H
+            T = np.zeros(((p + 1) * q * num_channels * r, nb))  # Square root of SIGMA_H
             Hvec0 = Hank.reshape(-1, order="F")  # vectorized Hankel
 
             for k in range(nb):
@@ -111,7 +113,7 @@ def build_hank(
                 Hcov_vec_k = Hcov_k.reshape(-1, order="F")
                 if Hcov_vec_k.shape[0] < T.shape[0]:
                     raise AttributeError(
-                        "Not enough data points per data block."
+                        "Not enough data points per data block. "
                         "Try reducing the number of data blocks, nb and/or the number of block-rows, br"
                     )
                 else:
@@ -131,26 +133,24 @@ def build_hank(
         if calc_unc is True:
             logger.info("... calculating cov(H)...")
             Nb = N // nb  # number of samples per segment
-            T = np.zeros(((p + 1) * q * l * r, nb))  # Square root of SIGMA_H
+            T = np.zeros(((p + 1) * q * num_channels * r, nb))  # Square root of SIGMA_H
             Hvec0 = Hank.reshape(-1, 1, order="f")  # vectorialised hankel
 
             for j in range(1, nb + 1):
-                print(j, nb)
-                Ri = np.array([])
+                # Pre-allocate Ri array for better performance (avoid O(n²) complexity)
+                Ri = np.zeros((p + q, num_channels, r))
                 for k in range(p + q):
-                    print(f"{k=}, {p=}, {q=}")
-                    res = np.array(
-                        [1 / (Nb - k) * np.dot(Y[:, : j * Nb - k], Yref[:, k : j * Nb].T)]
-                    )
-                    Ri = np.vstack([Ri, res])
+                    Ri[k] = 1 / (Nb - k) * np.dot(Y[:, : j * Nb - k], Yref[:, k : j * Nb].T)
+
+                # Fix variable shadowing: use 'jj' instead of 'j' in list comprehension
                 Hcov_j = np.vstack(
-                    [np.hstack([Ri[i + j, :, :] for j in range(p + 1)]) for i in range(q)]
+                    [np.hstack([Ri[i + jj, :, :] for jj in range(p + 1)]) for i in range(q)]
                 )
 
                 Hcov_vec_j = Hcov_j.reshape(-1, 1, order="f")
                 if Hcov_vec_j.shape[0] < T.shape[0]:
                     raise AttributeError(
-                        "Not enough data points per data block."
+                        "Not enough data points per data block. "
                         "Try reducing the number of data blocks, nb and/or the number of block-rows, br"
                     )
                 else:
@@ -169,7 +169,7 @@ def build_hank(
         if calc_unc:
             logger.info("... calculating cov(H)...")
             Nb = N // nb  # number of samples per segment
-            T = np.zeros(((p + 1) * q * l * r, nb))  # Square root of SIGMA_H
+            T = np.zeros(((p + 1) * q * num_channels * r, nb))  # Square root of SIGMA_H
             Hvec0 = Hank.reshape(-1, order="F")  # vectorized Hankel
 
             for j in range(nb):
@@ -200,7 +200,7 @@ def build_hank(
         # preallocate
         Uf = np.zeros(((p + 1) * inp, N))
         Up = np.zeros((q * inp, N))
-        Yf = np.zeros(((p + 1) * l, N))
+        Yf = np.zeros(((p + 1) * num_channels, N))
         Yp = np.zeros((q * r, N))
 
         # build past‐input blocks Up and past‐output blocks Yp
@@ -212,7 +212,7 @@ def build_hank(
         # build future‐input blocks Uf and future‐output blocks Yf
         for i in range(p + 1):
             Uf[i * inp : (i + 1) * inp, :] = U[:, q + i : q + i + N]
-            Yf[i * l : (i + 1) * l, :] = Y[:, q + i : q + i + N]
+            Yf[i * num_channels : (i + 1) * num_channels, :] = Y[:, q + i : q + i + N]
 
         R2 = Yf.dot(Yp.T) / N
         R4 = Yf.dot(Uf.T) / N
@@ -226,7 +226,7 @@ def build_hank(
         logger.info("... calculating cov(H)...")
         if calc_unc:
             Nb = N // nb  # number of samples per segment
-            T = np.zeros(((p + 1) * q * l * r, nb))  # Square root of SIGMA_H
+            T = np.zeros(((p + 1) * q * num_channels * r, nb))  # Square root of SIGMA_H
             Hvec0 = Hank.reshape(-1, order="F")  # vectorized Hankel
 
             for k in trange(nb):
@@ -439,7 +439,7 @@ def SSI_fast(
     leveraging QR decomposition for rapid estimation, see [DOME13]_.
     """
 
-    l = int(H.shape[0] / (br))  # noqa E741 (ambiguous variable name 'l')  Number of channels
+    num_channels = int(H.shape[0] / (br))  # Number of channels
 
     # SINGULAR VALUE DECOMPOSITION
     U, SIG, VT = np.linalg.svd(H)
@@ -449,8 +449,8 @@ def SSI_fast(
     Obs = np.dot(U[:, :ordmax], S1rad[:ordmax, :ordmax])  # Observability matrix
     Con = np.dot(S1rad[:ordmax, :ordmax], VT[:ordmax, :])  # Controllability matrix
 
-    Oup = Obs[: Obs.shape[0] - l, :]
-    Odw = Obs[l:, :]
+    Oup = Obs[: Obs.shape[0] - num_channels, :]
+    Odw = Obs[num_channels:, :]
     # # Extract system matrices
     # QR decomposition
     Q, R = np.linalg.qr(Oup)
@@ -462,8 +462,8 @@ def SSI_fast(
     logger.info("SSI for increasing model order...")
     for n in trange(0, ordmax + 1, step):
         A.append(np.dot(np.linalg.inv(R[:n, :n]), S[:n, :n]))
-        C.append(Obs[:l, :n])
-        G.append(Con[:n, -l:])
+        C.append(Obs[:num_channels, :n])
+        G.append(Con[:n, -num_channels:])
     logger.debug("... Done!")
     return Obs, A, C, G
 
@@ -542,15 +542,15 @@ def SSI_poles(
         Standard deviations of mode shapes, returned if `calc_unc` is True.
     """
 
-    # NB Nch = l
+    # NB Nch = num_channels
 
-    l = int(CC[0].shape[0])  # noqa E741 (ambiguous variable name 'l')
-    p = int(Obs.shape[0] / l - 1)
+    num_channels = int(CC[0].shape[0])
+    p = int(Obs.shape[0] / num_channels - 1)
     q = int(p + 1)  # block column
 
     # Build selector matrices
-    S1 = np.hstack([np.eye(p * l), np.zeros((p * l, l))])
-    S2 = np.hstack([np.zeros((p * l, l)), np.eye(p * l)])
+    S1 = np.hstack([np.eye(p * num_channels), np.zeros((p * num_channels, num_channels))])
+    S2 = np.hstack([np.zeros((p * num_channels, num_channels)), np.eye(p * num_channels)])
 
     # initialization of the matrix that contains the frequencies
     Lambdas = np.full((ordmax, int((ordmax) / step + 1)), np.nan, dtype=complex)
@@ -559,7 +559,7 @@ def SSI_poles(
     # initialization of the matrix that contains the damping ratios
     Xi = np.full((ordmax, int((ordmax) / step + 1)), np.nan)
     # initialization of the matrix that contains the mode shapes
-    Phi = np.full((ordmax, int((ordmax) / step + 1), l), np.nan, dtype=complex)
+    Phi = np.full((ordmax, int((ordmax) / step + 1), num_channels), np.nan, dtype=complex)
 
     if calc_unc:
         nb = T.shape[1]
@@ -574,7 +574,7 @@ def SSI_poles(
         Xi_std = np.full((ordmax, int((ordmax) / step + 1)), np.nan)
         # initialization of the matrix that contains the mode shapes
         Phi_std = np.full(
-            (ordmax, int((ordmax) / step + 1), l),
+            (ordmax, int((ordmax) / step + 1), num_channels),
             np.nan,
         )
 
@@ -586,7 +586,7 @@ def SSI_poles(
         Q1 = np.zeros(((ordmax) ** 2, nb))
         Q2 = np.zeros_like(Q1)
         Q3 = np.zeros_like(Q1)
-        Q4 = np.zeros((l * ordmax, nb))
+        Q4 = np.zeros((num_channels * ordmax, nb))
         logger.info("... propagating uncertainty...")
         for ii in trange(1, ordmax + 1, step):
             sn_k = Sn[ii - 1, ii - 1]
@@ -600,14 +600,14 @@ def SSI_poles(
             )
             Ki = np.linalg.inv(Kj)
             # Eq. 29
-            Bi1 = np.eye((p + 1) * l) + (H / sn_k) @ Ki @ (
-                (H.T / sn_k) - np.vstack([np.zeros((q * r - 1, (p + 1) * l)), Un_k.T])
+            Bi1 = np.eye((p + 1) * num_channels) + (H / sn_k) @ Ki @ (
+                (H.T / sn_k) - np.vstack([np.zeros((q * r - 1, (p + 1) * num_channels)), Un_k.T])
             )
             Bi1 = np.hstack([Bi1, (H / sn_k) @ Ki])
             # Remark 9
             # Eq. 33
             Ti1 = np.kron(np.eye(q * r), Un_k.T) @ T
-            Ti2 = np.kron(Vn_k.T, np.eye((p + 1) * l)) @ T
+            Ti2 = np.kron(Vn_k.T, np.eye((p + 1) * num_channels)) @ T
             # Eq. 34
             JOHTi = (1 / (2 * np.sqrt(sn_k))) * (Un_k @ (Vn_k.T @ Ti1)) + (
                 1 / np.sqrt(sn_k)
@@ -621,8 +621,8 @@ def SSI_poles(
             Q1[(ii - 1) * ordmax : (ii) * ordmax, :] = ((S1 @ Obs).T @ S1) @ JOHTi
             Q2[(ii - 1) * ordmax : (ii) * ordmax, :] = ((S2 @ Obs).T @ S1) @ JOHTi
             Q3[(ii - 1) * ordmax : (ii) * ordmax, :] = ((S1 @ Obs).T @ S2) @ JOHTi
-            Q4[(ii - 1) * l : (ii) * l, :] = (
-                np.hstack([np.eye(l), np.zeros((l, p * l))]) @ JOHTi
+            Q4[(ii - 1) * num_channels : (ii) * num_channels, :] = (
+                np.hstack([np.eye(num_channels), np.zeros((num_channels, p * num_channels))]) @ JOHTi
             )
 
     logger.info("Calculating modal parameters for increasing model order...")
@@ -687,9 +687,9 @@ def SSI_poles(
 
         if calc_unc:
             In = np.eye(nn)
-            Inl = np.eye(nn * l)
+            Inl = np.eye(nn * num_channels)
             Zero = np.zeros((nn, (ordmax) - nn))
-            Zero1 = np.zeros((nn * l, l * ((ordmax) - nn)))
+            Zero1 = np.zeros((nn * num_channels, num_channels * ((ordmax) - nn)))
             matr = np.hstack((In, Zero))
             matr1 = np.hstack((Inl, Zero1))
 
@@ -774,20 +774,20 @@ def SSI_poles(
                     JpaohT = np.dot(np.dot(np.dot(Mat1_1, Mat2_1), OO), Qi)
 
                     if idx[jj] == 0:
-                        Mat1_2 = np.eye(l) - np.hstack(
-                            [phi[:, jj].reshape(-1, 1), np.zeros((l, l - 1))]
+                        Mat1_2 = np.eye(num_channels) - np.hstack(
+                            [phi[:, jj].reshape(-1, 1), np.zeros((num_channels, num_channels - 1))]
                         )
                     else:
-                        Mat1_2 = np.eye(l) - np.hstack(
+                        Mat1_2 = np.eye(num_channels) - np.hstack(
                             [
-                                np.zeros((l, idx[jj])),
+                                np.zeros((num_channels, idx[jj])),
                                 phi[:, jj].reshape(-1, 1),
-                                np.zeros((l, l - idx[jj] - 1)),
+                                np.zeros((num_channels, num_channels - idx[jj] - 1)),
                             ]
                         )
 
                     Mat2_2 = np.dot(C, JpaohT) + np.dot(
-                        np.kron(r_eigvt[:, jj].T, np.eye(l)), Q4n
+                        np.kron(r_eigvt[:, jj].T, np.eye(num_channels)), Q4n
                     )
                     # Eq. 45
                     JpacohT = 1 / vmaxs[jj] * np.dot(Mat1_2, Mat2_2)
@@ -796,7 +796,7 @@ def SSI_poles(
                     # Eq. 40
                     cov_phi = np.dot(Uph, Uph.T)
                     # standard deviation
-                    Phi_std[jj, n, :] = abs(np.diag(cov_phi[:l, :l])) ** 0.5
+                    Phi_std[jj, n, :] = abs(np.diag(cov_phi[:num_channels, :num_channels])) ** 0.5
             logger.debug("... uncertainty calculations done!")
 
         try:
@@ -809,7 +809,7 @@ def SSI_poles(
                         for ii in range(phi.shape[1])
                     ]
                 )
-                .reshape(-1, l)
+                .reshape(-1, num_channels)
                 .T
             )
             # vmaxs = [phi[idx[k1], k1] for k1 in range(len(idx))]

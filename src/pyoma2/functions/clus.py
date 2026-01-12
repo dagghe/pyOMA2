@@ -1050,7 +1050,6 @@ def post_MTT(clusters, labels, flattened_results):
     Fn_fl, Xi_fl = flattened_results
     # Removing outliers with the modified Thompson Tau Techinique (Neu 2017)
     for _, indices in clusters.items():
-        # print(indices)
         freqs = Fn_fl[indices]
         xis = Xi_fl[indices]
 
