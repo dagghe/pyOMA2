@@ -6,10 +6,12 @@ Author:
 Dag Pasca
 """
 
+from __future__ import annotations
+
 import logging
+import math
 import pickle
 import typing
-import math
 
 import numpy as np
 import pandas as pd

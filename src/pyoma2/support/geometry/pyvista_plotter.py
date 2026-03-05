@@ -5,8 +5,9 @@ Created on Sat Jun  8 21:25:39 2024
 @author: dagpa
 """
 
+from __future__ import annotations
+
 import logging
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pyvista as pv
@@ -33,11 +34,11 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
     ----------
     geo : Geometry2
         Geometric model containing sensor positions and topology.
-    res : Optional[BaseResult]
+    res : BaseResult | None
         Modal analysis results (mode shapes, frequencies).
     """
 
-    def __init__(self, geo: Geometry2, res: Optional[BaseResult] = None):
+    def __init__(self, geo: Geometry2, res: BaseResult | None = None):
         """
         Initialize the plotter.
 
@@ -45,7 +46,7 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         ----------
         geo : Geometry2
             Geometric model with sensor coordinates and connectivity.
-        res : Optional[BaseResult], default=None
+        res : BaseResult | None, default=None
             Modal analysis results containing mode shapes and frequencies.
 
         Raises
@@ -82,9 +83,9 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
     @staticmethod
     def _encode_mesh(
         points: NDArray[np.float64],
-        lines_list: Optional[np.ndarray],
-        faces_list: Optional[np.ndarray],
-    ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+        lines_list: np.ndarray | None,
+        faces_list: np.ndarray | None,
+    ) -> tuple[np.ndarray | None, np.ndarray | None]:
         """
         Convert raw connectivity lists into PyVista-friendly arrays.
 
@@ -112,7 +113,7 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
 
     def _get_sensor_arrows(
         self,
-    ) -> Tuple[NDArray[np.float64], NDArray[np.float64], List[str]]:
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64], list[str]]:
         """
         Compute arrow origins, directions, and labels for each sensor channel.
 
@@ -152,12 +153,12 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         scaleF: float = 1.0,
         col_sens: str = "red",
         show_points: bool = True,
-        points_sett: Optional[dict] = None,
+        points_sett: dict | None = None,
         show_lines: bool = True,
-        lines_sett: Optional[dict] = None,
+        lines_sett: dict | None = None,
         show_surf: bool = True,
-        surf_sett: Optional[dict] = None,
-        pl: Optional[pv.Plotter] = None,
+        surf_sett: dict | None = None,
+        pl: pv.Plotter | None = None,
         background: bool = True,
         notebook: bool = False,
     ) -> pv.Plotter:
@@ -234,9 +235,9 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         scaleF: float = 1.0,
         show_lines: bool = True,
         show_surf: bool = True,
-        def_sett: Optional[dict] = None,
-        undef_sett: Optional[dict] = None,
-        pl: Optional[pv.Plotter] = None,
+        def_sett: dict | None = None,
+        undef_sett: dict | None = None,
+        pl: pv.Plotter | None = None,
         background: bool = True,
         notebook: bool = False,
     ) -> pv.Plotter:
@@ -326,10 +327,10 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         scaleF: float = 1.0,
         show_lines: bool = True,
         show_surf: bool = True,
-        def_sett: Optional[dict] = None,
+        def_sett: dict | None = None,
         save_gif: bool = False,
-        pl: Optional[pv.Plotter] = None,
-    ) -> Union[pv.Plotter, str]:
+        pl: pv.Plotter | None = None,
+    ) -> pv.Plotter | str:
         """
         Animate a mode shape oscillation. Optionally save as GIF.
 

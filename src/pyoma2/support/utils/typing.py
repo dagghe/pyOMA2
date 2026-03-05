@@ -4,6 +4,8 @@ i.e. allow serialization of numpy arrays.
 https://github.com/pydantic/pydantic/issues/7017
 """
 
+from __future__ import annotations
+
 import numpy as np
 from pydantic import BeforeValidator, PlainSerializer
 from typing_extensions import Annotated

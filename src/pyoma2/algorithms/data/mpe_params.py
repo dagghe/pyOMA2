@@ -5,8 +5,6 @@ algorithms included in the pyOMA2 module.
 
 from __future__ import annotations
 
-from typing import List, Optional, Union
-
 import numpy as np
 import numpy.typing as npt
 from pydantic import BaseModel, ConfigDict
@@ -34,7 +32,7 @@ class FDDMPEParams(BaseMPEParams):
         Frequency resolution for estimation, default is 0.1.
     """
 
-    sel_freq: Optional[npt.NDArray[np.float64]] = None
+    sel_freq: npt.NDArray[np.float64] | None = None
     DF: float = 0.1
 
 
@@ -60,7 +58,7 @@ class EFDDMPEParams(BaseMPEParams):
         Maximum number of peaks to use in the fit, default is 20.
     """
 
-    sel_freq: Optional[npt.NDArray[np.float64]] = None
+    sel_freq: npt.NDArray[np.float64] | None = None
     DF1: float = 0.1
     DF2: float = 1.0
     cm: int = 1
@@ -86,8 +84,8 @@ class SSIMPEParams(BaseMPEParams):
         Default is 5e-2.
     """
 
-    sel_freq: Optional[List[float]] = None
-    order_in: Union[int, List[int], str] = "find_min"
+    sel_freq: list[float] | None = None
+    order_in: int | list[int] | str = "find_min"
     rtol: float = 5e-2
 
 
@@ -107,6 +105,6 @@ class pLSCFMPEParams(BaseMPEParams):
         Default is 1e-2.
     """
 
-    sel_freq: Optional[List[float]] = None
-    order_in: Union[int, List[int], str] = "find_min"
+    sel_freq: list[float] | None = None
+    order_in: int | list[int] | str = "find_min"
     rtol: float = 5e-2

@@ -6,7 +6,7 @@ parameters for a specific algorithm or step in a clustering workflow.
 
 from __future__ import annotations
 
-from typing import List, Literal, Optional, Tuple, Union
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -33,10 +33,10 @@ class HCDictType(TypedDict):
         Defaults to None.
     """
 
-    xi_max: Optional[float]
-    mpc_lim: Optional[float]
-    mpd_lim: Optional[float]
-    CoV_max: Optional[float]
+    xi_max: float | None
+    mpc_lim: float | None
+    mpd_lim: float | None
+    CoV_max: float | None
 
 
 class SCDictType(TypedDict):
@@ -205,18 +205,18 @@ class SSIRunParams(BaseRunParams):
     """
 
     br: int = 20
-    method: Optional[Literal["cov", "cov_R", "dat", "IOcov"]] = "cov"
-    ref_ind: Optional[List[int]] = None
+    method: Literal["cov", "cov_R", "dat", "IOcov"] | None = "cov"
+    ref_ind: list[int] | None = None
     ordmin: int = 0
-    ordmax: Optional[int] = None
+    ordmax: int | None = None
     step: int = 1
     sc: SCDictType = {"err_fn": 0.05, "err_xi": 0.1, "err_phi": 0.05}
     hc: HCDictType = {"xi_max": 0.2, "mpc_lim": 0.5, "mpd_lim": 0.5, "CoV_max": 0.2}
     calc_unc: bool = False
     nb: int = 50
-    U: Optional[npt.NDArray[np.float64]] = None
+    U: npt.NDArray[np.float64] | None = None
     spetrum: bool = False
-    fdd_run_params: Optional[FDDRunParams] = None
+    fdd_run_params: FDDRunParams | None = None
 
 
 # =============================================================================
@@ -255,21 +255,21 @@ class Step1(BaseRunParams):
         Default: None.
     """
 
-    hc: Union[bool, Literal["after"]] = True
+    hc: bool | Literal["after"] = True
     hc_dict: HCDictType = {
         "xi_max": 0.15,
         "mpc_lim": 0.8,
         "mpd_lim": 0.3,
         "CoV_max": 0.15,
     }
-    sc: Union[bool, Literal["after"]] = False
+    sc: bool | Literal["after"] = False
     sc_dict: SCDictType = {"err_fn": 0.03, "err_xi": 0.05, "err_phi": 0.05}
     pre_cluster: bool = False
     pre_clus_typ: Literal["GMM", "kmeans", "FCMeans"] = "GMM"
-    pre_clus_dist: List[
+    pre_clus_dist: list[
         Literal["dfn", "dxi", "dlambda", "dMAC", "dMPC", "dMPD", "MPC", "MPD"]
     ] = ["dlambda", "dMAC"]
-    transform: Optional[Literal["box-cox"]] = None
+    transform: Literal["box-cox"] | None = None
 
 
 class Step2(BaseRunParams):
@@ -306,17 +306,17 @@ class Step2(BaseRunParams):
         Default: None.
     """
 
-    distance: List[Literal["dfn", "dxi", "dlambda", "dMAC", "dMPC", "dMPD"]] = [
+    distance: list[Literal["dfn", "dxi", "dlambda", "dMAC", "dMPC", "dMPD"]] = [
         "dlambda",
         "dMAC",
     ]
-    weights: Union[Optional[Literal["tot_one"]], List[float]] = None
+    weights: Literal["tot_one"] | list[float] | None = None
     sqrtsqr: bool = False
     algo: Literal["hdbscan", "hierarc", "optics", "spectral", "affinity"] = "hierarc"
-    dc: Optional[Union[float, Literal["auto", "mu+2sig", "95weib"]]] = "auto"
+    dc: float | Literal["auto", "mu+2sig", "95weib"] | None = "auto"
     linkage: Literal["average", "complete", "single"] = "average"
-    min_size: Union[Optional[int], Literal["auto"]] = "auto"
-    n_clusters: Union[Optional[int], Literal["auto"]] = None
+    min_size: int | Literal["auto"] | None = "auto"
+    n_clusters: int | Literal["auto"] | None = None
 
 
 class Step3(BaseRunParams):
@@ -361,7 +361,7 @@ class Step3(BaseRunParams):
     repetition are appropriate for your intended analysis.
     """
 
-    post_proc: List[
+    post_proc: list[
         Literal[
             "merge_similar",
             "damp_IQR",
@@ -376,10 +376,10 @@ class Step3(BaseRunParams):
             "ABP",
         ]
     ] = ["merge_similar", "damp_IQR", "fn_IQR", "1xorder", "min_size_pctg", "MTT"]
-    merge_dist: Union[Literal["auto", "deder"], float] = "auto"
+    merge_dist: Literal["auto", "deder"] | float = "auto"
     min_pctg: float = 0.3
     select: Literal["avg", "fn_mean_close", "xi_med_close", "medoid"] = "medoid"
-    freqlim: Optional[Tuple[float, float]] = None
+    freqlim: tuple[float, float] | None = None
 
 
 class Clustering(BaseModel):
@@ -410,9 +410,9 @@ class Clustering(BaseModel):
         extra="forbid",
     )
     name: str
-    steps: Optional[Tuple[Step1, Step2, Step3]] = None
-    quick: Optional[str] = None
-    freqlim: Optional[Tuple[float, float]] = None
+    steps: tuple[Step1, Step2, Step3] | None = None
+    quick: str | None = None
+    freqlim: tuple[float, float] | None = None
 
     @model_validator(mode="after")
     def assemble_steps(self, freqlim):

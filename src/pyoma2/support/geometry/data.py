@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing
-
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
@@ -31,12 +29,12 @@ class BaseGeometry(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # MANDATORY
-    sens_names: typing.List[str]
+    sens_names: list[str]
     # OPTIONAL
-    sens_lines: typing.Optional[npt.NDArray[np.int64]] = None  # lines between sensors
-    bg_nodes: typing.Optional[npt.NDArray[np.float64]] = None  # Background nodes
-    bg_lines: typing.Optional[npt.NDArray[np.int64]] = None  # Background lines
-    bg_surf: typing.Optional[npt.NDArray[np.int64]] = None  # Background surfaces
+    sens_lines: npt.NDArray[np.int64] | None = None  # lines between sensors
+    bg_nodes: npt.NDArray[np.float64] | None = None  # Background nodes
+    bg_lines: npt.NDArray[np.int64] | None = None  # Background lines
+    bg_surf: npt.NDArray[np.int64] | None = None  # Background surfaces
 
 
 class Geometry1(BaseGeometry):
@@ -113,6 +111,6 @@ class Geometry2(BaseGeometry):
     pts_coord: pd.DataFrame  # points' coordinates
     sens_map: pd.DataFrame  # mapping sensors to points
     # OPTIONAL
-    cstrn: typing.Optional[pd.DataFrame] = None
-    sens_sign: typing.Optional[pd.DataFrame] = None  # sensors sign
-    sens_surf: typing.Optional[npt.NDArray[np.int64]] = None  # surfaces between sensors
+    cstrn: pd.DataFrame | None = None
+    sens_sign: pd.DataFrame | None = None  # sensors sign
+    sens_surf: npt.NDArray[np.int64] | None = None  # surfaces between sensors

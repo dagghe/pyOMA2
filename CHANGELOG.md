@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+### Changed
+
+- Replaced PDM with uv as package manager
+
+### Removed
+
+- Dropped support for Python 3.8
+
 
 ## [1.2.1] - 2025-12-23
 

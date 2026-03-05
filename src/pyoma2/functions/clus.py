@@ -4,6 +4,8 @@ Created on Sun Nov 24 07:07:42 2024
 @author: dagghe
 """
 
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 from scipy import signal, stats

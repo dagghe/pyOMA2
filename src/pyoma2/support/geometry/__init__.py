@@ -65,6 +65,8 @@ pv_plotter.plot_geo()
 pv_plotter.animate_mode(mode_nr=1, saveGIF=True)
 """
 
+from __future__ import annotations
+
 from .data import BaseGeometry, Geometry1, Geometry2
 from .mixin import GeometryMixin
 from .mpl_plotter import Geo1MplPlotter, Geo2MplPlotter

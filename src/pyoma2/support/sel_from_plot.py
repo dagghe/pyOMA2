@@ -17,7 +17,7 @@ import logging
 import os
 import tkinter as tk
 import typing
-from typing import Literal, Tuple
+from typing import Literal
 
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -73,7 +73,7 @@ class SelFromPlot:
     def __init__(
         self,
         algo: BaseAlgorithm,
-        freqlim: Tuple[float, float] = None,
+        freqlim: tuple[float, float] = None,
         plot: Literal["FDD", "SSI", "pLSCF"] = "FDD",
     ):
         """

@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import logging
 import os
-import typing
 from pathlib import Path
 
 import requests
@@ -13,7 +14,7 @@ SAMPLE_DATA_DEFAULT_LOCAL_DIR: Path = Path("./.pyoma2_data/test_data/")
 def get_sample_data(
     filename: str,
     folder: str,
-    local_dir: typing.Union[str, Path] = SAMPLE_DATA_DEFAULT_LOCAL_DIR,
+    local_dir: str | Path = SAMPLE_DATA_DEFAULT_LOCAL_DIR,
 ):
     """
     Download a sample data file from the specified GitHub repository if it doesn't exist locally.

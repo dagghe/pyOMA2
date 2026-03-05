@@ -5,6 +5,8 @@ Authors:
 Dag Pasca
 """
 
+from __future__ import annotations
+
 import itertools
 import logging
 import typing

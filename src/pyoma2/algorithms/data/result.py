@@ -5,8 +5,6 @@ related to the pyOMA2 module.
 
 from __future__ import annotations
 
-from typing import List, Optional, Union
-
 import numpy as np
 import numpy.typing as npt
 from pydantic import BaseModel, ConfigDict
@@ -26,8 +24,8 @@ class BaseResult(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     # dopo mpe o mpe_from_plot
-    Fn: Optional[npt.NDArray[np.float64]] = None  # array of natural frequencies
-    Phi: Optional[npt.NDArray[np.float64]] = None  # array of Mode shape vectors
+    Fn: npt.NDArray[np.float64] | None = None  # array of natural frequencies
+    Phi: npt.NDArray[np.float64] | None = None  # array of Mode shape vectors
 
 
 class FDDResult(BaseResult):
@@ -46,10 +44,10 @@ class FDDResult(BaseResult):
         Singular vectors of the PSD.
     """
 
-    freq: Optional[npt.NDArray[np.float64]] = None
-    Sy: Optional[npt.NDArray[np.float64]] = None
-    S_val: Optional[npt.NDArray[np.float64]] = None
-    S_vec: Optional[npt.NDArray[np.float64]] = None
+    freq: npt.NDArray[np.float64] | None = None
+    Sy: npt.NDArray[np.float64] | None = None
+    S_val: npt.NDArray[np.float64] | None = None
+    S_vec: npt.NDArray[np.float64] | None = None
 
 
 class EFDDResult(FDDResult):
@@ -74,8 +72,8 @@ class EFDDResult(FDDResult):
     """
 
     # dopo mpe, MPE_forPlot
-    Xi: Optional[npt.NDArray[np.float64]] = None  # array of damping ratios
-    forPlot: Optional[List] = None
+    Xi: npt.NDArray[np.float64] | None = None  # array of damping ratios
+    forPlot: list | None = None
 
 
 class pLSCFResult(BaseResult):
@@ -106,16 +104,16 @@ class pLSCFResult(BaseResult):
         Output order after modal parameter estimation. Can be a list of integers, or a single integer.
     """
 
-    freq: Optional[npt.NDArray[np.float64]] = None
-    Sy: Optional[npt.NDArray[np.float64]] = None
-    Ad: Optional[List[npt.NDArray[np.float64]]] = None
-    Bn: Optional[List[npt.NDArray[np.float64]]] = None
-    Fn_poles: Optional[npt.NDArray[np.float64]] = None
-    Xi_poles: Optional[npt.NDArray[np.float64]] = None
-    Phi_poles: Optional[npt.NDArray[np.float64]] = None
-    Lab: Optional[npt.NDArray[np.float64]] = None
-    Xi: Optional[npt.NDArray[np.float64]] = None
-    order_out: Optional[Union[List[int], int]] = None
+    freq: npt.NDArray[np.float64] | None = None
+    Sy: npt.NDArray[np.float64] | None = None
+    Ad: list[npt.NDArray[np.float64]] | None = None
+    Bn: list[npt.NDArray[np.float64]] | None = None
+    Fn_poles: npt.NDArray[np.float64] | None = None
+    Xi_poles: npt.NDArray[np.float64] | None = None
+    Phi_poles: npt.NDArray[np.float64] | None = None
+    Lab: npt.NDArray[np.float64] | None = None
+    Xi: npt.NDArray[np.float64] | None = None
+    order_out: list[int] | int | None = None
 
 
 class MsPoserResult(BaseResult):
@@ -180,23 +178,23 @@ class ClusteringResult(BaseResult):
         Final order values of the selected modes.
     """
 
-    Fn: Optional[npt.NDArray[np.float64]] = None
-    Xi: Optional[npt.NDArray[np.float64]] = None
-    Phi: Optional[npt.NDArray[np.float64]] = None
-    Fn_fl: Optional[npt.NDArray[np.float64]] = None
-    Xi_fl: Optional[npt.NDArray[np.float64]] = None
-    Phi_fl: Optional[npt.NDArray[np.float64]] = None
-    Fn_std_fl: Optional[npt.NDArray[np.float64]] = None
-    Xi_std_fl: Optional[npt.NDArray[np.float64]] = None
-    Phi_std_fl: Optional[npt.NDArray[np.float64]] = None
-    order_fl: Optional[npt.NDArray[np.int64]] = None
-    labels: Optional[npt.NDArray[np.int64]] = None
-    dtot: Optional[npt.NDArray[np.float64]] = None
-    medoid_distances: Optional[npt.NDArray[np.float64]] = None
-    order_out: Optional[npt.NDArray[np.int64]] = None
-    Fn_std: Optional[npt.NDArray[np.float64]] = None
-    Xi_std: Optional[npt.NDArray[np.float64]] = None
-    Phi_std: Optional[npt.NDArray[np.float64]] = None
+    Fn: npt.NDArray[np.float64] | None = None
+    Xi: npt.NDArray[np.float64] | None = None
+    Phi: npt.NDArray[np.float64] | None = None
+    Fn_fl: npt.NDArray[np.float64] | None = None
+    Xi_fl: npt.NDArray[np.float64] | None = None
+    Phi_fl: npt.NDArray[np.float64] | None = None
+    Fn_std_fl: npt.NDArray[np.float64] | None = None
+    Xi_std_fl: npt.NDArray[np.float64] | None = None
+    Phi_std_fl: npt.NDArray[np.float64] | None = None
+    order_fl: npt.NDArray[np.int64] | None = None
+    labels: npt.NDArray[np.int64] | None = None
+    dtot: npt.NDArray[np.float64] | None = None
+    medoid_distances: npt.NDArray[np.float64] | None = None
+    order_out: npt.NDArray[np.int64] | None = None
+    Fn_std: npt.NDArray[np.float64] | None = None
+    Xi_std: npt.NDArray[np.float64] | None = None
+    Phi_std: npt.NDArray[np.float64] | None = None
 
 
 class SSIResult(BaseResult):
@@ -241,24 +239,24 @@ class SSIResult(BaseResult):
         Covariance of mode shape vectors obtained from the analysis.
     """
 
-    Obs: Optional[npt.NDArray[np.float64]] = None
-    A: Optional[List[npt.NDArray[np.float64]]] = None
-    C: Optional[List[npt.NDArray[np.float64]]] = None
-    H: Optional[npt.NDArray[np.float64]] = None
+    Obs: npt.NDArray[np.float64] | None = None
+    A: list[npt.NDArray[np.float64]] | None = None
+    C: list[npt.NDArray[np.float64]] | None = None
+    H: npt.NDArray[np.float64] | None = None
 
-    Lambds: Optional[npt.NDArray[np.float64]] = None
-    Fn_poles: Optional[npt.NDArray[np.float64]] = None
-    Xi_poles: Optional[npt.NDArray[np.float64]] = None
-    Phi_poles: Optional[npt.NDArray[np.float64]] = None
-    Lab: Optional[npt.NDArray[np.float64]] = None
-    Fn_poles_std: Optional[npt.NDArray[np.float64]] = None
-    Xi_poles_std: Optional[npt.NDArray[np.float64]] = None
-    Phi_poles_std: Optional[npt.NDArray[np.float64]] = None
+    Lambds: npt.NDArray[np.float64] | None = None
+    Fn_poles: npt.NDArray[np.float64] | None = None
+    Xi_poles: npt.NDArray[np.float64] | None = None
+    Phi_poles: npt.NDArray[np.float64] | None = None
+    Lab: npt.NDArray[np.float64] | None = None
+    Fn_poles_std: npt.NDArray[np.float64] | None = None
+    Xi_poles_std: npt.NDArray[np.float64] | None = None
+    Phi_poles_std: npt.NDArray[np.float64] | None = None
 
-    Xi: Optional[npt.NDArray[np.float64]] = None
-    Fn_std: Optional[npt.NDArray[np.float64]] = None
-    Xi_std: Optional[npt.NDArray[np.float64]] = None
-    Phi_std: Optional[npt.NDArray[np.float64]] = None
-    order_out: Optional[Union[List[int], int]] = None
+    Xi: npt.NDArray[np.float64] | None = None
+    Fn_std: npt.NDArray[np.float64] | None = None
+    Xi_std: npt.NDArray[np.float64] | None = None
+    Phi_std: npt.NDArray[np.float64] | None = None
+    order_out: list[int] | int | None = None
 
-    clustering_results: Optional[dict] = {}
+    clustering_results: dict | None = {}
