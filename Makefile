@@ -1,21 +1,15 @@
 # Makefile
 
 test:
-    pdm run pytest
+	uv run pytest
 
 test-coverage:
-	pdm run pytest --cov=pyoma2 --cov-report=html
-
-env38:
-	pdm venv create -n venv38
-	pdm install --venv venv38
-	# then with "pdm use" select the created venv
+	uv run pytest --cov=pyoma2 --cov-report=html
 
 tox:
-	pdm run tox
+	uv run tox
 
 export:
-	pdm export --without-hashes -L pdm.lock -v >> requirements.txt
+	uv export --no-hashes -o requirements.txt
 
-
-.PHONY: test test-coverage env38 tox export
+.PHONY: test test-coverage tox export
