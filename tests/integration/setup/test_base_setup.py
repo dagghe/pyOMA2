@@ -98,13 +98,15 @@ def test_decimate_data():
     fs = 1000
     q = 10
 
-    new_data, new_fs, dt, Ndat, T = BaseSetup._decimate_data(data, fs, q)
+    new_data, new_fs, dt, Ndat, T = BaseSetup._decimate_data(data, fs, q, axis=0)
 
-    assert new_data.shape == (10000, 10)
+    assert new_data.shape == (1000, 100)
     assert new_fs == 100
     assert dt == 1 / 100
-    assert Ndat == 10000
-    assert np.isclose(T, 10, atol=1e-6)
+    assert Ndat == 1000
+    # Duration must be preserved: 10000 samples @ 1000 Hz = 10s
+    assert Ndat / new_fs == T
+    assert np.isclose(T, 10.0)
 
 
 def test_detrend_data():

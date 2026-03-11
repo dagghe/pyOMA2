@@ -265,7 +265,7 @@ class BaseSetup:
         fs = fs / q
         dt = 1 / fs
         Ndat = newdata.shape[0]
-        T = 1 / fs / q * Ndat
+        T = Ndat / fs
         return newdata, fs, dt, Ndat, T
 
     # method to detrend data

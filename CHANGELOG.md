@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+### Fixed
+
+- Fixed incorrect signal duration (`T`) calculation in `BaseSetup._decimate_data()` (double division by decimation factor)
+
 ## [1.2.2] - 2026-03-05
 
 ### Changed
