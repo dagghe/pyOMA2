@@ -46,7 +46,14 @@ class FuzzyCMeansClustering:
         Seed for membership matrix initialization.
     """
 
-    def __init__(self, n_clusters=2, m=2.0, max_iter=100, tol=1e-5, random_state=None):
+    def __init__(
+        self,
+        n_clusters: int = 2,
+        m: float = 2.0,
+        max_iter: int = 100,
+        tol: float = 1e-5,
+        random_state: int | None = None,
+    ) -> None:
         self.n_clusters = n_clusters
         self.m = m
         self.max_iter = max_iter
@@ -56,20 +63,20 @@ class FuzzyCMeansClustering:
         self.membership_ = None
         self.labels_ = None
 
-    def _initialize_membership(self, n_samples):
+    def _initialize_membership(self, n_samples: int) -> np.ndarray:
         rng = np.random.RandomState(self.random_state)
         U = rng.rand(n_samples, self.n_clusters)
         U = U / np.sum(U, axis=1, keepdims=True)
         return U
 
-    def _update_centers(self, X, U):
+    def _update_centers(self, X: np.ndarray, U: np.ndarray) -> np.ndarray:
         # U raised to power m
         Um = U**self.m
         # compute cluster centers
         centers = (Um.T @ X) / np.sum(Um.T, axis=1, keepdims=True)
         return centers
 
-    def _update_membership(self, X, centers):
+    def _update_membership(self, X: np.ndarray, centers: np.ndarray) -> np.ndarray:
         n_samples = X.shape[0]
         U_new = np.zeros((n_samples, self.n_clusters))
         # exponent for distance ratio
@@ -82,7 +89,9 @@ class FuzzyCMeansClustering:
             U_new[i] = inv / np.sum(inv)
         return U_new
 
-    def fit(self, X, y=None):  # y ignored
+    def fit(
+        self, X: np.ndarray, y: np.ndarray | None = None
+    ) -> FuzzyCMeansClustering:  # y ignored
         """
         Compute fuzzy c-means clustering.
 
@@ -124,7 +133,7 @@ class FuzzyCMeansClustering:
         self.labels_ = np.argmax(U, axis=1)
         return self
 
-    def predict(self, X):
+    def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Predict the closest cluster each sample in X belongs to.
 
@@ -143,7 +152,9 @@ class FuzzyCMeansClustering:
         )
         return np.argmin(distances, axis=1)
 
-    def fit_predict(self, X, y=None):  # y ignored
+    def fit_predict(
+        self, X: np.ndarray, y: np.ndarray | None = None
+    ) -> np.ndarray:  # y ignored
         """
         Compute cluster centers and predict cluster index for each sample.
 
@@ -158,7 +169,7 @@ class FuzzyCMeansClustering:
 # -----------------------------------------------------------------------------
 
 
-def FCMeans(feat_arr):
+def FCMeans(feat_arr: np.ndarray) -> np.ndarray:
     """
     Perform Fuzzy C-Means clustering on the given feature array.
 
@@ -187,7 +198,7 @@ def FCMeans(feat_arr):
 # -----------------------------------------------------------------------------
 
 
-def kmeans(feat_arr):
+def kmeans(feat_arr: np.ndarray) -> np.ndarray:
     """
     Perform k-means clustering on the given feature array.
 
@@ -216,7 +227,9 @@ def kmeans(feat_arr):
 # -----------------------------------------------------------------------------
 
 
-def GMM(feat_arr, dist=False):
+def GMM(
+    feat_arr: np.ndarray, dist: bool = False
+) -> np.ndarray | tuple[np.ndarray, float]:
     """
     Perform Gaussian Mixture Model (GMM) clustering on the given feature array.
 
@@ -253,7 +266,16 @@ def GMM(feat_arr, dist=False):
 # -----------------------------------------------------------------------------
 
 
-def hierarc(dtot, dc, linkage, n_clusters, ordmax, step, Fns, Phis):
+def hierarc(
+    dtot: np.ndarray,
+    dc: float | str | None,
+    linkage: str,
+    n_clusters: int | str | None,
+    ordmax: int,
+    step: float,
+    Fns: np.ndarray,
+    Phis: np.ndarray,
+) -> np.ndarray:
     """
     Perform hierarchical clustering with specified parameters.
 
@@ -337,7 +359,7 @@ def hierarc(dtot, dc, linkage, n_clusters, ordmax, step, Fns, Phis):
 # -----------------------------------------------------------------------------
 
 
-def spectral(dsim, n_clusters, ordmax):
+def spectral(dsim: np.ndarray, n_clusters: int | str | None, ordmax: int) -> np.ndarray:
     """
     Perform spectral clustering with the given similarity matrix.
 
@@ -371,7 +393,7 @@ def spectral(dsim, n_clusters, ordmax):
 # -----------------------------------------------------------------------------
 
 
-def affinity(dsim):
+def affinity(dsim: np.ndarray) -> np.ndarray:
     """
     Perform affinity propagation clustering on the given similarity matrix.
 
@@ -398,7 +420,7 @@ def affinity(dsim):
 # -----------------------------------------------------------------------------
 
 
-def optics(dtot, min_size):
+def optics(dtot: np.ndarray, min_size: int) -> np.ndarray:
     """
     Perform OPTICS clustering on the given pairwise distance matrix.
 
@@ -432,7 +454,7 @@ def optics(dtot, min_size):
 # -----------------------------------------------------------------------------
 
 
-def hdbscan(dtot, min_size):
+def hdbscan(dtot: np.ndarray, min_size: int) -> np.ndarray:
     """
     Perform HDBSCAN clustering on the given pairwise distance matrix.
 
@@ -463,7 +485,11 @@ def hdbscan(dtot, min_size):
 # -----------------------------------------------------------------------------
 
 
-def reorder_clusters(clusters, labels, Fn_fl):
+def reorder_clusters(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    Fn_fl: np.ndarray,
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Reorder cluster labels based on ascending frequencies values.
 
@@ -517,7 +543,12 @@ def reorder_clusters(clusters, labels, Fn_fl):
 # -----------------------------------------------------------------------------
 
 
-def post_freq_lim(clusters, labels, freq_lim, Fn_fl):
+def post_freq_lim(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    freq_lim: tuple[float, float],
+    Fn_fl: np.ndarray,
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Filter clusters based on specified frequency range.
 
@@ -558,7 +589,11 @@ def post_freq_lim(clusters, labels, freq_lim, Fn_fl):
 # -----------------------------------------------------------------------------
 
 
-def post_fn_med(clusters, labels, flattened_results):
+def post_fn_med(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    flattened_results: tuple[np.ndarray, np.ndarray],
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Filter clusters based on a median frequency threshold.
 
@@ -605,7 +640,11 @@ def post_fn_med(clusters, labels, flattened_results):
 # -----------------------------------------------------------------------------
 
 
-def post_fn_IQR(clusters, labels, Fn_fl):
+def post_fn_IQR(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    Fn_fl: np.ndarray,
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Filter clusters based on the interquartile range (IQR) of frequencies.
 
@@ -653,7 +692,11 @@ def post_fn_IQR(clusters, labels, Fn_fl):
 # -----------------------------------------------------------------------------
 
 
-def post_xi_IQR(clusters, labels, Xi_fl):
+def post_xi_IQR(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    Xi_fl: np.ndarray,
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Filter clusters based on the interquartile range (IQR) of damping values.
 
@@ -699,7 +742,11 @@ def post_xi_IQR(clusters, labels, Xi_fl):
 # -----------------------------------------------------------------------------
 
 
-def post_min_size(clusters, labels, min_size):
+def post_min_size(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    min_size: int,
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Filter clusters based on a minimum cluster size.
 
@@ -738,7 +785,11 @@ def post_min_size(clusters, labels, min_size):
 # -----------------------------------------------------------------------------
 
 
-def post_min_size_pctg(clusters, labels, min_pctg):
+def post_min_size_pctg(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    min_pctg: float,
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Filter clusters based on a percentage of the largest cluster size.
 
@@ -788,7 +839,7 @@ def post_min_size_pctg(clusters, labels, min_pctg):
 # -----------------------------------------------------------------------------
 
 
-def post_min_size_kmeans(labels):
+def post_min_size_kmeans(labels: np.ndarray) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Filter clusters based on size using k-means clustering.
 
@@ -830,7 +881,7 @@ def post_min_size_kmeans(labels):
 # -----------------------------------------------------------------------------
 
 
-def post_min_size_gmm(labels):
+def post_min_size_gmm(labels: np.ndarray) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Filter clusters based on size using Gaussian Mixture Model (GMM).
 
@@ -872,7 +923,12 @@ def post_min_size_gmm(labels):
 # -----------------------------------------------------------------------------
 
 
-def post_merge_similar(clusters, labels, dtot, merge_dist):
+def post_merge_similar(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    dtot: np.ndarray,
+    merge_dist: float,
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Merge clusters that are similar based on inter-medoid distances.
 
@@ -949,7 +1005,12 @@ def post_merge_similar(clusters, labels, dtot, merge_dist):
 # -----------------------------------------------------------------------------
 
 
-def post_1xorder(clusters, labels, dtot, order_fl):
+def post_1xorder(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    dtot: np.ndarray,
+    order_fl: np.ndarray,
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Ensure only one sample per order in each cluster.
 
@@ -1025,7 +1086,11 @@ def post_1xorder(clusters, labels, dtot, order_fl):
 # -----------------------------------------------------------------------------
 
 
-def post_MTT(clusters, labels, flattened_results):
+def post_MTT(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    flattened_results: tuple[np.ndarray, np.ndarray],
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Remove outliers using the Modified Thompson Tau technique.
 
@@ -1073,7 +1138,11 @@ def post_MTT(clusters, labels, flattened_results):
 # -----------------------------------------------------------------------------
 
 
-def post_adjusted_boxplot(clusters, labels, flattened_results):
+def post_adjusted_boxplot(
+    clusters: dict[int, np.ndarray],
+    labels: np.ndarray,
+    flattened_results: tuple[np.ndarray, np.ndarray],
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
     """
     Remove outliers using the adjusted boxplot method.
 
@@ -1138,7 +1207,12 @@ def post_adjusted_boxplot(clusters, labels, flattened_results):
 # -----------------------------------------------------------------------------
 
 
-def output_selection(select, clusters, flattened_results, medoid_indices):
+def output_selection(
+    select: str,
+    clusters: dict[int, np.ndarray],
+    flattened_results: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+    medoid_indices: np.ndarray | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None]:
     """
     Select output results based on the specified selection method.
 
@@ -1225,7 +1299,7 @@ def output_selection(select, clusters, flattened_results, medoid_indices):
 # -----------------------------------------------------------------------------
 
 
-def MTT(arr, indices, alpha=0.01):
+def MTT(arr: np.ndarray, indices: np.ndarray, alpha: float = 0.01) -> np.ndarray:
     """
     Apply the Modified Thompson Tau technique to remove outliers.
 
@@ -1272,7 +1346,7 @@ def MTT(arr, indices, alpha=0.01):
 # -----------------------------------------------------------------------------
 
 
-def adjusted_boxplot_bounds(data):
+def adjusted_boxplot_bounds(data: np.ndarray) -> tuple[float, float]:
     """
     Compute the lower and upper fences of the adjusted boxplot for skewed distributions.
 
@@ -1300,7 +1374,7 @@ def adjusted_boxplot_bounds(data):
 
     # Compute medcouple (MC) using a simple O(n^2) implementation.
     # For large datasets an optimized implementation is recommended.
-    def medcouple(x):
+    def medcouple(x: np.ndarray) -> np.floating:
         x = np.sort(np.asarray(x))
         median = np.median(x)
         left = x[x <= median]
@@ -1328,7 +1402,10 @@ def adjusted_boxplot_bounds(data):
 # -----------------------------------------------------------------------------
 
 
-def filter_fl_list(fl_list, stab_lab):
+def filter_fl_list(
+    fl_list: list[np.ndarray | None],
+    stab_lab: np.ndarray,
+) -> list[np.ndarray | None]:
     """
     Filter and extract stable elements from a list of feature arrays.
 
@@ -1350,7 +1427,10 @@ def filter_fl_list(fl_list, stab_lab):
 # -----------------------------------------------------------------------------
 
 
-def vectorize_features(features, non_nan_index):
+def vectorize_features(
+    features: list[np.ndarray | None],
+    non_nan_index: np.ndarray,
+) -> list[np.ndarray | None]:
     """
     Vectorize features by flattening them and indexing valid (non-NaN) entries.
 
@@ -1390,7 +1470,12 @@ def vectorize_features(features, non_nan_index):
 # -----------------------------------------------------------------------------
 
 
-def build_tot_simil(distances, data_dict, len_fl, weights=None):
+def build_tot_simil(
+    distances: list[str],
+    data_dict: dict[str, np.ndarray],
+    len_fl: int,
+    weights: np.ndarray | None = None,
+) -> np.ndarray:
     """
     Compute a total similarity matrix by combining multiple distance matrices with weights.
 
@@ -1448,7 +1533,13 @@ distances length: {len(distances)} != weights length: {len(weights)}"
 # -----------------------------------------------------------------------------
 
 
-def build_tot_dist(distances, data_dict, len_fl, weights=None, sqrtsqr=False):
+def build_tot_dist(
+    distances: list[str],
+    data_dict: dict[str, np.ndarray],
+    len_fl: int,
+    weights: np.ndarray | str | None = None,
+    sqrtsqr: bool = False,
+) -> np.ndarray:
     """
     Compute a total distance matrix by combining multiple distance matrices with weights.
 
@@ -1526,7 +1617,13 @@ distances length: {len(distances)} != weights length: {len(weights)}"
 # -----------------------------------------------------------------------------
 
 
-def build_feature_array(distances, data_dict, ordmax, step, transform=None):
+def build_feature_array(
+    distances: list[str],
+    data_dict: dict[str, np.ndarray],
+    ordmax: int,
+    step: int,
+    transform: str | None = None,
+) -> np.ndarray:
     """
     Build a feature array from multiple distance metrics with optional transformations.
 
@@ -1614,7 +1711,12 @@ def build_feature_array(distances, data_dict, ordmax, step, transform=None):
 # -----------------------------------------------------------------------------
 
 
-def oned_to_2d(list_array1d, order, shape, step):
+def oned_to_2d(
+    list_array1d: list[np.ndarray | None],
+    order: np.ndarray,
+    shape: tuple[int, int],
+    step: int,
+) -> list[np.ndarray] | None:
     """
     Convert a 1D array to a 2D array based on order and shape.
 
@@ -1675,15 +1777,15 @@ class UnionFind:
         Merge the sets containing `elem1` and `elem2`.
     """
 
-    def __init__(self, elements):
+    def __init__(self, elements: list[int]) -> None:
         self.parent = {elem: elem for elem in elements}
 
-    def find(self, elem):
+    def find(self, elem: int) -> int:
         if self.parent[elem] != elem:
             self.parent[elem] = self.find(self.parent[elem])  # Path compression
         return self.parent[elem]
 
-    def union(self, elem1, elem2):
+    def union(self, elem1: int, elem2: int) -> None:
         root1 = self.find(elem1)
         root2 = self.find(elem2)
         if root1 != root2:
@@ -1698,7 +1800,7 @@ class UnionFind:
 
 
 # Matrice distanze con scikit + funzione
-def relative_difference_abs(x, y):
+def relative_difference_abs(x: np.ndarray, y: np.ndarray) -> float:
     """
     Compute the relative absolute difference between two values.
 
@@ -1721,7 +1823,7 @@ def relative_difference_abs(x, y):
     return abs((xi - xj) / np.max((xi, xj)))
 
 
-def MAC_difference(x, y):
+def MAC_difference(x: np.ndarray, y: np.ndarray) -> float:
     """
     Compute the Modal Assurance Criterion (MAC) difference between two mode shapes.
 
@@ -1743,7 +1845,7 @@ def MAC_difference(x, y):
 # -----------------------------------------------------------------------------
 
 
-def dist_all_f(array):
+def dist_all_f(array: np.ndarray) -> np.ndarray:
     """
     Compute a pairwise distance matrix for a flattened 1D array using relative absolute difference.
 
@@ -1772,7 +1874,7 @@ def dist_all_f(array):
 # -----------------------------------------------------------------------------
 
 
-def dist_all_phi(array):
+def dist_all_phi(array: np.ndarray) -> np.ndarray:
     """
     Compute a pairwise distance matrix for 3D mode shape data using the MAC difference.
 
@@ -1799,7 +1901,7 @@ def dist_all_phi(array):
 # -----------------------------------------------------------------------------
 
 
-def dist_all_complex(complex_array):
+def dist_all_complex(complex_array: np.ndarray) -> np.ndarray:
     """
     Compute pairwise relative distances for a 1D array of complex numbers.
 
@@ -1853,7 +1955,12 @@ def dist_all_complex(complex_array):
 # -----------------------------------------------------------------------------
 
 
-def dist_n_n1_f(array, ordmin, ordmax, step):
+def dist_n_n1_f(
+    array: np.ndarray,
+    ordmin: int,
+    ordmax: int,
+    step: int,
+) -> np.ndarray:
     """
     Compute distances between successive columns of a 2D array using relative differences.
 
@@ -1906,7 +2013,12 @@ def dist_n_n1_f(array, ordmin, ordmax, step):
 # -----------------------------------------------------------------------------
 
 
-def dist_n_n1_phi(array, ordmin, ordmax, step):
+def dist_n_n1_phi(
+    array: np.ndarray,
+    ordmin: int,
+    ordmax: int,
+    step: int,
+) -> np.ndarray:
     """
     Compute distances between successive columns of a 3D mode shape array using MAC differences.
 
@@ -1957,7 +2069,12 @@ def dist_n_n1_phi(array, ordmin, ordmax, step):
 # -----------------------------------------------------------------------------
 
 
-def dist_n_n1_f_complex(array, ordmin, ordmax, step):
+def dist_n_n1_f_complex(
+    array: np.ndarray,
+    ordmin: int,
+    ordmax: int,
+    step: int,
+) -> np.ndarray:
     """
     Compute distances between successive columns of a 2D complex array using relative differences.
 

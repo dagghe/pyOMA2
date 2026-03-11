@@ -20,6 +20,21 @@ from .data import Geometry1, Geometry2
 from .mpl_plotter import Geo1MplPlotter, Geo2MplPlotter
 from .pyvista_plotter import PvGeoPlotter
 
+
+def _ensure_dataframe(
+    value: pd.DataFrame | np.ndarray | None,
+    index: pd.Index | None = None,
+) -> pd.DataFrame:
+    """Convert ndarray to DataFrame, pass through DataFrames unchanged."""
+    if value is None:
+        return pd.DataFrame()
+    if isinstance(value, np.ndarray):
+        return pd.DataFrame(value, index=index)
+    if isinstance(value, pd.DataFrame):
+        return value
+    raise TypeError(f"Expected DataFrame or ndarray, got {type(value)}")
+
+
 if typing.TYPE_CHECKING:
     try:
         import pyvista as pv
@@ -59,12 +74,12 @@ class GeometryMixin:
             npt.NDArray[np.str_],
         ],  # sensors' names
         sens_coord: pd.DataFrame,  # sensors' coordinates
-        sens_dir: npt.NDArray[np.int64],  # sensors' directions
+        sens_dir: pd.DataFrame | npt.NDArray[np.int64] = None,
         # # OPTIONAL
-        sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
-        bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
-        bg_lines: npt.NDArray[np.int64] = None,  # Background lines
-        bg_surf: npt.NDArray[np.float64] = None,  # Background surfaces
+        sens_lines: pd.DataFrame | npt.NDArray[np.int64] | None = None,
+        bg_nodes: pd.DataFrame | npt.NDArray[np.float64] | None = None,
+        bg_lines: pd.DataFrame | npt.NDArray[np.int64] | None = None,
+        bg_surf: pd.DataFrame | npt.NDArray[np.float64] | None = None,
     ) -> None:
         """
         Defines the first geometry setup (geo1) for the instance.
@@ -92,15 +107,18 @@ class GeometryMixin:
         # Get reference index (if any)
         ref_ind = getattr(self, "ref_ind", None)
 
-        # Assemble dictionary for check function
+        # Normalize ndarray inputs to DataFrames for check_on_geo1
         file_dict = {
             "sensors names": sens_names,
-            "sensors coordinates": sens_coord,
-            "sensors directions": sens_dir,
-            "sensors lines": sens_lines if sens_lines is not None else pd.DataFrame(),
-            "BG nodes": bg_nodes if bg_nodes is not None else pd.DataFrame(),
-            "BG lines": bg_lines if bg_lines is not None else pd.DataFrame(),
-            "BG surfaces": bg_surf if bg_surf is not None else pd.DataFrame(),
+            "sensors coordinates": _ensure_dataframe(sens_coord),
+            "sensors directions": _ensure_dataframe(
+                sens_dir,
+                index=sens_coord.index if isinstance(sens_coord, pd.DataFrame) else None,
+            ),
+            "sensors lines": _ensure_dataframe(sens_lines),
+            "BG nodes": _ensure_dataframe(bg_nodes),
+            "BG lines": _ensure_dataframe(bg_lines),
+            "BG surfaces": _ensure_dataframe(bg_surf),
         }
 
         # check on input
@@ -131,11 +149,11 @@ class GeometryMixin:
         # OPTIONAL
         cstr: pd.DataFrame = None,
         sens_sign: pd.DataFrame = None,
-        sens_lines: npt.NDArray[np.int64] = None,  # lines connecting sensors
-        sens_surf: npt.NDArray[np.int64] = None,  # surf connecting sensors
-        bg_nodes: npt.NDArray[np.float64] = None,  # Background nodes
-        bg_lines: npt.NDArray[np.float64] = None,  # Background lines
-        bg_surf: npt.NDArray[np.float64] = None,  # Background lines
+        sens_lines: pd.DataFrame | npt.NDArray[np.int64] | None = None,
+        sens_surf: pd.DataFrame | npt.NDArray[np.int64] | None = None,
+        bg_nodes: pd.DataFrame | npt.NDArray[np.float64] | None = None,
+        bg_lines: pd.DataFrame | npt.NDArray[np.float64] | None = None,
+        bg_surf: pd.DataFrame | npt.NDArray[np.float64] | None = None,
     ) -> None:
         """
         Defines the second geometry setup (geo2) for the instance.
@@ -172,18 +190,18 @@ class GeometryMixin:
         # Get reference index
         ref_ind = getattr(self, "ref_ind", None)
 
-        # Assemble dictionary for check function
+        # Normalize ndarray inputs to DataFrames for check_on_geo2
         file_dict = {
             "sensors names": sens_names,
-            "points coordinates": pts_coord,
-            "mapping": sens_map,
-            "constraints": cstr if cstr is not None else pd.DataFrame(),
-            "sensors sign": sens_sign if sens_sign is not None else pd.DataFrame(),
-            "sensors lines": sens_lines if sens_lines is not None else pd.DataFrame(),
-            "sensors surfaces": sens_surf if sens_surf is not None else pd.DataFrame(),
-            "BG nodes": bg_nodes if bg_nodes is not None else pd.DataFrame(),
-            "BG lines": bg_lines if bg_lines is not None else pd.DataFrame(),
-            "BG surfaces": bg_surf if bg_surf is not None else pd.DataFrame(),
+            "points coordinates": _ensure_dataframe(pts_coord),
+            "mapping": _ensure_dataframe(sens_map),
+            "constraints": _ensure_dataframe(cstr),
+            "sensors sign": _ensure_dataframe(sens_sign),
+            "sensors lines": _ensure_dataframe(sens_lines),
+            "sensors surfaces": _ensure_dataframe(sens_surf),
+            "BG nodes": _ensure_dataframe(bg_nodes),
+            "BG lines": _ensure_dataframe(bg_lines),
+            "BG surfaces": _ensure_dataframe(bg_surf),
         }
 
         # check on input

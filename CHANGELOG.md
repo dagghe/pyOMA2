@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+### Added
+
+- Added `py.typed` marker file for PEP 561 compliance
+- Added type annotations to all functions in `clus.py`, `gen.py` (`check_on_geo1`, `check_on_geo2`, `flatten_sns_names`), and `typing.py`
+
 ### Fixed
 
+- Fixed `def_geo1`/`def_geo2` crashing when passing numpy arrays for `sens_dir`, `sens_lines`, `bg_nodes`, `bg_lines`, `bg_surf` (#41, #45)
+- Fixed `check_on_geo1`/`check_on_geo2` failing on non-DataFrame entries during empty-check iteration
+- Fixed `name: str = None` type hint in `plot.py` to `str | None = None`
 - Fixed incorrect signal duration (`T`) calculation in `BaseSetup._decimate_data()` (double division by decimation factor)
 
 ## [1.2.2] - 2026-03-05

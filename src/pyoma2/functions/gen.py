@@ -14,6 +14,7 @@ import pickle
 import typing
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from scipy import linalg, signal
 
@@ -382,15 +383,16 @@ def dfphi_map_func(phi, sens_names, sens_map, cstrn=None) -> pd.DataFrame:
 
 
 def check_on_geo1(
-    file_dict, ref_ind=None
-) -> typing.Tuple[
-    typing.List[str],
+    file_dict: dict[str, pd.DataFrame | list],
+    ref_ind: list[list[int]] | None = None,
+) -> tuple[
+    list[str],
     pd.DataFrame,
     np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
+    np.ndarray | None,
+    np.ndarray | None,
+    np.ndarray | None,
+    np.ndarray | None,
 ]:
     """
     Validates and processes sensor and background geometry data from a dictionary of dataframes.
@@ -543,6 +545,8 @@ def check_on_geo1(
 
     # Transform to None empty dataframes
     for sheet, df in file_dict.items():
+        if not isinstance(df, pd.DataFrame):
+            continue
         if df.empty:
             file_dict[sheet] = None
 
@@ -565,18 +569,20 @@ def check_on_geo1(
 
 
 def check_on_geo2(
-    file_dict, ref_ind=None, fill_na="zero"
-) -> typing.Tuple[
-    typing.List[str],
+    file_dict: dict[str, pd.DataFrame | list],
+    ref_ind: list[list[int]] | None = None,
+    fill_na: str = "zero",
+) -> tuple[
+    list[str],
     pd.DataFrame,
     np.ndarray,
-    pd.DataFrame,
-    pd.DataFrame,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
+    pd.DataFrame | None,
+    pd.DataFrame | None,
+    np.ndarray | None,
+    np.ndarray | None,
+    np.ndarray | None,
+    np.ndarray | None,
+    np.ndarray | None,
 ]:
     """
     Validates and processes sensor and background geometry data from a dictionary of dataframes.
@@ -785,6 +791,8 @@ def check_on_geo2(
 
     # Transform to None empty dataframes
     for sheet, df in file_dict.items():
+        if not isinstance(df, pd.DataFrame):
+            continue
         if df.empty:
             file_dict[sheet] = None
 
@@ -830,7 +838,10 @@ def check_on_geo2(
 # -----------------------------------------------------------------------------
 
 
-def flatten_sns_names(sens_names, ref_ind=None) -> typing.List[str]:
+def flatten_sns_names(
+    sens_names: (list[str] | list[list[str]] | pd.DataFrame | npt.NDArray[np.str_]),
+    ref_ind: list[list[int]] | None = None,
+) -> list[str]:
     """
     Ensures that sensors names is in the correct form (1D list of strings) for both
     single-setup or multi-setup geometries.

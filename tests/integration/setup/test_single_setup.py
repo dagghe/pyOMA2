@@ -63,7 +63,7 @@ def test_base_setup(single_setup_data_fixture, bs: BaseSetup) -> None:
     assert fs == 50
     assert dt == 0.02
     assert Ndat == len(newdata)
-    assert T == 0.15
+    assert Ndat / fs == T
 
     # Test DETREND_DATA method
     detrended_data = BaseSetup._detrend_data(data)
@@ -336,7 +336,8 @@ def test_plot_data(
     assert ss.data.shape == (initial_shape[0] // decimation_factor, initial_shape[1])
     assert ss.fs != initial_fs
     assert ss.data[0][0] != initial_data_first_el
-    assert initial_T != ss.T
+    # Duration is preserved after decimation (fewer samples but lower fs)
+    assert initial_T == ss.T
     # rollback the data
     ss.rollback()
     assert ss.data.shape == initial_shape

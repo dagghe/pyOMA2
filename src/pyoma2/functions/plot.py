@@ -322,7 +322,7 @@ def freq_vs_damp_plot(
     labels: np.ndarray,
     freqlim: typing.Optional[typing.Tuple] = None,
     plot_noise: bool = False,
-    name: str = None,
+    name: str | None = None,
     fig: typing.Optional[plt.Figure] = None,
     ax: typing.Optional[plt.Axes] = None,
 ) -> typing.Tuple[plt.Figure, plt.Axes]:
