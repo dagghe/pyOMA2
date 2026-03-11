@@ -9,8 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added support for Python 3.13 (#46)
 - Added `py.typed` marker file for PEP 561 compliance
 - Added type annotations to all functions in `clus.py`, `gen.py` (`check_on_geo1`, `check_on_geo2`, `flatten_sns_names`), and `typing.py`
+
+### Changed
+
+- Unpinned `PyQt5-sip` dependency and bumped `vtk` minimum to 9.4.0 for Python 3.13 compatibility
 
 ### Fixed
 
