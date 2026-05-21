@@ -11,7 +11,11 @@ from __future__ import annotations
 
 import typing
 
-from .data import Geometry1, ModeGeo1Data
+import numpy as np
+
+from pyoma2.functions.gen import dfphi_map_func
+
+from .data import Geometry1, Geometry2, ModeGeo1Data, ModeGeo2Data
 
 if typing.TYPE_CHECKING:
     from pyoma2.algorithms.data.result import BaseResult
@@ -63,4 +67,61 @@ def build_mode_geo1_data(
         bg_nodes=geo1.bg_nodes,
         bg_lines=geo1.bg_lines,
         bg_surf=geo1.bg_surf,
+    )
+
+
+def build_mode_geo2_data(
+    geo2: Geometry2,
+    res: BaseResult,
+    mode_nr: int,
+    scaleF: float = 1.0,
+) -> ModeGeo2Data:
+    """Assemble :class:`ModeGeo2Data` for one mode of a Geometry2 setup.
+
+    Parameters
+    ----------
+    geo2 : Geometry2
+        The geometry-2 model (point coordinates, sensor mapping, signs,
+        constraints, connectivity).
+    res : BaseResult
+        Modal result; ``res.Phi`` is ``(Nch, Nmodes)`` and ``res.Fn`` is
+        ``(Nmodes,)``.
+    mode_nr : int
+        Mode number to extract (1-based).
+    scaleF : float, default 1.0
+        Displacement scale factor; pre-multiplied into ``phi`` (matching the
+        geo2 plotters), so ``deformed_coord = pts_coord + mode_displ``.
+
+    Returns
+    -------
+    ModeGeo2Data
+        The assembled headless mode-shape data for geo2.
+    """
+    idx = int(mode_nr) - 1
+    phi = res.Phi[:, idx].real * scaleF
+    fn = res.Fn[idx]
+    pts_coord = geo2.pts_coord.to_numpy()
+    df_phi_map = dfphi_map_func(phi, geo2.sens_names, geo2.sens_map, cstrn=geo2.cstrn)
+    mode_displ = df_phi_map.to_numpy() * geo2.sens_sign.to_numpy()
+    deformed_coord = pts_coord + mode_displ
+    displ_magnitude = np.linalg.norm(mode_displ, axis=1)
+    return ModeGeo2Data(
+        sens_names=geo2.sens_names,
+        pts_coord=pts_coord,
+        sens_map=geo2.sens_map,
+        sens_sign=geo2.sens_sign,
+        phi=phi,
+        df_phi_map=df_phi_map,
+        mode_displ=mode_displ,
+        deformed_coord=deformed_coord,
+        displ_magnitude=displ_magnitude,
+        fn=float(fn),
+        mode_nr=int(mode_nr),
+        scaleF=float(scaleF),
+        cstrn=geo2.cstrn,
+        sens_lines=geo2.sens_lines,
+        sens_surf=geo2.sens_surf,
+        bg_nodes=geo2.bg_nodes,
+        bg_lines=geo2.bg_lines,
+        bg_surf=geo2.bg_surf,
     )
