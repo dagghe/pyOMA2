@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+## [1.3.0] - 2026-05-21
+
 ### Added
 
 - `requests` is now a core dependency (used by the sample-data downloader).
