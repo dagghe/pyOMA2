@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 
 import pytest
+
 from pyoma2._optional import require
 
 

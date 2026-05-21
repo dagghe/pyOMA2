@@ -7,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+
 from pyoma2.algorithms import BaseAlgorithm
 from pyoma2.algorithms.data.mpe_params import BaseMPEParams
 from pyoma2.algorithms.data.result import BaseResult

@@ -448,8 +448,7 @@ def check_on_geo1(
     for sheet in file_dict:
         if sheet not in all_sheets:
             raise ValueError(
-                f"'{sheet}' is not a valid name. Valid sheet names are: \n"
-                f"{all_sheets}"
+                f"'{sheet}' is not a valid name. Valid sheet names are: \n{all_sheets}"
             )
 
     # -----------------------------------------------------------------------------
@@ -647,8 +646,7 @@ def check_on_geo2(
     for sheet in file_dict:
         if sheet not in all_sheets:
             raise ValueError(
-                f"'{sheet}' is not a valid name. Valid sheet names are: \n"
-                f"{all_sheets}"
+                f"'{sheet}' is not a valid name. Valid sheet names are: \n{all_sheets}"
             )
 
     # -----------------------------------------------------------------------------
@@ -891,7 +889,7 @@ def flatten_sns_names(
         sns_names_fl = []
         # Create the reference strings
         for i in range(k):
-            sns_names_fl.append(f"REF{i+1}")
+            sns_names_fl.append(f"REF{i + 1}")
         # Flatten the list of strings and exclude the reference indices
         for i in range(n):
             for j in range(len(sens_names[i])):

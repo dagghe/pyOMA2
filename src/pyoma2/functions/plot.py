@@ -2214,8 +2214,8 @@ def plot_mac_matrix(
 
     n1 = array1.shape[1]
     n2 = array2.shape[1]
-    x_labels = [f"Mode {i+1}" for i in range(n1)]
-    y_labels = [f"Mode {j+1}" for j in range(n2)]
+    x_labels = [f"Mode {i + 1}" for i in range(n1)]
+    y_labels = [f"Mode {j + 1}" for j in range(n2)]
 
     ax.set_xticks(np.arange(n1))
     ax.set_xticklabels(x_labels, rotation=45)

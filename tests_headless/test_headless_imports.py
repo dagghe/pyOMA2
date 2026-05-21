@@ -46,6 +46,7 @@ def test_plotting_without_extra_raises_friendly_error():
         pytest.skip("matplotlib is installed; this check needs the core-only env")
 
     import numpy as np
+
     from pyoma2.setup import SingleSetup
 
     ss = SingleSetup(data=np.random.rand(200, 3), fs=50)

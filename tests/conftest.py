@@ -11,6 +11,7 @@ if typing.TYPE_CHECKING:
 
 import numpy as np
 import pytest
+
 from pyoma2.algorithms import SSI
 from pyoma2.support.utils.sample_data import (
     SAMPLE_DATA_DEFAULT_LOCAL_DIR,
@@ -218,19 +219,16 @@ sys.modules["pyvistaqt"] = unittest.mock.Mock()
 
 @pytest.fixture(autouse=True)
 def mock_imports():
-    with unittest.mock.patch(
-        "matplotlib.pyplot.figure"
-    ) as mock_figure, unittest.mock.patch(
-        "matplotlib.pyplot.show"
-    ) as mock_show, unittest.mock.patch(
-        "matplotlib.pyplot.subplots"
-    ) as subplots, unittest.mock.patch(
-        "pyoma2.support.sel_from_plot.NavigationToolbar2Tk"
-    ), unittest.mock.patch(
-        "pyoma2.support.sel_from_plot.FigureCanvasTkAgg"
-    ), unittest.mock.patch(
-        "src.pyoma2.functions.plot.plt.tight_layout"
-    ), unittest.mock.patch("tkinter.Tk"), unittest.mock.patch("tkinter.Menu"):
+    with (
+        unittest.mock.patch("matplotlib.pyplot.figure") as mock_figure,
+        unittest.mock.patch("matplotlib.pyplot.show") as mock_show,
+        unittest.mock.patch("matplotlib.pyplot.subplots") as subplots,
+        unittest.mock.patch("pyoma2.support.sel_from_plot.NavigationToolbar2Tk"),
+        unittest.mock.patch("pyoma2.support.sel_from_plot.FigureCanvasTkAgg"),
+        unittest.mock.patch("src.pyoma2.functions.plot.plt.tight_layout"),
+        unittest.mock.patch("tkinter.Tk"),
+        unittest.mock.patch("tkinter.Menu"),
+    ):
         """
         Mocks the imports for the tests.
         All mocked imports area bout GUI and plotting.
