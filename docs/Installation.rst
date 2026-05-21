@@ -23,7 +23,7 @@ Or install with conda/mamba (full install):
 
    conda install pyOMA-2
 
-You'll probably need to install **tk** for the GUI on your system, here some instructions:
+If you use the interactive plotting features (the ``plot`` or ``all`` extras), you'll probably need **tk** on your system, here some instructions:
 
 * `Windows <https://www.pythonguis.com/installation/install-tkinter-windows/>`_
 
