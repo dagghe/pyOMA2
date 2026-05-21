@@ -23,6 +23,7 @@ from pyoma2.functions.plot import (
 )
 
 from .data import Geometry1, Geometry2
+from .mode_data import build_mode_geo1_data
 from .plotter import BasePlotter, T_Geo
 
 
@@ -184,23 +185,21 @@ class Geo1MplPlotter(MplPlotter[Geometry1]):
         if self.res.Fn is None:
             raise ValueError("Run algorithm first")
 
-        # Select the (real) mode shape
-        phi = self.res.Phi[:, int(mode_nr - 1)].real
-        fn = self.res.Fn[int(mode_nr - 1)]
+        # Assemble the mode-shape geometry (headless single source of truth)
+        data = build_mode_geo1_data(self.geo, self.res, mode_nr, scaleF)
 
         fig, ax = self._create_figure()
         # Set title
-        ax.set_title(f"Mode nr. {mode_nr}, $f_n$={fn:.3f}Hz")
+        ax.set_title(f"Mode nr. {mode_nr}, $f_n$={data.fn:.3f}Hz")
 
         # plot sensors' nodes
-        sens_coord = self.geo.sens_coord[["x", "y", "z"]].to_numpy()
-        plt_nodes(ax, sens_coord, color="red")
+        plt_nodes(ax, data.sens_coord, color="red")
 
         # plot Mode shape
         plt_quiver(
             ax,
-            sens_coord,
-            self.geo.sens_dir * phi.reshape(-1, 1),
+            data.sens_coord,
+            data.mode_displ,
             scaleF=scaleF,
             method="2",
             color=col_sns,
@@ -211,7 +210,7 @@ class Geo1MplPlotter(MplPlotter[Geometry1]):
         # check for sens_lines
         if self.geo.sens_lines is not None:
             # if True plot
-            plt_lines(ax, sens_coord, self.geo.sens_lines, color=col_sns_lines)
+            plt_lines(ax, data.sens_coord, self.geo.sens_lines, color=col_sns_lines)
 
         self._set_common_options(ax, scaleF, view)
 
