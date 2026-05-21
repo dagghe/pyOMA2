@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `requests` is now a core dependency (used by the sample-data downloader).
 - `pyoma2._optional.require` helper for importing optional-dependency modules with a
   friendly error message.
+- Headless mode-shape data API — `get_mode_geo1_data` / `get_mode_geo2_data` on the
+  geometry-enabled setup classes, returning the new `ModeGeo1Data` / `ModeGeo2Data`
+  Pydantic models: deformed mode-shape geometry (coordinates, modal displacement,
+  deformed coordinates, displacement magnitude, connectivity) without creating a plot.
 
 ### Changed
 

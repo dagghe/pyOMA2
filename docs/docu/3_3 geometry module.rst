@@ -11,6 +11,10 @@ Classes:
       Class for storing and managing sensor and background geometry data for Geometry 1.
    :class:`.Geometry2`
       Class for storing and managing sensor and background geometry data for Geometry 2.
+   :class:`.ModeGeo1Data`
+      Headless mode-shape geometry data for a Geometry1 setup.
+   :class:`.ModeGeo2Data`
+      Headless mode-shape geometry data for a Geometry2 setup.
    :class:`.GeometryMixin`
       Mixin that gives the ability to define the geometry the instance of the setup class.
 
@@ -23,5 +27,9 @@ Classes:
    :show-inheritance:
 
 .. automodule:: pyoma2.support.geometry.mixin
+   :members:
+   :show-inheritance:
+
+.. automodule:: pyoma2.support.geometry.mode_data
    :members:
    :show-inheritance:
