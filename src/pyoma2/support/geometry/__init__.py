@@ -67,13 +67,15 @@ pv_plotter.animate_mode(mode_nr=1, saveGIF=True)
 
 from __future__ import annotations
 
-from .data import BaseGeometry, Geometry1, Geometry2
+from .data import BaseGeometry, Geometry1, Geometry2, ModeGeo1Data, ModeGeo2Data
 from .mixin import GeometryMixin
 
 __all__ = [
     "BaseGeometry",
     "Geometry1",
     "Geometry2",
+    "ModeGeo1Data",
+    "ModeGeo2Data",
     "GeometryMixin",
     "Geo1MplPlotter",
     "Geo2MplPlotter",
