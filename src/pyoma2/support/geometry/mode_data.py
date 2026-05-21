@@ -45,7 +45,15 @@ def build_mode_geo1_data(
     -------
     ModeGeo1Data
         The assembled headless mode-shape data for geo1.
+
+    Raises
+    ------
+    ValueError
+        If ``mode_nr`` is outside the range ``1..res.Phi.shape[1]``.
     """
+    n_modes = res.Phi.shape[1]
+    if not 1 <= mode_nr <= n_modes:
+        raise ValueError(f"mode_nr must be between 1 and {n_modes}")
     idx = int(mode_nr) - 1
     phi = res.Phi[:, idx].real
     fn = res.Fn[idx]
@@ -96,7 +104,15 @@ def build_mode_geo2_data(
     -------
     ModeGeo2Data
         The assembled headless mode-shape data for geo2.
+
+    Raises
+    ------
+    ValueError
+        If ``mode_nr`` is outside the range ``1..res.Phi.shape[1]``.
     """
+    n_modes = res.Phi.shape[1]
+    if not 1 <= mode_nr <= n_modes:
+        raise ValueError(f"mode_nr must be between 1 and {n_modes}")
     idx = int(mode_nr) - 1
     phi = res.Phi[:, idx].real * scaleF
     fn = res.Fn[idx]

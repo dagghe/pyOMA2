@@ -121,6 +121,19 @@ def test_build_mode_geo1_data_uses_real_part() -> None:
     assert data.scaleF == 1.0
 
 
+def test_build_mode_geo1_data_rejects_out_of_range_mode_nr() -> None:
+    """build_mode_geo1_data rejects mode_nr outside 1..n_modes."""
+    from pyoma2.support.geometry.mode_data import build_mode_geo1_data
+
+    ss = _make_geo1_setup()
+    res = _result(phi=np.array([[1.0, 9.0], [2.0, 9.0], [3.0, 9.0]]), fn=[2.5, 4.0])
+    # mode_nr=0 would otherwise negative-index to the last mode
+    with pytest.raises(ValueError, match="mode_nr must be between 1 and 2"):
+        build_mode_geo1_data(ss.geo1, res, mode_nr=0)
+    with pytest.raises(ValueError, match="mode_nr must be between 1 and 2"):
+        build_mode_geo1_data(ss.geo1, res, mode_nr=3)
+
+
 def test_get_mode_geo1_data_guards() -> None:
     """get_mode_geo1_data raises before geo1 is defined / before a run."""
     from pyoma2.algorithms.data.result import BaseResult
@@ -206,6 +219,19 @@ def test_build_mode_geo2_data_uses_real_part() -> None:
     data = build_mode_geo2_data(ss.geo2, res, mode_nr=1, scaleF=2.0)
     # phi = real(Phi) * scaleF = [0.5, 2.0] * 2.0
     np.testing.assert_allclose(data.phi, [1.0, 4.0])
+
+
+def test_build_mode_geo2_data_rejects_out_of_range_mode_nr() -> None:
+    """build_mode_geo2_data rejects mode_nr outside 1..n_modes."""
+    from pyoma2.support.geometry.mode_data import build_mode_geo2_data
+
+    ss = _make_geo2_setup()
+    res = _result(phi=np.array([[0.5, 1.0], [2.0, 1.0]]), fn=[3.0, 5.0])
+    # mode_nr=0 would otherwise negative-index to the last mode
+    with pytest.raises(ValueError, match="mode_nr must be between 1 and 2"):
+        build_mode_geo2_data(ss.geo2, res, mode_nr=0)
+    with pytest.raises(ValueError, match="mode_nr must be between 1 and 2"):
+        build_mode_geo2_data(ss.geo2, res, mode_nr=3)
 
 
 def test_get_mode_geo2_data_guards() -> None:
