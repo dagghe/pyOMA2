@@ -16,12 +16,12 @@ import numpy as np
 from scipy import signal, stats
 from tqdm import trange
 
+from pyoma2._optional import require
 from pyoma2.algorithms.base import BaseAlgorithm
 from pyoma2.algorithms.data.mpe_params import SSIMPEParams
 from pyoma2.algorithms.data.result import ClusteringResult, SSIResult
 from pyoma2.algorithms.data.run_params import Clustering, FDDRunParams, SSIRunParams
-from pyoma2.functions import clus, fdd, gen, plot, ssi
-from pyoma2.support.sel_from_plot import SelFromPlot
+from pyoma2.functions import clus, fdd, gen, ssi
 
 logger = logging.getLogger(__name__)
 
@@ -262,6 +262,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         ValueError
             If spectrum (self.Sy) or result (self.result) is not available.
         """
+        plot = require("pyoma2.functions.plot", "plot")
         if self.Sy is None:
             raise ValueError("Spectrum not estimated. Call est_spectrum() first.")
         if self.result is None:
@@ -769,6 +770,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         AttributeError
             If the specified clustering name does not exist.
         """
+        plot = require("pyoma2.functions.plot", "plot")
         if name == "all":
             if not self.result.clustering_results:
                 raise ValueError("No clustering results available.")
@@ -836,6 +838,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         AttributeError
             If the specified clustering name does not exist.
         """
+        plot = require("pyoma2.functions.plot", "plot")
         if name == "all":
             if not self.result.clustering_results:
                 raise ValueError("No clustering results available.")
@@ -923,6 +926,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         AttributeError
             If the specified clustering name does not exist.
         """
+        plot = require("pyoma2.functions.plot", "plot")
         if name == "all":
             if not self.result.clustering_results:
                 raise ValueError("No clustering results available.")
@@ -989,6 +993,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         AttributeError
             If the specified clustering name does not exist.
         """
+        plot = require("pyoma2.functions.plot", "plot")
         if name == "all":
             if not self.result.clustering_results:
                 raise ValueError("No clustering results available.")
@@ -1139,6 +1144,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         Phi_pol_std = self.result.Phi_poles_std
 
         # Launch interactive frequency selection
+        SelFromPlot = require("pyoma2.support.sel_from_plot", "plot").SelFromPlot
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="SSI")
         sel_freq = SFP.result[0]
         order = SFP.result[1]
@@ -1208,6 +1214,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         ValueError
             If the SSI algorithm has not been run (self.result is None).
         """
+        plot = require("pyoma2.functions.plot", "plot")
         if self.result is None:
             raise ValueError("Run SSI algorithm first (call run()).")
 
@@ -1268,6 +1275,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         ValueError
             If the SSI algorithm has not been run (self.result is None).
         """
+        plot = require("pyoma2.functions.plot", "plot")
         if self.result is None:
             raise ValueError("Run SSI algorithm first (call run()).")
 
@@ -1304,6 +1312,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         ValueError
             If the SSI algorithm has not been run (self.result is None).
         """
+        plot = require("pyoma2.functions.plot", "plot")
         if self.result is None:
             raise ValueError("Run SSI algorithm first (call run()).")
         if iter_n is None:

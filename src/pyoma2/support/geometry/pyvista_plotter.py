@@ -15,8 +15,8 @@ import pyvistaqt as pvqt
 from numpy.typing import NDArray
 
 from pyoma2.algorithms.data.result import BaseResult
-from pyoma2.functions import gen
 from pyoma2.support.geometry.data import Geometry2
+from pyoma2.support.geometry.mode_data import build_mode_geo2_data
 
 from .plotter import BasePlotter
 
@@ -282,20 +282,18 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
             raise ValueError(f"mode_nr must be between 1 and {n_modes}")
 
         pl = pl or self._make_plotter(notebook, background)
-        pts = self.geo.pts_coord.to_numpy()
+
+        # Assemble the mode-shape geometry (headless single source of truth)
+        data = build_mode_geo2_data(self.geo, self.res, mode_nr, scaleF)
+        pts = data.pts_coord
+        new_pts = data.deformed_coord
+        df_map = data.df_phi_map
         lines_arr, faces_arr = self._encode_mesh(
             pts, self.geo.sens_lines, self.geo.sens_surf
         )
 
         def_sett = def_sett or _DEF_MODE_SETT.copy()
         undef_sett = undef_sett or _UNDEF_MODE_SETT.copy()
-
-        # Compute deformation
-        phi = self.res.Phi[:, mode_nr - 1].real * scaleF
-        df_map = gen.dfphi_map_func(
-            phi, self.geo.sens_names, self.geo.sens_map, cstrn=self.geo.cstrn
-        )
-        new_pts = pts + df_map.to_numpy() * self.geo.sens_sign.to_numpy()
 
         # Undeformed
         pl.add_points(pts, **undef_sett)
@@ -315,7 +313,7 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
                 pv.PolyData(new_pts, faces=faces_arr), scalars=df_map.values, **def_sett
             )
 
-        freq = self.res.Fn[mode_nr - 1]
+        freq = data.fn
         pl.add_text(f"Mode {mode_nr}: {freq:.3f} Hz", position="upper_edge")
         pl.add_axes(line_width=2)
         pl.show()
@@ -372,21 +370,17 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
 
         def_sett = def_sett or _DEF_MODE_SETT.copy()
 
-        # Prepare geometry and scalars
-        pts = self.geo.pts_coord.to_numpy()
+        # Assemble the mode-shape geometry (headless single source of truth)
+        data = build_mode_geo2_data(self.geo, self.res, mode_nr, scaleF)
+        pts = data.pts_coord
         lines_arr, faces_arr = self._encode_mesh(
             pts, self.geo.sens_lines, self.geo.sens_surf
         )
-        phi = self.res.Phi[:, mode_nr - 1].real * scaleF
-        df_map = gen.dfphi_map_func(
-            phi, self.geo.sens_names, self.geo.sens_map, cstrn=self.geo.cstrn
-        )
-        sens_sign = self.geo.sens_sign.to_numpy()
+        base_disp = data.mode_displ
+        amps = data.displ_magnitude
 
         # Initial displaced mesh
         pts_mesh = pv.PolyData(pts)
-        base_disp = df_map.to_numpy() * sens_sign
-        amps = np.linalg.norm(base_disp, axis=1)
         pts_mesh.point_data["amplitude"] = amps
         pl.add_mesh(pts_mesh, scalars="amplitude", **def_sett)
 
@@ -403,7 +397,7 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
             pl.add_mesh(face_mesh, scalars="amplitude", **def_sett)
 
         # Annotation
-        freq = self.res.Fn[mode_nr - 1]
+        freq = data.fn
         pl.add_text(f"Mode {mode_nr}: {freq:.3f} Hz", position="upper_edge")
         pl.add_axes(line_width=2)
 

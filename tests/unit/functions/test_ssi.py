@@ -2,8 +2,8 @@ import typing
 
 import numpy as np
 import pytest
-from pyoma2.functions import ssi
 
+from pyoma2.functions import ssi
 from tests.factory import assert_array_equal_with_nan
 
 

@@ -30,19 +30,27 @@ https://pyoma.readthedocs.io/en/main/
 
 ## Quick start
 
-Install the library with pip:
+Install the core (headless) library with pip:
 
 ```shell
 pip install pyOMA-2
 ```
 
-or with conda/mamba:
+For the full desktop experience — interactive plots and 3D mode-shape visualization —
+install the optional extras:
+
+```shell
+pip install pyOMA-2[all]
+```
+
+`[plot]` adds Matplotlib plotting only, `[3d]` adds the PyVista/Qt 3D viewer, and `[all]`
+adds both. Or install with conda/mamba (full install):
 
 ```shell
 conda install pyOMA-2
 ```
 
-You'll probably need to install **tk** for the GUI on your system, here some instructions:
+If you use the interactive plotting features (the `plot` or `all` extras), you'll probably need **tk** on your system, here some instructions:
 
 Windows:
 

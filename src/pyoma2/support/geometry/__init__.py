@@ -67,7 +67,28 @@ pv_plotter.animate_mode(mode_nr=1, saveGIF=True)
 
 from __future__ import annotations
 
-from .data import BaseGeometry, Geometry1, Geometry2
+from .data import BaseGeometry, Geometry1, Geometry2, ModeGeo1Data, ModeGeo2Data
 from .mixin import GeometryMixin
-from .mpl_plotter import Geo1MplPlotter, Geo2MplPlotter
-from .pyvista_plotter import PvGeoPlotter
+
+__all__ = [
+    "BaseGeometry",
+    "Geometry1",
+    "Geometry2",
+    "ModeGeo1Data",
+    "ModeGeo2Data",
+    "GeometryMixin",
+    "Geo1MplPlotter",
+    "Geo2MplPlotter",
+    "PvGeoPlotter",
+]
+
+
+def __getattr__(name: str):
+    """Lazily import the plotter classes (PEP 562) to keep the package headless."""
+    from pyoma2._optional import require
+
+    if name in ("Geo1MplPlotter", "Geo2MplPlotter"):
+        return getattr(require("pyoma2.support.geometry.mpl_plotter", "plot"), name)
+    if name == "PvGeoPlotter":
+        return require("pyoma2.support.geometry.pyvista_plotter", "3d").PvGeoPlotter
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

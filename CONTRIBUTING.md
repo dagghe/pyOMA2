@@ -55,7 +55,7 @@ We use [uv](https://docs.astral.sh/uv/) as a package manager. Install it followi
 Then install all dependencies:
 
 ```shell
-uv sync --group qa
+uv sync --extra all --group qa
 ```
 
 ### Adding new packages

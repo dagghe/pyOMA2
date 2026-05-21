@@ -34,7 +34,7 @@ jobs:
       run: sudo apt-get install -y python3-tk
 
     - name: Install dependencies
-      run: uv sync --group qa
+      run: uv sync --extra all --group qa
 
     - name: Run tests
       run: uv run pytest
@@ -45,15 +45,34 @@ jobs:
       run: echo "job_status=failure" >> $GITHUB_ENV
       shell: bash
 
+  headless:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install core dependencies only
+      run: uv sync --group qa
+
+    - name: Run headless guard tests
+      run: uv run pytest tests_headless/ -v
+
   check_failures:
-    needs: [test]
+    needs: [test, headless]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Check for failures
         run: |
-          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
-            echo "One or more jobs failed"
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "One or more jobs failed or were cancelled"
             exit 1
           else
             echo "All jobs succeeded"

@@ -1,6 +1,7 @@
 from typing import Any
 
 import pytest
+
 from pyoma2.algorithms import BaseAlgorithm
 from pyoma2.algorithms.data.run_params import BaseRunParams
 from pyoma2.setup import SingleSetup

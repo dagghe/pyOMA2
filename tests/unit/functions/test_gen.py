@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from pyoma2.functions import gen
 
 

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+### Added
+
+- `requests` is now a core dependency (used by the sample-data downloader).
+- `pyoma2._optional.require` helper for importing optional-dependency modules with a
+  friendly error message.
+- Headless mode-shape data API — `get_mode_geo1_data` / `get_mode_geo2_data` on the
+  geometry-enabled setup classes, returning the new `ModeGeo1Data` / `ModeGeo2Data`
+  Pydantic models: deformed mode-shape geometry (coordinates, modal displacement,
+  deformed coordinates, displacement magnitude, connectivity) without creating a plot.
+
+### Changed
+
+- Matplotlib, PyVista, pyvistaqt, PyQt5 and VTK are now **optional** dependencies.
+  `pip install pyOMA_2` is now a headless install; install the plotting/3D stack with
+  `pip install pyOMA_2[all]` (or the narrower `[plot]` / `[3d]` extras). Calling a
+  plotting or interactive method without the matching extra raises a clear `ImportError`.
+
 ## [1.2.4] - 2026-05-16
 
 ### Added

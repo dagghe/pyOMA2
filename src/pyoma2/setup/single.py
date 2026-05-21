@@ -13,14 +13,15 @@ import copy
 import logging
 import typing
 
-import matplotlib.pyplot as plt
 import numpy as np
 
-from pyoma2.functions import plot
+from pyoma2._optional import require
 from pyoma2.setup.base import BaseSetup
 from pyoma2.support.geometry import GeometryMixin
 
 if typing.TYPE_CHECKING:
+    import matplotlib.pyplot as plt
+
     from pyoma2.algorithms import BaseAlgorithm
 
 
@@ -145,6 +146,7 @@ class SingleSetup(BaseSetup, GeometryMixin):
         names = names  # list of names (str) of the channnels
         unit = unit  # str label for the y-axis (unit of measurement)
         show_rms = show_rms  # wheter to show or not the rms acc in the plot
+        plot = require("pyoma2.functions.plot", "plot")
         fig, ax = plot.plt_data(data, fs, nc, names, unit, show_rms)
         return fig, ax
 
@@ -189,6 +191,7 @@ class SingleSetup(BaseSetup, GeometryMixin):
         """
         data = self.data
         fs = self.fs
+        plot = require("pyoma2.functions.plot", "plot")
         fig, ax = plot.plt_ch_info(
             data,
             fs,
@@ -246,6 +249,7 @@ class SingleSetup(BaseSetup, GeometryMixin):
 
         data = self.data
         fs = self.fs
+        plot = require("pyoma2.functions.plot", "plot")
         fig, ax = plot.STFT(
             data,
             fs,

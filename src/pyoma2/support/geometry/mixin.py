@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import typing
-import warnings
 from typing import Optional, Union
 
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
+from pyoma2._optional import require
 from pyoma2.algorithms.data.result import BaseResult
 from pyoma2.functions.gen import (
     check_on_geo1,
@@ -16,9 +15,8 @@ from pyoma2.functions.gen import (
     read_excel_file,
 )
 
-from .data import Geometry1, Geometry2
-from .mpl_plotter import Geo1MplPlotter, Geo2MplPlotter
-from .pyvista_plotter import PvGeoPlotter
+from .data import Geometry1, Geometry2, ModeGeo1Data, ModeGeo2Data
+from .mode_data import build_mode_geo1_data, build_mode_geo2_data
 
 
 def _ensure_dataframe(
@@ -36,19 +34,8 @@ def _ensure_dataframe(
 
 
 if typing.TYPE_CHECKING:
-    try:
-        import pyvista as pv
-    except ImportError:
-        warnings.warn(
-            "Optional package 'pyvista' is not installed. Some features may not be available.",
-            ImportWarning,
-            stacklevel=2,
-        )
-        warnings.warn(
-            "Install 'pyvista' with 'pip install pyvista' or 'pip install pyoma_2[pyvista]'",
-            ImportWarning,
-            stacklevel=2,
-        )
+    import matplotlib.pyplot as plt
+    import pyvista as pv
 
 
 class GeometryMixin:
@@ -376,7 +363,9 @@ class GeometryMixin:
         if self.geo1 is None:
             raise ValueError("geo1 is not defined. Call def_geo1 first.")
 
-        Plotter = Geo1MplPlotter(self.geo1)
+        Plotter = require("pyoma2.support.geometry.mpl_plotter", "plot").Geo1MplPlotter(
+            self.geo1
+        )
 
         fig, ax = Plotter.plot_geo(
             scaleF,
@@ -449,7 +438,9 @@ class GeometryMixin:
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
-        Plotter = PvGeoPlotter(self.geo2)
+        Plotter = require("pyoma2.support.geometry.pyvista_plotter", "3d").PvGeoPlotter(
+            self.geo2
+        )
 
         pl = Plotter.plot_geo(
             scaleF=scaleF,
@@ -519,7 +510,9 @@ class GeometryMixin:
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
 
-        Plotter = Geo2MplPlotter(self.geo2)
+        Plotter = require("pyoma2.support.geometry.mpl_plotter", "plot").Geo2MplPlotter(
+            self.geo2
+        )
 
         fig, ax = Plotter.plot_geo(
             scaleF,
@@ -588,7 +581,9 @@ class GeometryMixin:
 
         if algo_res.Fn is None:
             raise ValueError("Run algorithm first")
-        Plotter = Geo1MplPlotter(self.geo1, algo_res)
+        Plotter = require("pyoma2.support.geometry.mpl_plotter", "plot").Geo1MplPlotter(
+            self.geo1, algo_res
+        )
 
         fig, ax = Plotter.plot_mode(
             mode_nr,
@@ -659,7 +654,9 @@ class GeometryMixin:
         if algo_res.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Plotter = PvGeoPlotter(self.geo2, algo_res)
+        Plotter = require("pyoma2.support.geometry.pyvista_plotter", "3d").PvGeoPlotter(
+            self.geo2, algo_res
+        )
 
         pl = Plotter.plot_mode(
             mode_nr=mode_nr,
@@ -720,7 +717,9 @@ class GeometryMixin:
         if algo_res.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Plotter = Geo2MplPlotter(self.geo2, algo_res)
+        Plotter = require("pyoma2.support.geometry.mpl_plotter", "plot").Geo2MplPlotter(
+            self.geo2, algo_res
+        )
 
         fig, ax = Plotter.plot_mode(mode_nr, scaleF, view, color)
         return fig, ax
@@ -778,7 +777,9 @@ class GeometryMixin:
         if algo_res.Fn is None:
             raise ValueError("Run algorithm first")
 
-        Plotter = PvGeoPlotter(self.geo2, algo_res)
+        Plotter = require("pyoma2.support.geometry.pyvista_plotter", "3d").PvGeoPlotter(
+            self.geo2, algo_res
+        )
 
         result = Plotter.animate_mode(
             mode_nr=mode_nr,
@@ -790,3 +791,82 @@ class GeometryMixin:
             pl=pl,
         )
         return result
+
+    def get_mode_geo1_data(
+        self,
+        algo_res: BaseResult,
+        mode_nr: int,
+        scaleF: float = 1.0,
+    ) -> ModeGeo1Data:
+        """
+        Assembles headless mode-shape data for the first geometry setup (geo1).
+
+        Returns the deformed mode-shape geometry as a plain data model — sensor
+        coordinates and directions, the per-sensor modal displacement, the
+        deformed coordinates and the connectivity/background elements — without
+        creating a plot. Suitable for headless renderers and servers.
+
+        Parameters
+        ----------
+        algo_res : BaseResult
+            The result object containing modal parameters and mode shape data.
+        mode_nr : int
+            The mode number to extract (1-based).
+        scaleF : float, optional
+            Scaling factor applied to the modal displacement. Default is 1.0.
+
+        Returns
+        -------
+        ModeGeo1Data
+            The assembled headless mode-shape data for geo1.
+
+        Raises
+        ------
+        ValueError
+            If `geo1` is not defined or if the algorithm results are missing.
+        """
+        if self.geo1 is None:
+            raise ValueError("geo1 is not defined. Call def_geo1 first.")
+        if algo_res.Fn is None:
+            raise ValueError("Run algorithm first")
+        return build_mode_geo1_data(self.geo1, algo_res, mode_nr, scaleF)
+
+    def get_mode_geo2_data(
+        self,
+        algo_res: BaseResult,
+        mode_nr: int,
+        scaleF: float = 1.0,
+    ) -> ModeGeo2Data:
+        """
+        Assembles headless mode-shape data for the second geometry setup (geo2).
+
+        Returns the deformed mode-shape geometry as a plain data model — point
+        coordinates, the sensor mapping, the per-point modal displacement, the
+        deformed coordinates, the displacement magnitude and the
+        connectivity/background elements — without creating a plot. Suitable
+        for headless renderers and servers.
+
+        Parameters
+        ----------
+        algo_res : BaseResult
+            The result object containing modal parameters and mode shape data.
+        mode_nr : int
+            The mode number to extract (1-based).
+        scaleF : float, optional
+            Scaling factor applied to the modal displacement. Default is 1.0.
+
+        Returns
+        -------
+        ModeGeo2Data
+            The assembled headless mode-shape data for geo2.
+
+        Raises
+        ------
+        ValueError
+            If `geo2` is not defined or if the algorithm results are missing.
+        """
+        if self.geo2 is None:
+            raise ValueError("geo2 is not defined. Call def_geo2 first.")
+        if algo_res.Fn is None:
+            raise ValueError("Run algorithm first")
+        return build_mode_geo2_data(self.geo2, algo_res, mode_nr, scaleF)

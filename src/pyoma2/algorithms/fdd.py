@@ -11,12 +11,12 @@ from __future__ import annotations
 import logging
 import typing
 
+from pyoma2._optional import require
 from pyoma2.algorithms.base import BaseAlgorithm
 from pyoma2.algorithms.data.mpe_params import EFDDMPEParams, FDDMPEParams
 from pyoma2.algorithms.data.result import EFDDResult, FDDResult
 from pyoma2.algorithms.data.run_params import EFDDRunParams, FDDRunParams
-from pyoma2.functions import fdd, plot
-from pyoma2.support.sel_from_plot import SelFromPlot
+from pyoma2.functions import fdd
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +146,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDMPEParams, FDDResult, typing.Iterable[f
         self.mpe_params.DF = DF
 
         # chiamare plot interattivo
+        SelFromPlot = require("pyoma2.support.sel_from_plot", "plot").SelFromPlot
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
         sel_freq = SFP.result[0]
 
@@ -188,6 +189,7 @@ class FDD(BaseAlgorithm[FDDRunParams, FDDMPEParams, FDDResult, typing.Iterable[f
         """
         if not self.result:
             raise ValueError("Run algorithm first")
+        plot = require("pyoma2.functions.plot", "plot")
         fig, ax = plot.CMIF_plot(
             S_val=self.result.S_val, freq=self.result.freq, freqlim=freqlim, nSv=nSv
         )
@@ -342,6 +344,7 @@ class EFDD(FDD[EFDDRunParams, EFDDMPEParams, EFDDResult, typing.Iterable[float]]
         self.mpe_params.npmax = npmax
 
         # chiamare plot interattivo
+        SelFromPlot = require("pyoma2.support.sel_from_plot", "plot").SelFromPlot
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="FDD")
         sel_freq = SFP.result[0]
 
@@ -395,6 +398,7 @@ class EFDD(FDD[EFDDRunParams, EFDDMPEParams, EFDDResult, typing.Iterable[float]]
         if not self.result:
             raise ValueError("Run algorithm first")
 
+        plot = require("pyoma2.functions.plot", "plot")
         fig, ax = plot.EFDD_FIT_plot(
             Fn=self.result.Fn,
             Xi=self.result.Xi,

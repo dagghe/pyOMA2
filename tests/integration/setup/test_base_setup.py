@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from pyoma2.setup.base import BaseSetup
 
+from pyoma2.setup.base import BaseSetup
 from tests.factory import FakeAlgorithm, FakeResult, FakeRunParams
 
 

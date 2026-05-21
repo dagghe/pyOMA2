@@ -11,11 +11,11 @@ from __future__ import annotations
 import logging
 import typing
 
+from pyoma2._optional import require
 from pyoma2.algorithms.data.mpe_params import pLSCFMPEParams
 from pyoma2.algorithms.data.result import pLSCFResult
 from pyoma2.algorithms.data.run_params import pLSCFRunParams
-from pyoma2.functions import fdd, gen, plot, plscf
-from pyoma2.support.sel_from_plot import SelFromPlot
+from pyoma2.functions import fdd, gen, plscf
 
 from .base import BaseAlgorithm
 
@@ -228,6 +228,7 @@ class pLSCF(
         Ms_pol = self.result.Phi_poles
 
         # chiamare plot interattivo
+        SelFromPlot = require("pyoma2.support.sel_from_plot", "plot").SelFromPlot
         SFP = SelFromPlot(algo=self, freqlim=freqlim, plot="pLSCF")
         sel_freq = SFP.result[0]
         order = SFP.result[1]
@@ -273,6 +274,7 @@ class pLSCF(
         Any
             A tuple containing the matplotlib figure and axes objects for the stability diagram.
         """
+        plot = require("pyoma2.functions.plot", "plot")
         fig, ax = plot.stab_plot(
             Fn=self.result.Fn_poles,
             Lab=self.result.Lab,
@@ -319,6 +321,7 @@ class pLSCF(
         if not self.result:
             raise ValueError("Run algorithm first")
 
+        plot = require("pyoma2.functions.plot", "plot")
         fig, ax = plot.cluster_plot(
             Fn=self.result.Fn_poles,
             Xi=self.result.Xi_poles,

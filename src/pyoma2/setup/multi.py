@@ -13,19 +13,14 @@ import copy
 import logging
 import typing
 
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 
+from pyoma2._optional import require
 from pyoma2.algorithms.data.result import MsPoserResult
 from pyoma2.functions.gen import (
     merge_mode_shapes,
     pre_multisetup,
-)
-from pyoma2.functions.plot import (
-    STFT,
-    plt_ch_info,
-    plt_data,
 )
 from pyoma2.setup.base import BaseSetup
 from pyoma2.setup.single import SingleSetup
@@ -34,6 +29,8 @@ from pyoma2.support.geometry import (
 )
 
 if typing.TYPE_CHECKING:
+    import matplotlib.pyplot as plt
+
     from pyoma2.algorithms import BaseAlgorithm
 
 
@@ -435,7 +432,8 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
             )  # list of names (str) of the channnels
             unit = unit  # str label for the y-axis (unit of measurement)
             show_rms = show_rms  # wheter to show or not the rms acc in the plot
-            fig, ax = plt_data(data, fs, nc, nam, unit, show_rms)
+            plot = require("pyoma2.functions.plot", "plot")
+            fig, ax = plot.plt_data(data, fs, nc, nam, unit, show_rms)
             figs.append(fig)
             axs.append(ax)
         return figs, axs
@@ -482,7 +480,8 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         fs = self.fs
         figs, axs = [], []
         for data in datasets:
-            fig, ax = plt_ch_info(
+            plot = require("pyoma2.functions.plot", "plot")
+            fig, ax = plot.plt_ch_info(
                 data,
                 fs,
                 ch_idx=ch_idx,
@@ -540,7 +539,8 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         fs = self.fs
         figs, axs = [], []
         for data in datasets:
-            fig, ax = STFT(
+            plot = require("pyoma2.functions.plot", "plot")
+            fig, ax = plot.STFT(
                 data,
                 fs,
                 nxseg=nxseg,

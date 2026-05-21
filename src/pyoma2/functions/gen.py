@@ -448,8 +448,7 @@ def check_on_geo1(
     for sheet in file_dict:
         if sheet not in all_sheets:
             raise ValueError(
-                f"'{sheet}' is not a valid name. Valid sheet names are: \n"
-                f"{all_sheets}"
+                f"'{sheet}' is not a valid name. Valid sheet names are: \n{all_sheets}"
             )
 
     # -----------------------------------------------------------------------------
@@ -647,8 +646,7 @@ def check_on_geo2(
     for sheet in file_dict:
         if sheet not in all_sheets:
             raise ValueError(
-                f"'{sheet}' is not a valid name. Valid sheet names are: \n"
-                f"{all_sheets}"
+                f"'{sheet}' is not a valid name. Valid sheet names are: \n{all_sheets}"
             )
 
     # -----------------------------------------------------------------------------
@@ -891,7 +889,7 @@ def flatten_sns_names(
         sns_names_fl = []
         # Create the reference strings
         for i in range(k):
-            sns_names_fl.append(f"REF{i+1}")
+            sns_names_fl.append(f"REF{i + 1}")
         # Flatten the list of strings and exclude the reference indices
         for i in range(n):
             for j in range(len(sens_names[i])):
@@ -1546,8 +1544,6 @@ def read_excel_file(
 
     Raises
     ------
-    ImportError
-        If the specified engine is not available.
     RuntimeError
         If an error occurs while reading the Excel file.
     """
@@ -1556,11 +1552,6 @@ def read_excel_file(
             path, sheet_name=sheet_name, engine=engine, index_col=index_col, **kwargs
         )
         return file_dict
-    except ImportError as e:
-        raise ImportError(
-            "Optional package 'openpyxl' is not installed. "
-            "Install 'openpyxl' with 'pip install openpyxl' or 'pip install pyoma_2[pyvista]'"
-        ) from e
     except Exception as e:
         logger.error("An error occurred while reading the Excel file: %s", e)
         raise RuntimeError(
