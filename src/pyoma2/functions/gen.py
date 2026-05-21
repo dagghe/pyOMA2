@@ -1546,8 +1546,6 @@ def read_excel_file(
 
     Raises
     ------
-    ImportError
-        If the specified engine is not available.
     RuntimeError
         If an error occurs while reading the Excel file.
     """
@@ -1556,11 +1554,6 @@ def read_excel_file(
             path, sheet_name=sheet_name, engine=engine, index_col=index_col, **kwargs
         )
         return file_dict
-    except ImportError as e:
-        raise ImportError(
-            "Optional package 'openpyxl' is not installed. "
-            "Install 'openpyxl' with 'pip install openpyxl' or 'pip install pyoma_2[pyvista]'"
-        ) from e
     except Exception as e:
         logger.error("An error occurred while reading the Excel file: %s", e)
         raise RuntimeError(
