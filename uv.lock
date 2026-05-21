@@ -4857,8 +4857,6 @@ version = "1.2.4"
 source = { editable = "." }
 dependencies = [
     { name = "eval-type-backport", marker = "python_full_version < '3.10'" },
-    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "matplotlib", version = "3.10.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "numpy", version = "2.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -4866,13 +4864,7 @@ dependencies = [
     { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "pandas", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pydantic" },
-    { name = "pyqt5" },
-    { name = "pyqt5-qt5", version = "5.15.2", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'darwin'" },
-    { name = "pyqt5-qt5", version = "5.15.14", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'darwin'" },
-    { name = "pyqt5-sip" },
-    { name = "pyvista", version = "0.46.5", source = { registry = "https://pypi.org/simple" }, extra = ["all"], marker = "python_full_version < '3.10'" },
-    { name = "pyvista", version = "0.47.1", source = { registry = "https://pypi.org/simple" }, extra = ["all"], marker = "python_full_version >= '3.10'" },
-    { name = "pyvistaqt" },
+    { name = "requests" },
     { name = "scikit-learn", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "scikit-learn", version = "1.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -4880,8 +4872,36 @@ dependencies = [
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "tqdm" },
+]
+
+[package.optional-dependencies]
+3d = [
+    { name = "pyqt5" },
+    { name = "pyqt5-qt5", version = "5.15.2", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'darwin'" },
+    { name = "pyqt5-qt5", version = "5.15.14", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'darwin'" },
+    { name = "pyqt5-sip" },
+    { name = "pyvista", version = "0.46.5", source = { registry = "https://pypi.org/simple" }, extra = ["all"], marker = "python_full_version < '3.10'" },
+    { name = "pyvista", version = "0.47.1", source = { registry = "https://pypi.org/simple" }, extra = ["all"], marker = "python_full_version >= '3.10'" },
+    { name = "pyvistaqt" },
     { name = "vtk", version = "9.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "vtk", version = "9.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+all = [
+    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "matplotlib", version = "3.10.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "pyqt5" },
+    { name = "pyqt5-qt5", version = "5.15.2", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'darwin'" },
+    { name = "pyqt5-qt5", version = "5.15.14", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'darwin'" },
+    { name = "pyqt5-sip" },
+    { name = "pyvista", version = "0.46.5", source = { registry = "https://pypi.org/simple" }, extra = ["all"], marker = "python_full_version < '3.10'" },
+    { name = "pyvista", version = "0.47.1", source = { registry = "https://pypi.org/simple" }, extra = ["all"], marker = "python_full_version >= '3.10'" },
+    { name = "pyvistaqt" },
+    { name = "vtk", version = "9.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "vtk", version = "9.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+plot = [
+    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "matplotlib", version = "3.10.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
 
 [package.dev-dependencies]
@@ -4913,22 +4933,25 @@ qa = [
 [package.metadata]
 requires-dist = [
     { name = "eval-type-backport", marker = "python_full_version < '3.10'", specifier = ">=0.1.3" },
-    { name = "matplotlib", specifier = ">=3.7.4" },
+    { name = "matplotlib", marker = "extra == 'plot'", specifier = ">=3.7.4" },
     { name = "numpy", specifier = ">=1.25" },
     { name = "openpyxl", specifier = ">=3.1.3" },
     { name = "pandas", specifier = ">=2.0.3" },
     { name = "pydantic", specifier = ">=2.5.1" },
-    { name = "pyqt5", specifier = "==5.15.10" },
-    { name = "pyqt5-qt5", marker = "sys_platform != 'darwin'", specifier = "==5.15.2" },
-    { name = "pyqt5-qt5", marker = "sys_platform == 'darwin'", specifier = "==5.15.14" },
-    { name = "pyqt5-sip", specifier = ">=12.15.0" },
-    { name = "pyvista", extras = ["all"] },
-    { name = "pyvistaqt" },
+    { name = "pyoma-2", extras = ["plot", "3d"], marker = "extra == 'all'" },
+    { name = "pyqt5", marker = "extra == '3d'", specifier = "==5.15.10" },
+    { name = "pyqt5-qt5", marker = "sys_platform == 'darwin' and extra == '3d'", specifier = "==5.15.14" },
+    { name = "pyqt5-qt5", marker = "sys_platform != 'darwin' and extra == '3d'", specifier = "==5.15.2" },
+    { name = "pyqt5-sip", marker = "extra == '3d'", specifier = ">=12.15.0" },
+    { name = "pyvista", extras = ["all"], marker = "extra == '3d'" },
+    { name = "pyvistaqt", marker = "extra == '3d'" },
+    { name = "requests", specifier = ">=2.28" },
     { name = "scikit-learn", specifier = ">=1.3.2" },
     { name = "scipy", specifier = ">=1.9.3" },
     { name = "tqdm", specifier = ">=4.66.1" },
-    { name = "vtk", specifier = ">=9.4.0" },
+    { name = "vtk", marker = "extra == '3d'", specifier = ">=9.4.0" },
 ]
+provides-extras = ["plot", "3d", "all"]
 
 [package.metadata.requires-dev]
 docs = [
