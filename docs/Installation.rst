@@ -1,13 +1,23 @@
 Installation
 ============
 
-Install the library with pip:
+Install the core (headless) library with pip:
 
 .. code:: console
 
    pip install pyOMA-2
 
-or with conda/mamba:
+For the full desktop experience (interactive plots and 3D visualization), install
+the optional extras:
+
+.. code:: console
+
+   pip install pyOMA-2[all]
+
+``[plot]`` adds Matplotlib plotting only, ``[3d]`` adds the PyVista/Qt 3D viewer, and
+``[all]`` adds both.
+
+Or install with conda/mamba (full install):
 
 .. code:: console
 
