@@ -71,8 +71,8 @@ jobs:
     steps:
       - name: Check for failures
         run: |
-          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
-            echo "One or more jobs failed"
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "One or more jobs failed or were cancelled"
             exit 1
           else
             echo "All jobs succeeded"
