@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+### Fixed
+
+- PyVista mode-shape animation with `save_gif=True` now closes the movie writer so the
+  GIF file is flushed and finalized on disk (affected both geo1 and geo2 animations).
+  Thanks to @francoisboureau ([#48](https://github.com/dagghe/pyOMA2/issues/48)).
+
 ## [1.3.0] - 2026-05-21
 
 ### Added

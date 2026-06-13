@@ -427,9 +427,13 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         if save_gif:
             gif_path = f"Mode_{mode_nr}.gif"
             pl.open_gif(gif_path)
-            for _ in range(n_frames):
-                _update()
-                pl.write_frame()
+            try:
+                for _ in range(n_frames):
+                    _update()
+                    pl.write_frame()
+            finally:
+                # Close the movie writer so the GIF is flushed/finalized to disk.
+                pl.close()
             return gif_path
         else:
             pl.add_callback(_update, interval=100)
