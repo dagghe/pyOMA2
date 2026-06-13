@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+## [1.3.1] - 2026-06-13
+
 ### Fixed
 
 - PyVista mode-shape animation with `save_gif=True` now closes the movie writer so the
