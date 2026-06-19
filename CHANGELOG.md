@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+## [1.4.0] - 2026-06-19
+
 ### Changed
 
 - Minimum supported Python is now **3.10** (`requires-python = ">=3.10,<3.15"`); Python 3.9
