@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+### Changed
+
+- Minimum supported Python is now **3.10** (`requires-python = ">=3.10,<3.15"`); Python 3.9
+  reached end-of-life in October 2025. Ruff `target-version`, the tox env list and the CI
+  matrix were updated accordingly.
+
+### Removed
+
+- `eval_type_backport` dependency, which was only needed to run on Python 3.9.
+
 ## [1.3.1] - 2026-06-13
 
 ### Fixed
