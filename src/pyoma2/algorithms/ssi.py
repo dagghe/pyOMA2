@@ -116,7 +116,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
                 fdd_run_params.pov,
             )
 
-        # Build Hankel matrix H and time vector T
+        # Build Hankel matrix H and uncertainty estimates T
         H, T = ssi.build_hank(
             Y=Y, Yref=Yref, br=br, method=method_hank, calc_unc=calc_unc, nb=nb, U=U
         )
