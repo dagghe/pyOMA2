@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+## [1.4.1] - 2026-06-30
+
 ### Fixed
 
 - `SSI_MS.plot_sSy_VS_mSy` now raises a descriptive `NotImplementedError` instead of an
