@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+### Fixed
+
+- `SSI_MS.plot_sSy_VS_mSy` now raises a descriptive `NotImplementedError` instead of an
+  opaque `AttributeError: 'SSI_MS' object has no attribute 'G'`, clarifying that synthetic
+  spectrum comparison is not available for multi-setup analysis (#53).
+
 ## [1.4.0] - 2026-06-19
 
 ### Changed

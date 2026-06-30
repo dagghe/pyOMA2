@@ -1475,3 +1475,29 @@ class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
         self.freq, self.Sy = fdd.SD_PreGER(
             Y, self.fs, nxseg=nxseg, method=method, pov=pov
         )
+
+    def plot_sSy_VS_mSy(
+        self,
+        order: int,
+        freqlim: typing.Optional[tuple[float, float]] = None,
+        nSv: typing.Union[int, str] = "all",
+    ) -> tuple:
+        """
+        Not available for multi-setup analysis.
+
+        The synthetic spectrum comparison relies on the state-space output matrix G,
+        which is not computed by the multi-setup identification (``SSI_multi_setup``).
+        Calling this method on an ``SSI_MS`` instance therefore raises
+        ``NotImplementedError`` instead of an opaque ``AttributeError``.
+
+        Raises
+        ------
+        NotImplementedError
+            Always, since synthetic-vs-measured spectrum comparison is not
+            implemented for multi-setup analysis.
+        """
+        raise NotImplementedError(
+            "'plot_sSy_VS_mSy' is not available for multi-setup analysis (SSI_MS): "
+            "the synthetic spectrum requires the state-space matrix 'G', which is not "
+            "computed in the multi-setup identification."
+        )
