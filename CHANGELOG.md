@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SSI_MS.plot_sSy_VS_mSy` now raises a descriptive `NotImplementedError` instead of an
   opaque `AttributeError: 'SSI_MS' object has no attribute 'G'`, clarifying that synthetic
   spectrum comparison is not available for multi-setup analysis (#53).
+- `SSI.plot_stab(spectrum=True)` now re-applies `tight_layout` after overlaying the CMIF
+  spectrum (the twin y-axis was previously clipped) and returns the actual figure instead
+  of `None` (#52).
 
 ## [1.4.0] - 2026-06-19
 

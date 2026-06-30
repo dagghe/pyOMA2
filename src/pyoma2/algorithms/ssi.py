@@ -1237,7 +1237,10 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
                 self.est_spectrum()
             Sval, _ = fdd.SD_svalsvec(self.Sy)
             ax2 = ax.twinx()
-            fig, ax = plot.CMIF_plot(Sval, self.freq, ax=ax2, freqlim=freqlim, nSv=nSv)
+            plot.CMIF_plot(Sval, self.freq, ax=ax2, freqlim=freqlim, nSv=nSv)
+            # Re-apply tight_layout: the twin axis adds a right-hand y-axis that
+            # the earlier tight_layout (inside stab_plot) did not account for.
+            fig.tight_layout()
 
         return fig, ax
 
