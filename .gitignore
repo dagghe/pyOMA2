@@ -172,3 +172,6 @@ cython_debug/
 # pickle
 *.pickle
 *.pkl
+
+# pyOMA2 sample-data cache
+.pyoma2_data/

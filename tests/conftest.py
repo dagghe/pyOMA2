@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 import typing
@@ -268,8 +269,21 @@ def mock_imports():
 def cleanup_sample_data_dir():
     """
     Fixture to delete the SAMPLE_DATA_DEFAULT_LOCAL_DIR after all tests have run.
+
+    Set the environment variable ``PYOMA2_KEEP_SAMPLE_DATA`` to a truthy value
+    ("1", "true", "yes", "on") to keep the cached sample data instead of deleting
+    it. This avoids re-downloading the sample data on every session and supports
+    offline / pre-cached workflows.
     """
     yield
+    # Keep the cached sample data when explicitly requested (offline workflows).
+    if os.environ.get("PYOMA2_KEEP_SAMPLE_DATA", "").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    ):
+        return
     # Cleanup code to delete the directory
     if SAMPLE_DATA_DEFAULT_LOCAL_DIR.exists() and SAMPLE_DATA_DEFAULT_LOCAL_DIR.is_dir():
         shutil.rmtree(SAMPLE_DATA_DEFAULT_LOCAL_DIR)

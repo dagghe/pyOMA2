@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+### Fixed
+
+- The session-scoped test fixture `cleanup_sample_data_dir` no longer unconditionally
+  deletes the cached sample data (`SAMPLE_DATA_DEFAULT_LOCAL_DIR`) after every test
+  session. Set `PYOMA2_KEEP_SAMPLE_DATA` to a truthy value ("1", "true", "yes", "on")
+  to keep the cache and avoid re-downloading the sample data, supporting offline and
+  pre-cached workflows. The default behavior (delete on teardown) is unchanged.
+
 ## [1.4.1] - 2026-06-30
 
 ### Fixed
