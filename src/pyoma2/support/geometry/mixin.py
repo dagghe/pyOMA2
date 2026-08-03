@@ -380,7 +380,8 @@ class GeometryMixin:
         return fig, ax
 
     # PLOT GEO2 - PyVista plotter
-    # PLOT GEO2 - PyVista plotter
+
+    ## Modified: Juan C. Pantoja, Uminho, AUG-26
     def plot_geo2(
         self,
         *,
@@ -389,12 +390,18 @@ class GeometryMixin:
         show_points: bool = True,
         show_lines: bool = True,
         show_surf: bool = True,
+        show_bg_nodes: bool = True,
+        show_bg_lines: bool = True,
+        show_bg_surf: bool = True,
         points_sett: Optional[dict] = None,
         lines_sett: Optional[dict] = None,
         surf_sett: Optional[dict] = None,
+        bg_nodes_sett: Optional[dict] = None,
+        bg_lines_sett: Optional[dict] = None,
+        bg_surf_sett: Optional[dict] = None,
         background: bool = True,
         notebook: bool = False,
-    ) -> pv.Plotter:
+        ) -> pv.Plotter:
         """
         Plots the second geometry setup (geo2) using PyVista for 3D visualization.
 
@@ -414,12 +421,24 @@ class GeometryMixin:
             Whether to plot lines connecting sensors. Default is True.
         show_surf : bool, optional
             Whether to plot surfaces connecting sensors. Default is True.
+        show_bg_nodes : bool, optional
+            Whether to plot background nodes. Default is True.
+        show_bg_lines : bool, optional
+            Whether to plot background lines. Default is True.
+        show_bg_surf : bool, optional
+            Whether to plot background surfaces. Default is True.
         points_sett : dict or None, optional
             Settings for the points' appearance; falls back to defaults if None.
         lines_sett : dict or None, optional
             Settings for the lines' appearance; falls back to defaults if None.
         surf_sett : dict or None, optional
             Settings for the surfaces' appearance; falls back to defaults if None.
+        bg_nodes_sett : dict or None, optional
+            Settings for the background nodes' appearance; falls back to defaults if None.
+        bg_lines_sett : dict or None, optional
+            Settings for the background lines' appearance; falls back to defaults if None.
+        bg_surf_sett : dict or None, optional
+            Settings for the background surfaces' appearance; falls back to defaults if None.
         background : bool, optional
             Whether to use a background Qt plotter if creating new. Default is True.
         notebook : bool, optional
@@ -442,6 +461,7 @@ class GeometryMixin:
             self.geo2
         )
 
+        ## Modified: Juan C. Pantoja, Uminho, AUG-26
         pl = Plotter.plot_geo(
             scaleF=scaleF,
             col_sens=col_sens,
@@ -451,6 +471,12 @@ class GeometryMixin:
             lines_sett=lines_sett,
             show_surf=show_surf,
             surf_sett=surf_sett,
+            show_bg_nodes=show_bg_nodes,
+            show_bg_lines=show_bg_lines,
+            show_bg_surf=show_bg_surf,
+            bg_nodes_sett=bg_nodes_sett,
+            bg_lines_sett=bg_lines_sett,
+            bg_surf_sett=bg_surf_sett,
             pl=None,
             background=background,
             notebook=notebook,
@@ -598,21 +624,30 @@ class GeometryMixin:
         return fig, ax
 
     # PLOT MODI - PyVista plotter
+    ## Modified by Juan C. Pantoja, Uminho, AUG-26
     def plot_mode_geo2(
-        self,
-        algo_res: BaseResult,
-        *,
-        mode_nr: int = 1,
-        scaleF: float = 1.0,
-        show_lines: bool = True,
-        show_surf: bool = True,
-        def_sett: Optional[dict] = None,
-        undef_sett: Optional[dict] = None,
-        background: bool = True,
-        notebook: bool = False,
+            self,
+            algo_res: BaseResult,
+            *,
+            mode_nr: int = 1,
+            scaleF: float = 1.0,
+            show_lines: bool = True,
+            show_surf: bool = True,
+            # Background parameters added
+            show_bg_nodes: bool = True,
+            show_bg_lines: bool = True,
+            show_bg_surf: bool = True,
+            bg_nodes_sett: Optional[dict] = None,
+            bg_lines_sett: Optional[dict] = None,
+            bg_surf_sett: Optional[dict] = None,
+            def_sett: Optional[dict] = None,
+            undef_sett: Optional[dict] = None,
+            background: bool = True,
+            notebook: bool = False,
     ) -> pv.Plotter:
         """
-        Plots the mode shapes for the second geometry setup (geo2) using PyVista.
+        Plots the mode shapes for the second geometry setup (geo2) using PyVista,
+        including optional background nodes, lines, and surfaces.
 
         This method creates an interactive 3D plot of a single mode shape (with undeformed
         geometry underneath) for the second geometry setup. You can toggle connection lines
@@ -630,6 +665,18 @@ class GeometryMixin:
             Whether to render connection lines on the mode shape. Default is True.
         show_surf : bool, optional
             Whether to render surface faces on the mode shape. Default is True.
+        show_bg_nodes : bool, optional
+            Whether to render background nodes on the mode shape. Default is True.
+        show_bg_lines : bool, optional
+            Whether to render background lines on the mode shape. Default is True.
+        show_bg_surf : bool, optional
+            Whether to render background surfaces on the mode shape. Default is True.
+        bg_nodes_sett : dict or None, optional
+            Plot settings for background nodes; falls back to defaults if None.
+        bg_lines_sett : dict or None, optional
+            Plot settings for background lines; falls back to defaults if None.
+        bg_surf_sett : dict or None, optional
+            Plot settings for background surfaces; falls back to defaults if None.
         def_sett : dict or None, optional
             Plot settings for the deformed shape; falls back to defaults if None.
         undef_sett : dict or None, optional
@@ -648,7 +695,10 @@ class GeometryMixin:
         ------
         ValueError
             If `geo2` is not defined or if `algo_res.Fn` is None.
+
         """
+
+
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
         if algo_res.Fn is None:
@@ -658,11 +708,18 @@ class GeometryMixin:
             self.geo2, algo_res
         )
 
+        # Forward background parameters to Plotter.plot_mode
         pl = Plotter.plot_mode(
             mode_nr=mode_nr,
             scaleF=scaleF,
             show_lines=show_lines,
             show_surf=show_surf,
+            show_bg_nodes=show_bg_nodes,
+            show_bg_lines=show_bg_lines,
+            show_bg_surf=show_bg_surf,
+            bg_nodes_sett=bg_nodes_sett,
+            bg_lines_sett=bg_lines_sett,
+            bg_surf_sett=bg_surf_sett,
             def_sett=def_sett,
             undef_sett=undef_sett,
             pl=None,
@@ -725,20 +782,30 @@ class GeometryMixin:
         return fig, ax
 
     # PLOT MODI - PyVista plotter
+
+    ## Modified by Juan C. Pantoja, Uminho, AUG-26
     def anim_mode_geo2(
-        self,
-        algo_res: BaseResult,
-        *,
-        mode_nr: int = 1,
-        scaleF: float = 1.0,
-        show_lines: bool = True,
-        show_surf: bool = True,
-        def_sett: Optional[dict] = None,
-        save_gif: bool = False,
-        pl: Optional[pv.Plotter] = None,
+            self,
+            algo_res: BaseResult,
+            *,
+            mode_nr: int = 1,
+            scaleF: float = 1.0,
+            show_lines: bool = True,
+            show_surf: bool = True,
+            # Parámetros para la geometría de fondo
+            show_bg_nodes: bool = True,
+            show_bg_lines: bool = True,
+            show_bg_surf: bool = True,
+            bg_nodes_sett: Optional[dict] = None,
+            bg_lines_sett: Optional[dict] = None,
+            bg_surf_sett: Optional[dict] = None,
+            def_sett: Optional[dict] = None,
+            save_gif: bool = False,
+            pl: Optional[pv.Plotter] = None,
     ) -> Union[pv.Plotter, str]:
         """
-        Creates an animation of the mode shape for the second geometry setup (geo2).
+        Creates an animation of the mode shape for the second geometry setup (geo2),
+        including optional background nodes, lines, and surfaces.
 
         This wraps PvGeoPlotter.animate_mode, letting you animate a single mode
         (with optional GIF export) on geo2.
@@ -755,6 +822,18 @@ class GeometryMixin:
             Whether to render connection lines during the animation. Default is True.
         show_surf : bool, optional
             Whether to render surface faces during the animation. Default is True.
+        show_bg_nodes : bool, optional
+            Whether to render background nodes during the animation. Default is True.
+        show_bg_lines : bool, optional
+            Whether to render background lines during the animation. Default is True.
+        show_bg_surf : bool, optional
+            Whether to render background surfaces during the animation. Default is True.
+        bg_nodes_sett : dict or None, optional
+            Plot settings for background nodes; falls back to defaults if None.
+        bg_lines_sett : dict or None, optional
+            Plot settings for background lines; falls back to defaults if None.
+        bg_surf_sett : dict or None, optional
+            Plot settings for background surfaces; falls back to defaults if None.
         def_sett : dict or None, optional
             Plot settings for animation frames; falls back to defaults if None.
         save_gif : bool, optional
@@ -772,6 +851,7 @@ class GeometryMixin:
         ValueError
             If `geo2` is not defined or if `algo_res.Fn` is None.
         """
+
         if self.geo2 is None:
             raise ValueError("geo2 is not defined. Call def_geo2 first.")
         if algo_res.Fn is None:
@@ -786,6 +866,12 @@ class GeometryMixin:
             scaleF=scaleF,
             show_lines=show_lines,
             show_surf=show_surf,
+            show_bg_nodes=show_bg_nodes,
+            show_bg_lines=show_bg_lines,
+            show_bg_surf=show_bg_surf,
+            bg_nodes_sett=bg_nodes_sett,
+            bg_lines_sett=bg_lines_sett,
+            bg_surf_sett=bg_surf_sett,
             def_sett=def_sett,
             save_gif=save_gif,
             pl=pl,

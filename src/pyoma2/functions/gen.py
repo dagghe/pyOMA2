@@ -375,7 +375,11 @@ def dfphi_map_func(phi, sens_names, sens_map, cstrn=None) -> pd.DataFrame:
         mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
 
     # mode shape mapped to points
-    df_phi_map = sens_map.replace(mapping).astype(float)
+
+    ## Modified: Juan C. Pantoja, Uminho, AUG-26
+    with pd.option_context("future.no_silent_downcasting", True):
+        df_phi_map = sens_map.replace(mapping).astype(float)
+
     return df_phi_map
 
 
@@ -726,7 +730,10 @@ def check_on_geo2(
     constraints = file_dict["constraints"].fillna(0)
 
     if fill_na == "zero":
-        df_map = df_map.fillna(0.0)
+
+        ## Modified Juan C. Pantoja, Uminho, AUG-26
+        with pd.option_context("future.no_silent_downcasting", True):
+            df_map = df_map.fillna(0.0)
     # elif fill_na == "interp":
     #     df_map = df_map.fillna("interp")
 
