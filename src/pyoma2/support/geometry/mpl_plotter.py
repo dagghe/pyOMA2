@@ -189,7 +189,7 @@ class Geo1MplPlotter(MplPlotter[Geometry1]):
 
         fig, ax = self._create_figure()
         # Set title
-        ax.set_title(f"Mode nr. {mode_nr}, $f_n$={data.fn:.3f}Hz")
+        ax.set_title(f"Mode nr. {mode_nr}, $f_n$: {data.fn:.3f} Hz, $T_n$: {1/data.fn:.3f} s")
 
         # plot sensors' nodes
         plt_nodes(ax, data.sens_coord, color="red")
@@ -274,6 +274,9 @@ class Geo2MplPlotter(MplPlotter[Geometry2]):
         ch_names = self.geo.sens_map.to_numpy()
         s_sign = self.geo.sens_sign.to_numpy().astype(float)
 
+        # Modified by Juan C. Pantoja, Uminho, AUG-26
+        sens_names = self.geo.sens_names
+
         zero2 = np.zeros((s_sign.shape[0], 2))
         s_sign[s_sign == 0] = np.nan
         s_signs = [
@@ -283,7 +286,9 @@ class Geo2MplPlotter(MplPlotter[Geometry2]):
         ]
 
         for i, s_sign_direction in enumerate(s_signs):
-            valid_indices = ch_names[:, i] != 0
+
+            # Modified by Juan C. Pantoja, Uminho, AUG-26
+            valid_indices = np.isin(ch_names[:, i], sens_names)
             if np.any(valid_indices):
                 plt_quiver(
                     ax,
@@ -363,7 +368,7 @@ class Geo2MplPlotter(MplPlotter[Geometry2]):
 
         # create fig and ax
         fig, ax = self._create_figure()
-        ax.set_title(f"Mode nr. {mode_nr}, $f_n$={data.fn:.3f}Hz")
+        ax.set_title(f"Mode nr. {mode_nr}, $f_n$: {data.fn:.3f} Hz, $T_n$: {1/data.fn:.3f} s")
 
         self._plot_background(ax, "gray", "gray", "gray")
 
