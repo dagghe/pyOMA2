@@ -28,7 +28,7 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class SingleSetup(BaseSetup, GeometryMixin):
+class SingleSetup(BaseSetup[np.ndarray], GeometryMixin):
     """
     Class for managing and processing single setup data for Operational Modal Analysis.
 
@@ -38,14 +38,14 @@ class SingleSetup(BaseSetup, GeometryMixin):
 
     Parameters
     ----------
-    data : Iterable[float]
-        The data to be processed, expected as an iterable of floats.
+    data : np.ndarray
+        The data to be processed, expected as a 2D array of shape (N, M).
     fs : float
         The sampling frequency of the data.
 
     Attributes
     ----------
-    data : Iterable[float]
+    data : np.ndarray
         Stores the input data.
     fs : float
         Stores the sampling frequency.
@@ -63,7 +63,9 @@ class SingleSetup(BaseSetup, GeometryMixin):
     Nch: int
     Ndat: int
     T: float
-    algorithms: typing.Dict[str, BaseAlgorithm]
+    algorithms: typing.Dict[
+        str, "BaseAlgorithm[typing.Any, typing.Any, typing.Any, np.ndarray]"
+    ]
 
     def __init__(self, data: np.ndarray, fs: float):
         """

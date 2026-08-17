@@ -15,9 +15,10 @@ import typing
 import numpy as np
 from scipy import signal, stats
 from tqdm import trange
+from typing_extensions import TypeVar
 
 from pyoma2._optional import require
-from pyoma2.algorithms.base import BaseAlgorithm
+from pyoma2.algorithms.base import BaseAlgorithm, MultiSetupData, SingleSetupData
 from pyoma2.algorithms.data.mpe_params import SSIMPEParams
 from pyoma2.algorithms.data.result import ClusteringResult, SSIResult
 from pyoma2.algorithms.data.run_params import Clustering, FDDRunParams, SSIRunParams
@@ -25,31 +26,21 @@ from pyoma2.functions import clus, fdd, gen, ssi
 
 logger = logging.getLogger(__name__)
 
+T_SSI_Data = TypeVar(
+    "T_SSI_Data", SingleSetupData, MultiSetupData, default=SingleSetupData
+)
+
 
 # =============================================================================
-# SINGLE SETUP
+# SHARED IMPLEMENTATION (generic in data)
 # =============================================================================
-# (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[float]]):
+class _SSIBase(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, T_SSI_Data]):
     """
-    Perform Stochastic Subspace Identification (SSI) on single-setup measurement data.
+    Shared SSI implementation parameterized by setup data shape.
 
-    This class implements the SSI-ref algorithm to identify system modal
-    parameters (natural frequencies, damping ratios, mode shapes, etc.) from a single
-    setup experiment. It estimates the state-space matrices, constructs Hankel matrices,
-    computes poles, applies hard and soft criteria, and optionally estimates the power
-    spectral density.
-
-    Attributes
-    ----------
-    RunParamCls : Type[SSIRunParams]
-        Class for algorithm run parameters.
-    MPEParamCls : Type[SSIMPEParams]
-        Class for modal parameter extraction parameters.
-    ResultCls : Type[SSIResult]
-        Class for storing algorithm results.
-    method : Literal["dat", "cov", "cov_R", "IOcov"]
-        Default SSI method. Set to 'cov' by default.
+    Public single-setup ``SSI`` locks data to ``SingleSetupData``; ``SSI_MS`` uses
+    ``MultiSetupData``. Keeping the public single-setup class non-generic in data
+    prevents context-sensitive inference from treating ``SSI()`` as multi-setup.
     """
 
     RunParamCls = SSIRunParams
@@ -1339,10 +1330,38 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
 
 
 # =============================================================================
+# SINGLE SETUP
+# =============================================================================
+class SSI(_SSIBase[SingleSetupData]):
+    """
+    Perform Stochastic Subspace Identification (SSI) on single-setup measurement data.
+
+    This class implements the SSI-ref algorithm to identify system modal
+    parameters (natural frequencies, damping ratios, mode shapes, etc.) from a single
+    setup experiment. It estimates the state-space matrices, constructs Hankel matrices,
+    computes poles, applies hard and soft criteria, and optionally estimates the power
+    spectral density.
+
+    Attributes
+    ----------
+    RunParamCls : Type[SSIRunParams]
+        Class for algorithm run parameters.
+    MPEParamCls : Type[SSIMPEParams]
+        Class for modal parameter extraction parameters.
+    ResultCls : Type[SSIResult]
+        Class for storing algorithm results.
+    method : Literal["dat", "cov", "cov_R", "IOcov"]
+        Default SSI method. Set to 'cov' by default.
+    """
+
+    method: typing.Literal["dat", "cov", "cov_R", "IOcov"] = "cov"
+
+
+# =============================================================================
 # MULTISETUP
 # =============================================================================
 # (REF) STOCHASTIC SUBSPACE IDENTIFICATION
-class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
+class SSI_MS(_SSIBase[MultiSetupData]):
     """
     Perform Stochastic Subspace Identification (SSI) on multi-setup measurement data.
 
@@ -1350,7 +1369,9 @@ class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
     setups (e.g., moving and reference sensors). Builds combined observability, state,
     and output matrices across setups and identifies global poles.
 
-    Inherits methods and attributes from SSI, overriding run() to accommodate multi-setup data.
+    Typed as a sibling of ``SSI`` (via ``_SSIBase[MultiSetupData]``) so
+    ``SSI()`` cannot be context-inferred as multi-setup. At runtime it remains
+    a subclass of ``SSI``.
 
     Attributes
     ----------
@@ -1520,3 +1541,9 @@ class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
             "the synthetic spectrum requires the state-space matrix 'G', which is not "
             "computed in the multi-setup identification."
         )
+
+
+# Type checkers keep SSI_MS as _SSIBase[MultiSetupData] so ``SSI()`` cannot
+# be inferred as multi-setup. Runtime public inheritance is restored here.
+if not typing.TYPE_CHECKING:
+    SSI_MS.__bases__ = (SSI,)

@@ -11,20 +11,22 @@ from __future__ import annotations
 import abc
 import typing
 
-from pydantic import BaseModel
+import numpy as np
+from typing_extensions import TypeVar
 
 from pyoma2.algorithms.data.mpe_params import BaseMPEParams
 from pyoma2.algorithms.data.result import BaseResult
 from pyoma2.algorithms.data.run_params import BaseRunParams
 
-if typing.TYPE_CHECKING:
-    pass
+# Data shapes used by setups / algorithms (single-setup vs multi-setup PreGER).
+SingleSetupData = np.ndarray
+MultiSetupData = list[dict[str, np.ndarray]]
 
-
-T_RunParams = typing.TypeVar("T_RunParams", bound=BaseRunParams)
-T_MPEParams = typing.TypeVar("T_MPEParams", bound=BaseMPEParams)
-T_Result = typing.TypeVar("T_Result", bound=BaseResult)
-T_Data = typing.TypeVar("T_Data", bound=typing.Iterable)
+T_RunParams = TypeVar("T_RunParams", bound=BaseRunParams, default=BaseRunParams)
+T_MPEParams = TypeVar("T_MPEParams", bound=BaseMPEParams, default=BaseMPEParams)
+T_Result = TypeVar("T_Result", bound=BaseResult, default=BaseResult)
+# Constrained so single-setup (ndarray) and multi-setup PreGER data stay distinct.
+T_Data = TypeVar("T_Data", SingleSetupData, MultiSetupData, default=SingleSetupData)
 
 
 class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], abc.ABC):
@@ -47,7 +49,9 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], 
     name : Optional[str]
         The name of the algorithm, used for identification and logging.
     RunParamCls : Type[T_RunParams]
-        The class used for instantiating run parameters. Must be a subclass of BaseModel.
+        The class used for instantiating run parameters. Must be a subclass of BaseRunParams.
+    MPEParamCls : Type[T_MPEParams]
+        The class used for instantiating mpe parameters. Must be a subclass of BaseMPEParams.
     ResultCls : Type[T_Result]
         The class used for encapsulating the algorithm's results. Must be a subclass
         of BaseResult.
@@ -68,10 +72,8 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], 
         Assigns the result to the algorithm after execution.
     _set_data(self, data, fs)
         Sets the input data and sampling frequency for the algorithm.
-    __class_getitem__(cls, item)
-        Evaluates the types of `RunParamCls` and `ResultCls` at runtime.
     __init_subclass__(cls, **kwargs)
-        Ensures that subclasses define `RunParamCls` and `ResultCls`.
+        Ensures that subclasses define `RunParamCls`, `MPEParamCls` and `ResultCls`.
 
     Warning
     -------
@@ -83,9 +85,14 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], 
     run_params: typing.Optional[T_RunParams] = None
     mpe_params: typing.Optional[T_MPEParams] = None
     name: typing.Optional[str] = None
+    # Typed against the class TypeVars so ``FDD.RunParamCls(...)`` is
+    # ``FDDRunParams`` (not ``BaseRunParams``) and ``ResultCls(...)`` is
+    # ``T_Result``. Declared as instance attributes: ClassVar cannot carry
+    # TypeVars, and subclass ``ClassVar`` overrides are a mypy error.
+    # Concrete subclasses assign plain class attributes (``RunParamCls = ...``).
     RunParamCls: typing.Type[T_RunParams]
-    ResultCls: typing.Type[T_Result]
     MPEParamCls: typing.Type[T_MPEParams]
+    ResultCls: typing.Type[T_Result]
 
     # additional attributes set by the Setup Class
     fs: typing.Optional[float]  # sampling frequency
@@ -321,60 +328,29 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], 
         self._invalidate_data_state()
         return self
 
-    def __class_getitem__(cls, item):
-        """
-        Class method to evaluate the types of `RunParamCls` and `ResultCls` at runtime.
-
-        This method dynamically sets the `RunParamCls` and `ResultCls` class attributes based on the
-        provided `item` types.
-
-        Parameters
-        ----------
-        item : tuple
-            A tuple containing the types for `RunParamCls` and `ResultCls`.
-
-        Returns
-        -------
-        cls : BaseAlgorithm
-            The class with evaluated `RunParamCls` and `ResultCls`.
-
-        Note
-        -----
-        This class method is a workaround to dynamically determine the types of `RunParamCls` and `ResultCls`
-        at runtime. It is particularly useful for type checking and ensuring consistency across different
-        subclasses of `BaseAlgorithm`.
-        """
-        # tricky way to evaluate at runtime the type of the RunParamCls and ResultCls
-        if not issubclass(cls, BaseAlgorithm):
-            # avoid evaluating the types for the BaseAlgorithm class itself
-            cls.RunParamCls = item[0]
-            cls.MPEParamCls = item[1]
-            cls.ResultCls = item[2]
-        return cls
-
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
         """
         Initialize subclass of `BaseAlgorithm`.
 
-        This method ensures that subclasses of `BaseAlgorithm` define `RunParamCls`,`MPEParamCls` and
+        This method ensures that subclasses of `BaseAlgorithm` define `RunParamCls`, `MPEParamCls` and
         `ResultCls`.
 
         Raises
         ------
         ValueError
-            If `RunParamCls`, `MPEParamCls` or `ResultCls` are not defined or not subclasses of `BaseModel`
-            and `BaseResult`, respectively.
+            If `RunParamCls`, `MPEParamCls` or `ResultCls` are not defined or not subclasses of
+            `BaseRunParams`, `BaseMPEParams` and `BaseResult`, respectively.
 
         Note
         -----
         This method is automatically called when a subclass of `BaseAlgorithm` is defined. It checks that
-        `RunParamCls` and `ResultCls` are correctly set in the subclass. This is essential for the proper
-        functioning of the algorithm's infrastructure.
+        `RunParamCls`, `MPEParamCls` and `ResultCls` are correctly set in the subclass. This is essential
+        for the proper functioning of the algorithm's infrastructure.
         """
         super().__init_subclass__(**kwargs)
 
         if not getattr(cls, "RunParamCls", None) or not issubclass(
-            cls.RunParamCls, BaseModel
+            cls.RunParamCls, BaseRunParams
         ):
             raise ValueError(
                 f"{cls.__name__}: RunParamCls must be defined in subclasses of BaseAlgorithm\n\n"

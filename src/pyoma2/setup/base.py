@@ -14,7 +14,9 @@ import typing
 
 import numpy as np
 from scipy.signal import decimate, detrend
+from typing_extensions import TypeVar
 
+from pyoma2.algorithms.base import MultiSetupData, SingleSetupData
 from pyoma2.functions.gen import (
     filter_data,
 )
@@ -25,8 +27,12 @@ if typing.TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Must match BaseAlgorithm's data TypeVar constraints so T_Data is a valid
+# type argument to BaseAlgorithm[..., T_Data] on add_algorithms.
+T_Data = TypeVar("T_Data", SingleSetupData, MultiSetupData, default=SingleSetupData)
 
-class BaseSetup:
+
+class BaseSetup(typing.Generic[T_Data]):
     """
     Base class for operational modal analysis (OMA) setups.
 
@@ -39,8 +45,9 @@ class BaseSetup:
     ----------
     algorithms : dict[str, BaseAlgorithm]
         Dictionary storing algorithms added to the setup, keyed by their names.
-    data : np.ndarray, optional
-        Time series data array, typically representing the system's output.
+    data : T_Data
+        Time series data for the setup. Single-setup uses a 2D ndarray; multi-setup
+        PreGER uses a list of dicts with reference/moving sensor blocks.
     fs : float, optional
         Sampling frequency of the data.
 
@@ -51,8 +58,10 @@ class BaseSetup:
     Specific functionalities are provided through its subclasses.
     """
 
-    algorithms: typing.Dict[str, BaseAlgorithm]
-    data: np.ndarray  # TODO use generic typing
+    algorithms: typing.Dict[
+        str, BaseAlgorithm[typing.Any, typing.Any, typing.Any, T_Data]
+    ]
+    data: T_Data
     fs: float  # sampling frequency
 
     def rollback(self) -> None:
@@ -65,7 +74,9 @@ class BaseSetup:
         raise NotImplementedError("Rollback method must be implemented by subclasses.")
 
     # add algorithm (method) to the set.
-    def add_algorithms(self, *algorithms: BaseAlgorithm) -> None:
+    def add_algorithms(
+        self, *algorithms: BaseAlgorithm[typing.Any, typing.Any, typing.Any, T_Data]
+    ) -> None:
         """
         Adds algorithms to the setup and configures them with data and sampling frequency.
 
@@ -73,6 +84,7 @@ class BaseSetup:
         ----------
         algorithms : variable number of BaseAlgorithm
             One or more algorithm instances to be added to the setup.
+            Each algorithm's data type parameter must match this setup's data type.
 
         Notes
         -----
@@ -187,7 +199,9 @@ class BaseSetup:
         logger.info("Getting mpe modal parameters from plot... %s", name)
         self[name].mpe_from_plot(*args, **kwargs)
 
-    def __getitem__(self, name: str) -> BaseAlgorithm:
+    def __getitem__(
+        self, name: str
+    ) -> BaseAlgorithm[typing.Any, typing.Any, typing.Any, T_Data]:
         """
         Retrieves an algorithm from the setup by its name.
 
@@ -212,8 +226,12 @@ class BaseSetup:
             raise KeyError(f"No algorithm named '{name}' exists.")
 
     def get(
-        self, name: str, default: typing.Optional[BaseAlgorithm] = None
-    ) -> typing.Optional[BaseAlgorithm]:
+        self,
+        name: str,
+        default: typing.Optional[
+            BaseAlgorithm[typing.Any, typing.Any, typing.Any, T_Data]
+        ] = None,
+    ) -> typing.Optional[BaseAlgorithm[typing.Any, typing.Any, typing.Any, T_Data]]:
         """
         Retrieves an algorithm from the setup by its name, returning a default value if not found.
 

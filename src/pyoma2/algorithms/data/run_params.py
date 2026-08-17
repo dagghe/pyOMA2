@@ -99,28 +99,15 @@ class FDDRunParams(BaseRunParams):
     pov: float = 0.5
 
 
-class EFDDRunParams(BaseRunParams):
+class EFDDRunParams(FDDRunParams):
     """
     Run parameters for the Enhanced Frequency Domain Decomposition (EFDD) method.
 
-    Attributes
-    ----------
-    nxseg : int
-        Number of points per segment used in spectral density estimation.
-        Default: 1024.
-    method_SD : {'per', 'cor'}
-        Method for spectral density estimation:
-        - 'per': Periodogram
-        - 'cor': Correlation-based
-        Default: 'per'.
-    pov : float
-        Percentage of overlap between segments when `method_SD='per'`.
-        Must be between 0.0 and 1.0. Default: 0.5.
+    Same spectral-density settings as :class:`FDDRunParams` (``nxseg``,
+    ``method_SD``, ``pov``). Subclassing ``FDDRunParams`` keeps the FDD-family
+    run-parameter bound tight so ``FDD`` rejects unrelated models such as
+    ``SSIRunParams``.
     """
-
-    nxseg: int = 1024
-    method_SD: Literal["per", "cor"] = "per"
-    pov: float = 0.5
 
 
 class pLSCFRunParams(BaseRunParams):

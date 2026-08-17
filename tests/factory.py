@@ -52,7 +52,7 @@ class FakeResult(BaseResult):
     result2: str = "test"
 
 
-class FakeAlgorithm(BaseAlgorithm[FakeRunParams, FakeResult, typing.Iterable[float]]):
+class FakeAlgorithm(BaseAlgorithm[FakeRunParams, FakeMPEParams, FakeResult, np.ndarray]):
     """FakeAlgorithm is a subclass of BaseAlgorithm."""
 
     RunParamCls = FakeRunParams

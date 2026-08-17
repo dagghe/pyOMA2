@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+### Changed
+
+- Algorithm and setup hierarchies now use real ``typing.Generic`` contracts (run params,
+  mpe params, result, and data) instead of the no-op ``BaseAlgorithm.__class_getitem__``.
+  Single-setup algorithms are locked to ``ndarray`` data; multi-setup PreGER algorithms
+  use ``list[dict[str, ndarray]]``. Public ``FDD`` is fully specialized (generic
+  TypeVars live on private ``_FDDBase``) so ``FDD[EFDDRunParams, ...]`` is rejected.
+  ``EFDD`` / ``FDD_MS`` are static siblings of ``FDD`` (runtime subclasses):
+  ``EFDD.mpe`` does not accept ``FDD``'s ``DF`` keyword. Shared operations
+  (``run``, ``plot_CMIF``) are :class:`FDDAlgorithm` (``nSv`` is
+  ``int | Literal["all"]``). ``EFDDRunParams``
+  subclasses ``FDDRunParams``. Factory attributes
+  (``RunParamCls`` / ``MPEParamCls`` / ``ResultCls``) and ``run()`` are typed against
+  the class TypeVars. ``BaseSetup`` is generic in its data type so ``add_algorithms``
+  rejects mismatched algorithm/setup pairs under type checkers. Runtime public
+  inheritance is unchanged (``FDD_MS`` remains a subclass of ``FDD``, etc.). Typing
+  fixtures live under ``tests/typing_fixtures/`` and are checked by
+  ``tests/unit/test_typing_generics.py`` (requires ``mypy>=1.11.2``).
+
 ### Fixed
 
 - The session-scoped test fixture `cleanup_sample_data_dir` no longer unconditionally
@@ -34,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SSI.plot_stab(spectrum=True)` reuses the last `est_spectrum` configuration after
   data invalidation, instead of falling back to default `nxseg=1024` which can fail
   on a shorter post-decimation record.
+- ``BaseAlgorithm.__init_subclass__`` now validates ``RunParamCls`` against
+  ``BaseRunParams`` (not bare ``BaseModel``).
 
 ## [1.4.1] - 2026-06-30
 

@@ -255,7 +255,9 @@ class MultiSetup_PoSER(GeometryMixin):
 # =============================================================================
 
 
-class MultiSetup_PreGER(BaseSetup, GeometryMixin):
+class MultiSetup_PreGER(
+    BaseSetup[typing.List[typing.Dict[str, np.ndarray]]], GeometryMixin
+):
     """
     Class for conducting Operational Modal Analysis on multi-setup experiments using the
     Pre-Global Estimation Re-scaling (PreGER) approach.
@@ -273,8 +275,8 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         Indices of reference sensors for each dataset, as a list of lists.
     datasets : list[npt.NDArray[np.float64]]
         The original list of datasets, each represented as a NumPy array.
-    data : npt.NDArray[np.float64]
-        Processed data after applying the PreGER method, ready for analysis.
+    data : list[dict[str, np.ndarray]]
+        Processed multi-setup data after applying the PreGER method (ref/mov blocks per setup).
     algorithms : dict[str, BaseAlgorithm]
         Dictionary storing algorithms added to the setup, keyed by their names.
     Nchs : list[int]
@@ -295,7 +297,10 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
     dt: float
     Nsetup: int
     data: typing.List[typing.Dict[str, np.ndarray]]
-    algorithms: typing.Dict[str, BaseAlgorithm]
+    algorithms: typing.Dict[
+        str,
+        "BaseAlgorithm[typing.Any, typing.Any, typing.Any, typing.List[typing.Dict[str, np.ndarray]]]",
+    ]
     Nchs: typing.List[int]
     Ndats: typing.List[int]
     Ts: typing.List[float]
@@ -346,14 +351,21 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         self.datasets = datasets
         self.dt = 1 / fs  # sampling interval
         self.Nsetup = len(ref_ind)
-        self.data = pre_multisetup(datasets, ref_ind)
+
+        # Pre-process the data so to be multi-setup compatible
+        Y = pre_multisetup(datasets, ref_ind)
+
+        self.data = Y
         Nchs = []
         Ndats = []
         Ts = []
-        for data in datasets:
-            Nchs.append(data.shape[1])
-            Ndats.append(data.shape[0])
-            Ts.append(self.dt * data.shape[0])
+        for data in datasets:  # loop through each dataset in the dataset list
+            Nch = data.shape[1]  # number of channels
+            Ndat = data.shape[0]  # number of data points
+            T = self.dt * Ndat  # Period of acquisition [sec]
+            Nchs.append(Nch)
+            Ndats.append(Ndat)
+            Ts.append(T)
         self.Nchs = Nchs
         self.Ndats = Ndats
         self.Ts = Ts

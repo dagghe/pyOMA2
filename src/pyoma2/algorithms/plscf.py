@@ -11,22 +11,28 @@ from __future__ import annotations
 import logging
 import typing
 
+from typing_extensions import TypeVar
+
 from pyoma2._optional import require
 from pyoma2.algorithms.data.mpe_params import pLSCFMPEParams
 from pyoma2.algorithms.data.result import pLSCFResult
 from pyoma2.algorithms.data.run_params import pLSCFRunParams
 from pyoma2.functions import fdd, gen, plscf
 
-from .base import BaseAlgorithm
+from .base import BaseAlgorithm, MultiSetupData, SingleSetupData
 
 logger = logging.getLogger(__name__)
+
+T_pLSCF_Data = TypeVar(
+    "T_pLSCF_Data", SingleSetupData, MultiSetupData, default=SingleSetupData
+)
 
 
 # =============================================================================
 # SINGLE SETUP
 # =============================================================================
-class pLSCF(
-    BaseAlgorithm[pLSCFRunParams, pLSCFMPEParams, pLSCFResult, typing.Iterable[float]]
+class _pLSCFBase(
+    BaseAlgorithm[pLSCFRunParams, pLSCFMPEParams, pLSCFResult, T_pLSCF_Data]
 ):
     """
     Implementation of the poly-reference Least Square Complex Frequency (pLSCF) algorithm for modal analysis.
@@ -39,7 +45,7 @@ class pLSCF(
     ----------
     BaseAlgorithm : type
         Inherits from the BaseAlgorithm class with specified type parameters for pLSCFRunParams, pLSCFResult,
-        and Iterable[float].
+        and the setup data type.
 
     Attributes
     ----------
@@ -334,19 +340,36 @@ class pLSCF(
 
 
 # =============================================================================
+# SINGLE SETUP
+# =============================================================================
+class pLSCF(_pLSCFBase[SingleSetupData]):
+    """
+    Implementation of the poly-reference Least Square Complex Frequency (pLSCF) algorithm
+    for single-setup modal analysis.
+    """
+
+    RunParamCls = pLSCFRunParams
+    MPEParamCls = pLSCFMPEParams
+    ResultCls = pLSCFResult
+
+
+# =============================================================================
 # MULTI SETUP
 # =============================================================================
-class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFMPEParams, pLSCFResult, typing.Iterable[dict]]):
+class pLSCF_MS(_pLSCFBase[MultiSetupData]):
     """
     A multi-setup extension of the pLSCF class for the poly-reference Least Square Complex Frequency
     (pLSCF) algorithm.
 
 
+    Typed as a sibling of ``pLSCF`` (via ``_pLSCFBase[MultiSetupData]``) so
+    ``pLSCF()`` cannot be context-inferred as multi-setup. At runtime it
+    remains a subclass of ``pLSCF``.
+
     Parameters
     ----------
     pLSCF : type
-        Inherits from the pLSCF class with specified type parameters for pLSCFRunParams, pLSCFResult, and
-        Iterable[dict].
+        Inherits from the pLSCF class specialized for multi-setup PreGER data.
 
     Attributes
     ----------
@@ -355,10 +378,6 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFMPEParams, pLSCFResult, typing.Iterabl
     ResultCls : pLSCFResult
         Class attribute for results specific to pLSCF algorithm.
     """
-
-    RunParamCls = pLSCFRunParams
-    MPEParamCls = pLSCFMPEParams
-    ResultCls = pLSCFResult
 
     def run(self) -> pLSCFResult:
         """
@@ -448,3 +467,9 @@ class pLSCF_MS(pLSCF[pLSCFRunParams, pLSCFMPEParams, pLSCFResult, typing.Iterabl
             Phi_poles=Phis,
             Lab=Lab,
         )
+
+
+# Type checkers keep pLSCF_MS as _pLSCFBase[MultiSetupData] so ``pLSCF()``
+# cannot be inferred as multi-setup. Runtime public inheritance is restored.
+if not typing.TYPE_CHECKING:
+    pLSCF_MS.__bases__ = (pLSCF,)
