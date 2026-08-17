@@ -281,6 +281,17 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], 
         if not self.result:
             raise ValueError(f"{self.name}:Run algorithm first")
 
+    def _invalidate_data_state(self) -> None:
+        """Clear results and any data-derived caches.
+
+        Called by ``_set_data`` whenever the algorithm is rebound to new input
+        data (preprocessing, rollback, or first attach). Subclasses that cache
+        data-derived state (spectra, Hankel-derived matrices, …) must override
+        this method and clear those attributes after calling
+        ``super()._invalidate_data_state()``.
+        """
+        self.result = None
+
     def _set_data(self, data: T_Data, fs: float) -> "BaseAlgorithm":
         """
         Set the input data and sampling frequency for the algorithm.
@@ -297,14 +308,17 @@ class BaseAlgorithm(typing.Generic[T_RunParams, T_MPEParams, T_Result, T_Data], 
         BaseAlgorithm
             Returns the instance with the set data and sampling frequency.
 
-        Note
+        Notes
         -----
-        This method is typically used by the Setup class to provide the necessary data and sampling
-        frequency to the algorithm before its execution.
+        This method is typically used by the Setup class to provide the
+        necessary data and sampling frequency to the algorithm before its
+        execution. Rebinding data **invalidates** previously computed
+        results and any data-derived caches via ``_invalidate_data_state``.
         """
         self.data = data
         self.fs = fs
         self.dt = 1 / fs
+        self._invalidate_data_state()
         return self
 
     def __class_getitem__(cls, item):

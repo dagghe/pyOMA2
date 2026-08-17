@@ -319,46 +319,41 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         datasets : typing.List[npt.NDArray[np.float64]]
             A list of datasets, each as a NumPy array.
         """
-        self.fs = fs  # sampling frequencies
-        self.ref_ind = ref_ind  # list of (list of) reference indices
-        self.datasets = datasets
+        self.algorithms: typing.Dict[str, BaseAlgorithm] = {}
+        self._store_initial_state(fs=fs, ref_ind=ref_ind, datasets=datasets)
+        self._apply_data_state(fs=fs, ref_ind=ref_ind, datasets=datasets)
 
-        self._initialize_data(fs=fs, ref_ind=ref_ind, datasets=datasets)
-
-    def _initialize_data(
+    def _store_initial_state(
         self,
         fs: float,
         ref_ind: typing.List[typing.List[int]],
         datasets: typing.List[npt.NDArray[np.float64]],
     ) -> None:
-        """
-        Pre process the data and set the initial attributes after copying the data.
-
-        This method is called internally to pre-process the data and set the initial attributes
-        """
-        # Store a copy of the initial data
+        """Snapshot the datasets and sampling frequency used by ``rollback``."""
         self._initial_fs = fs
         self._initial_ref_ind = copy.deepcopy(ref_ind)
         self._initial_datasets = copy.deepcopy(datasets)
 
+    def _apply_data_state(
+        self,
+        fs: float,
+        ref_ind: typing.List[typing.List[int]],
+        datasets: typing.List[npt.NDArray[np.float64]],
+    ) -> None:
+        """Apply the current datasets and sampling frequency to this setup."""
+        self.fs = fs
+        self.ref_ind = ref_ind
+        self.datasets = datasets
         self.dt = 1 / fs  # sampling interval
         self.Nsetup = len(ref_ind)
-
-        # Pre-process the data so to be multi-setup compatible
-        Y = pre_multisetup(datasets, ref_ind)
-
-        self.data = Y
-        self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
+        self.data = pre_multisetup(datasets, ref_ind)
         Nchs = []
         Ndats = []
         Ts = []
-        for data in datasets:  # loop through each dataset in the dataset list
-            Nch = data.shape[1]  # number of channels
-            Ndat = data.shape[0]  # number of data points
-            T = self.dt * Ndat  # Period of acquisition [sec]
-            Nchs.append(Nch)
-            Ndats.append(Ndat)
-            Ts.append(T)
+        for data in datasets:
+            Nchs.append(data.shape[1])
+            Ndats.append(data.shape[0])
+            Ts.append(self.dt * data.shape[0])
         self.Nchs = Nchs
         self.Ndats = Ndats
         self.Ts = Ts
@@ -370,16 +365,18 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         This method reverts the `data` and `fs` attributes to their original values, effectively
         undoing any operations that modify the data, such as filtering, detrending, or decimation.
         It can be used to reset the setup to the state it was in after instantiation.
+        Attached algorithms are preserved and rebound to a fresh copy of the
+        initial snapshot; any results and data-derived caches computed on
+        preprocessed data are invalidated. Live ``datasets`` and ``ref_ind``
+        are independent of the stored snapshot, so later in-place edits
+        cannot poison rollback.
         """
-        self.fs = self._initial_fs
-        self.ref_ind = self._initial_ref_ind
-        self.datasets = self._initial_datasets
-
-        self._initialize_data(
+        self._apply_data_state(
             fs=self._initial_fs,
-            ref_ind=self._initial_ref_ind,
-            datasets=self._initial_datasets,
+            ref_ind=copy.deepcopy(self._initial_ref_ind),
+            datasets=copy.deepcopy(self._initial_datasets),
         )
+        self._apply_data_to_algorithms()
 
     # method to plot the time histories of the data channels.
     def plot_data(
@@ -587,30 +584,28 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         Raises
         ------
         ValueError
-            If the decimation factor 'q' is not greater than 1.
+            If the decimation factor 'q' is not greater than 1, or if
+            ``axis`` is not 0. Time is always stored along axis 0.
 
         Notes
         -----
+        Attached algorithms are rebound to the decimated data and sampling
+        frequency. Previously computed results and data-derived caches are
+        invalidated.
+
         For further information, see `scipy.signal.decimate
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
-        n = kwargs.get("n")
-        ftype = kwargs.get("ftype", "iir")
-        axis = kwargs.get("axis", 0)
-        zero_phase = kwargs.get("zero_phase", True)
-
         newdatasets = []
         Ndats = []
         Ts = []
+        fs = self.fs
+        dt = self.dt
         for data in self.datasets:
-            newdata, _, _, Ndat, T = super()._decimate_data(
+            newdata, fs, dt, Ndat, T = super()._decimate_data(
                 data=data,
                 fs=self.fs,
                 q=q,
-                n=n,
-                ftype=ftype,
-                axis=axis,
-                zero_phase=zero_phase,
                 **kwargs,
             )
             newdatasets.append(newdata)
@@ -618,8 +613,6 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
             Ts.append(T)
 
         Y = pre_multisetup(newdatasets, self.ref_ind)
-        fs = self.fs / q
-        dt = 1 / self.fs
 
         self.datasets = newdatasets
         self.data = Y
@@ -627,6 +620,7 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
         self.dt = dt
         self.Ndats = Ndats
         self.Ts = Ts
+        self._apply_data_to_algorithms()
 
     # method to filter data
     def filter_data(
@@ -655,6 +649,10 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
 
         Notes
         -----
+        Attached algorithms are rebound to the filtered data. Previously
+        computed results and data-derived caches are invalidated. ``datasets``
+        is updated together with ``data``.
+
         For more information, see the scipy documentation for `signal.butter`
         (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
         and `signal.sosfiltfilt`
@@ -672,7 +670,9 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
             newdatasets.append(newdata)
 
         Y = pre_multisetup(newdatasets, self.ref_ind)
+        self.datasets = newdatasets
         self.data = Y
+        self._apply_data_to_algorithms()
 
     # method to detrend data
     def detrend_data(
@@ -704,6 +704,10 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
 
         Notes
         -----
+        Attached algorithms are rebound to the detrended data. Previously
+        computed results and data-derived caches are invalidated. ``datasets``
+        is updated together with ``data``.
+
         For further information, see `scipy.signal.detrend
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
         """
@@ -713,4 +717,6 @@ class MultiSetup_PreGER(BaseSetup, GeometryMixin):
             newdatasets.append(newdata)
 
         Y = pre_multisetup(newdatasets, self.ref_ind)
+        self.datasets = newdatasets
         self.data = Y
+        self._apply_data_to_algorithms()

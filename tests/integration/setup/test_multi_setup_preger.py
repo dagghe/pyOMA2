@@ -1,7 +1,9 @@
-import math
+import numpy as np
+from scipy.signal import decimate, detrend
 
 from pyoma2.algorithms import SSI_MS, pLSCF_MS
-from src.pyoma2.setup import MultiSetup_PreGER
+from pyoma2.functions.gen import filter_data, pre_multisetup
+from pyoma2.setup import MultiSetup_PreGER
 
 
 def test_geo1(ms_preger: MultiSetup_PreGER) -> None:
@@ -30,64 +32,61 @@ def test_geo2(ms_preger: MultiSetup_PreGER) -> None:
     assert ms_preger.geo2 is not None
 
 
+def _assert_preger_data_matches_datasets(ms_preger: MultiSetup_PreGER) -> None:
+    expected = pre_multisetup(ms_preger.datasets, ms_preger.ref_ind)
+    assert len(ms_preger.data) == len(expected)
+    for actual, exp in zip(ms_preger.data, expected, strict=True):
+        np.testing.assert_allclose(actual["ref"], exp["ref"])
+        np.testing.assert_allclose(actual["mov"], exp["mov"])
+
+
 def test_plot_data(ms_preger: MultiSetup_PreGER) -> None:
     """
     Test the plotting and data manipulation methods of the MultiSetup_PreGER class.
     """
-    initial_data_first_ref = ms_preger.data[0]["ref"][0][0]
-    initial_datasets_first_el = ms_preger.datasets[0][0][0]
+    originals = [d.copy() for d in ms_preger.datasets]
     initial_fs = ms_preger.fs
     initial_dt = ms_preger.dt
 
-    # test DECIMATE_DATA method
     decimation_factor = 4
     ms_preger.decimate_data(q=decimation_factor)
-    # data has changed and is different from the initial data
-    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.27248603574735e-05)
-    assert not math.isclose(ms_preger.data[0]["ref"][0][0], initial_data_first_ref)
-    # datasets has changed and is different from the initial datasets
-    assert math.isclose(ms_preger.datasets[0][0][0], -3.272486035745707e-05)
-    assert not math.isclose(ms_preger.datasets[0][0][0], initial_datasets_first_el)
-    assert ms_preger.fs == 25.0
-    assert ms_preger.dt == 0.01
-    # rollback the data
+    for orig, new, ndat in zip(
+        originals, ms_preger.datasets, ms_preger.Ndats, strict=True
+    ):
+        expected = decimate(orig, decimation_factor, axis=0)
+        np.testing.assert_allclose(new, expected)
+        assert new.shape[0] == ndat == expected.shape[0]
+    assert ms_preger.fs == initial_fs / decimation_factor
+    assert ms_preger.dt == 1 / ms_preger.fs
+    _assert_preger_data_matches_datasets(ms_preger)
+
     ms_preger.rollback()
-    assert ms_preger.data[0]["ref"][0][0] == initial_data_first_ref
-    assert ms_preger.datasets[0][0][0] == initial_datasets_first_el
+    for orig, restored in zip(originals, ms_preger.datasets, strict=True):
+        np.testing.assert_array_equal(restored, orig)
     assert ms_preger.fs == initial_fs
     assert ms_preger.dt == initial_dt
+    _assert_preger_data_matches_datasets(ms_preger)
 
-    # test DETREND_DATA method
     ms_preger.detrend_data()
-    # data has changed and is different from the initial data
-    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.238227274628828e-05)
-    assert not math.isclose(ms_preger.data[0]["ref"][0][0], initial_data_first_ref)
+    for orig, new in zip(originals, ms_preger.datasets, strict=True):
+        np.testing.assert_allclose(new, detrend(orig, axis=0))
     assert ms_preger.fs == initial_fs
     assert ms_preger.dt == initial_dt
-    # datasets has changed and is not different from the initial datasets
-    assert math.isclose(ms_preger.datasets[0][0][0], -3.249758486587817e-05)
-    assert math.isclose(ms_preger.datasets[0][0][0], initial_datasets_first_el)
-    # rollback the data
-    ms_preger.rollback()
-    assert ms_preger.data[0]["ref"][0][0] == initial_data_first_ref
-    assert ms_preger.datasets[0][0][0] == initial_datasets_first_el
-    assert ms_preger.fs == initial_fs
-    assert ms_preger.dt == initial_dt
+    _assert_preger_data_matches_datasets(ms_preger)
 
-    # test FILTER_DATA method
+    ms_preger.rollback()
     ms_preger.filter_data(Wn=1, order=1, btype="lowpass")
-    # data has changed and is different from the initial data
-    assert math.isclose(ms_preger.data[0]["ref"][0][0], -3.4815804592448214e-05)
-    assert not math.isclose(ms_preger.data[0]["ref"][0][0], initial_data_first_ref)
+    for orig, new in zip(originals, ms_preger.datasets, strict=True):
+        np.testing.assert_allclose(
+            new, filter_data(orig, fs=initial_fs, Wn=1, order=1, btype="lowpass")
+        )
     assert ms_preger.fs == initial_fs
     assert ms_preger.dt == initial_dt
-    # datasets has changed and is not different from the initial datasets
-    assert math.isclose(ms_preger.datasets[0][0][0], -3.249758486587817e-05)
-    assert math.isclose(ms_preger.datasets[0][0][0], initial_datasets_first_el)
-    # rollback the data
+    _assert_preger_data_matches_datasets(ms_preger)
+
     ms_preger.rollback()
-    assert ms_preger.data[0]["ref"][0][0] == initial_data_first_ref
-    assert ms_preger.datasets[0][0][0] == initial_datasets_first_el
+    for orig, restored in zip(originals, ms_preger.datasets, strict=True):
+        np.testing.assert_array_equal(restored, orig)
     assert ms_preger.fs == initial_fs
     assert ms_preger.dt == initial_dt
 

@@ -1,4 +1,3 @@
-import math
 import typing
 
 import numpy as np
@@ -6,8 +5,9 @@ import pandas as pd
 import pytest
 from scipy.signal import decimate, detrend
 
-from src.pyoma2.algorithms import FDD, FSDD, SSI
-from src.pyoma2.setup import BaseSetup, SingleSetup
+from pyoma2.algorithms import FDD, FSDD, SSI
+from pyoma2.functions.gen import filter_data
+from pyoma2.setup import BaseSetup, SingleSetup
 from tests.factory import FakeAlgorithm, FakeAlgorithm2
 
 
@@ -347,9 +347,9 @@ def test_plot_data(
     assert initial_T == ss.T
 
     # test DETREND_DATA method
-    initial_shape = ss.data.shape
+    original = ss.data.copy()
     ss.detrend_data()
-    assert math.isclose(ss.data[0][0], -0.12528615865785814)
+    np.testing.assert_allclose(ss.data, detrend(original, axis=0))
     assert ss.data.shape == initial_shape
     # rollback the data
     ss.rollback()
@@ -359,9 +359,11 @@ def test_plot_data(
     assert ss.dt == initial_dt
 
     # test FILTER_DATA method
-    initial_shape = ss.data.shape
+    original = ss.data.copy()
     ss.filter_data(Wn=1, order=1, btype="lowpass")
-    assert math.isclose(ss.data[0][0], 0.41342428991383917)
+    np.testing.assert_allclose(
+        ss.data, filter_data(original, fs=ss.fs, Wn=1, order=1, btype="lowpass")
+    )
     assert ss.data.shape == initial_shape
     # rollback the data
     ss.rollback()

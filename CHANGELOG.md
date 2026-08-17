@@ -14,6 +14,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   session. Set `PYOMA2_KEEP_SAMPLE_DATA` to a truthy value ("1", "true", "yes", "on")
   to keep the cache and avoid re-downloading the sample data, supporting offline and
   pre-cached workflows. The default behavior (delete on teardown) is unchanged.
+- Preprocessing (`decimate_data`, `filter_data`, `detrend_data`) on `SingleSetup` and
+  `MultiSetup_PreGER` now propagates the updated data and sampling frequency (`fs`/`dt`)
+  to already-attached algorithms and invalidates previously computed results and
+  data-derived caches (SSI `freq`/`Sy`/`G`), so a subsequent run or spectrum plot
+  cannot silently reuse stale output.
+- `decimate_data` now rejects `axis != 0`. Time is stored along axis 0; a nonzero
+  axis previously changed the wrong dimension while still rewriting `fs`/`dt`/`T`.
+- `MultiSetup_PreGER.decimate_data` no longer raises `TypeError` when optional
+  `scipy.signal.decimate` keyword arguments (`n`, `ftype`, `zero_phase`, …) are passed.
+- `MultiSetup_PreGER.decimate_data` now sets `dt = 1/fs` from the *updated* sampling
+  frequency (it previously kept the pre-decimation interval).
+- `MultiSetup_PreGER.filter_data` / `detrend_data` now update `datasets` as well as
+  `data`, so plotting and chained preprocessing see the same signal.
+- `rollback()` on single/multi setups preserves attached algorithms and rebinds them
+  to the restored data (results and data-derived caches are cleared). It now applies
+  a fresh copy of the initial snapshot, so in-place mutation of live `data` /
+  `datasets` / `ref_ind` cannot corrupt a later rollback.
+- `SSI.plot_stab(spectrum=True)` reuses the last `est_spectrum` configuration after
+  data invalidation, instead of falling back to default `nxseg=1024` which can fail
+  on a shorter post-decimation record.
 
 ## [1.4.1] - 2026-06-30
 

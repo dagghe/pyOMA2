@@ -56,6 +56,26 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
     MPEParamCls = SSIMPEParams
     ResultCls = SSIResult
     method: typing.Literal["dat", "cov", "cov_R", "IOcov"] = "cov"
+    freq: typing.Optional[np.ndarray] = None
+    Sy: typing.Optional[np.ndarray] = None
+    G: list[np.ndarray] | None = None
+    _spectrum_run_params: typing.Optional[FDDRunParams] = None
+
+    def _invalidate_data_state(self) -> None:
+        """Clear SSI results and spectrum / state-space caches bound to the old data."""
+        super()._invalidate_data_state()
+        self.freq = None
+        self.Sy = None
+        self.G = None
+
+    def _resolve_spectrum_params(
+        self, run_params: typing.Optional[FDDRunParams] = None
+    ) -> FDDRunParams:
+        """Return spectrum params, remembering the last explicit configuration."""
+        if run_params is None:
+            run_params = self._spectrum_run_params or FDDRunParams()
+        self._spectrum_run_params = run_params
+        return run_params
 
     def run(self) -> SSIResult:
         """
@@ -103,18 +123,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
 
         # Estimate spectrum (PSD) if requested
         if self.run_params.spetrum is True:
-            if self.run_params.fdd_run_params is not None:
-                fdd_run_params = self.run_params.fdd_run_params
-            else:
-                fdd_run_params = FDDRunParams()  # Use default FDD parameters
-            self.freq, self.Sy = fdd.SD_est(
-                Y,
-                Yref,
-                self.dt,
-                fdd_run_params.nxseg,
-                fdd_run_params.method_SD,
-                fdd_run_params.pov,
-            )
+            self.est_spectrum(self.run_params.fdd_run_params)
 
         # Build Hankel matrix H and uncertainty estimates T
         H, T = ssi.build_hank(
@@ -199,7 +208,9 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         """
         Estimate the power spectral density (PSD) of the measurement data using FDD.
 
-        If run_params is not provided, default FDD parameters (FDDRunParams()) are used.
+        If run_params is omitted, the last configuration passed to this method
+        is reused; if none has been stored yet, default FDD parameters
+        (``FDDRunParams()``) are used.
 
         Parameters
         ----------
@@ -213,10 +224,12 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         Notes
         -----
         The computed frequency vector (self.freq) and spectral matrix (self.Sy) are stored
-        as attributes of the algorithm instance.
+        as attributes of the algorithm instance. The configuration is retained
+        across data invalidation so ``plot_stab(spectrum=True)`` can re-estimate
+        after preprocessing without falling back to defaults that may be invalid
+        for the new record length.
         """
-        if run_params is None:
-            run_params = FDDRunParams()
+        run_params = self._resolve_spectrum_params(run_params)
 
         Y = self.data.T
         Yref = Y[self.run_params.ref_ind, :] if self.run_params.ref_ind is not None else Y
@@ -1233,7 +1246,7 @@ class SSI(BaseAlgorithm[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[f
         )
 
         if spectrum:
-            if not hasattr(self, "Sy"):
+            if getattr(self, "Sy", None) is None:
                 self.est_spectrum()
             Sval, _ = fdd.SD_svalsvec(self.Sy)
             ax2 = ax.twinx()
@@ -1449,7 +1462,9 @@ class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
         """
         Estimate the power spectral density (PSD) of the measurement data using FDD.
 
-        If run_params is not provided, default FDD parameters (FDDRunParams()) are used.
+        If run_params is omitted, the last configuration passed to this method
+        is reused; if none has been stored yet, default FDD parameters
+        (``FDDRunParams()``) are used.
 
         Parameters
         ----------
@@ -1463,10 +1478,11 @@ class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
         Notes
         -----
         The computed frequency vector (self.freq) and spectral matrix (self.Sy) are stored
-        as attributes of the algorithm instance.
+        as attributes of the algorithm instance. The configuration is retained
+        across data invalidation so automatic re-estimation stays valid after
+        preprocessing.
         """
-        if run_params is None:
-            run_params = FDDRunParams()
+        run_params = self._resolve_spectrum_params(run_params)
 
         Y = self.data
 

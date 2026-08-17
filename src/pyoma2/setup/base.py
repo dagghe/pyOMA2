@@ -84,6 +84,22 @@ class BaseSetup:
             **{alg.name: alg._set_data(data=self.data, fs=self.fs) for alg in algorithms},
         }
 
+    def _apply_data_to_algorithms(self) -> None:
+        """Rebind attached algorithms to this setup's current data and ``fs``.
+
+        Each algorithm's ``_set_data`` also invalidates previously computed
+        results and any data-derived caches (see
+        ``BaseAlgorithm._invalidate_data_state``). Called after preprocessing
+        and rollback.
+
+        Raises
+        ------
+        AttributeError
+            If ``algorithms`` has not been initialized on the setup.
+        """
+        for alg in self.algorithms.values():
+            alg._set_data(data=self.data, fs=self.fs)
+
     # run the whole set of algorithms (methods). METODO 1 di tutti
     def run_all(self) -> None:
         """
@@ -232,7 +248,11 @@ class BaseSetup:
         q : int
             The decimation factor. Must be greater than 1.
         axis : int, optional
-            The axis along which to decimate the data. Default is 0.
+            Must be 0. Time is stored along the first dimension of setup
+            data; ``fs``, ``dt`` and duration are always derived from
+            ``shape[0]``. SciPy's ``decimate`` treats ``axis`` as the
+            time axis, so any other value would silently desynchronize
+            the metadata. Default is 0.
         **kwargs : dict, optional, will be passed to scipy.signal.decimate
             Additional keyword arguments for the scipy.signal.decimate function:
             n : int, optional
@@ -249,7 +269,8 @@ class BaseSetup:
         Raises
         ------
         ValueError
-            If the decimation factor 'q' is not greater than 1.
+            If the decimation factor 'q' is not greater than 1, or if
+            ``axis`` is not 0.
 
         Returns
         -------
@@ -261,7 +282,13 @@ class BaseSetup:
         For further information, see `scipy.signal.decimate
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
-        newdata = decimate(data, q, **kwargs)
+        axis = kwargs.pop("axis", 0)
+        if axis != 0:
+            raise ValueError(
+                "decimate_data only supports axis=0 (time along the first "
+                f"dimension); got axis={axis}."
+            )
+        newdata = decimate(data, q, axis=0, **kwargs)
         fs = fs / q
         dt = 1 / fs
         Ndat = newdata.shape[0]

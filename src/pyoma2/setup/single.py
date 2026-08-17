@@ -76,27 +76,23 @@ class SingleSetup(BaseSetup, GeometryMixin):
         fs : float
             The sampling frequency of the data.
         """
-        self.data = data  # data
-        self.fs = fs  # sampling frequency [Hz]
+        self.algorithms: typing.Dict[str, BaseAlgorithm] = {}
+        self._store_initial_state(data, fs)
+        self._apply_data_state(data, fs)
 
-        self._initialize_data(data=data, fs=fs)
-
-    def _initialize_data(self, data: np.ndarray, fs: float) -> None:
-        """
-        Pre process the data and set the initial attributes after copying the data.
-
-        This method is called during the initialization of the SingleSetup instance.
-        """
-        # Store a copy of the initial data
+    def _store_initial_state(self, data: np.ndarray, fs: float) -> None:
+        """Snapshot the data and sampling frequency used by ``rollback``."""
         self._initial_data = copy.deepcopy(data)
         self._initial_fs = fs
 
+    def _apply_data_state(self, data: np.ndarray, fs: float) -> None:
+        """Apply the current time series and sampling frequency to this setup."""
+        self.data = data
+        self.fs = fs
         self.dt = 1 / fs  # sampling interval
         self.Nch = data.shape[1]  # number of channels
         self.Ndat = data.shape[0]  # number of data points
         self.T = self.dt * self.Ndat  # Period of acquisition [sec]
-
-        self.algorithms: typing.Dict[str, BaseAlgorithm] = {}  # set of algo
 
     def rollback(self) -> None:
         """
@@ -105,11 +101,13 @@ class SingleSetup(BaseSetup, GeometryMixin):
         This method reverts the `data` and `fs` attributes to their original values, effectively
         undoing any operations that modify the data, such as filtering, detrending, or decimation.
         It can be used to reset the setup to the state it was in after instantiation.
+        Attached algorithms are preserved and rebound to a fresh copy of the
+        initial snapshot; any results and data-derived caches computed on
+        preprocessed data are invalidated. Live ``data`` is independent of
+        the stored snapshot, so later in-place edits cannot poison rollback.
         """
-        self.data = self._initial_data
-        self.fs = self._initial_fs
-
-        self._initialize_data(data=self._initial_data, fs=self._initial_fs)
+        self._apply_data_state(copy.deepcopy(self._initial_data), self._initial_fs)
+        self._apply_data_to_algorithms()
 
     # method to plot the time histories of the data channels.
     def plot_data(
@@ -289,22 +287,27 @@ class SingleSetup(BaseSetup, GeometryMixin):
         Raises
         ------
         ValueError
-            If the decimation factor 'q' is not greater than 1.
+            If the decimation factor 'q' is not greater than 1, or if
+            ``axis`` is not 0. Time is always stored along axis 0.
 
         Notes
         -----
+        Attached algorithms are rebound to the decimated data and sampling
+        frequency. Previously computed results and data-derived caches are
+        invalidated.
+
         For further information, see `scipy.signal.decimate
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html>`_.
         """
-        axis = kwargs.pop("axis", 0)
         decimated_data, fs, dt, Ndat, T = super()._decimate_data(
-            data=self.data, fs=self.fs, q=q, axis=axis, **kwargs
+            data=self.data, fs=self.fs, q=q, **kwargs
         )
         self.data = decimated_data
         self.fs = fs
         self.dt = dt
         self.Ndat = Ndat
         self.T = T
+        self._apply_data_to_algorithms()
 
     def detrend_data(self, **kwargs) -> None:
         """
@@ -332,11 +335,15 @@ class SingleSetup(BaseSetup, GeometryMixin):
 
         Notes
         -----
+        Attached algorithms are rebound to the detrended data. Previously
+        computed results and data-derived caches are invalidated.
+
         For further information, see `scipy.signal.detrend
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html>`_.
         """
         detrended_data = super()._detrend_data(data=self.data, **kwargs)
         self.data = detrended_data
+        self._apply_data_to_algorithms()
 
     def filter_data(
         self,
@@ -364,6 +371,9 @@ class SingleSetup(BaseSetup, GeometryMixin):
 
         Notes
         -----
+        Attached algorithms are rebound to the filtered data. Previously
+        computed results and data-derived caches are invalidated.
+
         For more information, see the scipy documentation for `signal.butter`
         (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
         and `signal.sosfiltfilt`
@@ -377,3 +387,4 @@ class SingleSetup(BaseSetup, GeometryMixin):
             btype=btype,
         )
         self.data = filt_data
+        self._apply_data_to_algorithms()

@@ -73,6 +73,45 @@ class FakeAlgorithm2(FakeAlgorithm):
     """FakeAlgorithm2 is a subclass of FakeAlgorithm."""
 
 
+class RecordingResult(BaseResult):
+    """Result that records the data identity and sampling params consumed by ``run()``."""
+
+    fs: float | None = None
+    dt: float | None = None
+    n_samples: int | None = None
+    data_id: int | None = None
+
+
+class RecordingAlgorithm(BaseAlgorithm[FakeRunParams, RecordingResult, typing.Iterable]):
+    """Spy algorithm whose result records the data/fs actually consumed by ``run()``."""
+
+    RunParamCls = FakeRunParams
+    ResultCls = RecordingResult
+    MPEParamCls = FakeMPEParams
+
+    def run(self) -> RecordingResult:
+        data = self.data
+        if isinstance(data, np.ndarray):
+            n_samples = int(data.shape[0])
+        elif isinstance(data, list) and data and isinstance(data[0], dict):
+            # MultiSetup_PreGER: list of {"ref", "mov"} with time along the last axis
+            n_samples = int(data[0]["ref"].shape[-1])
+        else:
+            n_samples = None
+        return RecordingResult(
+            fs=self.fs,
+            dt=self.dt,
+            n_samples=n_samples,
+            data_id=id(data),
+        )
+
+    def mpe(self, *args, **kwargs) -> typing.Any:
+        return np.array([1.0, 2.0, 3.0])
+
+    def mpe_from_plot(self, *args, **kwargs) -> typing.Any:
+        return np.array([1.0, 2.0, 3.0])
+
+
 def assert_array_equal_with_nan(arr1: npt.ArrayLike, arr2: npt.ArrayLike) -> bool:
     """Utility function to compare two arrays with NaN values.
 
