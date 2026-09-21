@@ -1175,11 +1175,21 @@ def match_modes(
         the mode of setup i paired with the merged mode k, or -1 if setup i did not identify
         it.
 
+    Raises
+    ------
+    ValueError
+        If `freq_tol` is not positive or `mac_min` is not between 0 and 1.
+
     Notes
     -----
     Each merged mode is represented by the first setup that identified it. With a single
     reference sensor the MAC is always 1, so the pairing relies on the frequency only.
     """
+    # the negated comparisons also reject NaN
+    if not freq_tol > 0:
+        raise ValueError(f"freq_tol must be positive, got {freq_tol}")
+    if not 0 <= mac_min <= 1:
+        raise ValueError(f"mac_min must be between 0 and 1, got {mac_min}")
     # Frequencies and reference mode shapes representing the merged modes
     Fn_mrg = np.asarray(Fn_list[0], dtype=float)
     phi_ref_mrg = MSarr_list[0][reflist[0]]

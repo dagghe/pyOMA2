@@ -245,7 +245,8 @@ class MultiSetup_PoSER(GeometryMixin):
         Raises
         ------
         ValueError
-            If the method is called before running algorithms on the setups.
+            If the method is called before running algorithms on the setups, if
+            `freq_tol` is not positive or if `mac_min` is not between 0 and 1.
         """
         # group algorithms by type
         alg_groups: typing.Dict[str, typing.List[BaseAlgorithm]] = {}

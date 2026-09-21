@@ -272,6 +272,16 @@ def test_frequency_tolerance_is_configurable(kwargs, expected_fn) -> None:
     assert_allclose(merged.Fn, expected_fn)
 
 
+def test_zero_frequency_tolerance_is_rejected() -> None:
+    """``freq_tol=0`` cannot define a pairing, even for identical frequencies."""
+    msp = _poser(
+        SSIResult(Fn=np.array([2.0]), Xi=np.array([0.01]), Phi=_phi(REF_A + [0.5])),
+        SSIResult(Fn=np.array([2.0]), Xi=np.array([0.01]), Phi=_phi(REF_A + [0.4])),
+    )
+    with pytest.raises(ValueError, match="freq_tol must be positive"):
+        msp.merge_results(freq_tol=0.0)
+
+
 def test_results_without_damping_are_merged() -> None:
     """FDD does not identify damping: the merged damping ratios are None."""
     setups = []

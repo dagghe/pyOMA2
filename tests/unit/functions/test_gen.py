@@ -57,6 +57,25 @@ def test_match_modes_gates(kwargs, expected) -> None:
     np.testing.assert_array_equal(mode_map, expected)
 
 
+@pytest.mark.parametrize(
+    "kwargs, message",
+    [
+        ({"freq_tol": 0.0}, "freq_tol must be positive"),
+        ({"freq_tol": -0.1}, "freq_tol must be positive"),
+        ({"freq_tol": np.nan}, "freq_tol must be positive"),
+        ({"mac_min": -0.1}, "mac_min must be between 0 and 1"),
+        ({"mac_min": 1.1}, "mac_min must be between 0 and 1"),
+        ({"mac_min": np.nan}, "mac_min must be between 0 and 1"),
+    ],
+)
+def test_match_modes_invalid_gates(kwargs, message) -> None:
+    """Tolerances that cannot define a pairing are rejected."""
+    Fn_list = [np.array([2.0]), np.array([2.0])]
+    MSarr_list = [np.array([[1.0], [0.2], [0.1]]), np.array([[1.0], [0.2], [0.1]])]
+    with pytest.raises(ValueError, match=message):
+        gen.match_modes(Fn_list, MSarr_list, [[0, 1, 2], [0, 1, 2]], **kwargs)
+
+
 def test_merge_modal_params() -> None:
     """NaN marks a missing mode; weights apply only when every contributor has a std."""
     values = np.array([[2.0, 5.0, 9.0], [2.2, np.nan, 9.2]])
