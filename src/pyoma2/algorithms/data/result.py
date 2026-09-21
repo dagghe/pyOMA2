@@ -125,21 +125,27 @@ class MsPoserResult(BaseResult):
     Phi : numpy.NDArray
         Array of mode shape vectors obtained from MultiSetup Poser analysis.
     Fn : numpy.NDArray
-        Array of natural frequencies obtained from MultiSetup Poser analysis (mean value).
+        Array of natural frequencies obtained from MultiSetup Poser analysis (mean value,
+        inverse-variance weighted when the setups provide uncertainties).
     Fn_std : numpy.NDArray
-        Standard deviation of natural frequencies between setups.
-    Xi : numpy.NDArray
-        Array of damping ratios obtained from MultiSetup Poser analysis (mean value).
-    Xi_std : numpy.NDArray
+        Standard deviation of natural frequencies between setups, or standard deviation
+        of the weighted mean when the setups provide uncertainties.
+    Xi : numpy.NDArray, optional
+        Array of damping ratios obtained from MultiSetup Poser analysis (mean value), None
+        if the algorithm does not identify damping (e.g. FDD).
+    Xi_std : numpy.NDArray, optional
         Standard deviation of damping ratios.
+    setups_used : list[list[int]]
+        Indices of the setups that identified each merged mode.
     """
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     Phi: npt.NDArray[np.float64] = None
     Fn: npt.NDArray[np.float64] = None
     Fn_std: npt.NDArray[np.float64] = None
-    Xi: npt.NDArray[np.float64] = None
-    Xi_std: npt.NDArray[np.float64] = None
+    Xi: npt.NDArray[np.float64] | None = None
+    Xi_std: npt.NDArray[np.float64] | None = None
+    setups_used: list[list[int]] | None = None
 
 
 class ClusteringResult(BaseResult):

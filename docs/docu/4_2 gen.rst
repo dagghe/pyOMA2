@@ -20,6 +20,8 @@ Functions:
     - :func:`.flatten_sns_names`: Ensures that sensors names is in the correct form.
     - :func:`.example_data`: Generates the example dataset.
     - :func:`.merge_mode_shapes`: Merges mode shapes from different setups into a unified mode shape array.
+    - :func:`.match_modes`: Pairs the modes of different setups by frequency and reference-sensor MAC.
+    - :func:`.merge_modal_params`: Merges a modal parameter identified in several setups, optionally inverse-variance weighted.
     - :func:`.MPC`: Calculate the Modal Phase Collinearity of a complex mode shape.
     - :func:`.MPD`: Calculate the Mean Phase Deviation of a complex mode shape.
     - :func:`.MSF`: Computes the Modal Scale Factor between two mode shape sets.

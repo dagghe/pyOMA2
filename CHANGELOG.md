@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+### Added
+
+- `MultiSetup_PoSER.merge_results()` accepts `freq_tol` and `mac_min` to tune how modes are
+  paired across setups; `MsPoserResult.setups_used` lists the setups that identified each
+  merged mode.
+- `gen.match_modes` pairs the modes of different setups by frequency and reference-sensor
+  MAC; `gen.merge_modal_params` merges a modal parameter over the setups that identified
+  each mode, inverse-variance weighted when uncertainties are available.
+
+### Fixed
+
+- PoSER merge paired modes by index, so modes identified in a different order were
+  averaged with a different physical mode; they are now paired by frequency and
+  reference-sensor MAC.
+- PoSER merge ignored the SSI uncertainties (`calc_unc=True`); frequencies and damping
+  ratios are now inverse-variance weighted when every contributing setup provides them.
+- `merge_mode_shapes` scaled the roving sensors by the inverse Modal Scale Factor; each
+  setup is now scaled onto the reference sensors of the first setup.
+- PoSER merge failed when a mode was missing in some setups; the mode is now merged from
+  the setups that identified it, with NaN roving sensors for the others.
+- PoSER merge raised `AttributeError` for algorithms without damping (FDD); the merged
+  `Xi`/`Xi_std` are now `None`.
+
 ## [1.4.2] - 2026-08-17
 
 ### Changed
