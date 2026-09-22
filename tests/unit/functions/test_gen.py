@@ -12,6 +12,70 @@ def test_merge_mode_shapes() -> None:
     assert merged.shape == (3, 2)
 
 
+def test_merge_mode_shapes_scales_onto_first_setup() -> None:
+    """Roving DOFs are scaled by the factor mapping each setup onto the first one."""
+    MSarr_list = [np.array([[1.0], [2.0], [5.0]]), np.array([[10.0], [20.0], [30.0]])]
+    merged = gen.merge_mode_shapes(MSarr_list, [[0, 1], [0, 1]])
+    np.testing.assert_allclose(merged[:, 0].real, [1.0, 2.0, 5.0, 3.0])
+
+
+def test_merge_mode_shapes_missing_mode() -> None:
+    """An all-NaN column marks a mode the setup did not identify."""
+    MSarr_list = [
+        np.array([[np.nan, 1.0], [np.nan, 2.0], [np.nan, 5.0]]),
+        np.array([[10.0, 10.0], [20.0, 20.0], [30.0, 30.0]]),
+    ]
+    merged = gen.merge_mode_shapes(MSarr_list, [[0, 1], [0, 1]])
+    # the first setup that identified the mode provides references and scale
+    np.testing.assert_allclose(merged[[0, 1, 3], 0].real, [10.0, 20.0, 30.0])
+    assert np.isnan(merged[2, 0])
+    np.testing.assert_allclose(merged[:, 1].real, [1.0, 2.0, 5.0, 3.0])
+
+
+def test_match_modes() -> None:
+    """Local modes are paired with merged modes, unmatched ones are appended."""
+    ref = np.array([[1.0, 0.1, -0.2], [0.2, 1.0, 0.1], [0.1, -0.2, 1.0]])
+    Fn_list = [np.array([2.0, 5.0]), np.array([9.1, 2.1, 5.2])]
+    MSarr_list = [ref[:, :2], ref[:, [2, 0, 1]]]
+    mode_map = gen.match_modes(Fn_list, MSarr_list, [[0, 1, 2], [0, 1, 2]])
+    np.testing.assert_array_equal(mode_map, [[0, 1, -1], [1, 2, 0]])
+
+
+@pytest.mark.parametrize(
+    "kwargs, expected",
+    [
+        ({}, [[0, -1], [-1, 0]]),
+        ({"freq_tol": 0.2}, [[0], [0]]),
+        ({"freq_tol": 0.2, "mac_min": 0.95}, [[0, -1], [-1, 0]]),
+    ],
+)
+def test_match_modes_gates(kwargs, expected) -> None:
+    """Pairs outside the frequency tolerance or below the MAC threshold are rejected."""
+    Fn_list = [np.array([2.0]), np.array([2.3])]
+    MSarr_list = [np.array([[1.0], [0.2], [0.1]]), np.array([[1.0], [0.5], [0.4]])]
+    mode_map = gen.match_modes(Fn_list, MSarr_list, [[0, 1, 2], [0, 1, 2]], **kwargs)
+    np.testing.assert_array_equal(mode_map, expected)
+
+
+@pytest.mark.parametrize(
+    "kwargs, message",
+    [
+        ({"freq_tol": 0.0}, "freq_tol must be positive"),
+        ({"freq_tol": -0.1}, "freq_tol must be positive"),
+        ({"freq_tol": np.nan}, "freq_tol must be positive"),
+        ({"mac_min": -0.1}, "mac_min must be between 0 and 1"),
+        ({"mac_min": 1.1}, "mac_min must be between 0 and 1"),
+        ({"mac_min": np.nan}, "mac_min must be between 0 and 1"),
+    ],
+)
+def test_match_modes_invalid_gates(kwargs, message) -> None:
+    """Tolerances that cannot define a pairing are rejected."""
+    Fn_list = [np.array([2.0]), np.array([2.0])]
+    MSarr_list = [np.array([[1.0], [0.2], [0.1]]), np.array([[1.0], [0.2], [0.1]])]
+    with pytest.raises(ValueError, match=message):
+        gen.match_modes(Fn_list, MSarr_list, [[0, 1, 2], [0, 1, 2]], **kwargs)
+
+
 def test_merge_mode_shape_exc() -> None:
     """Test the merge_mode_shapes function with an exception."""
     MSarr_list = [np.array([[1, 2], [3, 4]]), np.array([[5], [7]])]

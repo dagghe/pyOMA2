@@ -17,6 +17,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from scipy import linalg, signal
+from scipy.optimize import linear_sum_assignment
 
 logger = logging.getLogger(__name__)
 
@@ -366,13 +367,13 @@ def dfphi_map_func(phi, sens_names, sens_map, cstrn=None) -> pd.DataFrame:
             {"cName": cstrn.index, "val": val},
         )
         # apply sensor mapping
-        mapping_sens = dict(zip(df_phi["sName"], df_phi["Phi"]))
+        mapping_sens = dict(zip(df_phi["sName"], df_phi["Phi"], strict=True))
         # apply costraints mapping
-        mapping_cstrn = dict(zip(ctn_df["cName"], ctn_df["val"]))
+        mapping_cstrn = dict(zip(ctn_df["cName"], ctn_df["val"], strict=True))
         mapping = dict(mapping_sens, **mapping_cstrn)
     # else apply only sensor mapping
     else:
-        mapping = dict(zip(df_phi["sName"], df_phi["Phi"]))
+        mapping = dict(zip(df_phi["sName"], df_phi["Phi"], strict=True))
 
     # mode shape mapped to points
     df_phi_map = sens_map.replace(mapping).astype(float)
@@ -1084,6 +1085,14 @@ def merge_mode_shapes(
     ------
     ValueError
         If the mode shape arrays in `MSarr_list` do not have the same number of modes.
+
+    Notes
+    -----
+    The reference sensors are taken from the first setup, and the roving sensors of every
+    other setup are scaled by the Modal Scale Factor that maps its reference sensors onto
+    the first setup's ones. An all-NaN column marks a mode that a setup did not identify:
+    its roving sensors are NaN in the merged mode shape, and the first setup that
+    identified the mode provides the reference sensors and the scale.
     """
     Nsetup = len(MSarr_list)  # number of setup
     Nmodes = MSarr_list[0].shape[1]  # number of modes
@@ -1099,27 +1108,117 @@ def merge_mode_shapes(
     merged_mode_shapes = np.zeros((M, Nmodes)).astype(complex)
     # Loop through each mode
     for k in range(Nmodes):
-        phi_1_k = MSarr_list[0][:, k]  # Save the mode shape from first setup
-        phi_ref_1_k = phi_1_k[reflist[0]]  # Save the reference sensors
-        merged_mode_k = np.concatenate(
-            (phi_ref_1_k, np.delete(phi_1_k, reflist[0]))
-        )  # initialise the merged mode shape
+        # setups that identified the mode (a missing mode is an all-NaN column)
+        found = [i for i in range(Nsetup) if not np.isnan(MSarr_list[i][:, k]).all()]
+        if not found:
+            merged_mode_shapes[:, k] = np.nan
+            continue
+        i_1 = found[0]  # first setup that identified the mode
+        phi_ref_1_k = MSarr_list[i_1][reflist[i_1], k]  # Save the reference sensors
+        merged_mode_k = [phi_ref_1_k]  # initialise the merged mode shape
         # Loop through each setup
-        for i in range(1, Nsetup):
+        for i in range(Nsetup):
             ref_ind = reflist[i]  # reference sensors indices for the specific setup
             phi_i_k = MSarr_list[i][:, k]  # mode shape of setup i
-            phi_ref_i_k = MSarr_list[i][ref_ind, k]  # save data from reference sensors
-            phi_rov_i_k = np.delete(
-                phi_i_k, ref_ind, axis=0
-            )  # saave data from roving sensors
-            # Find scaling factor
-            alpha_i_k = MSF(phi_ref_1_k, phi_ref_i_k)
+            # roving sensors (all NaN if the setup did not identify the mode)
+            phi_rov_i_k = np.delete(phi_i_k, ref_ind, axis=0)
+            if i != i_1 and i in found:
+                # Scale factor mapping the reference sensors of setup i onto the first ones
+                alpha_i_k = MSF(phi_i_k[ref_ind], phi_ref_1_k)
+                phi_rov_i_k = alpha_i_k * phi_rov_i_k
             # Merge mode
-            merged_mode_k = np.hstack((merged_mode_k, alpha_i_k * phi_rov_i_k))
+            merged_mode_k.append(phi_rov_i_k)
 
-        merged_mode_shapes[:, k] = merged_mode_k
+        merged_mode_shapes[:, k] = np.concatenate(merged_mode_k)
 
     return merged_mode_shapes
+
+
+# -----------------------------------------------------------------------------
+
+
+def match_modes(
+    Fn_list: typing.List[np.ndarray],
+    MSarr_list: typing.List[np.ndarray],
+    reflist: typing.List[typing.List[int]],
+    freq_tol: float = 0.1,
+    mac_min: float = 0.5,
+) -> np.ndarray:
+    """
+    Pairs the modes identified in different setups that describe the same physical mode.
+
+    The modes of the first setup seed the merged modes, in their original order. The modes
+    of each following setup are paired with the merged modes by solving a linear assignment
+    problem whose cost combines the relative frequency difference and the MAC of the mode
+    shapes on the reference sensors. A pair is accepted only if the frequency difference is
+    within `freq_tol` and the MAC is at least `mac_min`; the modes left without a
+    counterpart are appended as new merged modes.
+
+    Parameters
+    ----------
+    Fn_list : List[np.ndarray]
+        Natural frequencies identified in each setup, each of shape (n_modes_i,).
+    MSarr_list : List[np.ndarray]
+        Mode shapes identified in each setup, each of shape (n_channels_i, n_modes_i).
+    reflist : List[List[int]]
+        Indices of the reference sensors in each setup.
+    freq_tol : float, optional
+        Maximum frequency difference, relative to the merged mode, for two modes to be
+        paired. Default is 0.1.
+    mac_min : float, optional
+        Minimum MAC on the reference sensors for two modes to be paired. Default is 0.5.
+
+    Returns
+    -------
+    np.ndarray
+        Integer array of shape (n_setups, n_merged_modes). The entry [i, k] is the index of
+        the mode of setup i paired with the merged mode k, or -1 if setup i did not identify
+        it.
+
+    Raises
+    ------
+    ValueError
+        If `freq_tol` is not positive or `mac_min` is not between 0 and 1.
+
+    Notes
+    -----
+    Each merged mode is represented by the first setup that identified it. With a single
+    reference sensor the MAC is always 1, so the pairing relies on the frequency only.
+    """
+    # the negated comparisons also reject NaN
+    if not freq_tol > 0:
+        raise ValueError(f"freq_tol must be positive, got {freq_tol}")
+    if not 0 <= mac_min <= 1:
+        raise ValueError(f"mac_min must be between 0 and 1, got {mac_min}")
+    # Frequencies and reference mode shapes representing the merged modes
+    Fn_mrg = np.asarray(Fn_list[0], dtype=float)
+    phi_ref_mrg = MSarr_list[0][reflist[0]]
+    rows = [np.arange(Fn_mrg.size)]
+    for i in range(1, len(Fn_list)):
+        Fn_i = np.asarray(Fn_list[i], dtype=float)
+        phi_ref_i = MSarr_list[i][reflist[i]]
+        dfn = np.abs(Fn_i[None, :] - Fn_mrg[:, None]) / Fn_mrg[:, None]
+        mac = np.atleast_2d(MAC(phi_ref_mrg, phi_ref_i))
+        valid = (dfn <= freq_tol) & (mac >= mac_min)
+        # An accepted pair costs at most 2, so a rejected one outweighs any set of
+        # accepted pairs: the assignment maximises the accepted pairs, then their fit
+        cost = np.where(valid, (1 - mac) + dfn / freq_tol, 2 * min(valid.shape) + 1)
+        ind_mrg, ind_i = linear_sum_assignment(cost)
+        accepted = valid[ind_mrg, ind_i]
+        row = np.full(Fn_mrg.size, -1)
+        row[ind_mrg[accepted]] = ind_i[accepted]
+        # modes of setup i without a counterpart become new merged modes
+        new = np.setdiff1d(np.arange(Fn_i.size), ind_i[accepted])
+        if new.size:
+            logger.debug("Setup %s: modes %s not paired, added as new modes", i, new)
+        rows.append(np.concatenate([row, new]))
+        Fn_mrg = np.concatenate([Fn_mrg, Fn_i[new]])
+        phi_ref_mrg = np.hstack([phi_ref_mrg, phi_ref_i[:, new]])
+
+    mode_map = np.full((len(rows), Fn_mrg.size), -1)
+    for i, row in enumerate(rows):
+        mode_map[i, : row.size] = row
+    return mode_map
 
 
 # -----------------------------------------------------------------------------
