@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - YYYY-MM-DD
 
+## [1.4.3] - 2026-09-22
+
 ### Added
 
 - `MultiSetup_PoSER.merge_results()` accepts `freq_tol` and `mac_min` to tune how modes are
