@@ -17,8 +17,9 @@ import numpy as np
 import numpy.typing as npt
 
 from pyoma2._optional import require
-from pyoma2.algorithms.data.result import MsPoserResult
+from pyoma2.algorithms.data.result import BaseResult, MsPoserResult
 from pyoma2.functions.gen import (
+    match_modes,
     merge_mode_shapes,
     pre_multisetup,
 )
@@ -39,6 +40,26 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # POSER
 # =============================================================================
+
+
+def _align_modes(
+    results: typing.List[BaseResult], mode_map: np.ndarray, attr: str
+) -> typing.List[np.ndarray]:
+    """
+    Reorders the modes (last axis) of the `attr` array of each setup as the merged modes.
+
+    Modes that a setup did not identify (-1 in `mode_map`) are NaN.
+    """
+    aligned = []
+    for res, mode_ind in zip(results, mode_map, strict=True):
+        arr = np.asarray(getattr(res, attr))
+        found = mode_ind >= 0
+        arr_al = np.full(
+            arr.shape[:-1] + mode_ind.shape, np.nan, dtype=np.result_type(arr, float)
+        )
+        arr_al[..., found] = arr[..., mode_ind[found]]
+        aligned.append(arr_al)
+    return aligned
 
 
 class MultiSetup_PoSER(GeometryMixin):
@@ -188,13 +209,26 @@ class MultiSetup_PoSER(GeometryMixin):
                     )
             yield setup
 
-    def merge_results(self) -> typing.Dict[str, MsPoserResult]:
+    def merge_results(
+        self, freq_tol: float = 0.1, mac_min: float = 0.5
+    ) -> typing.Dict[str, MsPoserResult]:
         """
         Merges results from individual setups into a combined result using the PoSER method.
 
-        Groups algorithms by type across all setups and merges their results.
-        Calculates the mean and covariance of natural frequencies and damping ratios,
-        and merges mode shapes.
+        Groups algorithms by type across all setups and merges their results. The modes of
+        the setups are first paired by frequency and by MAC of the mode shapes on the
+        reference sensors (see :func:`~pyoma2.functions.gen.match_modes`), so a mode listed
+        in a different order, or identified only by some setups, is merged with the matching
+        physical mode of the setups that identified it. Natural frequencies and damping
+        ratios are averaged over those setups, and mode shapes are merged by scaling each
+        setup onto the reference sensors.
+
+        Parameters
+        ----------
+        freq_tol : float, optional
+            Maximum relative frequency difference for two modes to be paired. Default is 0.1.
+        mac_min : float, optional
+            Minimum MAC on the reference sensors for two modes to be paired. Default is 0.5.
 
         Returns
         -------
@@ -204,7 +238,8 @@ class MultiSetup_PoSER(GeometryMixin):
         Raises
         ------
         ValueError
-            If the method is called before running algorithms on the setups.
+            If the method is called before running algorithms on the setups, if
+            `freq_tol` is not positive or if `mac_min` is not between 0 and 1.
         """
         # group algorithms by type
         alg_groups: typing.Dict[str, typing.List[BaseAlgorithm]] = {}
@@ -215,27 +250,33 @@ class MultiSetup_PoSER(GeometryMixin):
         for alg_name, algs in alg_groups.items():
             alg_cl = algs[0].__class__
             logger.info("Merging %s results for %s group", alg_cl.__name__, alg_name)
-            # get the reference algorithm
-            all_fn = []
-            all_xi = []
-            all_phi = []
+            results = []
             for alg in algs:
                 logger.info("Merging %s results", alg.name)
-                all_fn.append(alg.result.Fn)
-                all_xi.append(alg.result.Xi)
-                all_phi.append(alg.result.Phi)
+                results.append(alg.result)
 
-            # Convert lists to numpy arrays
-            all_fn = np.array(all_fn)
-            all_xi = np.array(all_xi)
+            # Pair the modes of the setups that describe the same physical mode
+            mode_map = match_modes(
+                Fn_list=[res.Fn for res in results],
+                MSarr_list=[res.Phi for res in results],
+                reflist=self.ref_ind,
+                freq_tol=freq_tol,
+                mac_min=mac_min,
+            )
 
-            # Calculate mean and covariance
-            fn_mean = np.mean(all_fn, axis=0)
-            xi_mean = np.mean(all_xi, axis=0)
-
-            fn_std = np.std(all_fn, axis=0)  # / fn_mean
-            xi_std = np.std(all_xi, axis=0)  # / xi_mean
-            Phi = merge_mode_shapes(MSarr_list=all_phi, reflist=self.ref_ind)
+            # Calculate mean and standard deviation over the setups that identified each
+            # mode (NaN where a setup did not identify it)
+            all_fn = np.array(_align_modes(results, mode_map, "Fn"))
+            fn_mean = np.nanmean(all_fn, axis=0)
+            fn_std = np.nanstd(all_fn, axis=0)
+            xi_mean = xi_std = None
+            if any(getattr(res, "Xi", None) is not None for res in results):
+                all_xi = np.array(_align_modes(results, mode_map, "Xi"))
+                xi_mean = np.nanmean(all_xi, axis=0)
+                xi_std = np.nanstd(all_xi, axis=0)
+            Phi = merge_mode_shapes(
+                MSarr_list=_align_modes(results, mode_map, "Phi"), reflist=self.ref_ind
+            )
 
             if self.__result is None:
                 self.__result = {}
@@ -246,6 +287,7 @@ class MultiSetup_PoSER(GeometryMixin):
                 Fn_std=fn_std,
                 Xi=xi_mean,
                 Xi_std=xi_std,
+                setups_used=[np.flatnonzero(col >= 0).tolist() for col in mode_map.T],
             )
         return self.__result
 
