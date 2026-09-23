@@ -111,11 +111,12 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
             faces = np.array([np.hstack(([3], face)) for face in faces_list], dtype=int)
         return lines, faces
 
+    ## Modified by Juan C. Pantoja, Uminho, AUG-26
     def _get_sensor_arrows(
-        self,
+            self,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64], list[str]]:
         """
-        Compute arrow origins, directions, and labels for each sensor channel.
+        Compute arrow origins, directions, and labels for each valid sensor channel.
 
         Parameters
         ----------
@@ -133,37 +134,52 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         sens_map = self.geo.sens_map.to_numpy()
         sens_sign = self.geo.sens_sign.to_numpy()
         pts = self.geo.pts_coord.to_numpy()
+        sens_names = self.geo.sens_names
 
         positions, directions, labels = [], [], []
         n_pts, n_axes = sens_map.shape
         for i in range(n_pts):
             for axis in range(n_axes):
                 name = sens_map[i, axis]
-                if isinstance(name, str) and name.lower() != "nan":
+                # Only process entries that match defined sensor names
+                if name in sens_names:
                     positions.append(pts[i])
                     vec = np.zeros(3, dtype=float)
                     vec[axis] = sens_sign[i, axis]
                     directions.append(vec)
-                    labels.append(name)
-        return np.array(positions), np.array(directions), labels
+                    labels.append(str(name))
 
+        # Return empty arrays with (0, 3) shape if no sensors match
+        pos_arr = np.array(positions) if positions else np.empty((0, 3), dtype=np.float64)
+        dir_arr = np.array(directions) if directions else np.empty((0, 3), dtype=np.float64)
+
+        return pos_arr, dir_arr, labels
+
+    ## Modified: Juan C. Pantoja, Uminho, AUG-26
     def plot_geo(
-        self,
-        *,
-        scaleF: float = 1.0,
-        col_sens: str = "red",
-        show_points: bool = True,
-        points_sett: dict | None = None,
-        show_lines: bool = True,
-        lines_sett: dict | None = None,
-        show_surf: bool = True,
-        surf_sett: dict | None = None,
-        pl: pv.Plotter | None = None,
-        background: bool = True,
-        notebook: bool = False,
+            self,
+            *,
+            scaleF: float = 1.0,
+            col_sens: str = "red",
+            show_points: bool = True,
+            points_sett: Optional[dict] = None,
+            show_lines: bool = True,
+            lines_sett: Optional[dict] = None,
+            show_surf: bool = True,
+            surf_sett: Optional[dict] = None,
+            # Background geometry parameters added
+            show_bg_nodes: bool = True,
+            bg_nodes_sett: Optional[dict] = None,
+            show_bg_lines: bool = True,
+            bg_lines_sett: Optional[dict] = None,
+            show_bg_surf: bool = True,
+            bg_surf_sett: Optional[dict] = None,
+            pl: Optional[pv.Plotter] = None,
+            background: bool = True,
+            notebook: bool = False,
     ) -> pv.Plotter:
         """
-        Plot the raw geometry: points, lines, surfaces, and sensor arrows.
+        Plot the raw geometry: points, lines, surfaces, sensor arrows, and background structure.
 
         Parameters
         ----------
@@ -183,6 +199,18 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
             Whether to render surface faces.
         surf_sett : dict or None, default=None
             Plot settings for surfaces; falls back to default.
+        show_bg_nodes : bool, default=True
+            Whether to render background nodes.
+        bg_nodes_sett : dict or None, default=None
+            Plot settings for background nodes.
+        show_bg_lines : bool, default=True
+            Whether to render background lines.
+        bg_lines_sett : dict or None, default=None
+            Plot settings for background lines.
+        show_bg_surf : bool, default=True
+            Whether to render background surfaces.
+        bg_surf_sett : dict or None, default=None
+            Plot settings for background surfaces.
         pl : pv.Plotter or None, default=None
             Existing plotter instance to use.
         background : bool, default=True
@@ -193,53 +221,97 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         Returns
         -------
         pv.Plotter
-            The configured plotter with raw geometry.
+            The configured plotter with raw and background geometry.
         """
         pl = pl or self._make_plotter(notebook, background)
 
-        pts = self.geo.pts_coord.to_numpy()
-        lines_arr, faces_arr = self._encode_mesh(
-            pts, self.geo.sens_lines, self.geo.sens_surf
-        )
+        # -----------------------------------------------------------------------------
+        # 1. BACKGROUND GEOMETRY RENDERING
+        # -----------------------------------------------------------------------------
+        bg_nodes = getattr(self.geo, "bg_nodes", None)
+        if bg_nodes is not None and len(bg_nodes) > 0:
 
-        # Apply defaults
+            bg_pts = bg_nodes.to_numpy() if hasattr(bg_nodes, "to_numpy") else bg_nodes
+
+            bg_lines = getattr(self.geo, "bg_lines", None)
+            bg_surf = getattr(self.geo, "bg_surf", None)
+
+            bg_lines_arr, bg_faces_arr = self._encode_mesh(bg_pts, bg_lines, bg_surf)
+
+            # Default fallback settings for background elements
+            bg_nodes_sett = bg_nodes_sett or {"color": "gray", "point_size": 6}
+            bg_lines_sett = bg_lines_sett or {"color": "gray", "line_width": 2}
+            bg_surf_sett = bg_surf_sett or {"color": "gray", "opacity": 0.3}
+
+            if show_bg_nodes:
+                pl.add_points(bg_pts, **bg_nodes_sett)
+            if show_bg_lines and bg_lines_arr is not None:
+                pl.add_mesh(pv.PolyData(bg_pts, lines=bg_lines_arr), **bg_lines_sett)
+            if show_bg_surf and bg_faces_arr is not None:
+                pl.add_mesh(pv.PolyData(bg_pts, faces=bg_faces_arr), **bg_surf_sett)
+
+        # -----------------------------------------------------------------------------
+        # 2. SENSOR / MAIN GEOMETRY RENDERING
+        # -----------------------------------------------------------------------------
+        if hasattr(self.geo, "pts_coord"):
+            pts = self.geo.pts_coord.to_numpy()
+        elif hasattr(self.geo, "sens_coord"):
+            pts = self.geo.sens_coord.to_numpy()
+        else:
+            pts = np.empty((0, 3))
+
+        sens_surf = getattr(self.geo, "sens_surf", None)
+        lines_arr, faces_arr = self._encode_mesh(pts, self.geo.sens_lines, sens_surf)
+
+        # Apply defaults for primary sensor geometry
         points_sett = points_sett or _UNDEF_SETT.copy()
         lines_sett = lines_sett or _UNDEF_SETT.copy()
         surf_sett = surf_sett or _UNDEF_SETT.copy()
 
-        if show_points:
+        if show_points and len(pts) > 0:
             pl.add_points(pts, **points_sett)
         if show_lines and lines_arr is not None:
             pl.add_mesh(pv.PolyData(pts, lines=lines_arr), **lines_sett)
         if show_surf and faces_arr is not None:
             pl.add_mesh(pv.PolyData(pts, faces=faces_arr), **surf_sett)
 
-        # Sensor arrows
+        # -----------------------------------------------------------------------------
+        # 3. SENSOR ARROWS & LABELS
+        # -----------------------------------------------------------------------------
         pos, dirs, labels = self._get_sensor_arrows()
-        pl.add_arrows(pos, dirs, mag=scaleF, color=col_sens)
-        pl.add_point_labels(
-            pos + dirs * scaleF,
-            labels,
-            font_size=12,
-            always_visible=True,
-            shape_color="white",
-        )
+        if len(pos) > 0:
+            pl.add_arrows(pos, dirs, mag=scaleF, color=col_sens)
+            pl.add_point_labels(
+                pos + dirs * scaleF,
+                labels,
+                font_size=12,
+                always_visible=True,
+                shape_color="white",
+            )
 
         pl.add_axes(line_width=2)
         pl.show()
         return pl
 
+    ## Modified by Juan C. Pantoja, Uminho, AUG-26
     def plot_mode(
-        self,
-        mode_nr: int = 1,
-        scaleF: float = 1.0,
-        show_lines: bool = True,
-        show_surf: bool = True,
-        def_sett: dict | None = None,
-        undef_sett: dict | None = None,
-        pl: pv.Plotter | None = None,
-        background: bool = True,
-        notebook: bool = False,
+            self,
+            mode_nr: int = 1,
+            scaleF: float = 1.0,
+            show_lines: bool = True,
+            show_surf: bool = True,
+            # Background parameters added
+            show_bg_nodes: bool = True,
+            bg_nodes_sett: Optional[dict] = None,
+            show_bg_lines: bool = True,
+            bg_lines_sett: Optional[dict] = None,
+            show_bg_surf: bool = True,
+            bg_surf_sett: Optional[dict] = None,
+            def_sett: Optional[dict] = None,
+            undef_sett: Optional[dict] = None,
+            pl: Optional[pv.Plotter] = None,
+            background: bool = True,
+            notebook: bool = False,
     ) -> pv.Plotter:
         """
         Plot a single mode shape with optional undeformed geometry.
@@ -254,6 +326,18 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
             Whether to render connection lines on mode shape.
         show_surf : bool, default=True
             Whether to render surface faces on mode shape.
+        show_bg_nodes : bool, default=True
+            Whether to render background nodes.
+        bg_nodes_sett : dict or None, default=None
+            Plot settings for background nodes; falls back to default.
+        show_bg_lines : bool, default=True
+            Whether to render background lines.
+        bg_lines_sett : dict or None, default=None
+            Plot settings for background lines; falls back to default.
+        show_bg_surf : bool, default=True
+            Whether to render background surfaces.
+        bg_surf_sett : dict or None, default=None
+            Plot settings for background surfaces; falls back to default.
         def_sett : dict or None, default=None
             Plot settings for deformed shape; falls back to default.
         undef_sett : dict or None, default=None
@@ -283,7 +367,33 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
 
         pl = pl or self._make_plotter(notebook, background)
 
-        # Assemble the mode-shape geometry (headless single source of truth)
+        # -----------------------------------------------------------------------------
+        # 1. BACKGROUND GEOMETRY RENDERING
+        # -----------------------------------------------------------------------------
+        bg_nodes = getattr(self.geo, "bg_nodes", None)
+        if bg_nodes is not None and len(bg_nodes) > 0:
+            bg_pts = bg_nodes.to_numpy() if hasattr(bg_nodes, "to_numpy") else bg_nodes
+
+            bg_lines = getattr(self.geo, "bg_lines", None)
+            bg_surf = getattr(self.geo, "bg_surf", None)
+
+            bg_lines_arr, bg_faces_arr = self._encode_mesh(bg_pts, bg_lines, bg_surf)
+
+            # Default fallback settings for background elements
+            bg_nodes_sett = bg_nodes_sett or {"color": "gray", "point_size": 6}
+            bg_lines_sett = bg_lines_sett or {"color": "gray", "line_width": 2}
+            bg_surf_sett = bg_surf_sett or {"color": "gray", "opacity": 0.3}
+
+            if show_bg_nodes:
+                pl.add_points(bg_pts, **bg_nodes_sett)
+            if show_bg_lines and bg_lines_arr is not None:
+                pl.add_mesh(pv.PolyData(bg_pts, lines=bg_lines_arr), **bg_lines_sett)
+            if show_bg_surf and bg_faces_arr is not None:
+                pl.add_mesh(pv.PolyData(bg_pts, faces=bg_faces_arr), **bg_surf_sett)
+
+        # -----------------------------------------------------------------------------
+        # 2. MODE SHAPE & UNDEFORMED STRUCTURE RENDERING
+        # -----------------------------------------------------------------------------
         data = build_mode_geo2_data(self.geo, self.res, mode_nr, scaleF)
         pts = data.pts_coord
         new_pts = data.deformed_coord
@@ -295,14 +405,14 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         def_sett = def_sett or _DEF_MODE_SETT.copy()
         undef_sett = undef_sett or _UNDEF_MODE_SETT.copy()
 
-        # Undeformed
+        # Undeformed structure
         pl.add_points(pts, **undef_sett)
         if show_lines and lines_arr is not None:
             pl.add_mesh(pv.PolyData(pts, lines=lines_arr), **undef_sett)
         if show_surf and faces_arr is not None:
             pl.add_mesh(pv.PolyData(pts, faces=faces_arr), **undef_sett)
 
-        # Deformed with scalars
+        # Deformed mode shape with scalar values
         pl.add_points(new_pts, scalars=df_map.values, **def_sett)
         if show_lines and lines_arr is not None:
             pl.add_mesh(
@@ -314,23 +424,31 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
             )
 
         freq = data.fn
-        pl.add_text(f"Mode {mode_nr}: {freq:.3f} Hz", position="upper_edge")
+        pl.add_text(f"Mode {mode_nr}: $f_n$: {freq:.3f} Hz, $T_n$: {1/freq:.3f} s", position="upper_edge")
         pl.add_axes(line_width=2)
         pl.show()
         return pl
 
+    ## Modified by Juan C. Pantoja, Uminho, AUG-26
     def animate_mode(
-        self,
-        mode_nr: int = 1,
-        scaleF: float = 1.0,
-        show_lines: bool = True,
-        show_surf: bool = True,
-        def_sett: dict | None = None,
-        save_gif: bool = False,
-        pl: pv.Plotter | None = None,
-    ) -> pv.Plotter | str:
+            self,
+            mode_nr: int = 1,
+            scaleF: float = 1.0,
+            show_lines: bool = True,
+            show_surf: bool = True,
+            # Background parameters added
+            show_bg_nodes: bool = True,
+            bg_nodes_sett: Optional[dict] = None,
+            show_bg_lines: bool = True,
+            bg_lines_sett: Optional[dict] = None,
+            show_bg_surf: bool = True,
+            bg_surf_sett: Optional[dict] = None,
+            def_sett: Optional[dict] = None,
+            save_gif: bool = False,
+            pl: Optional[pv.Plotter] = None,
+    ) -> Union[pv.Plotter, str]:
         """
-        Animate a mode shape oscillation. Optionally save as GIF.
+        Animate a mode shape oscillation with optional background structure. Optionally save as GIF.
 
         Parameters
         ----------
@@ -342,6 +460,18 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
             Whether to render connection lines during animation.
         show_surf : bool, default=True
             Whether to render surface faces during animation.
+        show_bg_nodes : bool, default=True
+            Whether to render background nodes during animation.
+        bg_nodes_sett : dict or None, default=None
+            Plot settings for background nodes; falls back to default.
+        show_bg_lines : bool, default=True
+            Whether to render background lines during animation.
+        bg_lines_sett : dict or None, default=None
+            Plot settings for background lines; falls back to default.
+        show_bg_surf : bool, default=True
+            Whether to render background surfaces during animation.
+        bg_surf_sett : dict or None, default=None
+            Plot settings for background surfaces; falls back to default.
         def_sett : dict or None, default=None
             Plot settings for animation frames; falls back to default.
         save_gif : bool, default=False
@@ -359,6 +489,7 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
         pv.Plotter or str
             Plotter instance for live animation, or filepath string if GIF saved.
         """
+
         if self.res is None:
             raise ValueError("Modal result data is required to animate mode shapes.")
 
@@ -370,7 +501,33 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
 
         def_sett = def_sett or _DEF_MODE_SETT.copy()
 
-        # Assemble the mode-shape geometry (headless single source of truth)
+        # -----------------------------------------------------------------------------
+        # 1. RENDER STATIC BACKGROUND GEOMETRY
+        # -----------------------------------------------------------------------------
+        bg_nodes = getattr(self.geo, "bg_nodes", None)
+        if bg_nodes is not None and len(bg_nodes) > 0:
+            bg_pts = bg_nodes.to_numpy() if hasattr(bg_nodes, "to_numpy") else bg_nodes
+
+            bg_lines = getattr(self.geo, "bg_lines", None)
+            bg_surf = getattr(self.geo, "bg_surf", None)
+
+            bg_lines_arr, bg_faces_arr = self._encode_mesh(bg_pts, bg_lines, bg_surf)
+
+            # Default plot settings for background structure
+            bg_nodes_sett = bg_nodes_sett or {"color": "gray", "point_size": 6}
+            bg_lines_sett = bg_lines_sett or {"color": "gray", "line_width": 2}
+            bg_surf_sett = bg_surf_sett or {"color": "gray", "opacity": 0.3}
+
+            if show_bg_nodes:
+                pl.add_points(bg_pts, **bg_nodes_sett)
+            if show_bg_lines and bg_lines_arr is not None:
+                pl.add_mesh(pv.PolyData(bg_pts, lines=bg_lines_arr), **bg_lines_sett)
+            if show_bg_surf and bg_faces_arr is not None:
+                pl.add_mesh(pv.PolyData(bg_pts, faces=bg_faces_arr), **bg_surf_sett)
+
+        # -----------------------------------------------------------------------------
+        # 2. ASSEMBLE ANIMATED MODE SHAPE GEOMETRY
+        # -----------------------------------------------------------------------------
         data = build_mode_geo2_data(self.geo, self.res, mode_nr, scaleF)
         pts = data.pts_coord
         lines_arr, faces_arr = self._encode_mesh(
@@ -390,6 +547,7 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
             line_mesh = pv.PolyData(pts, lines=lines_arr)
             line_mesh.point_data["amplitude"] = amps
             pl.add_mesh(line_mesh, scalars="amplitude", **def_sett)
+
         face_mesh = None
         if show_surf and faces_arr is not None:
             face_mesh = pv.PolyData(pts, faces=faces_arr)
@@ -398,10 +556,12 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
 
         # Annotation
         freq = data.fn
-        pl.add_text(f"Mode {mode_nr}: {freq:.3f} Hz", position="upper_edge")
+        pl.add_text(f"Mode {mode_nr}. $f_n$:{freq:.3f} Hz, $T_n$: {1/freq:.3f} s", position="upper_edge")
         pl.add_axes(line_width=2)
 
-        # Animation loop
+        # -----------------------------------------------------------------------------
+        # 3. ANIMATION LOOP
+        # -----------------------------------------------------------------------------
         n_frames = 30
         frames = np.linspace(0, 2 * np.pi, n_frames, endpoint=False)
         idx = {"frame": 0}
@@ -432,7 +592,6 @@ class PvGeoPlotter(BasePlotter[Geometry2]):
                     _update()
                     pl.write_frame()
             finally:
-                # Close the movie writer so the GIF is flushed/finalized to disk.
                 pl.close()
             return gif_path
         else:
